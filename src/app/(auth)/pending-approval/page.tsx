@@ -13,8 +13,8 @@ export default function PendingApprovalPage() {
     <div className="flex flex-1 items-center justify-center p-4">
       <Card className="w-full max-w-md text-center">
         <CardHeader>
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-500/10">
-            <Clock className="h-8 w-8 text-yellow-500" />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-warning/10">
+            <Clock className="h-8 w-8 text-warning" />
           </div>
           <CardTitle className="text-2xl font-bold">
             منتظر تأیید
