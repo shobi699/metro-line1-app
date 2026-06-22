@@ -39,7 +39,7 @@ export type RefreshInput = z.infer<typeof refreshSchema>
 export const approveUserSchema = z.object({
   userId: z.string().cuid('شناسه کاربر نامعتبر است'),
   roleKey: z.enum(['admin', 'operator'], {
-    errorMap: () => ({ message: 'نقش معتبر انتخاب کنید' }),
+    error: 'نقش معتبر انتخاب کنید',
   }),
 })
 

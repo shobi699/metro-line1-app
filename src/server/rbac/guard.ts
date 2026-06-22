@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { verifyAccessToken, type AccessTokenPayload } from '@/server/auth/jwt'
+import { verifyAccessToken } from '@/server/auth/jwt'
 import { hasMinRole, hasPermission, type Permission } from './permissions'
 import type { RoleKey } from '@/generated/prisma/client'
 
