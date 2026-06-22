@@ -1,0 +1,280 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ── Enums ──────────────────────────────────────────────
+
+enum UserStatus {
+  pending
+  active
+  suspended
+}
+
+enum RoleKey {
+  super_admin
+  admin
+  operator
+}
+
+enum ShiftCode {
+  morning
+  evening
+  night
+  off
+}
+
+enum ImportJobStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+enum SwapRequestStatus {
+  pending
+  approved
+  rejected
+}
+
+enum TicketPriority {
+  low
+  medium
+  high
+  critical
+}
+
+enum TicketStatus {
+  open
+  in_progress
+  resolved
+  closed
+}
+
+enum TicketLogAction {
+  created
+  status_changed
+  assigned
+  comment
+  priority_changed
+}
+
+enum AuditLogAction {
+  create
+  update
+  delete
+  login
+  logout
+  import
+  export
+}
+
+// ── Models ─────────────────────────────────────────────
+
+model User {
+  id            String      @id @default(cuid())
+  nationalId    String      @unique
+  name          String
+  phone         String?
+  email         String?
+  passwordHash  String
+  status        UserStatus  @default(pending)
+  roleId        String
+  customFields  Json?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  role              Role              @relation(fields: [roleId], references: [id])
+  importJobs        ImportJob[]       @relation("ImportActor")
+  rosterFiles       RosterFile[]      @relation("RosterUploader")
+  shifts            Shift[]           @relation("ShiftAssignee")
+  swapRequestsInit  SwapRequest[]     @relation("SwapRequester")
+  swapRequestsTarget SwapRequest[]    @relation("SwapTarget")
+  ticketsCreated    Ticket[]          @relation("TicketCreator")
+  ticketLogs        TicketLog[]       @relation("TicketLogActor")
+  auditLogs         AuditLog[]        @relation("AuditActor")
+  readReceipts      ReadReceipt[]     @relation("ReceiptUser")
+
+  @@index([roleId])
+  @@index([status])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  key         RoleKey  @unique
+  name        String
+  permissions Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users User[]
+
+  @@map("roles")
+}
+
+model CustomFieldDef {
+  id          String   @id @default(cuid())
+  entityType  String
+  name        String
+  label       String
+  type        String
+  options     Json?
+  required    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([entityType])
+}
+
+model ImportJob {
+  id          String          @id @default(cuid())
+  fileName    String
+  fileType    String
+  status      ImportJobStatus @default(pending)
+  rowCount    Int             @default(0)
+  errorCount  Int             @default(0)
+  errors      Json?
+  actorId     String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  actor User @relation("ImportActor", fields: [actorId], references: [id])
+
+  @@index([actorId])
+  @@index([status])
+}
+
+model RosterFile {
+  id          String   @id @default(cuid())
+  fileName    String
+  period      String
+  parsedData  Json
+  uploaderId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  uploader User @relation("RosterUploader", fields: [uploaderId], references: [id])
+
+  @@index([uploaderId])
+}
+
+model Shift {
+  id          String     @id @default(cuid())
+  date        DateTime
+  code        ShiftCode
+  note        String?
+  userId      String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user          User          @relation("ShiftAssignee", fields: [userId], references: [id])
+  swapAsSource  SwapRequest[] @relation("SwapSourceShift")
+  swapAsTarget  SwapRequest[] @relation("SwapTargetShift")
+
+  @@unique([userId, date])
+  @@index([date])
+  @@index([code])
+}
+
+model SwapRequest {
+  id              String            @id @default(cuid())
+  requesterId     String
+  targetId        String
+  sourceShiftId   String
+  targetShiftId   String
+  status          SwapRequestStatus @default(pending)
+  note            String?
+  reviewedBy      String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  requester   User   @relation("SwapRequester", fields: [requesterId], references: [id])
+  target      User   @relation("SwapTarget", fields: [targetId], references: [id])
+  sourceShift Shift  @relation("SwapSourceShift", fields: [sourceShiftId], references: [id])
+  targetShift Shift  @relation("SwapTargetShift", fields: [targetShiftId], references: [id])
+
+  @@index([requesterId])
+  @@index([targetId])
+  @@index([status])
+}
+
+model SafetyBulletin {
+  id          String   @id @default(cuid())
+  title       String
+  body        String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  readReceipts ReadReceipt[]
+}
+
+model ReadReceipt {
+  id              String   @id @default(cuid())
+  userId          String
+  safetyBulletinId String
+  readAt          DateTime @default(now())
+
+  user            User            @relation("ReceiptUser", fields: [userId], references: [id])
+  safetyBulletin  SafetyBulletin  @relation(fields: [safetyBulletinId], references: [id])
+
+  @@unique([userId, safetyBulletinId])
+  @@index([safetyBulletinId])
+}
+
+model Ticket {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+  priority    TicketPriority @default(medium)
+  status      TicketStatus   @default(open)
+  wagonCode   String?
+  creatorId   String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  creator User        @relation("TicketCreator", fields: [creatorId], references: [id])
+  logs    TicketLog[]
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([priority])
+}
+
+model TicketLog {
+  id        String           @id @default(cuid())
+  ticketId  String
+  actorId   String
+  action    TicketLogAction
+  note      String?
+  createdAt DateTime         @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  actor  User   @relation("TicketLogActor", fields: [actorId], references: [id])
+
+  @@index([ticketId])
+  @@index([actorId])
+}
+
+model AuditLog {
+  id        String         @id @default(cuid())
+  actorId   String
+  entity    String
+  entityId  String
+  action    AuditLogAction
+  before    Json?
+  after     Json?
+  createdAt DateTime       @default(now())
+
+  actor User @relation("AuditActor", fields: [actorId], references: [id])
+
+  @@index([actorId])
+  @@index([entity, entityId])
+  @@index([action])
+  @@index([createdAt])
+}

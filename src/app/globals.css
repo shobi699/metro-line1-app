@@ -1,26 +1,101 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* ── Radius ──────────────────── */
+  --radius-sm:  calc(var(--radius) - 4px);
+  --radius-md:  calc(var(--radius) - 2px);
+  --radius-lg:  var(--radius);
+  --radius-xl:  calc(var(--radius) + 4px);
+
+  /* ── Semantic color aliases ───────── */
+  --color-background:         var(--background);
+  --color-background-subtle:  var(--background-subtle);
+  --color-foreground:         var(--foreground);
+  --color-foreground-muted:   var(--foreground-muted);
+  --color-surface:            var(--surface);
+  --color-surface-hover:      var(--surface-hover);
+  --color-border:             var(--border);
+  --color-border-subtle:      var(--border-subtle);
+  --color-accent:             var(--accent);
+  --color-accent-hover:       var(--accent-hover);
+  --color-accent-foreground:  var(--accent-foreground);
+  --color-critical:           var(--critical);
+  --color-critical-foreground:var(--critical-foreground);
+  --color-warning:            var(--warning);
+  --color-success:            var(--success);
+  --color-info:               var(--info);
+  --color-ring:               var(--ring);
+
+  --font-sans: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Light mode ────────────────────── */
+:root {
+  --radius: 0.5rem;
+
+  --background:         oklch(0.98 0.002 247);
+  --background-subtle:  oklch(0.94 0.003 247);
+  --foreground:         oklch(0.12 0.004 247);
+  --foreground-muted:   oklch(0.50 0.010 247);
+
+  --surface:            oklch(1.00 0 0);
+  --surface-hover:      oklch(0.96 0.002 247);
+  --border:             oklch(0.88 0.004 247);
+  --border-subtle:      oklch(0.93 0.003 247);
+
+  --accent:             oklch(0.55 0.22 27);
+  --accent-hover:       oklch(0.48 0.21 27);
+  --accent-foreground:  oklch(1.00 0 0);
+
+  --critical:           oklch(0.50 0.25 25);
+  --critical-foreground:oklch(1.00 0 0);
+  --warning:            oklch(0.72 0.16 75);
+  --success:            oklch(0.58 0.19 145);
+  --info:               oklch(0.60 0.16 240);
+
+  --ring:               oklch(0.55 0.22 27);
+}
+
+/* ── Dark mode (default) ────────────── */
+.dark {
+  --background:         oklch(0.13 0.004 247);
+  --background-subtle:  oklch(0.17 0.005 247);
+  --foreground:         oklch(0.95 0.002 247);
+  --foreground-muted:   oklch(0.55 0.008 247);
+
+  --surface:            oklch(0.17 0.005 247);
+  --surface-hover:      oklch(0.21 0.006 247);
+  --border:             oklch(0.26 0.006 247);
+  --border-subtle:      oklch(0.22 0.005 247);
+
+  --accent:             oklch(0.62 0.21 27);
+  --accent-hover:       oklch(0.70 0.19 27);
+  --accent-foreground:  oklch(1.00 0 0);
+
+  --critical:           oklch(0.58 0.24 25);
+  --critical-foreground:oklch(1.00 0 0);
+  --warning:            oklch(0.78 0.15 78);
+  --success:            oklch(0.68 0.17 145);
+  --info:               oklch(0.66 0.15 240);
+
+  --ring:               oklch(0.62 0.21 27);
+}
+
+/* ── Base styles ───────────────────── */
+* {
+  border-color: var(--border);
+}
+
+html {
+  direction: rtl;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
