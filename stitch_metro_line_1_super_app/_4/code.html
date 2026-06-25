@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>مدیریت بحران و شبیه‌سازی حوادث - مرکز فرمان مترو</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary": "#5d5c5b",
+                      "error": "#ba1a1a",
+                      "surface-variant": "#e1e3e4",
+                      "on-error-container": "#93000a",
+                      "on-secondary-container": "#656464",
+                      "background": "#f8f9fa",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "primary": "#bc0004",
+                      "surface-container-low": "#f3f4f5",
+                      "on-primary-fixed": "#410000",
+                      "primary-fixed-dim": "#ffb4a9",
+                      "on-tertiary-container": "#f7feff",
+                      "inverse-primary": "#ffb4a9",
+                      "on-primary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-fixed-variant": "#474747",
+                      "on-tertiary": "#ffffff",
+                      "outline": "#926f6a",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "error-container": "#ffdad6",
+                      "surface-container-high": "#e7e8e9",
+                      "secondary-container": "#e4e2e1",
+                      "primary-fixed": "#ffdad5",
+                      "surface": "#f8f9fa",
+                      "tertiary-fixed": "#e5e2e1",
+                      "primary-container": "#e1271c",
+                      "secondary": "#5f5e5e",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "on-primary-fixed-variant": "#930002",
+                      "on-primary-container": "#fffbff",
+                      "surface-dim": "#d9dadb",
+                      "on-secondary": "#ffffff",
+                      "on-background": "#191c1d",
+                      "tertiary-container": "#767474",
+                      "outline-variant": "#e7bdb7",
+                      "surface-container": "#edeeef",
+                      "surface-bright": "#f8f9fa",
+                      "secondary-fixed": "#e4e2e1",
+                      "on-error": "#ffffff",
+                      "inverse-surface": "#2e3132",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-surface": "#191c1d",
+                      "inverse-on-surface": "#f0f1f2",
+                      "surface-tint": "#c00205",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "on-surface-variant": "#5d3f3b"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "gutter": "16px",
+                      "touch-target-min": "48px",
+                      "margin-mobile": "16px",
+                      "margin-desktop": "32px"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Vazirmatn"],
+                      "label-md": ["Vazirmatn"],
+                      "headline-lg-mobile": ["Vazirmatn"],
+                      "data-mono": ["JetBrains Mono"],
+                      "body-md": ["Vazirmatn"],
+                      "headline-md": ["Vazirmatn"],
+                      "body-lg": ["Vazirmatn"]
+              },
+              "fontSize": {
+                      "headline-lg": ["32px", {"lineHeight": "48px", "fontWeight": "700"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "36px", "fontWeight": "700"}],
+                      "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "36px", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .filled-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-surface-dim text-primary dark:text-primary-fixed-dim font-headline-md text-headline-md fixed top-0 left-0 w-full z-50 flex items-center justify-between px-gutter h-touch-target-min border-b border-outline-variant flat no shadows">
+<div class="flex items-center gap-4">
+<span class="font-headline-lg text-headline-lg font-bold text-primary">Redline Command</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-touch-target-min h-touch-target-min flex items-center justify-center hover:bg-surface-container-high transition-colors active:scale-95 duration-100 rounded-full">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="w-touch-target-min h-touch-target-min flex items-center justify-center hover:bg-surface-container-high transition-colors active:scale-95 duration-100 rounded-full">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button class="w-touch-target-min h-touch-target-min flex items-center justify-center hover:bg-surface-container-high transition-colors active:scale-95 duration-100 rounded-full">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="hidden md:flex bg-surface-container-low dark:bg-inverse-surface text-primary dark:text-primary-fixed-dim font-label-md text-label-md fixed right-0 top-0 h-full z-40 flex flex-col pt-20 pb-8 px-4 border-l border-outline-variant flat no shadows w-64">
+<div class="mb-8">
+<h2 class="font-headline-md text-headline-md text-primary">مرکز فرمان مترو</h2>
+<p class="text-on-surface-variant font-label-md text-label-md">خط ۱ - تهران</p>
+</div>
+<ul class="flex-1 space-y-2">
+<li>
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-all active:translate-x-1 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span>مانیتورینگ خط</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-all active:translate-x-1 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="train">train</span>
+<span>مدیریت ناوگان</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-all active:translate-x-1 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="engineering">engineering</span>
+<span>گزارشات فنی</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 p-3 rounded-lg bg-primary-container text-on-primary-container font-bold hover:bg-surface-container-highest transition-all active:translate-x-1 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span>پرسنل عملیاتی</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-all active:translate-x-1 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="tune">tune</span>
+<span>تنظیمات سیستم</span>
+</a>
+</li>
+</ul>
+<div class="mt-auto">
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-all active:translate-x-1 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>خروج</span>
+</a>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="pt-20 pb-8 px-gutter md:pr-[272px] lg:px-margin-desktop transition-all duration-300">
+<!-- Header Section -->
+<div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-background">مدیریت بحران و شبیه‌سازی</h1>
+<p class="font-body-md text-on-surface-variant">ماژول شبیه‌سازی حوادث و برنامه‌ریزی استراتژیک</p>
+</div>
+<div class="flex gap-2">
+<button class="bg-surface-container-high text-on-surface font-label-md text-label-md px-4 py-2 border border-outline rounded flex items-center gap-2 hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="history">history</span>
+                    سوابق شبیه‌سازی
+                </button>
+<button class="bg-error text-on-error font-label-md text-label-md px-6 py-2 rounded flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm">
+<span class="material-symbols-outlined text-lg" data-icon="warning">warning</span>
+                    شروع شبیه‌سازی جدید
+                </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Simulation Setup (Left Column) -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<!-- Scenario Selector -->
+<div class="bg-surface-container-lowest border border-surface-variant rounded-xl p-6 shadow-sm">
+<h3 class="font-headline-md text-headline-md mb-4 flex items-center gap-2 border-b border-surface-variant pb-2">
+<span class="material-symbols-outlined text-primary" data-icon="tune">tune</span>
+                        پارامترهای شبیه‌سازی
+                    </h3>
+<div class="space-y-4">
+<div>
+<label class="block font-label-md text-label-md mb-2">نوع حادثه</label>
+<select class="w-full bg-surface border border-outline-variant rounded p-2 font-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+<option>آتش‌سوزی در تونل</option>
+<option>قطعی برق سراسری (Blackout)</option>
+<option>نقص فنی قطار - توقف در مسیر</option>
+<option>آب‌گرفتگی ایستگاه</option>
+</select>
+</div>
+<div>
+<label class="block font-label-md text-label-md mb-2">موقعیت استراتژیک</label>
+<select class="w-full bg-surface border border-outline-variant rounded p-2 font-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+<option>محدوده ایستگاه دروازه دولت (L1-S14)</option>
+<option>محدوده ایستگاه امام خمینی (L1-S12)</option>
+<option>تونل بین ایستگاه میرداماد و شریعتی</option>
+</select>
+</div>
+<div>
+<label class="block font-label-md text-label-md mb-2">سطح شدت (Level)</label>
+<div class="flex gap-2">
+<button class="flex-1 border border-outline-variant rounded py-2 font-label-md text-label-md hover:bg-surface-container-high">L1 (جزئی)</button>
+<button class="flex-1 bg-primary text-on-primary border border-primary rounded py-2 font-label-md text-label-md shadow-inner">L2 (متوسط)</button>
+<button class="flex-1 border border-outline-variant rounded py-2 font-label-md text-label-md hover:bg-surface-container-high">L3 (بحرانی)</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Resource Readiness -->
+<div class="bg-surface-container-lowest border border-surface-variant rounded-xl p-6 shadow-sm">
+<h3 class="font-headline-md text-headline-md mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="local_hospital">local_hospital</span>
+                        آمادگی منابع امدادی
+                    </h3>
+<div class="space-y-3">
+<div class="flex items-center justify-between p-3 bg-surface rounded border border-outline-variant">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-[#10b981] pulse-animation"></div>
+<span class="font-label-md text-label-md">تیم آتش‌نشانی (ایستگاه حسن‌آباد)</span>
+</div>
+<span class="font-data-mono text-data-mono text-tertiary">ETA: 04:30</span>
+</div>
+<div class="flex items-center justify-between p-3 bg-surface rounded border border-outline-variant">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-[#f59e0b] pulse-animation"></div>
+<span class="font-label-md text-label-md">اورژانس پزشکی (کد ۳)</span>
+</div>
+<span class="font-data-mono text-data-mono text-tertiary">ETA: 08:15</span>
+</div>
+<div class="flex items-center justify-between p-3 bg-surface rounded border border-outline-variant">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-[#10b981]"></div>
+<span class="font-label-md text-label-md">تیم فنی تأسیسات</span>
+</div>
+<span class="font-data-mono text-data-mono text-tertiary">مستقر در محل</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Map & Analysis (Right Column) -->
+<div class="lg:col-span-8 flex flex-col gap-6">
+<!-- Live Map View -->
+<div class="bg-surface-container-lowest border border-surface-variant rounded-xl p-4 shadow-sm h-[400px] relative overflow-hidden flex flex-col">
+<div class="flex justify-between items-center mb-2 z-10 relative bg-surface-container-lowest/80 backdrop-blur px-2 py-1 rounded">
+<span class="font-label-md text-label-md text-error flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="my_location">my_location</span>
+                            محدوده خطر: شعاع ۵۰۰ متری
+                        </span>
+<div class="flex gap-1">
+<button class="bg-surface border border-outline-variant p-1 rounded hover:bg-surface-container-high"><span class="material-symbols-outlined text-sm" data-icon="zoom_in">zoom_in</span></button>
+<button class="bg-surface border border-outline-variant p-1 rounded hover:bg-surface-container-high"><span class="material-symbols-outlined text-sm" data-icon="zoom_out">zoom_out</span></button>
+</div>
+</div>
+<!-- Schematic Map Area (Placeholder for actual map component) -->
+<div class="flex-1 relative bg-surface-dim rounded-lg overflow-hidden flex items-center justify-center border border-outline-variant">
+<!-- Abstract map representation -->
+<div class="absolute inset-0 opacity-20" data-alt="A highly detailed, technical blueprint-style map of a subway network. It uses a high-contrast industrial aesthetic with dark charcoal backgrounds and stark white schematic lines representing train tracks. Specific zones are highlighted in a bright, warning red to indicate crisis simulation areas. The visual style is crisp, authoritative, and typical of advanced enterprise software interfaces."></div>
+
+<!-- Track Line -->
+<div class="w-full h-1 bg-secondary absolute top-1/2 -translate-y-1/2"></div>
+<!-- Stations & Indicators -->
+<div class="absolute top-1/2 left-1/4 -translate-y-1/2 flex flex-col items-center gap-2">
+<div class="w-4 h-4 rounded-full border-2 border-secondary bg-surface"></div>
+<span class="font-data-mono text-[10px] text-tertiary">S10</span>
+</div>
+<!-- Crisis Epicenter -->
+<div class="absolute top-1/2 left-1/2 -translate-y-1/2 flex flex-col items-center gap-2 z-10">
+<div class="relative flex h-8 w-8 items-center justify-center">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+<span class="relative inline-flex rounded-full h-4 w-4 bg-primary border-2 border-surface"></span>
+</div>
+<div class="bg-surface-container-lowest border border-error px-2 py-1 rounded text-error font-label-md text-label-md shadow-md">
+                                دروازه دولت (L1-S14)
+                            </div>
+</div>
+<div class="absolute top-1/2 right-1/4 -translate-y-1/2 flex flex-col items-center gap-2">
+<div class="w-4 h-4 rounded-full border-2 border-secondary bg-surface"></div>
+<span class="font-data-mono text-[10px] text-tertiary">S18</span>
+</div>
+</div>
+</div>
+<!-- SOP & AI Prediction Split -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- SOP Execution -->
+<div class="bg-surface-container-lowest border border-surface-variant rounded-xl p-6 shadow-sm">
+<h3 class="font-headline-md text-headline-md mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="list_alt">list_alt</span>
+                            پروتکل اقدام (SOP)
+                        </h3>
+<div class="space-y-4">
+<div class="flex gap-3 items-start">
+<div class="bg-primary text-on-primary w-6 h-6 rounded flex items-center justify-center font-data-mono text-sm shrink-0">۱</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface line-through text-tertiary">توقف قطار در ایستگاه قبلی (S13)</p>
+<p class="font-data-mono text-sm text-tertiary mt-1">انجام شد - 10:42:15</p>
+</div>
+</div>
+<div class="flex gap-3 items-start border-r-2 border-primary pr-3 -mr-[14px]">
+<div class="bg-surface border-2 border-primary text-primary w-6 h-6 rounded flex items-center justify-center font-data-mono text-sm shrink-0 pulse-animation">۲</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-bold">تخلیه دود از طریق هواکش‌های B4 و B5</p>
+<div class="mt-2 flex gap-2">
+<button class="bg-surface-container-high border border-outline px-3 py-1 rounded font-label-md text-sm hover:bg-surface-variant">فعال‌سازی دستی</button>
+</div>
+</div>
+</div>
+<div class="flex gap-3 items-start opacity-50">
+<div class="bg-surface border border-outline-variant text-tertiary w-6 h-6 rounded flex items-center justify-center font-data-mono text-sm shrink-0">۳</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">قطع برق 750v ریل سوم در ناحیه Z-14</p>
+</div>
+</div>
+</div>
+</div>
+<!-- AI Prediction -->
+<div class="bg-surface-container-lowest border border-surface-variant rounded-xl p-6 shadow-sm flex flex-col">
+<h3 class="font-headline-md text-headline-md mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="psychology">psychology</span>
+                            پیش‌بینی هوش مصنوعی
+                        </h3>
+<div class="flex-1 flex flex-col justify-center">
+<div class="bg-surface border border-outline-variant rounded p-4 mb-4">
+<div class="flex justify-between items-center mb-2">
+<span class="font-label-md text-label-md">تأخیر شبکه (Network Delay)</span>
+<span class="font-data-mono text-data-mono text-error">+45 Min</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-2">
+<div class="bg-error h-2 rounded-full" style="width: 75%"></div>
+</div>
+</div>
+<div class="p-3 bg-surface-variant border-l-4 border-primary rounded text-sm font-body-md text-on-surface-variant">
+<strong>توصیه سیستم:</strong> با توجه به حجم دود در شبیه‌سازی، هدایت قطارهای لاین مخالف (Southbound) به خطوط فرعی برای تسریع در امدادرسانی پیشنهاد می‌شود.
+                            </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

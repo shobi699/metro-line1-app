@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import { verifyAccessToken } from '@/server/auth/jwt'
-import { hasMinRole, hasPermission, type Permission } from './permissions'
-import type { RoleKey } from '@/generated/prisma/client'
+import { hasPermission, rankForRoleKey } from './permissions'
 
 export interface AuthUser {
   id: string
   nationalId: string
-  roleKey: RoleKey
+  roleKey: string
+  rank: number
+  permissions: string[]
 }
 
 export type AuthError = { error: string; status: number }
@@ -25,18 +26,21 @@ export async function getSessionUser(
     return {
       id: payload.sub!,
       nationalId: payload.nationalId,
-      roleKey: payload.roleKey as RoleKey,
+      roleKey: payload.roleKey,
+      rank: typeof payload.rank === 'number' ? payload.rank : rankForRoleKey(payload.roleKey),
+      permissions: Array.isArray(payload.permissions) ? payload.permissions : [],
     }
   } catch {
     return { error: 'توکن نامعتبر یا منقضی شده', status: 401 }
   }
 }
 
+/** گارد مبتنی بر رتبه؛ کلیدهای نقش سیستمی به رتبه نگاشت می‌شوند. */
 export function requireRole(
   user: AuthUser,
-  minRole: RoleKey,
+  minRole: string,
 ): AuthError | null {
-  if (!hasMinRole(user.roleKey, minRole)) {
+  if (user.rank < rankForRoleKey(minRole)) {
     return {
       error: 'شما دسترسی کافی برای این عملیات را ندارید',
       status: 403,
@@ -47,9 +51,9 @@ export function requireRole(
 
 export function requirePermission(
   user: AuthUser,
-  permission: Permission,
+  permission: string,
 ): AuthError | null {
-  if (!hasPermission(user.roleKey, permission)) {
+  if (!hasPermission(user.permissions, permission)) {
     return {
       error: 'شما دسترسی کافی برای این عملیات را ندارید',
       status: 403,

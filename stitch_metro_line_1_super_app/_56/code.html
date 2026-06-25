@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>REDLINE COMMAND - Incident Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&amp;family=Vazirmatn:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-surface": "#2e3132",
+                        "on-surface-variant": "#5d3f3b",
+                        "on-surface": "#191c1d",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#e5e2e1",
+                        "on-error": "#ffffff",
+                        "secondary-container": "#e4e2e1",
+                        "on-tertiary-container": "#f7feff",
+                        "background": "#f8f9fa",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#fffbff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#f8f9fa",
+                        "on-error-container": "#93000a",
+                        "secondary": "#5f5e5e",
+                        "inverse-on-surface": "#f0f1f2",
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "error-container": "#ffdad6",
+                        "surface": "#f8f9fa",
+                        "surface-container": "#edeeef",
+                        "on-primary-fixed-variant": "#930002",
+                        "surface-container-high": "#e7e8e9",
+                        "on-background": "#191c1d",
+                        "tertiary": "#5d5c5b",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "surface-tint": "#c00205",
+                        "secondary-fixed": "#e4e2e1",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "on-secondary-container": "#656464",
+                        "surface-dim": "#d9dadb",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "on-secondary-fixed-variant": "#474747",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#e1271c",
+                        "outline-variant": "#e7bdb7",
+                        "tertiary-container": "#767474",
+                        "primary": "#bc0004",
+                        "outline": "#926f6a",
+                        "surface-variant": "#e1e3e4",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#f3f4f5",
+                        "primary-fixed": "#ffdad5",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "on-primary-fixed": "#410000",
+                        "inverse-primary": "#ffb4a9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "touch-target-min": "48px",
+                        "margin-mobile": "16px",
+                        "gutter": "16px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-md": ["Vazirmatn"],
+                        "headline-lg": ["Vazirmatn"],
+                        "body-lg": ["Vazirmatn"],
+                        "headline-lg-mobile": ["Vazirmatn"],
+                        "label-md": ["Vazirmatn"],
+                        "body-md": ["Vazirmatn"]
+                    },
+                    "fontSize": {
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "48px", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .filled-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* High-density scrollbar for tabular data */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2e3132;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #5f5e5e;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #767474;
+        }
+
+        .pulse-cell {
+            animation: pulse-bg 2s infinite;
+        }
+        
+        @keyframes pulse-bg {
+            0% { background-color: rgba(188, 0, 4, 0.1); }
+            50% { background-color: rgba(188, 0, 4, 0.3); }
+            100% { background-color: rgba(188, 0, 4, 0.1); }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background dark:bg-on-surface dark:text-inverse-on-surface flex h-screen overflow-hidden antialiased">
+<!-- SideNavBar (Suppressed for Task-Focused Intent) -->
+<!-- The user is looking at an 'Incident Detail' screen, which is a sub-page/drill-down of the 'Incidents' tab.
+         According to the "Automatic Suppression" rule, since this implies a temporary departure from the main flow 
+         (viewing details of a specific incident), the global navigation shell is suppressed to prioritize the Canvas. -->
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full w-full relative">
+<!-- Local TopAppBar / Header for the Detail View -->
+<header class="bg-surface-container-highest dark:bg-inverse-surface border-b border-outline dark:border-on-surface-variant flex justify-between items-center w-full px-margin-desktop h-touch-target-min shrink-0 sticky top-0 z-10 shadow-sm">
+<div class="flex items-center gap-4">
+<button aria-label="بازگشت" class="text-primary dark:text-inverse-primary hover:bg-surface-variant dark:hover:bg-secondary-container transition-colors rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-primary flex items-center justify-center h-10 w-10 active:opacity-80 duration-100">
+<span class="material-symbols-outlined text-2xl rtl:rotate-180">arrow_back</span>
+</button>
+<div class="flex items-center gap-3">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary">
+                        INC-8492
+                    </h1>
+<span class="bg-primary text-on-primary font-label-md text-label-md px-3 py-1 rounded-sm uppercase tracking-wider shadow-[0_0_8px_rgba(188,0,4,0.5)]">
+                        بحرانی
+                    </span>
+<span class="border border-outline-variant text-on-surface dark:text-inverse-on-surface font-label-md text-label-md px-3 py-1 rounded-sm">
+                        در حال بررسی
+                    </span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<!-- System Health Utilities (Persistent Top Bar concept) -->
+<div class="hidden md:flex items-center gap-3 mr-6 bg-surface-container dark:bg-surface-container-low px-3 py-1 rounded-sm border border-outline dark:border-on-surface-variant">
+<div class="flex items-center gap-1" title="شبکه رادیویی">
+<span class="w-2 h-2 rounded-full bg-[#4CAF50]"></span>
+<span class="material-symbols-outlined text-sm text-on-surface-variant">radio</span>
+</div>
+<div class="flex items-center gap-1" title="اتصال شبکه">
+<span class="w-2 h-2 rounded-full bg-[#4CAF50]"></span>
+<span class="material-symbols-outlined text-sm text-on-surface-variant">wifi</span>
+</div>
+<div class="flex items-center gap-1" title="وضعیت سرور">
+<span class="w-2 h-2 rounded-full bg-[#4CAF50]"></span>
+<span class="material-symbols-outlined text-sm text-on-surface-variant">dns</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Scrollable Canvas -->
+<div class="flex-1 overflow-y-auto p-margin-desktop bg-surface dark:bg-on-surface">
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Center Column: Primary Content (Overview, Timeline, Logs) -->
+<div class="lg:col-span-8 flex flex-col gap-gutter">
+<!-- Incident Overview Card -->
+<section class="bg-surface-container-lowest dark:bg-inverse-surface border border-outline dark:border-on-surface-variant rounded-DEFAULT shadow-sm p-6 relative overflow-hidden">
+<!-- Top right accent bar for severity -->
+<div class="absolute top-0 right-0 w-2 h-full bg-primary"></div>
+<div class="flex justify-between items-start mb-6 pl-4">
+<div>
+<h2 class="font-headline-md text-headline-md font-semibold text-on-surface dark:text-inverse-on-surface mb-2">
+                                    نقص فنی در سیستم برق ایستگاه تجریش
+                                </h2>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">location_on</span>
+                                    ایستگاه تجریش، پلتفرم شمالی، سکوی 2
+                                </p>
+</div>
+<div class="text-left font-data-mono text-data-mono text-on-surface-variant flex flex-col gap-1 items-end">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span>۱۴:۳۲:۱۵ - ۱۴۰۳/۰۸/۱۲</span>
+</div>
+<div class="flex items-center gap-2 text-primary dark:text-inverse-primary">
+<span class="material-symbols-outlined text-sm">timer</span>
+<span>T+ 00:45:22</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-surface-container dark:bg-surface-container-low p-4 rounded-sm border border-outline-variant">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant mb-1">گزارش دهنده</p>
+<p class="font-body-md text-body-md font-medium text-on-surface dark:text-inverse-on-surface">اپراتور م. حسینی (OCC-04)</p>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant mb-1">نوع تجهیز</p>
+<p class="font-body-md text-body-md font-medium text-on-surface dark:text-inverse-on-surface">تابلو برق فشار قوی B-12</p>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant mb-1">اولویت قطارها</p>
+<p class="font-body-md text-body-md font-medium text-on-surface dark:text-inverse-on-surface text-error">توقف موقت لاین ۱</p>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant mb-1">تیم واکنش</p>
+<p class="font-body-md text-body-md font-medium text-on-surface dark:text-inverse-on-surface">تیم فنی شمال (T-Alpha)</p>
+</div>
+</div>
+</section>
+<!-- Timeline & Activity Feed -->
+<section class="bg-surface-container-lowest dark:bg-inverse-surface border border-outline dark:border-on-surface-variant rounded-DEFAULT shadow-sm p-6">
+<h3 class="font-headline-md text-headline-md font-semibold text-on-surface dark:text-inverse-on-surface mb-6 flex items-center gap-2 border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined filled-icon text-secondary">history</span>
+                            خط زمان عملیات
+                        </h3>
+<div class="relative border-r-2 border-outline-variant dark:border-on-surface-variant mr-4 pr-6 space-y-8 pb-4">
+<!-- Timeline Item: Parts Requested -->
+<div class="relative">
+<span class="absolute -right-[35px] top-1 w-4 h-4 rounded-full bg-surface-container-lowest border-2 border-primary flex items-center justify-center">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+</span>
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface dark:text-inverse-on-surface">درخواست قطعات یدکی</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">تیم فنی درخواست ۲ عدد فیوز صنعتی ۱۰۰۰ ولت را ثبت کرد.</p>
+</div>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-sm bg-surface-container dark:bg-surface-container-high px-2 py-1 rounded-sm">15:15:02</span>
+</div>
+</div>
+<!-- Timeline Item: Arrival -->
+<div class="relative">
+<span class="absolute -right-[35px] top-1 w-4 h-4 rounded-full bg-surface-container border-2 border-secondary"></span>
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface dark:text-inverse-on-surface">رسیدن به محل (Scene Arrival)</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">تیم T-Alpha به سکوی شمالی رسید. ارزیابی اولیه آغاز شد.</p>
+</div>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-sm bg-surface-container dark:bg-surface-container-high px-2 py-1 rounded-sm">14:50:45</span>
+</div>
+</div>
+<!-- Timeline Item: Dispatch -->
+<div class="relative">
+<span class="absolute -right-[35px] top-1 w-4 h-4 rounded-full bg-surface-container border-2 border-secondary"></span>
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface dark:text-inverse-on-surface">اعزام تکنسین (Dispatch)</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">دستور اعزام برای تیم فنی شمال صادر شد.</p>
+</div>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-sm bg-surface-container dark:bg-surface-container-high px-2 py-1 rounded-sm">14:35:10</span>
+</div>
+</div>
+<!-- Timeline Item: Reported -->
+<div class="relative">
+<span class="absolute -right-[35px] top-1 w-4 h-4 rounded-full bg-secondary"></span>
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface dark:text-inverse-on-surface">ثبت حادثه (Reported)</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">گزارش قطعی برق ناگهانی و بوی سوختگی از پنل B-12.</p>
+</div>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-sm bg-surface-container dark:bg-surface-container-high px-2 py-1 rounded-sm">14:32:15</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Technical Logs Data Table -->
+<section class="bg-surface-container-lowest dark:bg-inverse-surface border border-outline dark:border-on-surface-variant rounded-DEFAULT shadow-sm overflow-hidden">
+<div class="p-4 border-b border-outline-variant bg-surface-container dark:bg-surface-container-low flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md font-semibold text-on-surface dark:text-inverse-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">terminal</span>
+                                لاگ‌های سیستمی تجهیزات
+                            </h3>
+<button class="font-label-md text-label-md flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">download</span>
+                                اکسپورت
+                            </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-right font-data-mono text-data-mono">
+<thead class="bg-[#191c1d] text-on-secondary">
+<tr>
+<th class="py-3 px-4 font-label-md text-label-md">زمان (TStamp)</th>
+<th class="py-3 px-4 font-label-md text-label-md">سنسور ID</th>
+<th class="py-3 px-4 font-label-md text-label-md">پارامتر</th>
+<th class="py-3 px-4 font-label-md text-label-md">مقدار</th>
+<th class="py-3 px-4 font-label-md text-label-md">وضعیت</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-outline-variant bg-[#F1F1F1] dark:bg-[#383b3c]">
+<td class="py-2 px-4 text-on-surface-variant">15:16:01.204</td>
+<td class="py-2 px-4">B12-VOLT-A</td>
+<td class="py-2 px-4">Voltage_L1</td>
+<td class="py-2 px-4 text-error font-bold pulse-cell">0.0 V</td>
+<td class="py-2 px-4"><span class="bg-error-container text-on-error-container px-2 py-0.5 rounded-sm text-xs">ERR_NO_POWER</span></td>
+</tr>
+<tr class="border-b border-outline-variant bg-surface-container-lowest dark:bg-inverse-surface">
+<td class="py-2 px-4 text-on-surface-variant">15:16:01.100</td>
+<td class="py-2 px-4">B12-TEMP-S</td>
+<td class="py-2 px-4">Core_Temp</td>
+<td class="py-2 px-4 text-primary">85.4 °C</td>
+<td class="py-2 px-4"><span class="bg-primary-container text-on-primary-container px-2 py-0.5 rounded-sm text-xs">WARN_HIGH</span></td>
+</tr>
+<tr class="border-b border-outline-variant bg-[#F1F1F1] dark:bg-[#383b3c]">
+<td class="py-2 px-4 text-on-surface-variant">14:32:14.050</td>
+<td class="py-2 px-4">B12-VOLT-A</td>
+<td class="py-2 px-4">Voltage_L1</td>
+<td class="py-2 px-4">220.1 V</td>
+<td class="py-2 px-4"><span class="bg-[#e8f5e9] text-[#1b5e20] dark:bg-[#1b5e20] dark:text-[#e8f5e9] px-2 py-0.5 rounded-sm text-xs">NOMINAL</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+<!-- Right Column (Sidebar): Secondary Content (Media, Personnel, Actions) -->
+<div class="lg:col-span-4 flex flex-col gap-gutter">
+<!-- Critical Actions Box -->
+<section class="bg-surface-container-lowest dark:bg-inverse-surface border border-primary rounded-DEFAULT shadow-[0_4px_12px_rgba(188,0,4,0.1)] p-6">
+<h3 class="font-headline-md text-headline-md font-semibold text-on-surface dark:text-inverse-on-surface mb-4">عملیات فرماندهی</h3>
+<div class="flex flex-col gap-3">
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md font-bold py-3 px-4 rounded-sm hover:bg-[#a00003] active:bg-[#820002] transition-colors shadow-inner flex justify-center items-center gap-2">
+<span class="material-symbols-outlined filled-icon">add_comment</span>
+                                ثبت گزارش جدید (Add Log)
+                            </button>
+<button class="w-full bg-transparent border-2 border-outline dark:border-[#5D5C5B] text-on-surface dark:text-inverse-on-surface font-label-md text-label-md font-bold py-3 px-4 rounded-sm hover:bg-surface-variant dark:hover:bg-secondary-container active:shadow-inner transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined">sync</span>
+                                بروزرسانی وضعیت
+                            </button>
+<button class="w-full bg-transparent border-2 border-outline-variant dark:border-[#5D5C5B] text-on-surface dark:text-inverse-on-surface font-label-md text-label-md font-bold py-3 px-4 rounded-sm hover:bg-surface-variant dark:hover:bg-secondary-container active:shadow-inner transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-error">warning</span>
+                                ارتقا سطح بحران (Escalate)
+                            </button>
+<button class="w-full bg-surface-container-high dark:bg-[#383b3c] text-on-surface-variant border border-outline-variant py-3 px-4 rounded-sm font-label-md text-label-md flex justify-center items-center gap-2 opacity-50 cursor-not-allowed" disabled="" title="نیازمند تایید نهایی تکنسین">
+<span class="material-symbols-outlined">check_circle</span>
+                                بستن پرونده (Close Incident)
+                            </button>
+</div>
+</section>
+<!-- Assigned Personnel -->
+<section class="bg-surface-container-lowest dark:bg-inverse-surface border border-outline dark:border-on-surface-variant rounded-DEFAULT shadow-sm p-6">
+<h3 class="font-headline-md text-headline-md font-semibold text-on-surface dark:text-inverse-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined filled-icon text-secondary">engineering</span>
+                            تیم مستقر در محل
+                        </h3>
+<div class="flex flex-col gap-3">
+<!-- Personnel Card 1 -->
+<div class="flex items-center justify-between p-3 border border-outline-variant rounded-sm bg-surface dark:bg-[#202324]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-variant dark:bg-surface-container-highest overflow-hidden border border-outline">
+<img alt="Technician Photo" class="w-full h-full object-cover" data-alt="A professional headshot of a male metro maintenance technician wearing an industrial safety helmet and a reflective orange vest. He looks focused and serious. The background is a slightly blurred, dimly lit industrial tunnel wall, emphasizing the gritty, high-stakes environment of subway maintenance operations." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6FejGHTNsmDg9Ol0qE9YT6BFJrNHXPyqGGtCV9fXv3YkImBJ4pkgSCVK6RPOxFlJpXxi59FuxaqWLHPetl98_jNjBCoC18NJPAnqgITWVyfbZn3a3YNHj8fRQMqu0rpB3_8oNrSg20Ww6k7a_tHx-sWUdALvnpPj0JJwWQ3PEUBkaUO9aqCWLjOsjLEZiHtAdPlLLg9RrcCoZMAOJuzjGJes5aK6BxoXRXqdX9l2zPOwcjp9cVBYEMC7MIY-c5P5-U-Y7O72buqEC"/>
+</div>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface dark:text-inverse-on-surface">مهندس ر. کریمی</p>
+<p class="font-body-md text-body-md text-xs text-on-surface-variant">سرپرست تیم (T-Alpha)</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="text-primary hover:bg-primary-container p-1.5 rounded-full transition-colors">
+<span class="material-symbols-outlined text-[20px]">call</span>
+</button>
+</div>
+</div>
+<!-- Personnel Card 2 -->
+<div class="flex items-center justify-between p-3 border border-outline-variant rounded-sm bg-surface dark:bg-[#202324]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-variant dark:bg-surface-container-highest flex items-center justify-center border border-outline text-on-surface-variant font-headline-md font-bold">
+                                        AN
+                                    </div>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface dark:text-inverse-on-surface">تکنسین ع. نوری</p>
+<p class="font-body-md text-body-md text-xs text-on-surface-variant">متخصص برق فشار قوی</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="text-primary hover:bg-primary-container p-1.5 rounded-full transition-colors">
+<span class="material-symbols-outlined text-[20px]">call</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Evidence & Media -->
+<section class="bg-surface-container-lowest dark:bg-inverse-surface border border-outline dark:border-on-surface-variant rounded-DEFAULT shadow-sm p-6">
+<h3 class="font-headline-md text-headline-md font-semibold text-on-surface dark:text-inverse-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined filled-icon text-secondary">perm_media</span>
+                            شواهد و مستندات میدانی
+                        </h3>
+<!-- Media Grid -->
+<div class="grid grid-cols-2 gap-3 mb-4">
+<div class="aspect-square bg-surface-container-high rounded-sm border border-outline-variant overflow-hidden relative group cursor-pointer">
+<img alt="Damaged Panel Photo" class="w-full h-full object-cover" data-alt="A close-up photograph of a damaged industrial electrical panel in a subway setting. The heavy metal door is open, revealing charred wiring, melted fuses, and scorch marks on the gray metal interior. The lighting is harsh, mimicking a technician's flashlight beam cutting through the dim station environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2ailgKBFOHBhr7yGnUHLu2yMSQAEqQlPwnMO4VcRx_9KD4FHwX7PIZOvl9VNW9lTddcbXfI-ERCG0s64y5nZtcxcRRxVi6oUS57itdG_5yuTiF0vTuVC1T6g-2QhDz2TJJ7NYFPL-LzAXNRIk0_y1ZepFm-jDWTfFy7_8kO8hKtNqImqZK5mGJbRXQRCclsvqCxfcnfshlQLk4Rp6JOPnvJqYvU3qE2DnBgMCE2H574n__XvJpXG7Zk5oKuKgtL_cXnjbUL4IqFqS"/>
+<div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+<span class="material-symbols-outlined text-white text-3xl">zoom_in</span>
+</div>
+</div>
+<div class="aspect-square bg-surface-container-high rounded-sm border border-outline-variant overflow-hidden flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors cursor-pointer p-2 text-center">
+<span class="material-symbols-outlined text-3xl mb-2">mic</span>
+<span class="font-label-md text-xs">گزارش صوتی اولیه</span>
+<span class="font-data-mono text-[10px] mt-1">00:45</span>
+</div>
+</div>
+<button class="w-full border border-dashed border-outline text-on-surface-variant font-label-md py-2 rounded-sm hover:bg-surface-container-high dark:hover:bg-secondary-container transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-sm">upload</span>
+                            افزودن فایل جدید
+                        </button>
+</section>
+</div>
+</div>
+</div>
+</main>
+</body></html>

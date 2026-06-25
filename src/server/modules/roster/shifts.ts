@@ -1,5 +1,4 @@
 import { prisma } from '@/server/db'
-import type { RoleKey } from '@/generated/prisma/client'
 
 export interface ShiftWithUser {
   id: string
@@ -29,7 +28,7 @@ export async function getUserShifts(
 export async function getAllShifts(
   startDate: Date,
   endDate: Date,
-  roleFilter?: RoleKey,
+  roleFilter?: string,
 ): Promise<ShiftWithUser[]> {
   const where: Record<string, unknown> = {
     date: { gte: startDate, lte: endDate },

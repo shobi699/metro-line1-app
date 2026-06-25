@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Automatic Incident Report Generation - Redline Command</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "on-surface-variant": "#5d3f3b",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "inverse-on-surface": "#f0f1f2",
+                        "tertiary": "#5d5c5b",
+                        "surface-container": "#edeeef",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "tertiary-container": "#767474",
+                        "surface-variant": "#e1e3e4",
+                        "background": "#f8f9fa",
+                        "error-container": "#ffdad6",
+                        "on-surface": "#191c1d",
+                        "primary-container": "#e1271c",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "on-tertiary-container": "#f7feff",
+                        "inverse-surface": "#2e3132",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e1e3e4",
+                        "surface-bright": "#f8f9fa",
+                        "surface-container-low": "#f3f4f5",
+                        "surface": "#f8f9fa",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "tertiary-fixed": "#e5e2e1",
+                        "surface-container-high": "#e7e8e9",
+                        "on-background": "#191c1d",
+                        "on-primary-fixed-variant": "#930002",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "secondary-container": "#e4e2e1",
+                        "outline": "#926f6a",
+                        "on-primary": "#ffffff",
+                        "primary-fixed": "#ffdad5",
+                        "on-error": "#ffffff",
+                        "surface-tint": "#c00205",
+                        "on-secondary-container": "#656464",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#bc0004",
+                        "on-primary-container": "#fffbff",
+                        "on-secondary-fixed-variant": "#474747",
+                        "secondary": "#5f5e5e",
+                        "error": "#ba1a1a",
+                        "outline-variant": "#e7bdb7",
+                        "secondary-fixed": "#e4e2e1",
+                        "on-primary-fixed": "#410000",
+                        "inverse-primary": "#ffb4a9",
+                        "surface-dim": "#d9dadb",
+                        "on-secondary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "32px",
+                        "touch-target-min": "48px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Vazirmatn"],
+                        "body-md": ["Vazirmatn"],
+                        "headline-lg-mobile": ["Vazirmatn"],
+                        "headline-lg": ["Vazirmatn"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-md": ["Vazirmatn"],
+                        "label-md": ["Vazirmatn"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "48px", "fontWeight": "700"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Custom scrollbar for data dense areas */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d9dadb; /* surface-dim */
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #5d5c5b; /* tertiary */
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #926f6a; /* outline */
+        }
+        
+        /* Input focus transitions */
+        .input-inset:focus-within {
+            border-color: #bc0004 !important; /* primary */
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen overflow-hidden rtl">
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-64 h-16 z-30 border-b border-outline-variant bg-surface dark:bg-surface-dim flat no shadows flex justify-between items-center px-margin-desktop w-full rtl:pr-64 rtl:pl-0 transition-all hover:bg-surface-container-low">
+<div class="flex items-center gap-4">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Redline Command</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-outline-variant">
+<img alt="Supervisor Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a metro operations supervisor. The supervisor is wearing a clean, modern uniform with a subtle red accent. The background is a slightly blurred, high-tech control room with soft, cool lighting. The style is highly realistic, corporate, and precise, fitting a high-stakes industrial environment. The color palette emphasizes crisp whites, deep charcoals, and a touch of vibrant red." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmS1fqowg-aKBg8uyLE2kHM_ohKj8l9teID0YGgED99oXi4IHN_ZSLAPPXeoPZyeNBi6j0pFJ8HSng4w1Yl14168oLpSZAleoABtNC9vzrCVwkY1Y7SmD7Zf1sr3SOl2y7DNUx0OvOZIX6VyyAzyWbY0MZE04zau_MPHoglVDIxojbkc5E7H1Rujrv7mqZFGTw3vR8GbflWwjOvTCGKQufJwug0MN1A8V1cHazpCkS-FVoTc1t-hTvHDU-7ytF1vENUIlaK378TNEn"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 border-r border-outline-variant bg-surface-container dark:bg-surface-container-low flex flex-col h-full py-4 rtl:right-0 rtl:left-auto z-40">
+<div class="px-6 mb-8 mt-2">
+<h2 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed mb-1">Redline Command</h2>
+<p class="font-label-md text-label-md text-on-surface-variant">Line 1 Supervision</p>
+</div>
+<div class="flex-1 overflow-y-auto">
+<ul class="space-y-1 px-3">
+<li>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-primary dark:text-primary-fixed font-bold border-r-4 border-primary dark:border-primary-fixed bg-secondary-container dark:bg-secondary-container hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined filled" data-icon="fact_check">fact_check</span>
+<span>Approval Queue</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+<span>Verified Personnel</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="pt-16 rtl:pr-64 h-screen flex flex-col">
+<!-- Action Header -->
+<div class="border-b border-outline-variant bg-surface-bright px-8 py-4 flex justify-between items-center shrink-0">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-1">Automatic Incident Report Generation</h2>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                    AI Assisted Draft Mode
+                </p>
+</div>
+<div class="flex gap-4">
+<button class="px-6 py-2 border-2 border-secondary text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container-high transition-colors">
+                    Discard Draft
+                </button>
+<button class="px-6 py-2 bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm active:shadow-inner flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+                    Finalize Report
+                </button>
+</div>
+</div>
+<!-- Split View Layout -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Draft Report Column (Main Left Area) -->
+<div class="flex-[3] p-8 overflow-y-auto bg-background">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 shadow-sm">
+<div class="flex items-center justify-between mb-8 pb-4 border-b border-outline-variant">
+<h3 class="font-headline-md text-headline-md text-on-surface">Incident Report Draft #IR-2023-084</h3>
+<span class="px-3 py-1 bg-surface-container text-on-surface-variant rounded-full font-data-mono text-data-mono border border-outline-variant">
+                            Status: Pending Review
+                        </span>
+</div>
+<form class="space-y-6">
+<!-- Structured Fields Row 1 -->
+<div class="grid grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Incident Type</label>
+<div class="relative input-inset border border-outline-variant rounded-lg bg-surface-bright p-3 transition-colors">
+<select class="w-full bg-transparent border-none p-0 focus:ring-0 font-body-md text-body-md text-on-surface cursor-pointer appearance-none">
+<option value="signal_failure">Signal Failure</option>
+<option selected="" value="door_obstruction">Door Obstruction</option>
+<option value="power_loss">Power Loss</option>
+<option value="medical_emergency">Medical Emergency</option>
+</select>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" data-icon="arrow_drop_down">arrow_drop_down</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Timestamp</label>
+<div class="input-inset border border-outline-variant rounded-lg bg-surface-bright p-3 flex items-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="schedule">schedule</span>
+<input class="w-full bg-transparent border-none p-0 focus:ring-0 font-data-mono text-data-mono text-on-surface" dir="ltr" type="text" value="1402/08/15 14:32:00"/>
+</div>
+</div>
+</div>
+<!-- Structured Fields Row 2 -->
+<div class="grid grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Location (Station/Track)</label>
+<div class="input-inset border border-outline-variant rounded-lg bg-surface-bright p-3 flex items-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="location_on">location_on</span>
+<input class="w-full bg-transparent border-none p-0 focus:ring-0 font-body-md text-body-md text-on-surface" type="text" value="Station Tajrish, Track B, Platform 2"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Personnel Involved</label>
+<div class="input-inset border border-outline-variant rounded-lg bg-surface-bright p-3 flex items-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="badge">badge</span>
+<input class="w-full bg-transparent border-none p-0 focus:ring-0 font-body-md text-body-md text-on-surface" type="text" value="Driver Ali Rezaei (ID: 4402)"/>
+</div>
+</div>
+</div>
+<!-- AI Generated Summary -->
+<div class="space-y-2 pt-4 border-t border-outline-variant">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="auto_awesome">auto_awesome</span>
+                                    AI-Generated Summary
+                                </label>
+<button class="text-primary font-label-md text-label-md hover:underline flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-sm" data-icon="refresh">refresh</span> Regenerate
+                                </button>
+</div>
+<div class="input-inset border border-outline-variant rounded-lg bg-surface-bright p-4 transition-colors relative group">
+<textarea class="w-full bg-transparent border-none p-0 focus:ring-0 font-body-md text-body-md text-on-surface min-h-[160px] resize-none leading-relaxed">At 14:32, Driver Ali Rezaei reported a door obstruction on car 3 at Tajrish Station, Track B. The obstruction was identified as a passenger's bag. The driver attempted remote override which failed. Driver then proceeded to manually clear the obstruction. Total delay incurred: 4 minutes. Normal operations resumed at 14:36.</textarea>
+<div class="absolute inset-y-0 right-0 w-1 bg-primary rounded-r-lg opacity-50"></div>
+</div>
+</div>
+<!-- Required Action / Resolution -->
+<div class="space-y-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Suggested Resolution / Follow-up</label>
+<div class="input-inset border border-outline-variant rounded-lg bg-surface-bright p-3 transition-colors">
+<input class="w-full bg-transparent border-none p-0 focus:ring-0 font-body-md text-body-md text-on-surface" type="text" value="Schedule door mechanism inspection for Car 3 during next maintenance window."/>
+</div>
+</div>
+</form>
+</div>
+</div>
+<!-- Source Log Column (Right Area) -->
+<div class="flex-[2] border-r border-outline-variant bg-surface flex flex-col">
+<div class="p-4 border-b border-outline-variant bg-surface-container-low shrink-0">
+<h3 class="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="history_edu">history_edu</span>
+                        Source Log (OCC Chat)
+                    </h3>
+<p class="font-label-md text-label-md text-on-surface-variant mt-1">AI has highlighted entities used in the draft.</p>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-4 font-data-mono text-data-mono text-sm">
+<!-- Chat Bubble: OCC -->
+<div class="flex flex-col items-start max-w-[85%] mr-auto">
+<span class="text-xs text-on-surface-variant mb-1 font-body-md">OCC Command • 14:30:12</span>
+<div class="bg-surface-container p-3 rounded-lg rounded-tr-none border border-outline-variant text-on-surface leading-relaxed">
+                            Train 402, holding at Tajrish. Confirm status.
+                        </div>
+</div>
+<!-- Chat Bubble: Driver -->
+<div class="flex flex-col items-end max-w-[85%] ml-auto">
+<span class="text-xs text-on-surface-variant mb-1 font-body-md">Driver (4402) • 14:32:05</span>
+<div class="bg-inverse-surface text-inverse-on-surface p-3 rounded-lg rounded-tl-none leading-relaxed text-right">
+                            OCC, this is <span class="bg-primary-container text-on-primary-container px-1 rounded">Ali Rezaei</span>. We have a <span class="bg-primary-container text-on-primary-container px-1 rounded">door obstruction</span> on <span class="bg-tertiary-container text-on-tertiary-container px-1 rounded">car 3</span> at <span class="bg-secondary-container text-on-secondary-container px-1 rounded text-on-surface">Tajrish Station, Track B</span>.
+                        </div>
+</div>
+<!-- Chat Bubble: OCC -->
+<div class="flex flex-col items-start max-w-[85%] mr-auto">
+<span class="text-xs text-on-surface-variant mb-1 font-body-md">OCC Command • 14:32:15</span>
+<div class="bg-surface-container p-3 rounded-lg rounded-tr-none border border-outline-variant text-on-surface leading-relaxed">
+                            Copy that. Attempt remote override.
+                        </div>
+</div>
+<!-- Chat Bubble: Driver -->
+<div class="flex flex-col items-end max-w-[85%] ml-auto">
+<span class="text-xs text-on-surface-variant mb-1 font-body-md">Driver (4402) • 14:33:40</span>
+<div class="bg-inverse-surface text-inverse-on-surface p-3 rounded-lg rounded-tl-none leading-relaxed text-right">
+                            Remote override <span class="bg-error-container text-on-error-container px-1 rounded">failed</span>. It's a passenger's bag stuck. Proceeding to manually clear.
+                        </div>
+</div>
+<!-- Chat Bubble: Driver -->
+<div class="flex flex-col items-end max-w-[85%] ml-auto">
+<span class="text-xs text-on-surface-variant mb-1 font-body-md">Driver (4402) • 14:35:50</span>
+<div class="bg-inverse-surface text-inverse-on-surface p-3 rounded-lg rounded-tl-none leading-relaxed text-right">
+                            Obstruction cleared. Doors secured. Ready to depart.
+                        </div>
+</div>
+<!-- Chat Bubble: OCC -->
+<div class="flex flex-col items-start max-w-[85%] mr-auto">
+<span class="text-xs text-on-surface-variant mb-1 font-body-md">OCC Command • 14:36:00</span>
+<div class="bg-surface-container p-3 rounded-lg rounded-tr-none border border-outline-variant text-on-surface leading-relaxed">
+                            Confirmed. Proceed with <span class="bg-tertiary-container text-on-tertiary-container px-1 rounded">4 minutes</span> delay.
+                        </div>
+</div>
+</div>
+<!-- Legend -->
+<div class="p-4 border-t border-outline-variant bg-surface-container-lowest shrink-0 text-xs font-body-md flex flex-wrap gap-3">
+<span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-primary-container inline-block"></span> Personnel/Type</span>
+<span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-secondary-container inline-block"></span> Location</span>
+<span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-tertiary-container inline-block"></span> Details</span>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>سامانه ارتباطات خط ۱ - داشبورد بازخوردها</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "outline-variant": "#e7bdb7",
+                "on-surface-variant": "#5d3f3b",
+                "primary-fixed-dim": "#ffb4a9",
+                "on-tertiary": "#ffffff",
+                "on-background": "#191c1d",
+                "surface-container-high": "#e7e8e9",
+                "surface-tint": "#c00205",
+                "surface-dim": "#d9dadb",
+                "on-primary-fixed-variant": "#930002",
+                "on-primary-fixed": "#410000",
+                "on-secondary": "#ffffff",
+                "secondary": "#5f5e5e",
+                "on-tertiary-container": "#f7feff",
+                "surface-container-highest": "#e1e3e4",
+                "tertiary": "#5d5c5b",
+                "on-error": "#ffffff",
+                "on-primary-container": "#fffbff",
+                "on-surface": "#191c1d",
+                "secondary-fixed": "#e4e2e1",
+                "on-tertiary-fixed": "#1c1b1b",
+                "error-container": "#ffdad6",
+                "inverse-primary": "#ffb4a9",
+                "on-primary": "#ffffff",
+                "tertiary-fixed-dim": "#c8c6c5",
+                "error": "#ba1a1a",
+                "on-tertiary-fixed-variant": "#474646",
+                "tertiary-container": "#767474",
+                "outline": "#926f6a",
+                "surface-container": "#edeeef",
+                "background": "#f8f9fa",
+                "surface-container-lowest": "#ffffff",
+                "secondary-fixed-dim": "#c8c6c6",
+                "surface-container-low": "#f3f4f5",
+                "secondary-container": "#e4e2e1",
+                "surface": "#f8f9fa",
+                "on-secondary-fixed-variant": "#474747",
+                "on-secondary-fixed": "#1b1c1c",
+                "on-secondary-container": "#656464",
+                "inverse-on-surface": "#f0f1f2",
+                "tertiary-fixed": "#e5e2e1",
+                "on-error-container": "#93000a",
+                "inverse-surface": "#2e3132",
+                "surface-bright": "#f8f9fa",
+                "primary": "#bc0004",
+                "surface-variant": "#e1e3e4",
+                "primary-container": "#e1271c",
+                "primary-fixed": "#ffdad5"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "unit": "4px",
+                "touch-target-min": "48px",
+                "margin-mobile": "16px",
+                "margin-desktop": "32px",
+                "gutter": "16px"
+        },
+        "fontFamily": {
+                "data-mono": [
+                        "JetBrains Mono"
+                ],
+                "headline-lg-mobile": [
+                        "Vazirmatn"
+                ],
+                "body-lg": [
+                        "Vazirmatn"
+                ],
+                "headline-lg": [
+                        "Vazirmatn"
+                ],
+                "label-md": [
+                        "Vazirmatn"
+                ],
+                "headline-md": [
+                        "Vazirmatn"
+                ],
+                "body-md": [
+                        "Vazirmatn"
+                ]
+        },
+        "fontSize": {
+                "data-mono": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "36px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "48px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "36px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+  body {
+    font-family: 'Vazirmatn', sans-serif;
+  }
+</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col pb-safe">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline docked full-width top-0 sticky z-50 flex items-center justify-between px-margin-mobile h-touch-target-min w-full">
+<button class="text-primary dark:text-primary-fixed-dim hover:bg-surface-container-low transition-colors active:scale-95 duration-100 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md-mobile font-bold text-primary dark:text-primary-container">سامانه ارتباطات خط ۱</h1>
+<div class="h-8 w-8 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant flex-shrink-0">
+<img alt="Profile of Metro Personnel" class="w-full h-full object-cover" data-alt="A professional headshot of a Metro Line 1 male personnel member in his 30s. He is wearing a dark, industrial corporate uniform with a subtle red accent. The lighting is studio quality, high key, and creates a bright modern aesthetic with deep blacks and pristine whites. The mood is authoritative and precise." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxInhg0yfQU2SaiNy4zUfQ_FiDRebmDnp5t3dcXn9uNcINMJnw-f63GtMdX1NLqkZkMJZPF3JSREJf2z7Glt9G0vFwxnzqw83MsCPX8pMp0h01iIkvhqyGQpagHlCzOGZkt-TZwotInKxbNrwSBu5675hGppIVXuCLwV3M4NWd1czLSJ1ZZmYNDNBhMhbcqIkJA7Lade2-TbNOLEeY-gVAF3Cor3sLw4Mx0uxU2_gGtc8p_7-oBA_lproyS4e2ZL9tlHCEKE4pEif5"/>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow p-margin-mobile flex flex-col gap-gutter md:hidden pb-24">
+<div class="mb-4">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">داشبورد بازخوردها</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">خلاصه وضعیت گزارش‌های ارسالی شما</p>
+</div>
+<!-- Summary Cards -->
+<div class="grid grid-cols-3 gap-unit mb-6">
+<!-- Total Sent -->
+<div class="bg-surface-container-low border border-outline-variant rounded p-3 flex flex-col items-center justify-center text-center">
+<span class="material-symbols-outlined text-secondary mb-1" data-icon="send">send</span>
+<span class="font-headline-md text-headline-md text-on-surface font-bold">۲۴</span>
+<span class="font-label-md text-label-md text-on-surface-variant">کل ارسالی</span>
+</div>
+<!-- Under Review -->
+<div class="bg-primary-container border border-primary rounded p-3 flex flex-col items-center justify-center text-center shadow-sm">
+<span class="material-symbols-outlined text-on-primary-container mb-1" data-icon="pending">pending</span>
+<span class="font-headline-md text-headline-md text-on-primary-container font-bold">۵</span>
+<span class="font-label-md text-label-md text-on-primary-container">در حال بررسی</span>
+</div>
+<!-- Responded -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-3 flex flex-col items-center justify-center text-center">
+<span class="material-symbols-outlined text-tertiary mb-1" data-icon="check_circle">check_circle</span>
+<span class="font-headline-md text-headline-md text-on-surface font-bold">۱۹</span>
+<span class="font-label-md text-label-md text-on-surface-variant">پاسخ داده شده</span>
+</div>
+</div>
+<!-- Recent Feedback List -->
+<div class="flex flex-col gap-unit">
+<h3 class="font-label-md text-label-md text-on-surface font-bold mb-2 border-b border-outline-variant pb-1">آخرین پیگیری‌ها</h3>
+<!-- Item 1: In Progress -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 flex flex-col gap-2 rounded relative overflow-hidden">
+<div class="absolute right-0 top-0 bottom-0 w-1 bg-primary-container"></div>
+<div class="flex justify-between items-start w-full">
+<span class="bg-primary-container text-on-primary-container font-label-md text-label-md px-2 py-0.5 rounded text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="sync" style="font-variation-settings: 'FILL' 1;">sync</span>
+                در حال بررسی
+            </span>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-xs" dir="ltr">1402/08/15</span>
+</div>
+<h4 class="font-body-md text-body-md text-on-surface font-bold mt-1">نقص تهویه ایستگاه تجریش</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm truncate">سیستم تهویه سکوی جنوبی از ساعت ۰۸:۰۰ با افت فشار مواجه شده است و نیاز به...</p>
+</div>
+<!-- Item 2: Responded -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 flex flex-col gap-2 rounded relative overflow-hidden">
+<div class="absolute right-0 top-0 bottom-0 w-1 bg-secondary"></div>
+<div class="flex justify-between items-start w-full">
+<span class="bg-surface-container-highest text-on-surface font-label-md text-label-md px-2 py-0.5 rounded text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="done_all" style="font-variation-settings: 'FILL' 1;">done_all</span>
+                پاسخ داده شده
+            </span>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-xs" dir="ltr">1402/08/14</span>
+</div>
+<h4 class="font-body-md text-body-md text-on-surface font-bold mt-1">خرابی گیت ورود شماره ۳ میرداماد</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm truncate">کارتخوان گیت شماره ۳ خطای شبکه می‌دهد. ری‌استارت انجام شد اما...</p>
+</div>
+<!-- Item 3: Received -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 flex flex-col gap-2 rounded relative overflow-hidden">
+<div class="absolute right-0 top-0 bottom-0 w-1 bg-outline"></div>
+<div class="flex justify-between items-start w-full">
+<span class="bg-surface-container border border-outline-variant text-on-surface-variant font-label-md text-label-md px-2 py-0.5 rounded text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="inbox">inbox</span>
+                دریافت شده
+            </span>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-xs" dir="ltr">1402/08/12</span>
+</div>
+<h4 class="font-body-md text-body-md text-on-surface font-bold mt-1">درخواست تجهیزات روشنایی تونل</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm truncate">برای بخش میانی تونل بین ایستگاه مصلی و بهشتی نیاز به ۱۰ عدد لامپ...</p>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center h-16 px-margin-mobile pb-safe bg-surface dark:bg-inverse-surface border-t border-outline-variant dark:border-outline md:hidden">
+<button class="flex flex-col items-center justify-center bg-primary-container dark:bg-on-primary-fixed-variant text-on-primary-container dark:text-primary-fixed rounded-full px-spacing-gutter py-1 hover:bg-surface-container-highest transition-all active:inner-shadow-sm duration-75 min-w-[64px]">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md text-[10px] mt-1 text-primary font-bold">داشبورد</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-secondary-fixed-dim hover:bg-surface-container-highest transition-all active:inner-shadow-sm duration-75 min-w-[64px] px-2 py-1 rounded">
+<span class="material-symbols-outlined" data-icon="add_comment">add_comment</span>
+<span class="font-label-md text-label-md text-[10px] mt-1">ثبت بازخورد</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-secondary-fixed-dim hover:bg-surface-container-highest transition-all active:inner-shadow-sm duration-75 min-w-[64px] px-2 py-1 rounded">
+<span class="material-symbols-outlined" data-icon="track_changes">track_changes</span>
+<span class="font-label-md text-label-md text-[10px] mt-1">پیگیری</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-secondary-fixed-dim hover:bg-surface-container-highest transition-all active:inner-shadow-sm duration-75 min-w-[64px] px-2 py-1 rounded">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md text-[10px] mt-1">تنظیمات</span>
+</button>
+</nav>
+</body></html>

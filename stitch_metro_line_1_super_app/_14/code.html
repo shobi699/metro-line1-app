@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ارسال بازخورد - خط ۱ مترو تهران</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-container": "#f7feff",
+                      "tertiary": "#5d5c5b",
+                      "surface-tint": "#c00205",
+                      "surface-container-highest": "#e1e3e4",
+                      "error": "#ba1a1a",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-container": "#656464",
+                      "surface": "#f8f9fa",
+                      "on-surface-variant": "#5d3f3b",
+                      "on-primary-fixed": "#410000",
+                      "inverse-on-surface": "#f0f1f2",
+                      "tertiary-container": "#767474",
+                      "surface-container": "#edeeef",
+                      "surface-bright": "#f8f9fa",
+                      "inverse-surface": "#2e3132",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "background": "#f8f9fa",
+                      "inverse-primary": "#ffb4a9",
+                      "outline": "#926f6a",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "secondary-container": "#e4e2e1",
+                      "on-secondary-fixed-variant": "#474747",
+                      "on-surface": "#191c1d",
+                      "on-background": "#191c1d",
+                      "primary-fixed-dim": "#ffb4a9",
+                      "on-primary-fixed-variant": "#930002",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "tertiary-fixed": "#e5e2e1",
+                      "surface-container-high": "#e7e8e9",
+                      "surface-dim": "#d9dadb",
+                      "primary-fixed": "#ffdad5",
+                      "on-error-container": "#93000a",
+                      "primary": "#bc0004",
+                      "on-primary": "#ffffff",
+                      "outline-variant": "#e7bdb7",
+                      "secondary": "#5f5e5e",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "on-primary-container": "#fffbff",
+                      "surface-variant": "#e1e3e4",
+                      "on-secondary": "#ffffff",
+                      "surface-container-low": "#f3f4f5",
+                      "on-error": "#ffffff",
+                      "error-container": "#ffdad6",
+                      "primary-container": "#e1271c",
+                      "secondary-fixed": "#e4e2e1"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "margin-mobile": "16px",
+                      "gutter": "16px",
+                      "touch-target-min": "48px",
+                      "margin-desktop": "32px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Vazirmatn"
+                      ],
+                      "label-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg-mobile": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg": [
+                              "Vazirmatn"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "body-lg": [
+                              "Vazirmatn"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "48px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "data-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col md:flex-row">
+<!-- TopAppBar (Mobile & Desktop) -->
+<header class="bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline flex flex-row-reverse justify-between items-center w-full px-margin-mobile h-touch-target-min fixed top-0 z-50 md:hidden md:w-auto md:relative md:border-none md:px-margin-desktop shadow-sm">
+<div class="font-headline-md text-headline-md-mobile md:text-headline-lg md:font-headline-lg font-bold text-primary dark:text-primary-fixed">
+            سامانه ارتباطی خط ۱
+        </div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95 duration-100">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95 duration-100">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex flex-col h-screen bg-surface border-l border-outline-variant w-64 fixed right-0 top-0 z-40 overflow-y-auto pt-touch-target-min">
+<div class="p-gutter border-b border-outline-variant flex flex-col items-center">
+<div class="w-20 h-20 bg-surface-container-highest rounded-full flex items-center justify-center mb-unit shadow-sm border border-outline-variant">
+<span class="material-symbols-outlined filled text-4xl text-on-surface-variant">account_circle</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-primary mt-2">پنل پرسنلی</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">خط ۱ مترو تهران</p>
+</div>
+<ul class="flex-1 py-gutter px-2 space-y-1">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">mail</span>
+<span class="font-body-md text-body-md">پیام‌های مستقیم</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary-container bg-primary-container font-bold active:scale-98 transition-transform shadow-inner" href="#">
+<span class="material-symbols-outlined filled">lightbulb</span>
+<span class="font-body-md text-body-md">پیشنهادات</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">report_problem</span>
+<span class="font-body-md text-body-md">شکایات</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">verified</span>
+<span class="font-body-md text-body-md">تقدیر و تشکر</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">security</span>
+<span class="font-body-md text-body-md">تنظیمات امنیتی</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 mt-[48px] mb-[64px] md:mt-0 md:mb-0 md:mr-64 p-margin-mobile md:p-margin-desktop bg-background overflow-y-auto">
+<div class="max-w-4xl mx-auto space-y-gutter md:space-y-6">
+<header class="mb-8 border-b border-outline-variant pb-4">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface font-bold">ارتباط مستقیم با مدیریت</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2 max-w-2xl">
+                    ارسال بازخورد، انتقاد، پیشنهاد یا تقدیر به صورت امن و در صورت تمایل، کاملا ناشناس. نظرات شما در بهبود عملکرد خط ۱ نقش کلیدی دارد.
+                </p>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Form Container -->
+<div class="lg:col-span-2 bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-margin-mobile md:p-6 flex flex-col gap-6">
+<!-- Category Selector -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-2">نوع پیام</label>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+<label class="cursor-pointer">
+<input checked="" class="peer sr-only" name="category" type="radio" value="suggestion"/>
+<div class="p-3 border border-outline-variant rounded-lg text-center peer-checked:bg-primary-container peer-checked:text-on-primary-container peer-checked:border-primary peer-checked:font-bold hover:bg-surface-container-low transition-colors h-full flex flex-col items-center justify-center gap-1">
+<span class="material-symbols-outlined text-lg">lightbulb</span>
+<span class="font-label-md text-label-md">پیشنهاد</span>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="category" type="radio" value="criticism"/>
+<div class="p-3 border border-outline-variant rounded-lg text-center peer-checked:bg-primary-container peer-checked:text-on-primary-container peer-checked:border-primary peer-checked:font-bold hover:bg-surface-container-low transition-colors h-full flex flex-col items-center justify-center gap-1">
+<span class="material-symbols-outlined text-lg">feedback</span>
+<span class="font-label-md text-label-md">انتقاد</span>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="category" type="radio" value="complaint"/>
+<div class="p-3 border border-outline-variant rounded-lg text-center peer-checked:bg-error-container peer-checked:text-on-error-container peer-checked:border-error peer-checked:font-bold hover:bg-surface-container-low transition-colors h-full flex flex-col items-center justify-center gap-1">
+<span class="material-symbols-outlined text-lg">report_problem</span>
+<span class="font-label-md text-label-md">شکایت</span>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="category" type="radio" value="appreciation"/>
+<div class="p-3 border border-outline-variant rounded-lg text-center peer-checked:bg-secondary-container peer-checked:text-on-secondary-container peer-checked:border-secondary peer-checked:font-bold hover:bg-surface-container-low transition-colors h-full flex flex-col items-center justify-center gap-1">
+<span class="material-symbols-outlined text-lg">verified</span>
+<span class="font-label-md text-label-md">تقدیر</span>
+</div>
+</label>
+</div>
+</div>
+<!-- Message Body -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-2" for="message_body">متن پیام <span class="text-error">*</span></label>
+<textarea class="w-full bg-surface border border-outline-variant rounded-lg p-3 font-body-md text-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary resize-y" id="message_body" placeholder="جزئیات پیام خود را با دقت و اختصار بیان کنید..." rows="6"></textarea>
+</div>
+<!-- Attachments -->
+<div>
+<span class="block font-label-md text-label-md text-on-surface mb-2">مستندات (اختیاری)</span>
+<div class="border-2 border-dashed border-outline-variant rounded-lg p-6 flex flex-col items-center justify-center bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer group">
+<div class="w-12 h-12 bg-surface-container-highest rounded-full flex items-center justify-center mb-2 group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined text-2xl">attach_file</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-center">برای افزودن عکس یا فایل، اینجا کلیک کنید یا فایل را بکشید.</p>
+<p class="font-label-md text-label-md text-secondary mt-1 text-xs">حداکثر حجم: ۵ مگابایت (JPG, PNG, PDF)</p>
+</div>
+</div>
+<!-- Anonymous Toggle -->
+<div class="flex items-start bg-surface p-4 rounded-lg border border-outline-variant">
+<div class="flex items-center h-6">
+<input class="w-5 h-5 text-primary bg-surface-container-lowest border-outline-variant rounded focus:ring-primary focus:ring-2" id="anonymous" type="checkbox"/>
+</div>
+<div class="mr-3 text-sm">
+<label class="font-label-md text-label-md text-on-surface font-bold cursor-pointer" for="anonymous">ارسال به صورت ناشناس</label>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1 text-sm" id="anonymous-description">
+                                با انتخاب این گزینه، هویت شما (نام و کد پرسنلی) ضمیمه پیام نخواهد شد. ما برای گزارش‌های حساس، امنیت شغلی شما را تضمین می‌کنیم.
+                            </p>
+</div>
+</div>
+<!-- Actions -->
+<div class="pt-4 border-t border-outline-variant flex justify-end gap-4 mt-auto">
+<button class="px-6 py-2 border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high transition-colors focus:ring-2 focus:ring-secondary" type="button">
+                            انصراف
+                        </button>
+<button class="px-6 py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md shadow-sm hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-2 active:shadow-inner active:scale-95 duration-100 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background" type="button">
+<span class="material-symbols-outlined text-sm">send</span>
+                            ارسال پیام
+                        </button>
+</div>
+</div>
+<!-- Info Panel -->
+<div class="lg:col-span-1 space-y-6">
+<!-- Commitment Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-5 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-full h-1 bg-primary"></div>
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary text-2xl filled">security</span>
+<h3 class="font-label-md text-label-md text-on-surface font-bold">تعهد ما به حریم خصوصی</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm leading-relaxed mb-4">
+                            ارتباطات ثبت شده در این سامانه مستقیماً به دست مدیریت ارشد خط ۱ می‌رسد. در صورت انتخاب حالت ناشناس، هیچ ردپای دیجیتالی از هویت ارسال‌کننده در دیتابیس ثبت نمی‌گردد.
+                        </p>
+<div class="flex items-center gap-2 text-xs font-label-md text-label-md text-secondary">
+<span class="material-symbols-outlined text-[16px]">lock</span>
+<span>رمزنگاری سراسری ۲۵۶-بیتی فعال است</span>
+</div>
+</div>
+<!-- FAQ Accordion (Static Representation) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-5">
+<h3 class="font-label-md text-label-md text-on-surface font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">help</span>
+                            سوالات متداول
+                        </h3>
+<div class="space-y-3">
+<div class="border-b border-outline-variant pb-3">
+<h4 class="font-label-md text-label-md text-on-surface text-sm mb-1 cursor-pointer hover:text-primary transition-colors flex justify-between items-center">
+                                    زمان پاسخگویی چقدر است؟
+                                    <span class="material-symbols-outlined text-sm">expand_more</span>
+</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-xs mt-1">معمولا بین ۲۴ تا ۷۲ ساعت کاری، پیام‌ها بررسی و ارجاع داده می‌شوند.</p>
+</div>
+<div class="border-b border-outline-variant pb-3">
+<h4 class="font-label-md text-label-md text-on-surface text-sm mb-1 cursor-pointer hover:text-primary transition-colors flex justify-between items-center">
+                                    چگونه نتیجه را پیگیری کنم؟
+                                    <span class="material-symbols-outlined text-sm">expand_more</span>
+</h4>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface text-sm mb-1 cursor-pointer hover:text-primary transition-colors flex justify-between items-center">
+                                    آیا واقعا ناشناس است؟
+                                    <span class="material-symbols-outlined text-sm">expand_more</span>
+</h4>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden bg-surface-container-lowest dark:bg-inverse-surface border-t border-outline-variant dark:border-outline bg-surface-container-lowest shadow-lg fixed bottom-0 w-full z-50 rounded-t-xl fixed bottom-0 left-0 w-full flex flex-row-reverse justify-around items-center px-4 py-2">
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high dark:hover:bg-secondary-container active:inner-shadow transition-all duration-150 p-2 rounded-lg" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">dashboard</span>
+<span class="font-label-md text-label-md text-[10px]">داشبورد</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:inner-shadow transition-all duration-150" href="#">
+<span class="material-symbols-outlined filled text-2xl mb-1">add_comment</span>
+<span class="font-label-md text-label-md text-[10px] font-bold">ارسال پیام</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high dark:hover:bg-secondary-container active:inner-shadow transition-all duration-150 p-2 rounded-lg" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">track_changes</span>
+<span class="font-label-md text-label-md text-[10px]">پیگیری</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high dark:hover:bg-secondary-container active:inner-shadow transition-all duration-150 p-2 rounded-lg" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">account_circle</span>
+<span class="font-label-md text-label-md text-[10px]">پروفایل</span>
+</a>
+</nav>
+</body></html>

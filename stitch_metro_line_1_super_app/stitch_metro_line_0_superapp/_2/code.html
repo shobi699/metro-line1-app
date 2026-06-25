@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>برنامه شیفت | خط‌ یار</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed-dim": "#ffb3ac",
+                    "surface-dim": "#d8dadd",
+                    "secondary-container": "#fcd400",
+                    "on-primary-container": "#9bbdff",
+                    "primary-fixed": "#d7e2ff",
+                    "on-primary-fixed-variant": "#00458f",
+                    "tertiary": "#720009",
+                    "secondary": "#705d00",
+                    "surface-container": "#eceef1",
+                    "on-tertiary-fixed": "#410003",
+                    "inverse-on-surface": "#eff1f4",
+                    "surface-container-highest": "#e0e3e6",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-container": "#9d0011",
+                    "surface": "#f7f9fc",
+                    "on-error-container": "#93000a",
+                    "surface-bright": "#f7f9fc",
+                    "surface-container-low": "#f2f4f7",
+                    "on-secondary-fixed-variant": "#544600",
+                    "surface-variant": "#e0e3e6",
+                    "outline-variant": "#c2c6d3",
+                    "on-surface": "#191c1e",
+                    "primary-fixed-dim": "#abc7ff",
+                    "on-surface-variant": "#424751",
+                    "on-tertiary-container": "#ffa59d",
+                    "on-secondary-container": "#6e5c00",
+                    "on-secondary": "#ffffff",
+                    "primary-container": "#004a99",
+                    "secondary-fixed-dim": "#e9c400",
+                    "on-background": "#191c1e",
+                    "inverse-surface": "#2d3133",
+                    "on-primary-fixed": "#001b3f",
+                    "tertiary-fixed": "#ffdad6",
+                    "error": "#ba1a1a",
+                    "error-container": "#ffdad6",
+                    "surface-container-high": "#e6e8eb",
+                    "on-primary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed": "#221b00",
+                    "on-tertiary-fixed-variant": "#930010",
+                    "background": "#f7f9fc",
+                    "inverse-primary": "#abc7ff",
+                    "surface-tint": "#255dad",
+                    "outline": "#737783",
+                    "primary": "#00346f",
+                    "secondary-fixed": "#ffe16d",
+                    "on-tertiary": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "16px",
+                    "unit": "4px",
+                    "md": "16px",
+                    "xl": "32px",
+                    "lg": "24px",
+                    "sm": "8px",
+                    "margin-desktop": "32px",
+                    "xs": "4px",
+                    "margin-mobile": "16px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Vazirmatn"],
+                    "data-mono": ["JetBrains Mono"],
+                    "headline-md": ["Vazirmatn"],
+                    "headline-lg": ["Vazirmatn"],
+                    "headline-lg-mobile": ["Vazirmatn"],
+                    "body-md": ["Vazirmatn"],
+                    "label-md": ["Vazirmatn"],
+                    "display-lg": ["Vazirmatn"]
+            },
+            "fontSize": {
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "data-mono": ["14px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["26px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "display-lg": ["48px", {"lineHeight": "1.2", "fontWeight": "700"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&display=swap');
+        
+        body { font-family: 'Vazirmatn', sans-serif; }
+        .data-font { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Grid setup for fixed operational dashboard */
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Calendar specific layout */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 1px;
+            background-color: theme('colors.outline-variant');
+            border: 1px solid theme('colors.outline-variant');
+        }
+        .calendar-cell {
+            background-color: theme('colors.surface');
+            min-height: 100px;
+            padding: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .calendar-cell:hover {
+            background-color: theme('colors.surface-container-low');
+        }
+        .calendar-cell.active-day {
+            background-color: theme('colors.primary-fixed');
+            border: 2px solid theme('colors.primary');
+        }
+        
+        /* Interactive styling */
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 right-64 z-50 flex justify-between items-center px-margin-desktop h-16 border-b border-outline-variant bg-surface">
+<div class="flex items-center gap-4">
+<h1 class="font-headline-md text-headline-md font-black text-primary">خط‌ یار</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="text-on-surface-variant hover:bg-surface-container rounded-full p-2 transition-transform active:scale-95 flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container rounded-full p-2 transition-transform active:scale-95 flex items-center justify-center text-error">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">emergency_home</span>
+</button>
+<div class="w-px h-8 bg-outline-variant mx-2"></div>
+<button class="flex items-center gap-2 text-on-surface-variant hover:bg-surface-container rounded-full p-1 pl-4 transition-transform active:scale-95 border border-outline-variant">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="Professional portrait of a male train operator in his 40s, wearing a crisp dark blue uniform with a subtle transit authority badge. High key lighting, clean modern aesthetic, sharp focus. Shot in a bright, neutral studio environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3244veUVXEBbZpyuhUGR4Tfiwqz89pr1t22vE2hcG8b7z2cFyOvqY0bLojYPBOGVKn_UfiNtjErzoZDyGhNmACjVwGR6HvMOjkDOIUfYnY2riwMXa4j7JLvcm6zo19szf2em8oFy1aICOYewLqk1mimVRSGkYpemGGE6dmKpxjJGHHTAEtFm9rvl1g-IgDG77c7pZeDpeAKU9FpyQbCJ5Kt65HczZBTD7PaHG3JO6zfH0fuWBnJ6UucJ87cN32hPfzH9TbvmndSM"/>
+<span class="font-label-md text-label-md text-on-surface">علیرضا محمدی</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed right-0 top-0 border-l border-outline-variant bg-surface-container-low flex flex-col z-40">
+<!-- Header area inside nav (optional based on JSON, but keeping structural space) -->
+<div class="p-6 border-b border-outline-variant/50">
+<div class="font-headline-md text-headline-md font-bold text-primary mb-1">خط‌ یار</div>
+<div class="font-label-md text-label-md text-on-surface-variant">سیستم مدیریت مترو</div>
+</div>
+<div class="flex-1 overflow-y-auto py-4 flex flex-col gap-1 px-3">
+<!-- Inactive Tab -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-body-md text-body-md rtl" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>داشبورد</span>
+</a>
+<!-- Inactive Tab -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-body-md text-body-md rtl" href="#">
+<span class="material-symbols-outlined">contacts</span>
+<span>فهرست کارکنان</span>
+</a>
+<!-- ACTIVE TAB -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-bold border-r-4 border-primary bg-primary-container/10 transition-colors font-body-md text-body-md rtl opacity-80 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
+<span>برنامه شیفت</span>
+</a>
+<!-- Inactive Tab -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-body-md text-body-md rtl" href="#">
+<span class="material-symbols-outlined">school</span>
+<span>آموزش</span>
+</a>
+<!-- Inactive Tab -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-body-md text-body-md rtl" href="#">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+<span>پنل مدیریت</span>
+</a>
+</div>
+<div class="p-4 border-t border-outline-variant/50">
+<button class="w-full bg-primary text-on-primary py-2 px-4 rounded-lg font-label-md text-label-md hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">report</span>
+                گزارش وضعیت
+            </button>
+<div class="flex flex-col gap-1 mt-4">
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+                    تنظیمات
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-error hover:bg-error-container transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+                    خروج
+                </a>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="pt-24 pr-72 pl-margin-desktop pb-12">
+<div class="app-grid">
+<!-- Header Section -->
+<div class="col-span-12 flex justify-between items-end mb-4 border-b border-outline-variant pb-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">برنامه شیفت (لوحه)</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">شیفت‌های تخصیص یافته برای ماه جاری - آبان ۱۴۰۳</p>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant">
+<span class="w-3 h-3 rounded-full bg-primary-container inline-block border border-outline-variant"></span>
+                        صبح
+                    </div>
+<div class="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant">
+<span class="w-3 h-3 rounded-full bg-secondary-container inline-block border border-outline-variant"></span>
+                        عصر
+                    </div>
+<div class="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant">
+<span class="w-3 h-3 rounded-full bg-surface-container-highest inline-block border border-outline-variant"></span>
+                        استراحت
+                    </div>
+</div>
+</div>
+<!-- Calendar Area (Left/Main Column) -->
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-4">
+<!-- Calendar Controls -->
+<div class="flex justify-between items-center bg-surface border border-outline-variant p-4 rounded-xl">
+<button class="p-2 border border-outline-variant rounded hover:bg-surface-container-low transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+<div class="font-headline-md text-headline-md font-bold">آبان ۱۴۰۳</div>
+<button class="p-2 border border-outline-variant rounded hover:bg-surface-container-low transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+</div>
+<!-- The Calendar Grid -->
+<div class="rounded-xl overflow-hidden border border-outline-variant">
+<!-- Days Header -->
+<div class="grid grid-cols-7 bg-surface-container text-center py-3 font-label-md text-label-md font-bold text-on-surface border-b border-outline-variant">
+<div>شنبه</div>
+<div>یکشنبه</div>
+<div>دوشنبه</div>
+<div>سه‌شنبه</div>
+<div>چهارشنبه</div>
+<div>پنجشنبه</div>
+<div class="text-error">جمعه</div>
+</div>
+<!-- Days Grid (Mock data for November 2024 / Aban 1403) -->
+<div class="calendar-grid font-body-md text-body-md">
+<!-- Empty cells for start of month -->
+<div class="calendar-cell bg-surface-container-lowest opacity-50"></div>
+<div class="calendar-cell bg-surface-container-lowest opacity-50"></div>
+<div class="calendar-cell bg-surface-container-lowest opacity-50"></div>
+<!-- Day 1: Morning -->
+<div class="calendar-cell" onclick="selectDay(this, 1)">
+<div class="font-bold mb-2">۱</div>
+<div class="status-chip bg-primary-container text-on-primary-container border border-outline-variant/20 w-full justify-between">
+                                صبح <span class="material-symbols-outlined text-[14px]">train</span>
+</div>
+</div>
+<!-- Day 2: Morning -->
+<div class="calendar-cell" onclick="selectDay(this, 2)">
+<div class="font-bold mb-2">۲</div>
+<div class="status-chip bg-primary-container text-on-primary-container border border-outline-variant/20 w-full justify-between">
+                                صبح <span class="material-symbols-outlined text-[14px]">train</span>
+</div>
+</div>
+<!-- Day 3: Afternoon -->
+<div class="calendar-cell" onclick="selectDay(this, 3)">
+<div class="font-bold mb-2">۳</div>
+<div class="status-chip bg-secondary-container text-on-secondary-container border border-outline-variant/20 w-full justify-between">
+                                عصر <span class="material-symbols-outlined text-[14px]">subway</span>
+</div>
+</div>
+<!-- Day 4: Off (Friday) -->
+<div class="calendar-cell bg-error-container/10" onclick="selectDay(this, 4)">
+<div class="font-bold mb-2 text-error">۴</div>
+<div class="status-chip bg-surface-container-highest text-on-surface-variant border border-outline-variant/20 w-full justify-between">
+                                استراحت <span class="material-symbols-outlined text-[14px]">weekend</span>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="calendar-cell active-day" onclick="selectDay(this, 5)">
+<div class="font-bold mb-2">۵</div>
+<div class="status-chip bg-primary-container text-on-primary-container border border-outline-variant/20 w-full justify-between">
+                                صبح <span class="material-symbols-outlined text-[14px]">train</span>
+</div>
+</div>
+<div class="calendar-cell" onclick="selectDay(this, 6)">
+<div class="font-bold mb-2">۶</div>
+<div class="status-chip bg-primary-container text-on-primary-container border border-outline-variant/20 w-full justify-between">
+                                صبح <span class="material-symbols-outlined text-[14px]">train</span>
+</div>
+</div>
+<div class="calendar-cell" onclick="selectDay(this, 7)">
+<div class="font-bold mb-2">۷</div>
+<div class="status-chip bg-secondary-container text-on-secondary-container border border-outline-variant/20 w-full justify-between">
+                                عصر <span class="material-symbols-outlined text-[14px]">subway</span>
+</div>
+</div>
+<div class="calendar-cell" onclick="selectDay(this, 8)">
+<div class="font-bold mb-2">۸</div>
+<div class="status-chip bg-surface-container-highest text-on-surface-variant border border-outline-variant/20 w-full justify-between">
+                                استراحت <span class="material-symbols-outlined text-[14px]">weekend</span>
+</div>
+</div>
+<div class="calendar-cell" onclick="selectDay(this, 9)">
+<div class="font-bold mb-2">۹</div>
+<div class="status-chip bg-surface-container-highest text-on-surface-variant border border-outline-variant/20 w-full justify-between">
+                                استراحت <span class="material-symbols-outlined text-[14px]">weekend</span>
+</div>
+</div>
+<div class="calendar-cell" onclick="selectDay(this, 10)">
+<div class="font-bold mb-2">۱۰</div>
+<div class="status-chip bg-primary-container text-on-primary-container border border-outline-variant/20 w-full justify-between">
+                                صبح <span class="material-symbols-outlined text-[14px]">train</span>
+</div>
+</div>
+<div class="calendar-cell bg-error-container/10" onclick="selectDay(this, 11)">
+<div class="font-bold mb-2 text-error">۱۱</div>
+<div class="status-chip bg-primary-container text-on-primary-container border border-outline-variant/20 w-full justify-between">
+                                صبح <span class="material-symbols-outlined text-[14px]">train</span>
+</div>
+</div>
+<!-- Filling rest of the grid visually for completeness, minimal interaction -->
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۱۲</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۱۳</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۱۴</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۱۵</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۱۶</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۱۷</div></div>
+<div class="calendar-cell opacity-60 bg-error-container/10"><div class="font-bold mb-2 text-error">۱۸</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۱۹</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۲۰</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۲۱</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۲۲</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۲۳</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۲۴</div></div>
+<div class="calendar-cell opacity-60 bg-error-container/10"><div class="font-bold mb-2 text-error">۲۵</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۲۶</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۲۷</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۲۸</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۲۹</div></div>
+<div class="calendar-cell opacity-60"><div class="font-bold mb-2">۳۰</div></div>
+<!-- Empty cells end of month -->
+<div class="calendar-cell bg-surface-container-lowest opacity-50"></div>
+<div class="calendar-cell bg-surface-container-lowest opacity-50"></div>
+</div>
+</div>
+</div>
+<!-- Sidebar Area (Right/Secondary Column) -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+<!-- Shift Details Panel -->
+<div class="bg-surface border border-outline-variant rounded-xl p-6 flex flex-col gap-6">
+<div class="flex justify-between items-center pb-4 border-b border-outline-variant">
+<h3 class="font-headline-md text-headline-md text-on-surface">جزئیات شیفت</h3>
+<div class="font-label-md text-label-md bg-surface-container px-3 py-1 rounded-md border border-outline-variant">
+                            ۵ آبان ۱۴۰۳
+                        </div>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Data Row -->
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">schedule</span> ساعت کاری
+                            </span>
+<span class="font-data-mono text-data-mono text-on-surface font-bold bg-surface-container px-2 py-1 rounded">05:30 - 14:00</span>
+</div>
+<!-- Data Row -->
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">directions_subway</span> قطار تخصیصی
+                            </span>
+<span class="font-label-md text-label-md text-on-surface border border-outline-variant px-3 py-1 rounded-[4px] bg-surface">TRN-104</span>
+</div>
+<!-- Data Row -->
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">location_on</span> ایستگاه مبدأ
+                            </span>
+<span class="font-label-md text-label-md text-on-surface">تجریش (خط ۱)</span>
+</div>
+<!-- Data Row -->
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">work</span> نوع شیفت
+                            </span>
+<span class="status-chip bg-primary-container text-on-primary-container">
+                                شیفت صبح
+                            </span>
+</div>
+</div>
+<div class="mt-2 pt-4 border-t border-outline-variant">
+<button class="w-full flex justify-center items-center gap-2 py-3 border-2 border-outline-variant rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container transition-colors focus:ring-2 focus:ring-primary focus:outline-none">
+<span class="material-symbols-outlined">swap_horiz</span>
+                            درخواست جابجایی شیفت
+                        </button>
+</div>
+</div>
+<!-- Notices Section -->
+<div class="bg-surface border border-outline-variant rounded-xl p-0 overflow-hidden flex flex-col h-full">
+<div class="p-4 bg-surface-container-low border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">campaign</span>
+                            ابلاغیه‌ها
+                        </h3>
+<span class="bg-error text-on-error font-data-mono text-[12px] px-2 py-0.5 rounded-full">2 جدید</span>
+</div>
+<div class="flex flex-col overflow-y-auto max-h-[300px]">
+<!-- Notice Item (Unread) -->
+<div class="p-4 border-b border-outline-variant/50 hover:bg-surface-container-lowest transition-colors bg-surface relative notice-item">
+<div class="absolute right-0 top-0 bottom-0 w-1 bg-secondary"></div>
+<div class="flex justify-between items-start mb-2 pl-2">
+<h4 class="font-label-md text-label-md font-bold text-on-surface pr-3">تغییر زمان‌بندی قطارهای تندرو</h4>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-[12px]">1403/08/02</span>
+</div>
+<p class="font-body-md text-[14px] text-on-surface-variant leading-relaxed pr-3 mb-3">
+                                به اطلاع می‌رساند زمان توقف قطارهای تندرو در ایستگاه شهید بهشتی به مدت ۳۰ ثانیه افزایش یافته است.
+                            </p>
+<div class="flex justify-end pl-2">
+<button class="flex items-center gap-1 font-label-md text-[12px] text-primary hover:bg-primary-container/20 px-2 py-1 rounded transition-colors" onclick="markAsSeen(this)">
+<span class="material-symbols-outlined text-[16px]">done_all</span>
+                                    ثبت رؤیت
+                                </button>
+</div>
+</div>
+<!-- Notice Item (Unread) -->
+<div class="p-4 border-b border-outline-variant/50 hover:bg-surface-container-lowest transition-colors bg-surface relative notice-item">
+<div class="absolute right-0 top-0 bottom-0 w-1 bg-error"></div>
+<div class="flex justify-between items-start mb-2 pl-2">
+<h4 class="font-label-md text-label-md font-bold text-on-surface pr-3">الزام استفاده از تجهیزات ایمنی</h4>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-[12px]">1403/08/01</span>
+</div>
+<p class="font-body-md text-[14px] text-on-surface-variant leading-relaxed pr-3 mb-3">
+                                استفاده از جلیقه بازتابنده در محیط‌های دپو و پارکینگ الزامی است. با متخلفین برخورد خواهد شد.
+                            </p>
+<div class="flex justify-end pl-2">
+<button class="flex items-center gap-1 font-label-md text-[12px] text-primary hover:bg-primary-container/20 px-2 py-1 rounded transition-colors" onclick="markAsSeen(this)">
+<span class="material-symbols-outlined text-[16px]">done_all</span>
+                                    ثبت رؤیت
+                                </button>
+</div>
+</div>
+<!-- Notice Item (Read) -->
+<div class="p-4 bg-surface-container-low opacity-70">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-label-md text-label-md text-on-surface line-through">تعمیرات خط ۴ در روز جمعه</h4>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-[12px]">1403/07/28</span>
+</div>
+<div class="flex justify-end">
+<span class="flex items-center gap-1 font-label-md text-[12px] text-outline">
+<span class="material-symbols-outlined text-[16px]">check</span>
+                                    رؤیت شده
+                                </span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple interaction script
+        function selectDay(element, day) {
+            // Remove active class from all cells
+            document.querySelectorAll('.calendar-cell').forEach(el => {
+                el.classList.remove('active-day');
+            });
+            // Add active class to clicked cell
+            element.classList.add('active-day');
+            
+            // In a real app, this would update the right panel details based on the selected day.
+        }
+
+        function markAsSeen(button) {
+            const noticeItem = button.closest('.notice-item');
+            
+            // Visual transition
+            noticeItem.style.transition = "all 0.3s ease";
+            noticeItem.style.opacity = "0.6";
+            noticeItem.style.backgroundColor = "theme('colors.surface-container-low')";
+            
+            // Remove highlight bar
+            const highlightBar = noticeItem.querySelector('.absolute');
+            if(highlightBar) highlightBar.style.display = 'none';
+
+            // Change button to text
+            const btnContainer = button.parentElement;
+            btnContainer.innerHTML = `
+                <span class="flex items-center gap-1 font-label-md text-[12px] text-outline">
+                    <span class="material-symbols-outlined text-[16px]">check</span>
+                    رؤیت شده
+                </span>
+            `;
+            
+            // Strike through title
+            const title = noticeItem.querySelector('h4');
+            title.classList.add('line-through', 'text-on-surface-variant');
+            title.classList.remove('font-bold', 'text-on-surface');
+        }
+    </script>
+</body></html>

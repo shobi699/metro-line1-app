@@ -4,6 +4,8 @@ export interface AccessTokenPayload extends JWTPayload {
   sub: string
   nationalId: string
   roleKey: string
+  rank: number
+  permissions: string[]
 }
 
 export interface RefreshTokenPayload extends JWTPayload {
@@ -30,8 +32,10 @@ export async function issueAccessToken(
   userId: string,
   nationalId: string,
   roleKey: string,
+  rank: number,
+  permissions: string[],
 ): Promise<string> {
-  return new SignJWT({ sub: userId, nationalId, roleKey })
+  return new SignJWT({ sub: userId, nationalId, roleKey, rank, permissions })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(ACCESS_EXPIRY)

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>پخش‌کننده ویدئو</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary": "#ffffff",
+                      "inverse-surface": "#2e3132",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "on-secondary-container": "#656464",
+                      "error": "#ba1a1a",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "on-tertiary-container": "#f7feff",
+                      "on-error-container": "#93000a",
+                      "surface-container": "#edeeef",
+                      "surface-container-highest": "#e1e3e4",
+                      "surface-container-high": "#e7e8e9",
+                      "on-secondary": "#ffffff",
+                      "on-surface": "#191c1d",
+                      "tertiary-container": "#767474",
+                      "on-background": "#191c1d",
+                      "inverse-on-surface": "#f0f1f2",
+                      "tertiary": "#5d5c5b",
+                      "surface-bright": "#f8f9fa",
+                      "secondary-fixed": "#e4e2e1",
+                      "on-error": "#ffffff",
+                      "inverse-primary": "#ffb4a9",
+                      "background": "#f8f9fa",
+                      "surface-tint": "#c00205",
+                      "on-primary-fixed-variant": "#930002",
+                      "surface-variant": "#e1e3e4",
+                      "primary-fixed-dim": "#ffb4a9",
+                      "on-secondary-fixed-variant": "#474747",
+                      "error-container": "#ffdad6",
+                      "surface-dim": "#d9dadb",
+                      "surface": "#f8f9fa",
+                      "primary-fixed": "#ffdad5",
+                      "secondary-container": "#e4e2e1",
+                      "primary-container": "#e1271c",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "primary": "#bc0004",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "surface-container-lowest": "#ffffff",
+                      "outline": "#926f6a",
+                      "on-primary": "#ffffff",
+                      "secondary": "#5f5e5e",
+                      "surface-container-low": "#f3f4f5",
+                      "outline-variant": "#e7bdb7",
+                      "on-primary-fixed": "#410000",
+                      "on-surface-variant": "#5d3f3b",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "on-primary-container": "#fffbff",
+                      "tertiary-fixed": "#e5e2e1"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "unit": "4px",
+                      "touch-target-min": "48px",
+                      "gutter": "16px",
+                      "margin-desktop": "32px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg-mobile": [
+                              "Vazirmatn"
+                      ],
+                      "label-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg": [
+                              "Vazirmatn"
+                      ],
+                      "headline-md": [
+                              "Vazirmatn"
+                      ],
+                      "body-lg": [
+                              "Vazirmatn"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "48px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "data-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md antialiased pb-20 md:pb-0">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 border-b border-outline-variant bg-surface flex justify-between items-center px-margin-mobile h-touch-target-min">
+<button class="w-10 h-10 flex items-center justify-center text-primary active:scale-95 duration-100 rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md-mobile font-bold text-primary">سامانه آموزش خط ۱</h1>
+<button class="w-10 h-10 flex items-center justify-center text-primary active:scale-95 duration-100 rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<main class="pt-touch-target-min">
+<!-- Video Player -->
+<div class="relative w-full aspect-video bg-black flex items-center justify-center">
+<div class="absolute inset-0 bg-cover bg-center opacity-50" data-alt="A detailed view of a train's hydraulic braking system in a brightly lit industrial maintenance depot. The focus is on the metallic pneumatic valves and pressure gauges. The scene uses a high-contrast industrial aesthetic with crisp lighting, deep shadows, and subtle red accents typical of safety equipment." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBo35hHaZSQywrO691Zldxuymja5yCB7u76sWFc81GopCKMVzIroFCCoDnqM7Zu3h1TFNzBuCR27GqxArbBYq-6pBiEDOIPvcDefUcWkNgT-F8CDjluDQVj4vdQUng5E6JDofgED68I3UeZDGqJt9l4mlgo-Nmv7mCj_rV0z4ATQFYv-fI38D55nrXbLAWDimg4FmAcP9ME6ryXYUlJFlubEif65BLnq8aBxBb8aOqH83ahyLg32j45Dv1ouxKYdAgI-TmGS2dC-mrn')"></div>
+<button class="absolute z-10 w-16 h-16 bg-primary/90 rounded-full flex items-center justify-center text-on-primary shadow-lg active:scale-95 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<div class="absolute bottom-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent flex items-center gap-2">
+<span class="text-white text-xs font-data-mono">02:14 / 15:30</span>
+<div class="flex-grow h-1 bg-surface-variant/50 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-1/4"></div>
+</div>
+<button class="text-white">
+<span class="material-symbols-outlined text-sm">fullscreen</span>
+</button>
+</div>
+</div>
+<!-- Content Details -->
+<div class="p-margin-mobile">
+<h2 class="font-headline-md text-headline-md-mobile text-on-surface mb-2">عیب‌یابی فوری: سیستم ترمز هیدرولیک پنوماتیک</h2>
+<div class="flex items-center gap-4 text-on-surface-variant font-data-mono text-data-mono mb-4">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+<span>۱۴۰۲/۰۸/۱۵</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">person</span>
+<span>مهندس رضایی</span>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex gap-4 mb-6">
+<button class="flex-1 bg-primary text-on-primary py-3 rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 active:scale-95 active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all">
+<span class="material-symbols-outlined">download</span>
+                    دانلود آفلاین
+                </button>
+<button class="flex-1 border border-outline text-on-surface py-3 rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 active:scale-95 transition-all">
+<span class="material-symbols-outlined">share</span>
+                    اشتراک‌گذاری
+                </button>
+</div>
+<!-- Description -->
+<div class="bg-surface-container-low p-4 rounded-xl border border-surface-variant mb-6">
+<h3 class="font-label-md text-label-md text-on-surface mb-2">توضیحات دوره</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">
+                    در این ویدیوی آموزشی به بررسی ساختار و نحوه عیب‌یابی سریع سیستم‌های ترمز پنوماتیک در قطارهای خط ۱ می‌پردازیم. تمرکز اصلی بر روی شناسایی نشتی هوا و کالیبراسیون فشارسنج‌ها است.
+                </p>
+</div>
+<!-- Related Videos -->
+<div>
+<h3 class="font-headline-md text-headline-md-mobile text-on-surface mb-3">ویدیوهای مرتبط</h3>
+<div class="flex overflow-x-auto gap-4 pb-4 snap-x">
+<div class="min-w-[200px] bg-surface rounded-xl border border-surface-variant overflow-hidden snap-start">
+<div class="h-28 relative">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="Close up of a train control panel dashboard showing various lit indicators, buttons and levers. High contrast industrial aesthetic, bright lighting emphasizing the green and red status lights against the dark grey console panel." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAaXba0kzOZPn-h3M1oL01qySk252cevaSaerXgYQ0cvgdHC0vFXA2vgA4jreqAkB4mREpmAgHCI3o7WGQFoczgk6PGF_-jVA9TaPJU4P7jTo5YOxtIp4SP9pKVTE5AUe5-wh6HoZoUjE6yqIqMeFjT8MOxpTN1mOsNsKCXFSzPiN66nY2QLjjWuSOBd_Wf4wlHpfXvxR3zGxfGwfxIB6Gkxpi7U8v4YsbFAEzJqyPL1R48exVehh7n8p57u6xqcXIX3bpa26EEOIkB')"></div>
+<div class="absolute bottom-1 right-1 bg-black/70 text-white text-[10px] px-1 rounded font-data-mono">10:45</div>
+</div>
+<div class="p-3">
+<h4 class="font-label-md text-label-md text-on-surface line-clamp-2 mb-1">راهنمای پنل کنترل اصلی کابین راهبر</h4>
+<p class="text-xs text-on-surface-variant font-data-mono">۱۴۰۲/۰۸/۱۰</p>
+</div>
+</div>
+<div class="min-w-[200px] bg-surface rounded-xl border border-surface-variant overflow-hidden snap-start">
+<div class="h-28 relative">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="Technical view of a heavy duty electric motor assembly mounted on a train bogie. Clean industrial aesthetic, bright white and gray tones with sharp focus on the copper wiring and metallic casing, conveying a professional maintenance environment." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCUesqZ215swJrwpXSSO-6B1vzUdW-50YH7LwbrfYAnHUGFW_PfvC5-fVFQVyfwO_xms1S8dL0yi2QMdx4A-vgKKKus0vwoxZwjhykKptNfs_7T4R45E7Z9oGiQZ8fNtK0OmwokK6H5t7ZW5Ladzk7wV4FGiHnLaV6ORGfqWcMZbhPQBsplQRrAxbVwEuk5ebmqPs4EWoiQH7mIjfcFOaBuwixLqlAmt7X3lYZgLu2187I18xmdDf5OBn6OfsOqgEtr3B3AZ9sbka0x')"></div>
+<div class="absolute bottom-1 right-1 bg-black/70 text-white text-[10px] px-1 rounded font-data-mono">22:10</div>
+</div>
+<div class="p-3">
+<h4 class="font-label-md text-label-md text-on-surface line-clamp-2 mb-1">سرویس دوره‌ای موتورهای کششی (Traction)</h4>
+<p class="text-xs text-on-surface-variant font-data-mono">۱۴۰۲/۰۷/۲۵</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Nav Bar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl border-t border-outline-variant bg-surface shadow-md flex justify-around items-center h-16 px-2 md:hidden">
+<a class="flex flex-col items-center justify-center text-on-surface-variant w-16 h-14 hover:bg-surface-container-highest rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-[10px] mt-1">داشبورد</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container w-16 h-14 rounded-xl px-4 py-1 active:inner-shadow transition-all" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">school</span>
+<span class="font-label-md text-[10px] mt-1">آموزش</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant w-16 h-14 hover:bg-surface-container-highest rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">chat</span>
+<span class="font-label-md text-[10px] mt-1">گفتگو</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant w-16 h-14 hover:bg-surface-container-highest rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md text-[10px] mt-1">پروفایل</span>
+</a>
+</nav>
+</body></html>

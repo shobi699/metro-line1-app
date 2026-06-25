@@ -1,0 +1,465 @@
+<!DOCTYPE html><html class="light" dir="rtl" lang="fa"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>گزارش حوادث - مرکز کنترل عملیات</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-primary": "#ffb4a9",
+                      "surface-container": "#edeeef",
+                      "on-primary": "#ffffff",
+                      "secondary-fixed": "#e4e2e1",
+                      "on-tertiary-container": "#f7feff",
+                      "on-secondary-container": "#656464",
+                      "tertiary-container": "#767474",
+                      "on-secondary-fixed-variant": "#474747",
+                      "tertiary": "#5d5c5b",
+                      "on-primary-container": "#fffbff",
+                      "background": "#f8f9fa",
+                      "secondary": "#5f5e5e",
+                      "outline": "#926f6a",
+                      "on-background": "#191c1d",
+                      "tertiary-fixed": "#e5e2e1",
+                      "surface-tint": "#c00205",
+                      "surface-container-low": "#f3f4f5",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "surface-container-high": "#e7e8e9",
+                      "on-secondary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "surface-dim": "#d9dadb",
+                      "primary-container": "#e1271c",
+                      "primary": "#bc0004",
+                      "surface-container-highest": "#e1e3e4",
+                      "secondary-container": "#e4e2e1",
+                      "primary-fixed": "#ffdad5",
+                      "on-tertiary": "#ffffff",
+                      "on-surface": "#191c1d",
+                      "inverse-surface": "#2e3132",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "on-primary-fixed-variant": "#930002",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "on-error": "#ffffff",
+                      "inverse-on-surface": "#f0f1f2",
+                      "surface": "#f8f9fa",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "surface-variant": "#e1e3e4",
+                      "on-surface-variant": "#5d3f3b",
+                      "on-primary-fixed": "#410000",
+                      "surface-bright": "#f8f9fa",
+                      "primary-fixed-dim": "#ffb4a9",
+                      "error-container": "#ffdad6",
+                      "error": "#ba1a1a",
+                      "outline-variant": "#e7bdb7",
+                      "surface-container-lowest": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "touch-target-min": "48px",
+                      "margin-mobile": "16px",
+                      "unit": "4px",
+                      "margin-desktop": "32px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Vazirmatn"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "body-lg": [
+                              "Vazirmatn"
+                      ],
+                      "headline-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg": [
+                              "Vazirmatn"
+                      ],
+                      "body-md": [
+                              "Vazirmatn"
+                      ],
+                      "label-md": [
+                              "Vazirmatn"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "data-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "48px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+            },
+          }
+        }
+      </script>
+<style>
+        .pulse-cell {
+            animation: pulse-bg 2s infinite;
+        }
+        @keyframes pulse-bg {
+            0% { background-color: transparent; }
+            50% { background-color: rgba(188, 0, 4, 0.1); }
+            100% { background-color: transparent; }
+        }
+        
+        /* Minimalist Scrollbar for data density */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: theme('colors.surface-container-lowest'); 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.outline-variant'); 
+            border-radius: theme('borderRadius.DEFAULT');
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: theme('colors.outline'); 
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
+<div class="flex h-screen w-full">
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full mr-64 overflow-hidden relative">
+<!-- TopAppBar -->
+<header class="bg-surface-container-highest flex flex-row-reverse justify-between items-center w-full px-margin-desktop h-touch-target-min z-50 border-b border-outline-variant flat no shadows">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-bold text-primary">مرکز کنترل عملیات - خط ۱</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<button class="w-8 h-8 flex items-center justify-center rounded-full text-secondary hover:bg-surface-container-low transition-colors scale-95 duration-150 ease-in-out" title="Radio Status: OK">
+<span class="material-symbols-outlined text-primary">radio</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-full text-secondary hover:bg-surface-container-low transition-colors scale-95 duration-150 ease-in-out" title="Network Status: OK">
+<span class="material-symbols-outlined text-primary">wifi</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-full text-secondary hover:bg-surface-container-low transition-colors scale-95 duration-150 ease-in-out" title="Server Status: OK">
+<span class="material-symbols-outlined text-primary">dns</span>
+</button>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-DEFAULT font-label-md text-label-md flex items-center gap-2 hover:bg-surface-tint transition-colors active:shadow-inner scale-95 duration-150 ease-in-out">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">warning</span>
+                        اعلام وضعیت اضطراری
+                    </button>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional headshot of an Iranian subway operations control center dispatcher wearing a headset, illuminated by the cool glow of monitors in a high-tech control room environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDel5TcJz3fBoaNkhsXwjHD2P7r1-1d-rChYuG44t9fEjaC3XwxPgZdaotyiWAZepNSMbNIiB8bHPvutB9BWC5M1lCEEcriYTweN7I8SjxXopOx8oj_4sda_T0fdDZm_Aqkm7r1olrMLQDdKdyRAn7lx7N1PuayylPkiWsDQfyBxZvs9FRyIM3jsVmygb0dkw8gkJQwz1XD3_U2mXzadpqb_SaC5nUgG62VQbGBJ6apc-iAXIPr0qenf35RSqU-Jl9Vkls5ElrqvCy1">
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="flex-1 overflow-auto p-4 md:p-margin-desktop bg-background grid grid-cols-1 xl:grid-cols-12 gap-gutter">
+<!-- Summary Cards Row -->
+<div class="xl:col-span-12 grid grid-cols-1 md:grid-cols-4 gap-gutter mb-4">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-4 flex flex-col gap-2 relative overflow-hidden">
+<div class="absolute -right-4 -top-4 w-16 h-16 bg-surface-container-low rounded-full opacity-50"></div>
+<div class="flex justify-between items-start z-10">
+<h3 class="font-label-md text-label-md text-secondary">کل حوادث امروز</h3>
+<span class="material-symbols-outlined text-tertiary">analytics</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-on-background z-10">۴۲</div>
+<div class="font-data-mono text-data-mono text-secondary flex items-center gap-1 z-10">
+<span class="material-symbols-outlined text-[16px] text-primary">arrow_upward</span>
+<span class="">+۱۲٪ نسبت به دیروز</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-4 flex flex-col gap-2 relative overflow-hidden">
+<div class="absolute -right-4 -top-4 w-16 h-16 bg-surface-container-low rounded-full opacity-50"></div>
+<div class="flex justify-between items-start z-10">
+<h3 class="font-label-md text-label-md text-secondary">پرونده‌های باز</h3>
+<span class="material-symbols-outlined text-tertiary">folder_open</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-on-background z-10">۸</div>
+<div class="font-data-mono text-data-mono text-secondary z-10">در حال بررسی فعال</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-4 flex flex-col gap-2 relative overflow-hidden">
+<div class="absolute -right-4 -top-4 w-16 h-16 bg-surface-container-low rounded-full opacity-50"></div>
+<div class="flex justify-between items-start z-10">
+<h3 class="font-label-md text-label-md text-secondary">متوسط زمان پاسخ</h3>
+<span class="material-symbols-outlined text-tertiary">timer</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-on-background z-10">۴.۲m</div>
+<div class="font-data-mono text-data-mono text-secondary flex items-center gap-1 z-10">
+<span class="material-symbols-outlined text-[16px] text-[#2e7d32]">arrow_downward</span>
+<span class="">-۰.۵m بهبودی</span>
+</div>
+</div>
+<div class="bg-primary-container border-2 border-primary rounded-DEFAULT p-4 flex flex-col gap-2 relative overflow-hidden shadow-sm">
+<div class="absolute -right-4 -top-4 w-16 h-16 bg-primary opacity-20 rounded-full"></div>
+<div class="flex justify-between items-start z-10">
+<h3 class="font-label-md text-label-md text-on-primary-container">هشدارهای بحرانی</h3>
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">error</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-primary z-10">۲</div>
+<div class="font-data-mono text-data-mono text-on-primary-container z-10">نیازمند اقدام فوری</div>
+</div>
+</div>
+<!-- Main Data Layout -->
+<div class="xl:col-span-12 grid grid-cols-1 lg:grid-cols-12 gap-gutter h-[calc(100vh-280px)]">
+<!-- Filters Sidebar -->
+<aside class="lg:col-span-3 bg-surface-container-lowest border border-outline-variant rounded-DEFAULT flex flex-col overflow-hidden">
+<div class="bg-inverse-surface text-on-tertiary p-3 border-b border-outline-variant flex items-center justify-between">
+<h2 class="font-label-md text-label-md font-bold">فیلترهای گزارش</h2>
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+</div>
+<div class="p-4 flex-1 overflow-y-auto flex flex-col gap-6">
+<!-- Filter Group: Date -->
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-secondary">بازه زمانی</label>
+<div class="flex flex-col gap-2">
+<div class="relative">
+<input class="w-full bg-surface-container-low border border-outline-variant text-on-background font-data-mono text-data-mono rounded-DEFAULT py-2 px-3 focus:ring-0 focus:border-primary transition-colors pr-10" placeholder="از تاریخ" type="text" value="۱۴۰۲/۰۸/۱۵">
+<span class="material-symbols-outlined absolute right-3 top-2.5 text-secondary text-[18px]">calendar_today</span>
+</div>
+<div class="relative">
+<input class="w-full bg-surface-container-low border border-outline-variant text-on-background font-data-mono text-data-mono rounded-DEFAULT py-2 px-3 focus:ring-0 focus:border-primary transition-colors pr-10" placeholder="تا تاریخ" type="text" value="۱۴۰۲/۰۸/۱۵">
+<span class="material-symbols-outlined absolute right-3 top-2.5 text-secondary text-[18px]">calendar_today</span>
+</div>
+</div>
+</div>
+<!-- Filter Group: Category -->
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-secondary">دسته‌بندی رویداد</label>
+<div class="flex flex-col gap-1">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="w-4 h-4 text-primary border-outline-variant rounded bg-surface-container-low focus:ring-primary focus:ring-offset-surface" type="checkbox">
+<span class="font-body-md text-body-md text-on-background group-hover:text-primary transition-colors">سیگنالینگ</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="w-4 h-4 text-primary border-outline-variant rounded bg-surface-container-low focus:ring-primary focus:ring-offset-surface" type="checkbox">
+<span class="font-body-md text-body-md text-on-background group-hover:text-primary transition-colors">برق و تاسیسات</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="w-4 h-4 text-primary border-outline-variant rounded bg-surface-container-low focus:ring-primary focus:ring-offset-surface" type="checkbox">
+<span class="font-body-md text-body-md text-on-background group-hover:text-primary transition-colors">مکانیکی و ناوگان</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="w-4 h-4 text-primary border-outline-variant rounded bg-surface-container-low focus:ring-primary focus:ring-offset-surface" type="checkbox">
+<span class="font-body-md text-body-md text-on-background group-hover:text-primary transition-colors">امنیتی و حراست</span>
+</label>
+</div>
+</div>
+<!-- Filter Group: Severity -->
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-secondary">درجه اهمیت</label>
+<select class="w-full bg-surface-container-low border border-outline-variant text-on-background font-body-md text-body-md rounded-DEFAULT py-2 px-3 focus:ring-0 focus:border-primary transition-colors">
+<option value="all">همه موارد</option>
+<option value="high">بحرانی (High)</option>
+<option value="medium">متوسط (Medium)</option>
+<option value="low">پایین (Low)</option>
+</select>
+</div>
+<div class="mt-auto pt-4 border-t border-outline-variant flex gap-2 flex-col"><button class="w-full mb-2 bg-surface-container-low border border-outline-variant text-on-background font-label-md text-label-md py-2 rounded-DEFAULT hover:bg-surface-container-high transition-colors flex items-center justify-center gap-2">
+    <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+    خروجی PDF گزارش
+</button>
+<button class="flex-1 bg-surface-container-low border border-outline-variant text-on-background font-label-md text-label-md py-2 rounded-DEFAULT hover:bg-surface-container-high transition-colors">پاکسازی</button>
+<button class="flex-1 bg-primary text-on-primary font-label-md text-label-md py-2 rounded-DEFAULT hover:bg-surface-tint transition-colors">اعمال فیلتر</button>
+</div>
+</div>
+</aside>
+<!-- Data Table -->
+<div class="lg:col-span-9 bg-surface-container-lowest border border-outline-variant rounded-DEFAULT flex flex-col overflow-hidden relative">
+<div class="bg-inverse-surface text-on-tertiary border-b border-outline-variant flex items-center justify-between pl-4">
+<div class="grid grid-cols-12 gap-2 w-full px-4 py-3 font-label-md text-label-md text-secondary-fixed">
+<div class="col-span-2">شناسه (ID)</div>
+<div class="col-span-2">زمان (Time)</div>
+<div class="col-span-2">موقعیت</div>
+<div class="col-span-2">دسته‌بندی</div>
+<div class="col-span-2">اهمیت</div>
+<div class="col-span-2 text-left">وضعیت</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto">
+<!-- Row 1: High Severity, Pulse -->
+<div class="grid grid-cols-12 gap-2 w-full px-4 py-3 font-body-md text-body-md border-b border-outline-variant bg-[#F1F1F1] hover:bg-surface-container-high transition-colors cursor-pointer group pulse-cell">
+<div class="col-span-2 font-data-mono text-data-mono text-primary font-bold">INC-8492</div>
+<div class="col-span-2 font-data-mono text-data-mono text-secondary">10:42:15</div>
+<div class="col-span-2 text-on-background truncate">ایستگاه تجریش - S01</div>
+<div class="col-span-2 text-on-background flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-tertiary">power</span>
+                                    برق و تاسیسات
+                                </div>
+<div class="col-span-2 flex items-center">
+<span class="bg-primary-container text-primary font-label-md text-label-md px-2 py-0.5 rounded-sm border border-primary">بحرانی</span>
+</div>
+<div class="col-span-2 flex items-center justify-end gap-2 text-secondary">
+<span class="material-symbols-outlined text-[18px] animate-spin">sync</span>
+                                    در حال بررسی
+                                </div>
+</div>
+<!-- Row 2: Medium -->
+<div class="grid grid-cols-12 gap-2 w-full px-4 py-3 font-body-md text-body-md border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="col-span-2 font-data-mono text-data-mono text-on-background">INC-8491</div>
+<div class="col-span-2 font-data-mono text-data-mono text-secondary">09:15:00</div>
+<div class="col-span-2 text-on-background truncate">تونل T-14</div>
+<div class="col-span-2 text-on-background flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-tertiary">settings_input_antenna</span>
+                                    سیگنالینگ
+                                </div>
+<div class="col-span-2 flex items-center">
+<span class="bg-surface-container-high text-on-secondary-container font-label-md text-label-md px-2 py-0.5 rounded-sm border border-outline-variant">متوسط</span>
+</div>
+<div class="col-span-2 flex items-center justify-end gap-2 text-[#2e7d32]">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                    مرتفع شد
+                                </div>
+</div>
+<!-- Row 3: High, Escalated -->
+<div class="grid grid-cols-12 gap-2 w-full px-4 py-3 font-body-md text-body-md border-b border-outline-variant bg-[#F1F1F1] hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="col-span-2 font-data-mono text-data-mono text-primary font-bold">INC-8490</div>
+<div class="col-span-2 font-data-mono text-data-mono text-secondary">08:30:22</div>
+<div class="col-span-2 text-on-background truncate">قطار TR-104</div>
+<div class="col-span-2 text-on-background flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-tertiary">train</span>
+                                    مکانیکی
+                                </div>
+<div class="col-span-2 flex items-center">
+<span class="bg-primary-container text-primary font-label-md text-label-md px-2 py-0.5 rounded-sm border border-primary">بحرانی</span>
+</div>
+<div class="col-span-2 flex items-center justify-end gap-2 text-primary">
+<span class="material-symbols-outlined text-[18px]">escalator_warning</span>
+                                    ارجاع به مدیر
+                                </div>
+</div>
+<!-- Row 4: Low -->
+<div class="grid grid-cols-12 gap-2 w-full px-4 py-3 font-body-md text-body-md border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="col-span-2 font-data-mono text-data-mono text-on-background">INC-8489</div>
+<div class="col-span-2 font-data-mono text-data-mono text-secondary">07:45:10</div>
+<div class="col-span-2 text-on-background truncate">ایستگاه میرداماد</div>
+<div class="col-span-2 text-on-background flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-tertiary">security</span>
+                                    حراست
+                                </div>
+<div class="col-span-2 flex items-center">
+<span class="bg-surface text-secondary font-label-md text-label-md px-2 py-0.5 rounded-sm border border-outline-variant">پایین</span>
+</div>
+<div class="col-span-2 flex items-center justify-end gap-2 text-[#2e7d32]">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                    مرتفع شد
+                                </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- SideNavBar -->
+<nav class="bg-surface w-64 fixed right-0 top-0 flex flex-col h-screen border-l border-outline-variant flat no shadows py-gutter space-y-unit z-50">
+<!-- Header -->
+<div class="px-6 pb-6 border-b border-outline-variant">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center border border-outline-variant overflow-hidden">
+<img alt="OCC Personnel" class="w-full h-full object-cover" data-alt="A stylized, industrial logo icon representing a red metro line command structure, featuring sharp geometric lines and a high-contrast red and dark grey color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMAhB8zfXP_zes-zUuheFfgBik9UBGq5ZfYYIq8600vlichbRWsB9fxUAPNjORoBXoreBh8_nUQL40xEYKaXL3xQ2aiWoz1GIR44RgdvtBm1jUAjPd7tPmptq9JgG14RnbXUGLkTYQru_VTlshLI9jWR9v0Vsmtlu22876aylpiPJ0uhNW0s0YaURqdm7yyLK-mU4p-DVui-S4ZoyGHw7eVdcx37j6VEQywBW8NTmLQhJquCw1M4vIPzd9ry8yOOxd2133i-TaCQvo">
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-black text-primary">فرماندهی خط قرمز</h1>
+<p class="font-body-md text-body-md text-secondary text-sm">اپراتور ارشد - شیفت الف</p>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary py-2 rounded-DEFAULT font-label-md text-label-md hover:bg-surface-tint transition-colors active:shadow-inner flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                    گزارش جدید
+                </button>
+</div>
+<!-- Main Tabs -->
+<div class="flex-1 overflow-y-auto py-4 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-6 py-3 text-secondary hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">داشبورد مانیتورینگ</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 bg-primary-container text-on-primary-container font-bold border-r-4 border-primary hover:bg-surface-container-high transition-all translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">report_problem</span>
+<span class="font-label-md text-label-md">گزارش حوادث</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-secondary hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">route</span>
+<span class="font-label-md text-label-md">نقشه زنده</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-secondary hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">train</span>
+<span class="font-label-md text-label-md">مدیریت ناوگان</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-secondary hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">تنظیمات سیستم</span>
+</a>
+</div>
+<!-- Footer Tabs -->
+<div class="mt-auto border-t border-outline-variant pt-4 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-6 py-2 text-secondary hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md text-label-md">راهنما</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-2 text-secondary hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">خروج</span>
+</a>
+</div>
+</nav>
+</div>
+
+
+</body></html>

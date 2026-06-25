@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tehran Metro Line 1 OCC - Live Map</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-container": "#767474",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "error": "#ba1a1a",
+                      "surface-container": "#edeeef",
+                      "background": "#f8f9fa",
+                      "outline": "#926f6a",
+                      "surface-container-low": "#f3f4f5",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "surface": "#f8f9fa",
+                      "secondary-container": "#e4e2e1",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "on-secondary-container": "#656464",
+                      "on-secondary-fixed-variant": "#474747",
+                      "tertiary-fixed": "#e5e2e1",
+                      "on-error-container": "#93000a",
+                      "inverse-on-surface": "#f0f1f2",
+                      "primary-fixed": "#ffdad5",
+                      "surface-variant": "#e1e3e4",
+                      "primary-container": "#e1271c",
+                      "surface-bright": "#f8f9fa",
+                      "primary": "#bc0004",
+                      "inverse-surface": "#2e3132",
+                      "on-surface-variant": "#5d3f3b",
+                      "outline-variant": "#e7bdb7",
+                      "on-tertiary": "#ffffff",
+                      "on-background": "#191c1d",
+                      "primary-fixed-dim": "#ffb4a9",
+                      "surface-dim": "#d9dadb",
+                      "on-primary-fixed-variant": "#930002",
+                      "on-primary-fixed": "#410000",
+                      "surface-tint": "#c00205",
+                      "surface-container-high": "#e7e8e9",
+                      "secondary": "#5f5e5e",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-container": "#f7feff",
+                      "tertiary": "#5d5c5b",
+                      "on-error": "#ffffff",
+                      "surface-container-highest": "#e1e3e4",
+                      "inverse-primary": "#ffb4a9",
+                      "secondary-fixed": "#e4e2e1",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "error-container": "#ffdad6",
+                      "on-surface": "#191c1d",
+                      "on-primary-container": "#fffbff",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "on-primary": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "gutter": "16px",
+                      "touch-target-min": "48px",
+                      "margin-mobile": "16px",
+                      "margin-desktop": "32px"
+              },
+              "fontFamily": {
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg-mobile": [
+                              "Vazirmatn"
+                      ],
+                      "body-lg": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg": [
+                              "Vazirmatn"
+                      ],
+                      "label-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-md": [
+                              "Vazirmatn"
+                      ],
+                      "body-md": [
+                              "Vazirmatn"
+                      ]
+              },
+              "fontSize": {
+                      "data-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "48px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .pulse-cell { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0% { background-color: transparent; }
+            50% { background-color: rgba(188, 0, 4, 0.1); }
+            100% { background-color: transparent; }
+        }
+        .scroll-hidden::-webkit-scrollbar { display: none; }
+        .scroll-hidden { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md m-0 p-0 overflow-hidden h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-surface-container-highest dark:bg-inverse-surface border-b border-outline dark:border-outline-variant flex justify-between items-center w-full px-margin-desktop h-touch-target-min flex-shrink-0 z-50">
+<div class="flex items-center gap-4">
+<span class="text-headline-md font-headline-md font-bold text-primary dark:text-inverse-primary">OCC Command: Line 1</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden md:flex items-center">
+<span class="material-symbols-outlined absolute right-3 text-on-surface-variant">search</span>
+<input class="pl-4 pr-10 py-1 bg-surface-container-low border border-outline rounded-DEFAULT text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none text-on-surface w-64 h-8 transition-colors" placeholder="Search Train / Station..." type="text"/>
+</div>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT hover:bg-surface-variant dark:hover:bg-secondary-fixed-dim transition-colors text-primary dark:text-inverse-primary" title="notifications">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT hover:bg-surface-variant dark:hover:bg-secondary-fixed-dim transition-colors text-primary dark:text-inverse-primary" title="settings">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT hover:bg-surface-variant dark:hover:bg-secondary-fixed-dim transition-colors text-primary dark:text-inverse-primary" title="account_circle">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<div class="flex flex-1 h-[calc(100vh-48px)] overflow-hidden">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col bg-surface-container dark:bg-inverse-surface border-l border-outline dark:border-outline-variant h-full w-64 flex-shrink-0 py-4 gap-2 z-40">
+<div class="px-4 mb-4 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container overflow-hidden">
+<span class="material-symbols-outlined">badge</span>
+</div>
+<div>
+<h2 class="font-label-md text-label-md text-on-surface">Control Center</h2>
+<p class="font-data-mono text-data-mono text-on-surface-variant text-[11px]">Station 01 - Tajrish</p>
+</div>
+</div>
+<div class="flex flex-col gap-1 px-2 flex-1">
+<a class="flex items-center gap-3 px-3 h-10 bg-primary-container text-on-primary-container font-bold border-r-4 border-primary rounded-l-DEFAULT transition-all duration-200 -translate-x-1" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">map</span>
+<span class="font-label-md text-label-md">Live Map</span>
+</a>
+<a class="flex items-center gap-3 px-3 h-10 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant rounded-DEFAULT transition-colors" href="#">
+<span class="material-symbols-outlined">electrical_services</span>
+<span class="font-label-md text-label-md">Power Grid</span>
+</a>
+<a class="flex items-center gap-3 px-3 h-10 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant rounded-DEFAULT transition-colors" href="#">
+<span class="material-symbols-outlined">settings_input_component</span>
+<span class="font-label-md text-label-md">Signaling Status</span>
+</a>
+<a class="flex items-center gap-3 px-3 h-10 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant rounded-DEFAULT transition-colors" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+<span class="font-label-md text-label-md">Incident Log</span>
+</a>
+</div>
+<div class="flex flex-col gap-1 px-2 mt-auto border-t border-outline-variant pt-2">
+<a class="flex items-center gap-3 px-3 h-10 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant rounded-DEFAULT transition-colors" href="#">
+<span class="material-symbols-outlined">monitor_heart</span>
+<span class="font-label-md text-label-md">System Health</span>
+</a>
+<a class="flex items-center gap-3 px-3 h-10 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant rounded-DEFAULT transition-colors" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-hidden flex flex-col lg:flex-row p-unit gap-unit bg-surface-container-low">
+<!-- Center Canvas: Live Map & Diagnostics -->
+<section class="flex-1 flex flex-col gap-unit overflow-hidden min-w-0">
+<!-- Live Track Map -->
+<div class="flex-[3] bg-surface-container-lowest border border-outline rounded-DEFAULT flex flex-col relative overflow-hidden">
+<div class="h-8 bg-inverse-surface text-on-tertiary flex items-center px-3 justify-between shrink-0">
+<span class="font-label-md text-label-md flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                            Live Track Map - Line 1 (Tajrish - Kahrizak)
+                        </span>
+<div class="flex gap-2">
+<button class="text-on-tertiary hover:text-primary-fixed transition-colors"><span class="material-symbols-outlined text-[18px]">zoom_in</span></button>
+<button class="text-on-tertiary hover:text-primary-fixed transition-colors"><span class="material-symbols-outlined text-[18px]">zoom_out</span></button>
+<button class="text-on-tertiary hover:text-primary-fixed transition-colors"><span class="material-symbols-outlined text-[18px]">layers</span></button>
+</div>
+</div>
+<div class="flex-1 relative bg-[#1e2122] overflow-hidden p-4 flex items-center justify-center">
+<!-- Abstracted Track Visualization -->
+<div class="w-full max-w-4xl h-32 relative border-y-4 border-secondary-fixed-dim/30 flex items-center">
+<!-- Track Line -->
+<div class="absolute left-0 right-0 h-1 bg-surface-variant/50 top-1/2 -translate-y-1/2"></div>
+<!-- Stations -->
+<div class="absolute left-[10%] w-3 h-8 bg-surface-container-highest border border-outline rounded-sm top-1/2 -translate-y-1/2 z-10 flex flex-col items-center justify-between -mt-8">
+<span class="text-on-tertiary text-[10px] font-data-mono whitespace-nowrap mt-10">TAJ</span>
+</div>
+<div class="absolute left-[30%] w-3 h-8 bg-surface-container-highest border border-outline rounded-sm top-1/2 -translate-y-1/2 z-10 flex flex-col items-center justify-between -mt-8">
+<span class="text-on-tertiary text-[10px] font-data-mono whitespace-nowrap mt-10">QEY</span>
+</div>
+<div class="absolute left-[50%] w-3 h-8 bg-surface-container-highest border border-outline rounded-sm top-1/2 -translate-y-1/2 z-10 flex flex-col items-center justify-between -mt-8">
+<span class="text-on-tertiary text-[10px] font-data-mono whitespace-nowrap mt-10">SHD</span>
+</div>
+<div class="absolute left-[70%] w-3 h-8 bg-surface-container-highest border border-outline rounded-sm top-1/2 -translate-y-1/2 z-10 flex flex-col items-center justify-between -mt-8">
+<span class="text-on-tertiary text-[10px] font-data-mono whitespace-nowrap mt-10">MDR</span>
+</div>
+<div class="absolute left-[90%] w-3 h-8 bg-surface-container-highest border border-outline rounded-sm top-1/2 -translate-y-1/2 z-10 flex flex-col items-center justify-between -mt-8">
+<span class="text-on-tertiary text-[10px] font-data-mono whitespace-nowrap mt-10">MZD</span>
+</div>
+<!-- Trains (Moving) -->
+<div class="absolute left-[15%] h-4 w-12 bg-primary rounded-sm top-1/2 -translate-y-1/2 z-20 flex items-center justify-center shadow-[0_0_8px_rgba(188,0,4,0.6)]">
+<span class="text-white text-[8px] font-data-mono font-bold">&gt;&gt; TR-104</span>
+</div>
+<div class="absolute left-[45%] h-4 w-12 bg-primary rounded-sm top-1/2 -translate-y-1/2 z-20 flex items-center justify-center">
+<span class="text-white text-[8px] font-data-mono font-bold">&gt;&gt; TR-112</span>
+</div>
+<div class="absolute left-[82%] h-4 w-12 bg-tertiary-container rounded-sm top-1/2 -translate-y-1/2 z-20 flex items-center justify-center opacity-70">
+<span class="text-white text-[8px] font-data-mono">&lt;&lt; TR-098</span>
+</div>
+<!-- Block Occupancy Indicators -->
+<div class="absolute left-[12%] right-[85%] h-1 bg-primary/40 top-1/2 -translate-y-1/2"></div>
+<div class="absolute left-[42%] right-[55%] h-1 bg-primary/40 top-1/2 -translate-y-1/2"></div>
+</div>
+</div>
+</div>
+<!-- Bottom Data Row: Dispatch & Comm -->
+<div class="flex-[2] flex flex-col sm:flex-row gap-unit overflow-hidden">
+<!-- Dispatching Log -->
+<div class="flex-[2] bg-surface-container-lowest border border-outline rounded-DEFAULT flex flex-col overflow-hidden">
+<div class="h-8 bg-inverse-surface text-on-tertiary flex items-center px-3 shrink-0">
+<span class="font-label-md text-label-md flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">list_alt</span>
+                                Dispatching Log
+                            </span>
+</div>
+<div class="flex-1 overflow-y-auto scroll-hidden bg-surface">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-surface-container border-b border-outline">
+<tr>
+<th class="py-1 px-2 font-data-mono text-[11px] text-on-surface-variant font-medium">TIME</th>
+<th class="py-1 px-2 font-data-mono text-[11px] text-on-surface-variant font-medium">UNIT</th>
+<th class="py-1 px-2 font-data-mono text-[11px] text-on-surface-variant font-medium">EVENT</th>
+<th class="py-1 px-2 font-data-mono text-[11px] text-on-surface-variant font-medium text-right">STATUS</th>
+</tr>
+</thead>
+<tbody class="font-data-mono text-data-mono text-[12px]">
+<tr class="border-b border-surface-variant hover:bg-surface-container-low">
+<td class="py-1 px-2 text-on-surface-variant">14:02:11</td>
+<td class="py-1 px-2 font-bold text-on-surface">TR-104</td>
+<td class="py-1 px-2 text-on-surface">Departed Tajrish P1</td>
+<td class="py-1 px-2 text-right text-primary">NML</td>
+</tr>
+<tr class="border-b border-surface-variant bg-surface-container-low hover:bg-surface-container">
+<td class="py-1 px-2 text-on-surface-variant">14:01:45</td>
+<td class="py-1 px-2 font-bold text-on-surface">SIG-Z2</td>
+<td class="py-1 px-2 text-on-surface">Block occupancy cleared</td>
+<td class="py-1 px-2 text-right text-tertiary">CLR</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-surface-container-low">
+<td class="py-1 px-2 text-on-surface-variant">14:00:02</td>
+<td class="py-1 px-2 font-bold text-on-surface">TR-112</td>
+<td class="py-1 px-2 text-on-surface">Arrived Shahid Haghani</td>
+<td class="py-1 px-2 text-right text-primary">NML</td>
+</tr>
+<tr class="border-b border-surface-variant bg-surface-container-low hover:bg-surface-container pulse-cell">
+<td class="py-1 px-2 text-on-surface-variant">13:58:30</td>
+<td class="py-1 px-2 font-bold text-on-surface">ESC-QEY-1</td>
+<td class="py-1 px-2 text-primary font-bold">Motor temp warning</td>
+<td class="py-1 px-2 text-right text-primary font-bold">WRN</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-surface-container-low">
+<td class="py-1 px-2 text-on-surface-variant">13:55:10</td>
+<td class="py-1 px-2 font-bold text-on-surface">TR-098</td>
+<td class="py-1 px-2 text-on-surface">Turnaround complete MZD</td>
+<td class="py-1 px-2 text-right text-tertiary">NML</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Communication Panel -->
+<div class="flex-1 bg-surface-container-lowest border border-outline rounded-DEFAULT flex flex-col overflow-hidden">
+<div class="h-8 bg-inverse-surface text-on-tertiary flex items-center px-3 shrink-0">
+<span class="font-label-md text-label-md flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">headset_mic</span>
+                                Secure Comm
+                            </span>
+</div>
+<div class="flex-1 p-2 flex flex-col gap-2 bg-surface">
+<div class="flex-1 overflow-y-auto flex flex-col gap-2 p-1">
+<!-- Chat Bubbles RTL -->
+<div class="flex justify-end">
+<div class="bg-surface-container-high text-on-surface rounded-lg rounded-tl-none p-2 max-w-[80%] border border-outline-variant shadow-sm">
+<p class="font-data-mono text-[11px] mb-1 text-on-surface-variant">OCC Command - 13:50</p>
+<p class="text-body-md text-[13px]">TR-104, confirm door closing sequence at TAJ.</p>
+</div>
+</div>
+<div class="flex justify-start">
+<div class="bg-primary/10 text-on-surface rounded-lg rounded-tr-none p-2 max-w-[80%] border border-primary/20">
+<p class="font-data-mono text-[11px] mb-1 text-primary">TR-104 (Driver) - 13:51</p>
+<p class="text-body-md text-[13px]">OCC, doors closed. Awaiting signal clear to depart.</p>
+</div>
+</div>
+</div>
+<div class="mt-auto pt-2 border-t border-outline-variant flex gap-1">
+<button class="w-8 h-8 bg-surface-container-high rounded-DEFAULT flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors shrink-0">
+<span class="material-symbols-outlined text-[18px]">mic</span>
+</button>
+<input class="flex-1 h-8 bg-surface-container-low border border-outline rounded-DEFAULT px-2 font-body-md text-[12px] focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="Type message to TR-104..." type="text"/>
+<button class="w-8 h-8 bg-primary rounded-DEFAULT flex items-center justify-center text-white hover:bg-primary-container transition-colors shrink-0">
+<span class="material-symbols-outlined text-[18px]">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Sidebar: Station Status & Controls -->
+<aside class="w-full lg:w-72 flex flex-col gap-unit overflow-hidden shrink-0">
+<!-- System Health (Persistent Top Utility) -->
+<div class="bg-surface-container-lowest border border-outline rounded-DEFAULT p-2 flex justify-between items-center shrink-0 shadow-sm">
+<div class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-[#2e7d32]"></span>
+<span class="font-data-mono text-[10px] text-on-surface">RADIO</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-[#2e7d32]"></span>
+<span class="font-data-mono text-[10px] text-on-surface">NET</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-[#fbc02d]"></span>
+<span class="font-data-mono text-[10px] text-on-surface">SRV-2</span>
+</div>
+</div>
+<!-- Station Status -->
+<div class="flex-1 bg-surface-container-lowest border border-outline rounded-DEFAULT flex flex-col overflow-hidden">
+<div class="h-8 bg-inverse-surface text-on-tertiary flex items-center px-3 shrink-0">
+<span class="font-label-md text-label-md">Station Metrics</span>
+</div>
+<div class="flex-1 overflow-y-auto p-2 flex flex-col gap-2 bg-surface">
+<!-- Station Card 1 -->
+<div class="bg-surface-container border border-outline-variant rounded-DEFAULT p-2">
+<div class="flex justify-between items-center border-b border-outline-variant pb-1 mb-1">
+<span class="font-label-md text-label-md text-on-surface">Tajrish (TAJ)</span>
+<span class="font-data-mono text-[10px] bg-primary/10 text-primary px-1 rounded">HIGH LOAD</span>
+</div>
+<div class="grid grid-cols-2 gap-x-2 gap-y-1 font-data-mono text-[11px]">
+<div class="text-on-surface-variant">Platform 1:</div>
+<div class="text-right text-primary font-bold">85% Cap</div>
+<div class="text-on-surface-variant">Platform 2:</div>
+<div class="text-right text-on-surface">40% Cap</div>
+<div class="text-on-surface-variant">Gate Entry/min:</div>
+<div class="text-right text-on-surface">142 pax</div>
+<div class="col-span-2 mt-1 pt-1 border-t border-outline-variant/50 flex justify-between">
+<span class="text-on-surface-variant">Escalators:</span>
+<span class="text-[#2e7d32]">4/4 OK</span>
+</div>
+</div>
+</div>
+<!-- Station Card 2 -->
+<div class="bg-surface-container border border-outline-variant rounded-DEFAULT p-2">
+<div class="flex justify-between items-center border-b border-outline-variant pb-1 mb-1">
+<span class="font-label-md text-label-md text-on-surface">Qeytarieh (QEY)</span>
+<span class="font-data-mono text-[10px] bg-tertiary/10 text-tertiary px-1 rounded">NML</span>
+</div>
+<div class="grid grid-cols-2 gap-x-2 gap-y-1 font-data-mono text-[11px]">
+<div class="text-on-surface-variant">Platform 1:</div>
+<div class="text-right text-on-surface">30% Cap</div>
+<div class="text-on-surface-variant">Platform 2:</div>
+<div class="text-right text-on-surface">25% Cap</div>
+<div class="col-span-2 mt-1 pt-1 border-t border-outline-variant/50 flex justify-between">
+<span class="text-on-surface-variant">Escalators:</span>
+<span class="text-primary font-bold animate-pulse">1 FAULT</span>
+</div>
+</div>
+</div>
+<!-- Station Card 3 -->
+<div class="bg-surface-container border border-outline-variant rounded-DEFAULT p-2">
+<div class="flex justify-between items-center border-b border-outline-variant pb-1 mb-1">
+<span class="font-label-md text-label-md text-on-surface">Sadr (SDR)</span>
+<span class="font-data-mono text-[10px] bg-tertiary/10 text-tertiary px-1 rounded">NML</span>
+</div>
+<div class="grid grid-cols-2 gap-x-2 gap-y-1 font-data-mono text-[11px]">
+<div class="text-on-surface-variant">Platform 1:</div>
+<div class="text-right text-on-surface">15% Cap</div>
+<div class="col-span-2 mt-1 pt-1 border-t border-outline-variant/50 flex justify-between">
+<span class="text-on-surface-variant">Escalators:</span>
+<span class="text-[#2e7d32]">2/2 OK</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Emergency Action -->
+<div class="shrink-0 pt-2">
+<button class="w-full h-12 bg-primary hover:bg-primary-container text-white font-headline-md text-headline-md rounded-DEFAULT flex items-center justify-center gap-2 shadow-[0_2px_4px_rgba(188,0,4,0.3)] active:shadow-inner transition-all">
+<span class="material-symbols-outlined text-[24px]">warning</span>
+                        LINE HALT
+                    </button>
+</div>
+</aside>
+</main>
+</div>
+</body></html>

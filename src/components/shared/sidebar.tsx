@@ -1,8 +1,9 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@/features/auth'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
@@ -14,7 +15,29 @@ import {
   AlertTriangle,
   ShieldCheck,
   FileSpreadsheet,
+  MessageCircle,
+  Newspaper,
   LogOut,
+  Settings,
+  Bell,
+  MessageSquare,
+  ClipboardCheck,
+  BookOpen,
+  User,
+  Trophy,
+  Shield,
+  Activity,
+  BarChart3,
+  Radio,
+  Bot,
+  ChevronDown,
+  ChevronLeft,
+  GraduationCap,
+  HardDrive,
+  UserCheck,
+  Video,
+  Award,
+  Mic,
 } from 'lucide-react'
 
 interface NavItem {
@@ -24,90 +47,319 @@ interface NavItem {
   roles?: string[]
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { label: 'داشبورد', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'دفتر تلفن', href: '/directory', icon: Users },
-  { label: 'شیفت من', href: '/shifts', icon: Calendar },
-  { label: 'تعویض شیفت', href: '/swap/inbox', icon: ArrowLeftRight },
-  { label: 'تیکت‌ها', href: '/tickets', icon: AlertTriangle },
+interface NavSubgroup {
+  id: string
+  label: string
+  icon: React.ElementType
+  items: NavItem[]
+  roles?: string[]
+}
+
+interface NavSection {
+  title: string
+  roles?: string[]
+  groups: NavSubgroup[]
+}
+
+// دسته‌بندی کامل و کاملاً طبقه‌بندی شده منوهای سوپراپ خط ۱ مترو تهران
+const NAVIGATION_SECTIONS: NavSection[] = [
   {
-    label: 'مدیریت شیفت',
-    href: '/admin/shifts',
-    icon: Calendar,
-    roles: ['admin', 'super_admin'],
+    title: 'میز کار پرسنلی',
+    groups: [
+      {
+        id: 'desk',
+        label: 'امور کاربری',
+        icon: LayoutDashboard,
+        items: [
+          { label: 'داشبورد اصلی', href: '/dashboard', icon: LayoutDashboard },
+          { label: 'اعلانات سیستم', href: '/notifications', icon: Bell },
+          { label: 'پروفایل کاربری', href: '/profile', icon: User },
+          { label: 'جدول برترها (رتبه)', href: '/leaderboard', icon: Trophy },
+          { label: 'کارنامه و ارزیابی عملکرد', href: '/performance', icon: Award },
+          { label: 'ثبت بازخورد و پیام', href: '/feedback', icon: MessageSquare },
+        ]
+      },
+      {
+        id: 'shifts-op',
+        label: 'عملیات و شیفت‌ها',
+        icon: Calendar,
+        items: [
+          { label: 'شیفت و تقویم من', href: '/shifts', icon: Calendar },
+          { label: 'درخواست تعویض شیفت', href: '/swap/inbox', icon: ArrowLeftRight },
+          { label: 'حضور و غیاب هوشمند', href: '/attendance', icon: UserCheck },
+          { label: 'چک‌لیست حرکت قطار', href: '/checklists', icon: ClipboardCheck },
+          { label: 'ثبت خرابی و تیکتینگ', href: '/tickets', icon: AlertTriangle },
+        ]
+      },
+      {
+        id: 'comms',
+        label: 'ارتباطات و همیار',
+        icon: MessageCircle,
+        items: [
+          { label: 'اتاق‌های گفت‌وگو', href: '/chat', icon: MessageCircle },
+          { label: 'کنفرانس صوتی گروهی', href: '/comms/conference', icon: Mic },
+          { label: 'شبیه‌ساز بی‌سیم تِترا', href: '/comms/radio', icon: Radio },
+          { label: 'دفتر تلفن پرسنل', href: '/directory', icon: Users },
+          { label: 'دستیار هوشمند AI', href: '/ai', icon: Bot },
+        ]
+      }
+    ]
   },
   {
-    label: 'بخشنامه‌ها',
-    href: '/admin/bulletins',
-    icon: ShieldCheck,
-    roles: ['admin', 'super_admin'],
+    title: 'مرکز کنترل و فرماندهی خط ۱',
+    roles: ['admin', 'super_admin', 'operator'],
+    groups: [
+      {
+        id: 'occ-menu',
+        label: 'فرماندهی OCC',
+        icon: Activity,
+        roles: ['admin', 'super_admin', 'operator'],
+        items: [
+          { label: 'دیسپاچینگ و مانیتورینگ', href: '/occ', icon: Activity, roles: ['admin', 'super_admin', 'operator'] },
+          { label: 'سامانه اعلام عمومی PA', href: '/pa', icon: Radio, roles: ['admin', 'super_admin'] },
+          { label: 'مدیریت بحران و اضطرار', href: '/crisis', icon: Shield, roles: ['admin', 'super_admin'] },
+        ]
+      }
+    ]
   },
   {
-    label: 'آپلود لیست شیفت',
-    href: '/roster/upload',
-    icon: FileSpreadsheet,
-    roles: ['admin', 'super_admin'],
+    title: 'سامانه آموزش پرسنل',
+    groups: [
+      {
+        id: 'learning-menu',
+        label: 'آموزش و آزمون‌ها',
+        icon: GraduationCap,
+        items: [
+          { label: 'دوره‌ها و مقالات آموزشی', href: '/content', icon: Newspaper },
+          { label: 'گالری ویدیوهای آموزشی', href: '/learning/gallery', icon: Video },
+          { label: 'کارنامه و آزمون‌های من', href: '/learning/exams', icon: Award },
+          { label: 'دستورالعمل‌ها و دانش‌نامه', href: '/knowledge', icon: BookOpen },
+        ]
+      }
+    ]
   },
+  {
+    title: 'پنل مدیریت سامانه',
+    roles: ['admin', 'super_admin'],
+    groups: [
+      {
+        id: 'admin-users',
+        label: 'کاربران و دسترسی',
+        icon: Users,
+        roles: ['admin', 'super_admin'],
+        items: [
+          { label: 'پیشخوان رویدادهای زنده', href: '/admin/live-actions', icon: Activity },
+          { label: 'مدیریت پرسنل و نقش‌ها', href: '/admin/users', icon: Users },
+          { label: 'صف تایید مدارک', href: '/admin/documents-queue', icon: UserCheck },
+          { label: 'تنظیمات بایومتریک', href: '/admin/biometrics', icon: ShieldCheck },
+        ]
+      },
+      {
+        id: 'admin-roster',
+        label: 'برنامه‌ریزی و شیفت',
+        icon: Calendar,
+        roles: ['admin', 'super_admin'],
+        items: [
+          { label: 'مدیریت شیفت‌ها', href: '/admin/shifts', icon: Calendar },
+          { label: 'بارگذاری اکسل لوحه', href: '/roster/upload', icon: FileSpreadsheet },
+          { label: 'مدیریت چک‌لیست‌ها', href: '/checklists', icon: ClipboardCheck },
+        ]
+      },
+      {
+        id: 'admin-training',
+        label: 'آموزش و ابلاغیه‌ها',
+        icon: GraduationCap,
+        roles: ['admin', 'super_admin'],
+        items: [
+          { label: 'بخشنامه‌های ایمنی', href: '/admin/bulletins', icon: ShieldCheck },
+          { label: 'بانک سوالات و آزمون‌ها', href: '/admin/exams-editor', icon: Settings },
+        ]
+      },
+      {
+        id: 'admin-reports',
+        label: 'مانیتورینگ و گزارش‌ها',
+        icon: BarChart3,
+        roles: ['admin', 'super_admin'],
+        items: [
+          { label: 'داشبورد تحلیلی', href: '/admin/analytics', icon: BarChart3 },
+          { label: 'پیکربندی کاتالوگ عملکرد', href: '/admin/performance-config', icon: Award },
+          { label: 'اعتراضات ارزیابی عملکرد', href: '/admin/performance-appeals', icon: FileSpreadsheet },
+          { label: 'سیگنالینگ و شبکه برق', href: '/admin/infrastructure', icon: HardDrive },
+          { label: 'ثبت خودروها و پلاک‌خوان', href: '/admin/license-plates', icon: Settings },
+          { label: 'صلاحیت و گواهی راهبران', href: '/admin/operator-licenses', icon: ShieldCheck },
+          { label: 'تنظیمات سیستم', href: '/admin/settings', icon: Settings },
+        ]
+      }
+    ]
+  }
 ]
+
+const roleLabels: Record<string, string> = {
+  super_admin: 'مدیر ارشد',
+  admin: 'مدیر',
+  operator: 'اپراتور',
+  user: 'راهبر / پرسنل',
+}
 
 export function Sidebar() {
   const pathname = usePathname()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
 
-  const visibleItems = NAV_ITEMS.filter(
-    (item) => !item.roles || item.roles.includes(user?.roleKey ?? ''),
-  )
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {}
+    NAVIGATION_SECTIONS.forEach((section) => {
+      section.groups.forEach((group) => {
+        const hasActiveChild = group.items.some(
+          (item) => pathname === item.href || pathname.startsWith(item.href + '/'),
+        )
+        if (hasActiveChild) {
+          initial[group.id] = true
+        }
+      })
+    })
+    return initial
+  })
+
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [groupId]: !prev[groupId],
+    }))
+  }
+
+  // فیلتر نقش‌ها
+  const checkRole = (roles?: string[]) => {
+    if (!roles) return true
+    return roles.includes(user?.roleKey ?? '')
+  }
 
   return (
-    <aside className="hidden w-56 shrink-0 border-s border-border bg-background-subtle lg:flex lg:flex-col">
-      <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-        <span className="text-sm font-semibold tracking-tight">
-          مترو خط ۱
-        </span>
+    <aside className="hidden w-64 shrink-0 border-s border-border-subtle bg-surface-container-low lg:flex lg:flex-col" dir="rtl">
+      {/* User Profile Section */}
+      <div className="flex flex-col items-center gap-3 border-b border-border-subtle px-5 py-5">
+        <div className="flex size-16 items-center justify-center rounded-full border-2 border-accent bg-surface-container-high overflow-hidden">
+          {user?.customFields?.avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={user.customFields.avatar} alt={user.name} className="size-full object-cover" />
+          ) : (
+            <User className="size-7 text-foreground-muted" />
+          )}
+        </div>
+        <div className="text-center">
+          <div className="truncate text-sm font-semibold text-foreground">
+            {user?.name ?? 'کاربر'}
+          </div>
+          <div className="truncate text-xs text-foreground-muted mt-0.5">
+            {roleLabels[user?.roleKey ?? ''] ?? user?.roleKey}
+          </div>
+        </div>
       </div>
 
-      <nav className="flex-1 space-y-0.5 overflow-y-auto p-2" aria-label="منوی اصلی">
-        {visibleItems.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + '/')
+      {/* Navigation */}
+      <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4" aria-label="منوی اصلی">
+        {NAVIGATION_SECTIONS.map((section, idx) => {
+          // بررسی نقش در سطح بخش
+          if (section.roles && !section.roles.includes(user?.roleKey ?? '')) {
+            return null
+          }
+
+          // فیلتر گروه‌های مجاز بر اساس نقش کاربر
+          const visibleGroups = section.groups.filter((group) => checkRole(group.roles))
+          if (visibleGroups.length === 0) return null
+
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? 'page' : undefined}
-              className={cn(
-                'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors',
-                active
-                  ? 'bg-accent/10 text-accent font-medium'
-                  : 'text-foreground-muted hover:bg-surface-hover hover:text-foreground',
-              )}
-            >
-              <item.icon className="size-4 shrink-0" />
-              {item.label}
-            </Link>
+            <div key={idx} className="space-y-1.5">
+              {/* عنوان دسته‌بندی */}
+              <div className="text-[10px] font-bold text-foreground-muted/65 px-3 uppercase tracking-wider">
+                {section.title}
+              </div>
+
+              {/* گروه‌های تاشو */}
+              <div className="space-y-1">
+                {visibleGroups.map((group) => {
+                  const isExpanded = !!expandedGroups[group.id]
+                  const groupHasActiveChild = group.items.some(
+                    (item) => pathname === item.href || pathname.startsWith(item.href + '/'),
+                  )
+
+                  // فیلتر آیتم‌های مجاز
+                  const visibleItems = group.items.filter((item) => checkRole(item.roles))
+                  if (visibleItems.length === 0) return null
+
+                  return (
+                    <div key={group.id} className="rounded-lg overflow-hidden">
+                      {/* دکمه هدر گروه تاشو */}
+                      <button
+                        onClick={() => toggleGroup(group.id)}
+                        className={cn(
+                          'flex items-center justify-between w-full px-3 py-2 text-sm rounded-lg transition-all scale-[0.98] active:scale-95',
+                          groupHasActiveChild
+                            ? 'text-foreground font-semibold bg-surface-container-high/40'
+                            : 'text-foreground-muted hover:bg-surface-container-highest hover:text-foreground',
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <group.icon className="size-4 shrink-0" />
+                          <span>{group.label}</span>
+                        </div>
+                        {isExpanded ? (
+                          <ChevronDown className="size-3.5 text-foreground-muted" />
+                        ) : (
+                          <ChevronLeft className="size-3.5 text-foreground-muted" />
+                        )}
+                      </button>
+
+                      {/* لیست زیرمنوهای گروه */}
+                      {isExpanded && (
+                        <div className="mr-3 mt-0.5 border-r border-border-subtle/50 pr-2.5 space-y-0.5 transition-all">
+                          {visibleItems.map((item) => {
+                            const active = pathname === item.href || pathname.startsWith(item.href + '/')
+                            return (
+                              <Link
+                                key={item.href}
+                                href={item.href}
+                                aria-current={active ? 'page' : undefined}
+                                className={cn(
+                                  'flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs transition-all scale-[0.98] active:scale-95',
+                                  active
+                                    ? 'bg-accent/10 text-accent font-bold'
+                                    : 'text-foreground-muted hover:bg-surface-container-highest hover:text-foreground',
+                                )}
+                              >
+                                <item.icon className="size-3.5 shrink-0" />
+                                <span>{item.label}</span>
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           )
         })}
       </nav>
 
-      <div className="border-t border-border p-3">
+      {/* Footer */}
+      <div className="border-t border-border-subtle p-3">
         <div className="mb-2 flex items-center justify-between">
-          <span className="max-w-[140px] truncate text-xs text-foreground-muted">
-            {user?.name}
-          </span>
           <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2"
+            onClick={() => {
+              logout()
+              window.location.href = '/login'
+            }}
+          >
+            <LogOut className="size-4" />
+            خروج
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start gap-2"
-          onClick={() => {
-            logout()
-            window.location.href = '/login'
-          }}
-        >
-          <LogOut className="size-4" />
-          خروج
-        </Button>
       </div>
     </aside>
   )
@@ -118,9 +370,17 @@ export function MobileHeader() {
   const logout = useAuthStore((s) => s.logout)
 
   return (
-    <header className="flex items-center justify-between border-b border-border px-4 py-3 lg:hidden">
-      <span className="text-sm font-semibold tracking-tight"> метро خط ۱ </span>
+    <header className="flex h-16 items-center justify-between border-b border-border-subtle bg-surface-container px-4 lg:hidden">
+      <span className="font-headline-md text-headline-md font-bold text-accent">
+        مترو خط ۱
+      </span>
       <div className="flex items-center gap-2">
+        <Link
+          href="/notifications"
+          className="relative rounded-md p-2 text-foreground-muted hover:bg-surface-hover active:scale-95 transition-all duration-150"
+        >
+          <Bell className="size-5" />
+        </Link>
         <ThemeToggle />
         <span className="max-w-[80px] truncate text-xs text-foreground-muted">
           {user?.name}
@@ -129,6 +389,7 @@ export function MobileHeader() {
           variant="ghost"
           size="icon-sm"
           aria-label="خروج"
+          className="active:scale-95 transition-all duration-150"
           onClick={() => {
             logout()
             window.location.href = '/login'

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>مدیریت دپو و ناوگان خط ۱ - مرکز فرماندهی</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#e5e2e1",
+                        "surface-container-high": "#e7e8e9",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#d9dadb",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "secondary-container": "#e4e2e1",
+                        "on-primary-fixed-variant": "#930002",
+                        "on-error": "#ffffff",
+                        "outline": "#926f6a",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "on-secondary-fixed-variant": "#474747",
+                        "tertiary": "#5d5c5b",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "on-error-container": "#93000a",
+                        "on-secondary-container": "#656464",
+                        "surface-container-low": "#f3f4f5",
+                        "on-background": "#191c1d",
+                        "inverse-primary": "#ffb4a9",
+                        "surface-tint": "#c00205",
+                        "surface-container-highest": "#e1e3e4",
+                        "primary": "#bc0004",
+                        "primary-container": "#e1271c",
+                        "inverse-surface": "#2e3132",
+                        "on-primary-container": "#fffbff",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#ffdad5",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "surface-container": "#edeeef",
+                        "tertiary-container": "#767474",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "secondary": "#5f5e5e",
+                        "on-surface-variant": "#5d3f3b",
+                        "on-tertiary-container": "#f7feff",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#e4e2e1",
+                        "inverse-on-surface": "#f0f1f2",
+                        "surface-variant": "#e1e3e4",
+                        "on-tertiary": "#ffffff",
+                        "background": "#f8f9fa",
+                        "outline-variant": "#e7bdb7",
+                        "on-surface": "#191c1d",
+                        "on-primary-fixed": "#410000",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#f8f9fa",
+                        "surface": "#f8f9fa"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "touch-target-min": "48px",
+                        "unit": "4px",
+                        "margin-desktop": "32px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Vazirmatn"],
+                        "label-md": ["Vazirmatn"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-md": ["Vazirmatn"],
+                        "headline-md": ["Vazirmatn"],
+                        "body-lg": ["Vazirmatn"],
+                        "headline-lg-mobile": ["Vazirmatn"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "48px", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "36px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .pulse-cell {
+            animation: pulse-bg 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-bg {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        body { font-family: 'Vazirmatn', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen">
+<!-- TopNavBar -->
+<nav class="bg-background dark:bg-background border-b border-outline dark:border-outline-variant flat no shadows flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-touch-target-min docked full-width top-0 z-40 hidden md:flex">
+<div class="flex items-center gap-4">
+<span class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary dark:text-primary">مدیریت دپو و ناوگان خط ۱</span>
+</div>
+<div class="flex flex-row-reverse items-center gap-4">
+<span class="material-symbols-outlined hover:bg-surface-container-highest transition-colors active:scale-95 duration-150 p-2 rounded-full cursor-pointer text-secondary dark:text-secondary-fixed">sensors</span>
+<span class="material-symbols-outlined hover:bg-surface-container-highest transition-colors active:scale-95 duration-150 p-2 rounded-full cursor-pointer text-secondary dark:text-secondary-fixed">wifi</span>
+<span class="material-symbols-outlined hover:bg-surface-container-highest transition-colors active:scale-95 duration-150 p-2 rounded-full cursor-pointer text-secondary dark:text-secondary-fixed">dns</span>
+<img alt="اپراتور ارشد سیستم" class="w-8 h-8 rounded-full object-cover border border-outline" data-alt="A small circular avatar image of a senior systems operator in a modern industrial setting. Clean lighting, professional look, sharp details, subtle uniform elements visible." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFPyVFIWbxXlErn9hj8TtgWMbG0mnkd2OzLCiLhGPqsqCx008SSf1e8_s7e1IdmiSESgRDM0FkiS9tdKviEYmScbFnrKRWZP7nC7qASBzF-Cf7AfXFRFruQ3doZWrXFDr7FzViTKlyzFuVwLLhnGOrxo2ceozL7VyajiAsn0XE78JFb73nrxkEkjCaMzSjDBxB541Uc7pLIiYZ9aH2CiYYCdU91arHGuR-9ubim1XzRFi0JSBPVSa-UNtp9P6G1ajD3J4nGDkaIQ-B"/>
+</div>
+</nav>
+<div class="flex h-screen md:pt-[48px]"> <!-- pt compensates for fixed top nav -->
+<!-- SideNavBar -->
+<aside class="bg-surface-container-low dark:bg-surface-container-low border-l border-outline dark:border-outline-variant flat no shadows flex flex-col h-screen py-gutter fixed left-0 top-0 w-64 hidden md:flex z-30 pt-20">
+<div class="px-4 mb-6 flex flex-col items-center">
+<img alt="اپراتور ارشد" class="w-16 h-16 rounded-full mb-2 object-cover border-2 border-primary" data-alt="A circular avatar image representing a command center operator. Professional attire, clear high-key lighting, modern industrial aesthetic. High resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBklVz-niXsMtY67XpqYJmQfqXSKmyhRs6ngo9KTahKniSjTf5QU_KjkN6VrWuyNKu5rCjn2ROxbhIaTJYkVlsSDjIkWemzIlasHtFHt0iNyUHB7OcHu5w8EyzFdF_lavgCwICVms2SUqdr7du9t3CSOMh4uSWhBvx_3nJanaa9wPfPRzD_C_nAgzM_yCzeWtIqlEMXYGh4-9OPb1CnlBhODkXQK-x-ex1mOnbBMl5zrOAbaLbIj0bWEVTIx2T_TSszmSiLf0MQKp8o"/>
+<h2 class="font-headline-md text-headline-md text-primary">مرکز فرماندهی</h2>
+<p class="font-label-md text-label-md text-on-surface-variant">خط ۱ تهران</p>
+<button class="mt-4 bg-primary text-on-primary font-label-md text-label-md py-2 px-4 rounded-lg w-full hover:bg-primary-container hover:text-on-primary-container transition-colors active:scale-95 duration-150">ثبت گزارش اضطراری</button>
+</div>
+<nav class="flex-1 flex flex-col gap-2">
+<a class="bg-primary text-on-primary rounded-lg mx-2 flex items-center gap-3 p-3 transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">train</span>
+                    وضعیت ناوگان
+                </a>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 flex items-center gap-3 p-3 transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">engineering</span>
+                    گزارش‌های تعمیرات
+                </a>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 flex items-center gap-3 p-3 transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">map</span>
+                    نقشه دپو
+                </a>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 flex items-center gap-3 p-3 transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+                    موجودی قطعات
+                </a>
+</nav>
+<div class="mt-auto border-t border-outline-variant pt-4 flex flex-col gap-2">
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 flex items-center gap-3 p-3 transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    تنظیمات
+                </a>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 flex items-center gap-3 p-3 transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">logout</span>
+                    خروج
+                </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto w-full md:pr-64 pb-20 md:pb-0">
+<div class="p-margin-mobile md:p-margin-desktop max-w-7xl mx-auto space-y-6">
+<header class="flex justify-between items-end border-b border-outline-variant pb-4">
+<div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-1">وضعیت ناوگان و دپو</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">نمای کلی عملیات در لحظه - شیفت صبح</p>
+</div>
+<div class="hidden sm:flex items-center gap-2 bg-surface-container rounded-lg p-2 border border-outline-variant">
+<span class="material-symbols-outlined text-secondary">calendar_today</span>
+<span class="font-data-mono text-data-mono text-on-surface">۱۴۰۲/۰۸/۱۵ - ۰۸:۴۵</span>
+</div>
+</header>
+<!-- Summary Cards -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Fleet Availability -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+<div class="absolute top-0 right-0 w-1 h-full bg-primary"></div>
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant">آمادگی اعزام</span>
+<span class="material-symbols-outlined text-primary bg-primary-container p-1 rounded-full text-[20px]">train</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-on-surface">۸۵٪</div>
+<div class="w-full bg-surface-container mt-2 h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 85%;"></div>
+</div>
+<p class="font-label-md text-label-md text-secondary mt-2">۳۶ از ۴۲ فعال</p>
+</div>
+<!-- Active Faults -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+<div class="absolute top-0 right-0 w-1 h-full bg-[#D97706]"></div> <!-- Amber -->
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant">خطاهای فعال</span>
+<span class="material-symbols-outlined text-[#D97706] bg-[#FEF3C7] p-1 rounded-full text-[20px]">warning</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-on-surface">۱۲</div>
+<div class="flex items-center gap-1 mt-2">
+<span class="material-symbols-outlined text-error text-[16px]">arrow_upward</span>
+<span class="font-label-md text-label-md text-error">+۲ از شیفت قبل</span>
+</div>
+</div>
+<!-- In Maintenance -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+<div class="absolute top-0 right-0 w-1 h-full bg-tertiary"></div>
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant">در حال تعمیر</span>
+<span class="material-symbols-outlined text-tertiary bg-tertiary-container p-1 rounded-full text-[20px]">build</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-on-surface">۴</div>
+<div class="flex items-center gap-1 mt-2">
+<span class="font-label-md text-label-md text-secondary">۲ سنگین، ۲ دوره‌ای</span>
+</div>
+</div>
+<!-- Backup -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+<div class="absolute top-0 right-0 w-1 h-full bg-[#10B981]"></div> <!-- Green -->
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant">ناوگان پشتیبان</span>
+<span class="material-symbols-outlined text-[#10B981] bg-[#D1FAE5] p-1 rounded-full text-[20px]">shield</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-on-surface">۲</div>
+<div class="flex items-center gap-1 mt-2">
+<span class="material-symbols-outlined text-[#10B981] text-[16px]">check_circle</span>
+<span class="font-label-md text-label-md text-[#10B981]">آماده بکار</span>
+</div>
+</div>
+</section>
+<!-- Main Split Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Left Side: Trains in Maintenance (Bento/Card style) -->
+<div class="lg:col-span-5 flex flex-col gap-4">
+<div class="flex justify-between items-center mb-2">
+<h2 class="font-headline-md text-headline-md text-on-surface">قطارهای در حال تعمیر</h2>
+<button class="text-primary font-label-md text-label-md hover:bg-surface-container p-1 rounded">مشاهده همه</button>
+</div>
+<!-- Maintenance Item 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm">
+<div class="flex justify-between items-start mb-3">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-on-surface">T-104</span>
+<span class="bg-error-container text-on-error-container font-label-md text-[10px] px-2 py-0.5 rounded-full border border-error">فوری</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant mt-1">تعمیرات سیستم ترمز</p>
+</div>
+<span class="bg-surface-container text-on-surface-variant p-2 rounded-lg font-data-mono text-data-mono">خط ۳</span>
+</div>
+<div class="flex gap-2 mb-4">
+<span class="bg-surface-container-high px-2 py-1 rounded text-[12px] font-label-md text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">settings</span> مکانیک</span>
+<span class="bg-surface-container-high px-2 py-1 rounded text-[12px] font-label-md text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">bolt</span> الکترونیک</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full pulse-cell" style="width: 60%;"></div>
+</div>
+<div class="flex justify-between mt-1">
+<span class="font-label-md text-[12px] text-secondary">پیشرفت: ۶۰٪</span>
+<span class="font-label-md text-[12px] text-secondary">تخمین اتمام: ۲ ساعت</span>
+</div>
+</div>
+<!-- Maintenance Item 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm">
+<div class="flex justify-between items-start mb-3">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-on-surface">T-112</span>
+<span class="bg-[#FEF3C7] text-[#92400E] font-label-md text-[10px] px-2 py-0.5 rounded-full border border-[#D97706]">عادی</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant mt-1">بازدید دوره‌ای (بوگی)</p>
+</div>
+<span class="bg-surface-container text-on-surface-variant p-2 rounded-lg font-data-mono text-data-mono">خط ۷</span>
+</div>
+<div class="flex gap-2 mb-4">
+<span class="bg-surface-container-high px-2 py-1 rounded text-[12px] font-label-md text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">tire_repair</span> چرخ‌ها</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-[#10B981] h-full" style="width: 90%;"></div>
+</div>
+<div class="flex justify-between mt-1">
+<span class="font-label-md text-[12px] text-secondary">پیشرفت: ۹۰٪</span>
+<span class="font-label-md text-[12px] text-secondary">در حال ترخیص</span>
+</div>
+</div>
+</div>
+<!-- Right Side: Live Depot Status Map -->
+<div class="lg:col-span-7 flex flex-col gap-4">
+<div class="flex justify-between items-center mb-2">
+<h2 class="font-headline-md text-headline-md text-on-surface">نقشه زنده دپو</h2>
+<div class="flex gap-3">
+<div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-primary"></div><span class="text-[12px] text-on-surface-variant">اشغال/تعمیر</span></div>
+<div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-[#10B981]"></div><span class="text-[12px] text-on-surface-variant">آزاد</span></div>
+</div>
+</div>
+<!-- Depot Schematic Grid -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm flex-1 relative min-h-[400px]">
+<!-- Schematic Background Style -->
+<div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(#191c1d 1px, transparent 1px); background-size: 20px 20px;"></div>
+<div class="grid grid-cols-1 gap-3 relative z-10">
+<!-- Track 1 -->
+<div class="flex items-center gap-4 bg-surface-container rounded-lg p-2 border border-outline-variant">
+<div class="font-data-mono text-data-mono w-16 text-center border-l border-outline-variant pl-2">Track 1</div>
+<div class="flex-1 h-12 bg-surface-dim rounded relative flex items-center px-2">
+<div class="absolute left-0 w-full h-1 bg-[#5d5c5b] top-1/2 -translate-y-1/2 rounded opacity-30"></div>
+<!-- Train on track -->
+<div class="bg-primary text-on-primary px-3 py-1 rounded shadow-md z-10 flex items-center gap-2 pulse-cell ml-4">
+<span class="material-symbols-outlined text-[18px]">train</span>
+<span class="font-data-mono text-[12px]">T-104</span>
+</div>
+</div>
+<div class="w-24 text-center font-label-md text-[10px] text-primary">تعمیر سنگین</div>
+</div>
+<!-- Track 2 -->
+<div class="flex items-center gap-4 bg-surface-container rounded-lg p-2 border border-outline-variant">
+<div class="font-data-mono text-data-mono w-16 text-center border-l border-outline-variant pl-2">Track 2</div>
+<div class="flex-1 h-12 bg-surface-dim rounded relative flex items-center px-2">
+<div class="absolute left-0 w-full h-1 bg-[#5d5c5b] top-1/2 -translate-y-1/2 rounded opacity-30"></div>
+<div class="bg-surface-container-highest text-on-surface-variant px-3 py-1 rounded shadow-md z-10 flex items-center gap-2 ml-auto mr-4 border border-outline-variant">
+<span class="material-symbols-outlined text-[18px]">train</span>
+<span class="font-data-mono text-[12px]">T-089</span>
+</div>
+</div>
+<div class="w-24 text-center font-label-md text-[10px] text-[#10B981]">آماده اعزام</div>
+</div>
+<!-- Track 3 (Empty) -->
+<div class="flex items-center gap-4 bg-surface-container rounded-lg p-2 border border-outline-variant opacity-70">
+<div class="font-data-mono text-data-mono w-16 text-center border-l border-outline-variant pl-2">Track 3</div>
+<div class="flex-1 h-12 bg-surface-dim rounded relative flex items-center px-2">
+<div class="absolute left-0 w-full h-1 bg-[#10B981] top-1/2 -translate-y-1/2 rounded opacity-50"></div>
+</div>
+<div class="w-24 text-center font-label-md text-[10px] text-secondary">آزاد</div>
+</div>
+<!-- Track 4 -->
+<div class="flex items-center gap-4 bg-surface-container rounded-lg p-2 border border-outline-variant">
+<div class="font-data-mono text-data-mono w-16 text-center border-l border-outline-variant pl-2">Track 4</div>
+<div class="flex-1 h-12 bg-surface-dim rounded relative flex items-center px-2">
+<div class="absolute left-0 w-full h-1 bg-[#5d5c5b] top-1/2 -translate-y-1/2 rounded opacity-30"></div>
+<div class="bg-[#D97706] text-white px-3 py-1 rounded shadow-md z-10 flex items-center gap-2 ml-10">
+<span class="material-symbols-outlined text-[18px]">train</span>
+<span class="font-data-mono text-[12px]">T-112</span>
+</div>
+</div>
+<div class="w-24 text-center font-label-md text-[10px] text-[#D97706]">شستشو</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="bg-surface dark:bg-surface border-t border-outline dark:border-outline-variant shadow-lg fixed bottom-0 left-0 w-full flex justify-around items-center px-margin-mobile pb-2 z-50 md:hidden h-16">
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full p-unit w-16 h-12 active:scale-90 transition-transform duration-100" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">train</span>
+<span class="font-label-md text-[10px] mt-1">ناوگان</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-unit w-16 h-12 active:bg-surface-container-highest active:scale-90 transition-transform duration-100 rounded-full" href="#">
+<span class="material-symbols-outlined">engineering</span>
+<span class="font-label-md text-[10px] mt-1">تعمیرات</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-unit w-16 h-12 active:bg-surface-container-highest active:scale-90 transition-transform duration-100 rounded-full" href="#">
+<span class="material-symbols-outlined">map</span>
+<span class="font-label-md text-[10px] mt-1">نقشه</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-unit w-16 h-12 active:bg-surface-container-highest active:scale-90 transition-transform duration-100 rounded-full" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-[10px] mt-1">قطعات</span>
+</a>
+</nav>
+</body></html>

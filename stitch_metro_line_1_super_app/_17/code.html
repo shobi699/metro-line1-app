@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+<html class="light" dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>پروفایل پرسنل - سامانه فرمان خط یک</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-primary": "#ffb4a9",
+                        "on-surface-variant": "#5d3f3b",
+                        "primary": "#bc0004",
+                        "on-error-container": "#93000a",
+                        "on-surface": "#191c1d",
+                        "background": "#f8f9fa",
+                        "surface": "#f8f9fa",
+                        "surface-dim": "#d9dadb",
+                        "primary-fixed": "#ffdad5",
+                        "primary-container": "#e1271c",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#767474",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-background": "#191c1d",
+                        "tertiary-fixed": "#e5e2e1",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#e4e2e1",
+                        "on-primary-fixed-variant": "#930002",
+                        "on-primary-fixed": "#410000",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "surface-variant": "#e1e3e4",
+                        "surface-container-high": "#e7e8e9",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "tertiary": "#5d5c5b",
+                        "outline": "#926f6a",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "surface-container": "#edeeef",
+                        "on-primary-container": "#fffbff",
+                        "secondary": "#5f5e5e",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "on-secondary-fixed-variant": "#474747",
+                        "on-secondary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#656464",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed": "#e4e2e1",
+                        "on-tertiary-container": "#f7feff",
+                        "surface-bright": "#f8f9fa",
+                        "outline-variant": "#e7bdb7",
+                        "inverse-surface": "#2e3132",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#c00205",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#f3f4f5",
+                        "secondary-fixed-dim": "#c8c6c6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "touch-target-min": "48px",
+                        "gutter": "16px",
+                        "margin-mobile": "16px",
+                        "unit": "4px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Vazirmatn"],
+                        "headline-lg-mobile": ["Vazirmatn"],
+                        "body-lg": ["Vazirmatn"],
+                        "headline-lg": ["Vazirmatn"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-md": ["Vazirmatn"],
+                        "headline-md": ["Vazirmatn"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "48px", "fontWeight": "700" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "36px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Vazirmatn', sans-serif; }
+        .data-mono { font-family: 'JetBrains Mono', monospace; }
+        .inner-shadow { box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background antialiased min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky border-b border-outline-variant bg-surface flex flex-row-reverse justify-between items-center px-margin-mobile h-touch-target-min z-40">
+<button class="active:scale-95 duration-150 hover:bg-surface-container-high transition-colors p-2 -mr-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md-mobile font-bold text-primary tracking-tight">سامانه فرمان خط یک</h1>
+<button class="active:scale-95 duration-150 hover:bg-surface-container-high transition-colors p-2 -ml-2 rounded-full flex items-center justify-center relative">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border border-surface"></span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="flex-grow px-margin-mobile py-gutter pb-[88px] flex flex-col gap-margin-mobile">
+<!-- Profile Header Card -->
+<section class="bg-surface border border-outline-variant rounded-xl p-margin-mobile flex items-start gap-gutter shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 w-full h-1 bg-primary"></div>
+<div class="flex-shrink-0 relative">
+<img class="w-20 h-20 rounded-full object-cover border-2 border-outline-variant p-0.5 bg-surface-container" data-alt="A professional corporate headshot of Morteza Alavi, a senior train driver in his mid-40s with Middle Eastern features, wearing a crisp, dark navy official Tehran Metro Line 1 uniform with subtle red piping. He has a neat, short beard and a focused, authoritative expression. The background is a clean, bright, light-mode industrial environment featuring brushed steel and subtle out-of-focus control panels. The lighting is high-key and pristine, emphasizing precision, resilience, and operational readiness within a high-stakes transportation network." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQU9dESOlNw3faxUNqakXlkg5yCCpf7Eq6CFBnGh1YBmS4KLTycFdNYn1duw_w0ff9pt7F4dpyuIfx2CALcnwRK1q_le5sZEevy87MyYCQ03JO6EPhkoDc1Yo1-E95mxolGmNjlECesF8lflCDdsjP78nyw4VDqlINe7H0RlohK4FGEr52uVEiBgZ7lSJ3G2x9mKUVrS7xBttuGR3UQpFF85CE7kZK1kbxj5E7VZVsS5QtZoreu3N_JVbtOFVdmn7BMDMZM2LvIpNU"/>
+</div>
+<div class="flex flex-col flex-grow justify-center pt-1">
+<div class="flex justify-between items-start w-full">
+<h2 class="font-headline-md text-headline-md-mobile text-on-surface leading-none">مرتضی علوی</h2>
+<span class="bg-surface-container-high text-on-surface font-label-md text-[11px] px-2 py-0.5 rounded-sm border border-outline-variant flex items-center gap-1.5 shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                        آنلاین
+                    </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">راهبر ارشد قطار</p>
+<div class="flex items-center gap-2 mt-2 bg-surface-container-low w-max px-2 py-1 rounded border border-outline-variant">
+<span class="material-symbols-outlined text-[16px] text-tertiary">badge</span>
+<p class="font-data-mono text-data-mono text-secondary tracking-widest text-[12px]">ID: 11234</p>
+</div>
+</div>
+</section>
+<!-- Digital ID QR Code -->
+<section class="bg-primary-fixed border border-outline-variant rounded-xl p-margin-mobile flex justify-between items-center relative overflow-hidden">
+<div class="absolute -right-8 -top-8 w-32 h-32 bg-primary opacity-5 rounded-full blur-xl pointer-events-none"></div>
+<div class="flex flex-col gap-2 z-10">
+<h3 class="font-headline-md text-headline-md-mobile text-on-primary-fixed leading-tight">کارت شناسایی<br/>دیجیتال</h3>
+<p class="font-body-md text-[13px] text-on-primary-fixed-variant">جهت تردد در ایستگاه‌ها</p>
+<button class="mt-1 bg-primary text-on-primary font-label-md text-[12px] px-3 py-1.5 rounded flex items-center justify-center gap-1.5 w-max active:inner-shadow hover:bg-surface-tint transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[16px]">fullscreen</span>
+                    تمام صفحه
+                </button>
+</div>
+<div class="bg-surface p-2 rounded-lg border border-outline-variant shadow-sm z-10 flex-shrink-0">
+<img class="w-24 h-24 object-contain mix-blend-multiply" data-alt="A high-contrast, crisp, digital QR code representing a secure employee digital ID badge for transit operations. The QR code is rendered in sharp black against a pure white background, framed by a subtle, precise industrial border. The overall aesthetic is purely functional and data-dense, designed for rapid scanning by security personnel in a bright, modern, light-mode corporate setting. The visual style prioritizes absolute clarity and technological efficiency over decorative elements, fitting an authoritative infrastructure ecosystem." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDS2lR2IWtmLs2RCixN5tfqfB7AK49ulFuM8-hcrwaR78Ba0PbBSjXGYxXqokPTt_N739hAy3BMl4yq0P1lvZGq7nqyy585pDuvf735_dsCVlFSbs6D1ekQCuw00YVCfQY5peI1zZ9tK4lr7h3TBhfbo0K3ddwBfDNIYGzOoaxbJ3KDnr-PNFLifUCd09-f9UV7dTclMABg3ChZ7Cid0RGP5G74R9j9dV4L_8GIci8R9_Gfs8IuQVwPYTf3GJ9MA6Y51-As_-y-7eiy"/>
+</div>
+</section>
+<!-- Performance Stats -->
+<section>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">monitoring</span>
+                آمار عملکرد (ماه جاری)
+            </h3>
+<div class="grid grid-cols-2 gap-gutter">
+<div class="bg-surface border border-outline-variant rounded-xl p-margin-mobile flex flex-col items-center justify-center text-center shadow-sm">
+<span class="material-symbols-outlined text-tertiary mb-2 text-[24px]">timer</span>
+<span class="font-data-mono text-headline-lg-mobile text-on-surface">۱۸۴</span>
+<span class="font-body-md text-[12px] text-on-surface-variant mt-1">ساعات هدایت قطار</span>
+</div>
+<div class="bg-surface border border-outline-variant rounded-xl p-margin-mobile flex flex-col items-center justify-center text-center shadow-sm relative overflow-hidden">
+<div class="absolute bottom-0 left-0 w-full h-1 bg-primary opacity-20"></div>
+<span class="material-symbols-outlined text-tertiary mb-2 text-[24px]">verified</span>
+<span class="font-data-mono text-headline-lg-mobile text-primary">۹۹.۲٪</span>
+<span class="font-body-md text-[12px] text-on-surface-variant mt-1">نرخ وقت‌شناسی</span>
+</div>
+</div>
+</section>
+<!-- Certificates & Licenses -->
+<section>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">workspace_premium</span>
+                گواهینامه‌ها و مجوزها
+            </h3>
+<div class="flex flex-col gap-unit">
+<!-- Valid Cert -->
+<div class="bg-surface border border-outline-variant rounded-lg p-3 flex justify-between items-center shadow-sm">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container flex items-center justify-center text-primary flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">health_and_safety</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-[14px] text-on-surface">گواهی ایمنی پیشرفته</span>
+<span class="font-data-mono text-[11px] text-on-surface-variant mt-0.5">انقضا: ۱۴۰۳/۱۲/۰۱</span>
+</div>
+</div>
+<span class="bg-surface-container-lowest text-on-surface font-label-md text-[10px] px-2 py-1 rounded border border-outline-variant shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">check_circle</span>
+                        معتبر
+                    </span>
+</div>
+<!-- Expired/Warning Cert -->
+<div class="bg-surface border border-error opacity-90 rounded-lg p-3 flex justify-between items-center shadow-sm relative overflow-hidden">
+<div class="absolute left-0 top-0 w-1 h-full bg-error"></div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container flex items-center justify-center text-secondary flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">medical_services</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-[14px] text-on-surface">امداد و کمک‌های اولیه</span>
+<span class="font-data-mono text-[11px] text-error mt-0.5">انقضا: ۱۴۰۲/۱۰/۱۵</span>
+</div>
+</div>
+<span class="bg-error-container text-on-error-container font-label-md text-[10px] px-2 py-1 rounded border border-error shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">warning</span>
+                        تمدید
+                    </span>
+</div>
+</div>
+</section>
+<!-- Emergency Contacts -->
+<section>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">emergency</span>
+                تماس‌های اضطراری
+            </h3>
+<div class="bg-surface border border-outline-variant rounded-xl flex flex-col shadow-sm">
+<!-- Contact 1 -->
+<div class="p-4 flex justify-between items-center border-b border-outline-variant last:border-0">
+<div class="flex flex-col">
+<span class="font-label-md text-[14px] text-on-surface font-bold">فرماندهی مرکزی خط ۱</span>
+<span class="font-data-mono text-[12px] text-on-surface-variant mt-1">داخلی: ۱۰۰</span>
+</div>
+<button class="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center active:inner-shadow hover:bg-surface-tint transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+<span class="material-symbols-outlined">call</span>
+</button>
+</div>
+<!-- Contact 2 -->
+<div class="p-4 flex justify-between items-center border-b border-outline-variant last:border-0">
+<div class="flex flex-col">
+<span class="font-label-md text-[14px] text-on-surface font-bold">تیم فوریت‌های پزشکی</span>
+<span class="font-data-mono text-[12px] text-on-surface-variant mt-1">داخلی: ۱۱۵</span>
+</div>
+<button class="w-12 h-12 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center active:inner-shadow hover:bg-surface-variant transition-colors border border-outline-variant shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary focus:ring-offset-2">
+<span class="material-symbols-outlined">call</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 border-t border-outline-variant bg-surface flex flex-row-reverse justify-around items-center h-16 shadow-[0_-4px_16px_rgba(0,0,0,0.05)] pb-safe">
+<button class="flex flex-col items-center justify-center text-secondary hover:bg-surface-container-low transition-all active:inner-shadow duration-100 flex-1 h-full">
+<span class="material-symbols-outlined mb-1 text-[24px]" data-icon="dashboard" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span class="font-label-md text-[10px]">داشبورد</span>
+</button>
+<button class="flex flex-col items-center justify-center text-secondary hover:bg-surface-container-low transition-all active:inner-shadow duration-100 flex-1 h-full">
+<span class="material-symbols-outlined mb-1 text-[24px]" data-icon="calendar_month" style="font-variation-settings: 'FILL' 0;">calendar_month</span>
+<span class="font-label-md text-[10px]">برنامه کاری</span>
+</button>
+<button class="flex flex-col items-center justify-center text-secondary hover:bg-surface-container-low transition-all active:inner-shadow duration-100 flex-1 h-full relative">
+<span class="material-symbols-outlined mb-1 text-[24px]" data-icon="chat" style="font-variation-settings: 'FILL' 0;">chat</span>
+<span class="absolute top-2 right-[calc(50%-14px)] w-2 h-2 bg-primary rounded-full border border-surface"></span>
+<span class="font-label-md text-[10px]">گفتگو</span>
+</button>
+<!-- Active State: Profile -->
+<button class="flex flex-col items-center justify-center text-primary font-bold hover:bg-surface-container-low transition-all active:inner-shadow duration-100 flex-1 h-full relative">
+<div class="absolute top-0 w-12 h-1 bg-primary rounded-b-full"></div>
+<span class="material-symbols-outlined mb-1 text-[24px]" data-icon="person" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-md text-[10px]">پروفایل</span>
+</button>
+</nav>
+<style>
+        /* Add basic safe area padding for modern mobile browsers */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+            main { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+        }
+    </style>
+</body></html>

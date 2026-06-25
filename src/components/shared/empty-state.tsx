@@ -14,13 +14,15 @@ export function EmptyState({
   action,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border p-8 text-center">
-      <Icon className="mb-3 size-10 text-foreground-muted" />
-      <h3 className="text-sm font-medium">{title}</h3>
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-outline-variant bg-surface-container-low/50 p-12 text-center">
+      <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-surface-container-high">
+        <Icon className="size-7 text-foreground-muted" />
+      </div>
+      <h3 className="font-label-md text-foreground">{title}</h3>
       {description && (
-        <p className="mt-1 text-xs text-foreground-muted">{description}</p>
+        <p className="mt-1.5 text-xs text-foreground-muted max-w-xs">{description}</p>
       )}
-      {action && <div className="mt-4">{action}</div>}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   )
 }

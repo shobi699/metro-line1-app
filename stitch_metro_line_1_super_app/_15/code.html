@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Phonebook - Command Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#bc0004",
+                        "background": "#f8f9fa",
+                        "secondary-fixed": "#e4e2e1",
+                        "on-surface": "#191c1d",
+                        "on-secondary-container": "#656464",
+                        "surface-container-high": "#e7e8e9",
+                        "secondary": "#5f5e5e",
+                        "secondary-container": "#e4e2e1",
+                        "tertiary-container": "#767474",
+                        "on-surface-variant": "#5d3f3b",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#d9dadb",
+                        "tertiary": "#5d5c5b",
+                        "outline": "#926f6a",
+                        "on-tertiary-container": "#f7feff",
+                        "on-secondary-fixed-variant": "#474747",
+                        "surface-tint": "#c00205",
+                        "surface-container-highest": "#e1e3e4",
+                        "inverse-surface": "#2e3132",
+                        "on-background": "#191c1d",
+                        "on-primary-fixed": "#410000",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "tertiary-fixed": "#e5e2e1",
+                        "surface-variant": "#e1e3e4",
+                        "on-primary-container": "#fffbff",
+                        "inverse-primary": "#ffb4a9",
+                        "surface-container-low": "#f3f4f5",
+                        "surface": "#f8f9fa",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "on-error": "#ffffff",
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "primary-fixed": "#ffdad5",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#e1271c",
+                        "outline-variant": "#e7bdb7",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#f8f9fa",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-primary-fixed-variant": "#930002",
+                        "surface-container": "#edeeef"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "gutter": "16px",
+                        "margin-desktop": "32px",
+                        "unit": "4px",
+                        "touch-target-min": "48px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Vazirmatn"],
+                        "headline-lg": ["Vazirmatn"],
+                        "body-md": ["Vazirmatn"],
+                        "body-lg": ["Vazirmatn"],
+                        "headline-md": ["Vazirmatn"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Vazirmatn"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "48px", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "36px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .animate-pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col md:flex-row overflow-hidden relative selection:bg-primary selection:text-on-primary">
+<!-- TopNavBar (Mobile Only) -->
+<header class="md:hidden flex flex-row-reverse justify-between items-center w-full px-margin-mobile z-50 h-16 bg-surface dark:bg-inverse-surface text-primary dark:text-primary-fixed-dim border-b border-outline-variant dark:border-outline flat no shadows sticky top-0">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-bold">Tehran Metro Line 1</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors duration-200 cursor-pointer rounded">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors duration-200 cursor-pointer rounded">
+<span class="material-symbols-outlined" data-icon="person_search">person_search</span>
+</button>
+<button class="p-2 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors duration-200 cursor-pointer rounded">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar (Desktop Only) -->
+<nav class="hidden md:flex fixed right-0 top-0 h-full w-64 flex-col z-40 pt-16 rtl bg-surface-container-low dark:bg-surface-dim text-primary dark:text-primary-fixed-dim font-label-md text-label-md border-l border-outline-variant dark:border-outline flat no shadows">
+<div class="px-6 py-4 border-b border-outline-variant dark:border-outline flex flex-col items-center">
+<img alt="Personnel Profile" class="w-16 h-16 rounded-full border-2 border-primary mb-2 object-cover" data-alt="A professional headshot of a Metro Line Operations Commander in a crisp uniform, high contrast industrial lighting, serious expression, highly detailed face, set against a dark gray control room background with subtle glowing red indicator lights out of focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAySPVJb-u1XED4ToIRIl3-SMwZvXANmUOP1hGJ1ml_lROCX1qd9sFR834DIUUMnv1wzViXaDaS0naJyRTn9ZA-AIBvvfvcZ3h8392tfIBrKZxG05fpVTT8VwN6EgL8jlbQ1Ks7M443plyAx86UOuvJ-KcGW2Kzrp2P0P_DlChAyq_14odOoUmd--Y4o7AtGLG3sMqj-JPjLt4jczpClRPCFjzw-di7M5yxtNPBo7pLk-ogXqjyRWK2dmO-4qHc71XWPEYZksHZXGFB"/>
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Command Center</h2>
+<p class="text-on-surface-variant text-sm mt-1">Metro Line 1 Ops</p>
+</div>
+<div class="flex-1 overflow-y-auto py-4 flex flex-col gap-1 px-2">
+<a class="flex items-center gap-3 px-4 py-3 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest transition-all scale-95 active:scale-90 rounded" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest transition-all scale-95 active:scale-90 rounded" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
+                Roster
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary font-bold rounded-lg transition-all scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="contact_phone" style="font-variation-settings: 'FILL' 1;">contact_phone</span>
+                Phonebook
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest transition-all scale-95 active:scale-90 rounded" href="#">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+                Bulletins
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest transition-all scale-95 active:scale-90 rounded" href="#">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+                Chat
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest transition-all scale-95 active:scale-90 rounded" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+                Training
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest transition-all scale-95 active:scale-90 rounded" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Settings
+            </a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:pr-64 pb-8 h-screen overflow-y-auto bg-background">
+<!-- Header Section -->
+<div class="px-margin-mobile md:px-margin-desktop py-6 md:py-8 border-b border-outline-variant bg-surface sticky top-0 z-30">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div>
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2">دفتر تلفن هوشمند پرسنل</h1>
+<p class="text-on-surface-variant font-body-md">جستجوی سریع در دیتابیس پرسنل خط ۱ مترو تهران</p>
+</div>
+<!-- Search Box -->
+<div class="w-full md:w-96 relative group">
+<span class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full pl-4 pr-10 py-3 bg-surface-container-low border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md placeholder:text-on-surface-variant/70 text-on-surface" placeholder="جستجو بر اساس نام، کد پرسنلی یا پلاک..." type="text"/>
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-primary font-data-mono text-data-mono text-xs bg-primary-fixed/20 px-2 py-1 rounded">Ctrl+K</span>
+</div>
+</div>
+</div>
+<div class="p-margin-mobile md:p-margin-desktop max-w-7xl mx-auto flex flex-col md:flex-row gap-6">
+<!-- Filter Sidebar -->
+<aside class="w-full md:w-64 flex-shrink-0">
+<div class="bg-surface border border-outline-variant rounded p-4 sticky top-32">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4 border-b border-outline-variant pb-2">دسته‌بندی‌ها</h3>
+<ul class="space-y-1 font-label-md text-label-md">
+<li>
+<button class="w-full flex items-center justify-between px-3 py-2 bg-primary/10 text-primary rounded border border-primary/20">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[20px]">groups</span> همه پرسنل</span>
+<span class="font-data-mono text-xs bg-surface px-2 py-0.5 rounded border border-outline-variant">1,248</span>
+</button>
+</li>
+<li>
+<button class="w-full flex items-center justify-between px-3 py-2 text-on-surface hover:bg-surface-container rounded transition-colors group">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[20px] text-on-surface-variant group-hover:text-on-surface transition-colors">train</span> راهبران قطار</span>
+<span class="font-data-mono text-xs bg-surface-container px-2 py-0.5 rounded">342</span>
+</button>
+</li>
+<li>
+<button class="w-full flex items-center justify-between px-3 py-2 text-on-surface hover:bg-surface-container rounded transition-colors group">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[20px] text-on-surface-variant group-hover:text-on-surface transition-colors">storefront</span> مدیران ایستگاه</span>
+<span class="font-data-mono text-xs bg-surface-container px-2 py-0.5 rounded">86</span>
+</button>
+</li>
+<li>
+<button class="w-full flex items-center justify-between px-3 py-2 text-on-surface hover:bg-surface-container rounded transition-colors group">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[20px] text-on-surface-variant group-hover:text-on-surface transition-colors">support_agent</span> مرکز فرمان (OCC)</span>
+<span class="font-data-mono text-xs bg-surface-container px-2 py-0.5 rounded">45</span>
+</button>
+</li>
+<li>
+<button class="w-full flex items-center justify-between px-3 py-2 text-on-surface hover:bg-surface-container rounded transition-colors group">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[20px] text-on-surface-variant group-hover:text-on-surface transition-colors">engineering</span> فنی و نگهداری</span>
+<span class="font-data-mono text-xs bg-surface-container px-2 py-0.5 rounded">215</span>
+</button>
+</li>
+</ul>
+</div>
+</aside>
+<!-- Personnel Grid -->
+<div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4">
+<!-- Card 1 -->
+<div class="bg-surface border border-outline-variant rounded p-4 hover:border-primary/50 transition-colors flex flex-col gap-4 relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-2 h-full bg-primary/20 group-hover:bg-primary transition-colors"></div>
+<div class="flex items-start gap-4">
+<div class="relative">
+<img alt="Ali Rezaei" class="w-16 h-16 rounded object-cover border border-outline-variant" data-alt="A portrait of a male train driver with a neat mustache, wearing a white uniform shirt with epaulets, standing in front of a slightly blurred train cab window, harsh industrial lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3W7UaJaqlFSODTLjKUDNxzTvXpL_pjp80pob8Q5VuDIHNFvNYjk13hCkY9zeCZ8z-6eYGC-43io-Nfq3a7MEEUS7DyRrTijtNg55OY2P8y_pYyz9zsxxBwJCMPJtdBwWjKiUrFd8Wu8flxpIrZTQCw8JOwq9RVbKApdARUqV6HoIQ6JGDJlDrRQ6AaHWDzZ8nAYBH18JEUGVYxf6eX6ag3ucV2M8sY7EO5AJ-_KV96sMeY_e_4yzmoAv5h52KE1-n0xHgNwqA5i2s"/>
+<div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-surface" title="Online"></div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-headline-md text-body-lg font-bold text-on-surface">علی رضایی</h4>
+<p class="text-on-surface-variant text-sm font-label-md mt-0.5">راهبر پایه یک (Line 1)</p>
+</div>
+<span class="font-data-mono text-xs bg-surface-container-high text-on-surface px-2 py-1 rounded border border-outline-variant">ID: 98452</span>
+</div>
+<div class="mt-2 flex items-center gap-2 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<span>در حال کار - قطار 114 (مسیر تجریش)</span>
+</div>
+</div>
+</div>
+<div class="flex justify-end gap-2 mt-auto pt-4 border-t border-outline-variant/50">
+<button class="p-2 border border-outline-variant rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Message">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+</button>
+<button class="p-2 border border-outline-variant rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="View Profile">
+<span class="material-symbols-outlined text-[20px]">badge</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded font-label-md hover:bg-primary/90 transition-colors active:shadow-inner">
+<span class="material-symbols-outlined text-[20px]">call</span>
+                            تماس مستقیم
+                        </button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface border border-outline-variant rounded p-4 hover:border-primary/50 transition-colors flex flex-col gap-4 relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-2 h-full bg-secondary/20 group-hover:bg-secondary transition-colors"></div>
+<div class="flex items-start gap-4">
+<div class="relative">
+<div class="w-16 h-16 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center text-on-surface-variant font-headline-md">
+                                SM
+                            </div>
+<div class="absolute -bottom-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full border-2 border-surface" title="Busy"></div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-headline-md text-body-lg font-bold text-on-surface">سارا محمدی</h4>
+<p class="text-on-surface-variant text-sm font-label-md mt-0.5">مدیر ایستگاه حقانی</p>
+</div>
+<span class="font-data-mono text-xs bg-surface-container-high text-on-surface px-2 py-1 rounded border border-outline-variant">ID: 87210</span>
+</div>
+<div class="mt-2 flex items-center gap-2 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">domain</span>
+<span>شیفت صبح - دفتر ایستگاه</span>
+</div>
+</div>
+</div>
+<div class="flex justify-end gap-2 mt-auto pt-4 border-t border-outline-variant/50">
+<button class="p-2 border border-outline-variant rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Message">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+</button>
+<button class="p-2 border border-outline-variant rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="View Profile">
+<span class="material-symbols-outlined text-[20px]">badge</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 border border-outline-variant bg-surface text-on-surface rounded font-label-md hover:bg-surface-container transition-colors active:shadow-inner">
+<span class="material-symbols-outlined text-[20px]">call</span>
+                            تماس
+                        </button>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface border border-outline-variant rounded p-4 hover:border-primary/50 transition-colors flex flex-col gap-4 relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-2 h-full bg-primary/20 group-hover:bg-primary transition-colors"></div>
+<div class="flex items-start gap-4">
+<div class="relative">
+<img alt="Reza Karimi" class="w-16 h-16 rounded object-cover border border-outline-variant" data-alt="A rugged male maintenance worker wearing a safety vest and hardhat, slightly grimy face, looking at a clipboard, background shows dimly lit underground tunnels." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuL4zm57vLrmQS9-58Gw7prh6tIK3RAL6cWki_KoB2Y0qiAQnIomFldocxgd-WvNaFz0Vvn8M4xzseQH3zda03nAnf9rXc0EDZrrKSMDzEuCW3wE-dgZ47raybtgcTphipRzKzsIVYjWa4Rvu43Z5o5aYkplPx43N_r2u7EPfSecI0yncemY0grO6XRkr2SlYKEQZQ452qP8D6EO10rzZrblRm_H4bFdMNZEjjCmIc5TxCk74EG7vQ2yzRZbbRatl_ayJ3EPQ3o6hg"/>
+<div class="absolute -bottom-1 -right-1 w-4 h-4 bg-gray-400 rounded-full border-2 border-surface" title="Offline"></div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-headline-md text-body-lg font-bold text-on-surface">رضا کریمی</h4>
+<p class="text-on-surface-variant text-sm font-label-md mt-0.5">سرپرست تیم نت سیگنالینگ</p>
+</div>
+<span class="font-data-mono text-xs bg-surface-container-high text-on-surface px-2 py-1 rounded border border-outline-variant">ID: 44102</span>
+</div>
+<div class="mt-2 flex items-center gap-2 text-sm text-error">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+<span class="font-bold">عملیات اضطراری - تونل میرداماد</span>
+</div>
+</div>
+</div>
+<div class="flex justify-end gap-2 mt-auto pt-4 border-t border-outline-variant/50">
+<button class="p-2 border border-outline-variant rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Message">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+</button>
+<button class="p-2 border border-outline-variant rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="View Profile">
+<span class="material-symbols-outlined text-[20px]">badge</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 bg-error/10 border border-error text-error rounded font-label-md hover:bg-error/20 transition-colors active:shadow-inner">
+<span class="material-symbols-outlined text-[20px]">emergency_share</span>
+                            بیسیم اضطراری
+                        </button>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface border border-outline-variant rounded p-4 hover:border-primary/50 transition-colors flex flex-col gap-4 relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-2 h-full bg-secondary/20 group-hover:bg-secondary transition-colors"></div>
+<div class="flex items-start gap-4">
+<div class="relative">
+<img alt="Fatemeh Ahmadi" class="w-16 h-16 rounded object-cover border border-outline-variant" data-alt="A focused female dispatcher in a sterile control room environment, wearing a headset, staring intensely at off-screen monitors, high contrast blue-tinged lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDr4_lQia3TWh60fyHC60YK1SwYwba7_W47fkmRbL-rRWc-xjfji5j1YlQjv6Lyo_-RonI9dlAC3FvZL4Rr5eqhDgJOjxRngmLOTXDqr3qQoReuWARfvuDO4BibhxLbcuqPX52SeeNhYKi8aQCobY7EoJsURJUxS648nszDURpyuxJYe3JPsg4ZLwwBoXNfwtNjVgkx9NUrhv_5O1nWT6Nx4B044cH36s6jm00aW8TlmOvE9-3Z6qaXTYJ3gXRhtl12rj_vlG6ihkFV"/>
+<div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-surface" title="Online"></div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-headline-md text-body-lg font-bold text-on-surface">فاطمه احمدی</h4>
+<p class="text-on-surface-variant text-sm font-label-md mt-0.5">کنترلر ارشد ترافیک (OCC)</p>
+</div>
+<span class="font-data-mono text-xs bg-surface-container-high text-on-surface px-2 py-1 rounded border border-outline-variant">ID: 11054</span>
+</div>
+<div class="mt-2 flex items-center gap-2 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">desktop_windows</span>
+<span>مرکز فرمان - میز ۳</span>
+</div>
+</div>
+</div>
+<div class="flex justify-end gap-2 mt-auto pt-4 border-t border-outline-variant/50">
+<button class="p-2 border border-outline-variant rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Message">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+</button>
+<button class="p-2 border border-outline-variant rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="View Profile">
+<span class="material-symbols-outlined text-[20px]">badge</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 border border-outline-variant bg-surface text-on-surface rounded font-label-md hover:bg-surface-container transition-colors active:shadow-inner">
+<span class="material-symbols-outlined text-[20px]">call</span>
+                            تماس
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="fixed bottom-0 left-0 w-full z-50 h-8 flex items-center px-4 overflow-hidden bg-inverse-surface dark:bg-surface-container-lowest text-primary-fixed dark:text-primary font-data-mono text-data-mono border-t-2 border-primary shadow-lg rtl">
+<div class="flex w-full justify-between items-center">
+<span class="animate-pulse-slow">Live Line 1 Status: Normal Operations | Signal: OK | Network: Stable</span>
+<div class="flex gap-4">
+<a class="text-surface-variant hover:text-primary-fixed transition-colors" href="#">Operational Dashboard</a>
+<a class="text-surface-variant hover:text-primary-fixed transition-colors" href="#">TSR Alerts</a>
+</div>
+</div>
+</footer>
+</body></html>

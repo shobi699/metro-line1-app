@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>داشبورد مدیریت بازخورد - مترو تهران خط ۱</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        .fill-icon { font-variation-settings: 'FILL' 1; }
+        
+        /* Custom Scrollbar for Industrial Look */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f8f9fa; }
+        ::-webkit-scrollbar-thumb { background: #e1e3e4; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c8c6c6; }
+    </style>
+<!-- Tailwind CSS with custom config -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-container": "#f7feff",
+                        "tertiary": "#5d5c5b",
+                        "surface-tint": "#c00205",
+                        "surface-container-highest": "#e1e3e4",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#656464",
+                        "surface": "#f8f9fa",
+                        "on-surface-variant": "#5d3f3b",
+                        "on-primary-fixed": "#410000",
+                        "inverse-on-surface": "#f0f1f2",
+                        "tertiary-container": "#767474",
+                        "surface-container": "#edeeef",
+                        "surface-bright": "#f8f9fa",
+                        "inverse-surface": "#2e3132",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "background": "#f8f9fa",
+                        "inverse-primary": "#ffb4a9",
+                        "outline": "#926f6a",
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "secondary-container": "#e4e2e1",
+                        "on-secondary-fixed-variant": "#474747",
+                        "on-surface": "#191c1d",
+                        "on-background": "#191c1d",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "on-primary-fixed-variant": "#930002",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "tertiary-fixed": "#e5e2e1",
+                        "surface-container-high": "#e7e8e9",
+                        "surface-dim": "#d9dadb",
+                        "primary-fixed": "#ffdad5",
+                        "on-error-container": "#93000a",
+                        "primary": "#bc0004",
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#e7bdb7",
+                        "secondary": "#5f5e5e",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "on-primary-container": "#fffbff",
+                        "surface-variant": "#e1e3e4",
+                        "on-secondary": "#ffffff",
+                        "surface-container-low": "#f3f4f5",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#e1271c",
+                        "secondary-fixed": "#e4e2e1"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    spacing: {
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "gutter": "16px",
+                        "touch-target-min": "48px",
+                        "margin-desktop": "32px"
+                    },
+                    fontFamily: {
+                        "body-md": ["Vazirmatn", "sans-serif"],
+                        "label-md": ["Vazirmatn", "sans-serif"],
+                        "headline-md": ["Vazirmatn", "sans-serif"],
+                        "headline-lg-mobile": ["Vazirmatn", "sans-serif"],
+                        "headline-lg": ["Vazirmatn", "sans-serif"],
+                        "data-mono": ["JetBrains Mono", "monospace"],
+                        "body-lg": ["Vazirmatn", "sans-serif"]
+                    },
+                    fontSize: {
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "label-md": ["14px", { lineHeight: "20px", letterSpacing: "0.02em", fontWeight: "600" }],
+                        "headline-md": ["24px", { lineHeight: "36px", fontWeight: "600" }],
+                        "headline-lg-mobile": ["24px", { lineHeight: "36px", fontWeight: "700" }],
+                        "headline-lg": ["32px", { lineHeight: "48px", fontWeight: "700" }],
+                        "data-mono": ["14px", { lineHeight: "20px", fontWeight: "500" }],
+                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md flex h-screen overflow-hidden antialiased">
+<!-- SideNavBar (Desktop Fixed Right) -->
+<aside class="hidden md:flex flex-col h-full w-64 right-0 shrink-0 bg-surface dark:bg-inverse-surface border-l border-outline-variant dark:border-outline z-20">
+<!-- Header -->
+<div class="p-gutter border-b border-outline-variant flex items-center gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-variant flex items-center justify-center border-2 border-primary-container">
+<span class="material-symbols-outlined text-primary text-3xl">badge</span>
+</div>
+<div>
+<h2 class="font-headline-md text-primary text-lg leading-tight">پنل پرسنلی</h2>
+<p class="font-label-md text-label-md text-on-surface-variant">خط ۱ مترو تهران</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 overflow-y-auto p-4 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container-high dark:hover:bg-secondary-container transition-colors active:scale-98" href="#">
+<span class="material-symbols-outlined">mail</span>
+<span class="font-label-md text-label-md">پیام‌های مستقیم</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container-high dark:hover:bg-secondary-container transition-colors active:scale-98" href="#">
+<span class="material-symbols-outlined">lightbulb</span>
+<span class="font-label-md text-label-md">پیشنهادات</span>
+</a>
+<!-- Active Tab: شکایات (Complaints/Feedback) -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary-container bg-primary-container font-bold active:scale-98 transition-transform" href="#">
+<span class="material-symbols-outlined fill-icon">report_problem</span>
+<span class="font-label-md text-label-md">شکایات</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container-high dark:hover:bg-secondary-container transition-colors active:scale-98" href="#">
+<span class="material-symbols-outlined">verified</span>
+<span class="font-label-md text-label-md">تقدیر و تشکر</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container-high dark:hover:bg-secondary-container transition-colors active:scale-98" href="#">
+<span class="material-symbols-outlined">security</span>
+<span class="font-label-md text-label-md">تنظیمات امنیتی</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col min-w-0 bg-surface-container-lowest relative z-10">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline flex flex-row-reverse justify-between items-center w-full px-margin-mobile h-touch-target-min shrink-0">
+<!-- Brand/Product Name -->
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">
+                سامانه ارتباطی خط ۱
+            </div>
+<!-- Actions -->
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-100 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-2.5 h-2.5 bg-error rounded-full animate-pulse border border-surface"></span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-100">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<!-- Scrollable Dashboard Content -->
+<div class="flex-1 overflow-y-auto p-margin-mobile md:p-margin-desktop bg-surface-container-lowest">
+<!-- Page Title & Operational Status -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-gutter gap-4">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">مرکز مدیریت بحران و بازخورد</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">مانیتورینگ لحظه‌ای شکایات و گزارش‌های پرسنل و مسافرین</p>
+</div>
+<div class="flex gap-2">
+<button class="bg-surface-variant border border-outline px-4 py-2 rounded flex items-center gap-2 hover:bg-surface-container-highest transition-colors active:shadow-inner text-on-surface font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm">download</span>
+                        خروجی گزارش
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-margin-desktop">
+<!-- Critical Issues -->
+<div class="bg-error-container border border-error rounded-xl p-gutter shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-full h-1 bg-error"></div>
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label-md text-label-md text-on-error-container">گزارش‌های بحرانی (باز)</p>
+<h3 class="font-headline-lg text-headline-lg text-error mt-2 font-data-mono font-bold">14</h3>
+</div>
+<div class="w-10 h-10 rounded-full bg-error text-on-error flex items-center justify-center">
+<span class="material-symbols-outlined">warning</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-error-container mt-4 text-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+                        +۳ مورد در ساعت گذشته
+                    </p>
+</div>
+<!-- Total Feedback -->
+<div class="bg-surface border border-outline-variant rounded-xl p-gutter shadow-sm">
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">کل بازخوردهای امروز</p>
+<h3 class="font-headline-lg text-headline-lg text-on-surface mt-2 font-data-mono font-bold">128</h3>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center">
+<span class="material-symbols-outlined">forum</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-highest h-1.5 rounded-full mt-4 overflow-hidden">
+<div class="bg-primary h-full w-[65%] rounded-full"></div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2 text-xs text-left">۶۵٪ پاسخ داده شده</p>
+</div>
+<!-- Avg Response Time -->
+<div class="bg-surface border border-outline-variant rounded-xl p-gutter shadow-sm">
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">میانگین زمان پاسخگویی</p>
+<h3 class="font-headline-lg text-headline-lg text-on-surface mt-2 font-data-mono font-bold" dir="ltr">12m 45s</h3>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center">
+<span class="material-symbols-outlined">timer</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-tertiary mt-4 text-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-secondary">trending_down</span>
+                        -۲ دقیقه نسبت به دیروز
+                    </p>
+</div>
+</div>
+<!-- Main Mission Control Layout: 2 Columns -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Left/Main Column: Feedback Data Table -->
+<div class="lg:col-span-2 bg-surface border border-outline-variant rounded-xl flex flex-col shadow-sm overflow-hidden">
+<div class="p-gutter border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+<h2 class="font-headline-md text-headline-md text-on-surface">لیست پیگیری عملیات</h2>
+<div class="flex gap-2">
+<div class="relative">
+<span class="material-symbols-outlined absolute right-3 top-2.5 text-on-surface-variant text-sm">filter_list</span>
+<select class="pl-3 pr-9 py-2 bg-surface border border-outline rounded font-label-md text-label-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary appearance-none">
+<option>همه ایستگاه‌ها</option>
+<option>تجریش</option>
+<option>دروازه دولت</option>
+</select>
+</div>
+</div>
+</div>
+<div class="overflow-x-auto flex-1">
+<table class="w-full text-right border-collapse">
+<thead class="bg-inverse-surface text-surface font-label-md text-label-md sticky top-0 z-10">
+<tr>
+<th class="p-3 border-b border-outline w-16 text-center">شناسه</th>
+<th class="p-3 border-b border-outline">مکان/ایستگاه</th>
+<th class="p-3 border-b border-outline">دسته بندی</th>
+<th class="p-3 border-b border-outline">گزارش دهنده</th>
+<th class="p-3 border-b border-outline">وضعیت</th>
+<th class="p-3 border-b border-outline text-left">عملیات</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<!-- Row 1: Critical Anonymous -->
+<tr class="border-b border-outline-variant bg-error-container/20 hover:bg-surface-container-high transition-colors">
+<td class="p-3 text-center font-data-mono font-bold text-error">#F-809</td>
+<td class="p-3 font-bold">ایستگاه شهید حقانی - سکو جنوبی</td>
+<td class="p-3">
+<span class="inline-flex items-center gap-1 px-2 py-1 bg-surface-variant rounded text-xs">
+<span class="material-symbols-outlined text-[16px]">elevator</span> خرابی پله برقی
+                                        </span>
+</td>
+<td class="p-3 text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px] text-tertiary">visibility_off</span> ناشناس (پرسنل)
+                                    </td>
+<td class="p-3">
+<div class="flex items-center gap-2">
+<div class="w-2.5 h-2.5 bg-error rounded-full animate-pulse"></div>
+<span class="text-error font-bold text-sm">اقدام فوری</span>
+</div>
+</td>
+<td class="p-3 text-left">
+<button class="bg-primary text-on-primary px-3 py-1.5 rounded font-label-md text-sm hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm active:shadow-inner">بررسی و پاسخ</button>
+</td>
+</tr>
+<!-- Row 2: Standard Issue -->
+<tr class="border-b border-outline-variant bg-surface hover:bg-surface-container-high transition-colors">
+<td class="p-3 text-center font-data-mono text-on-surface-variant">#F-808</td>
+<td class="p-3">ایستگاه طالقانی - گیت خروجی</td>
+<td class="p-3">
+<span class="inline-flex items-center gap-1 px-2 py-1 bg-surface-variant rounded text-xs">
+<span class="material-symbols-outlined text-[16px]">credit_card</span> مشکل بلیط الکترونیک
+                                        </span>
+</td>
+<td class="p-3 text-on-surface font-data-mono">ID: 98452</td>
+<td class="p-3">
+<span class="text-secondary font-bold text-sm">در صف بررسی</span>
+</td>
+<td class="p-3 text-left">
+<button class="border border-outline text-on-surface px-3 py-1.5 rounded font-label-md text-sm hover:bg-surface-container-highest transition-colors active:shadow-inner">مشاهده</button>
+</td>
+</tr>
+<!-- Row 3: Resolved Issue -->
+<tr class="border-b border-outline-variant bg-surface-container-lowest hover:bg-surface-container-high transition-colors opacity-80">
+<td class="p-3 text-center font-data-mono text-on-surface-variant">#F-807</td>
+<td class="p-3 line-through text-on-surface-variant">قطار ۱۱۴ - واگن ۳</td>
+<td class="p-3">
+<span class="inline-flex items-center gap-1 px-2 py-1 bg-surface-variant rounded text-xs opacity-75">
+<span class="material-symbols-outlined text-[16px]">volume_up</span> سیستم صوتی
+                                        </span>
+</td>
+<td class="p-3 text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px] text-tertiary">visibility_off</span> مسافر (سامانه پیامکی)
+                                    </td>
+<td class="p-3">
+<span class="text-on-surface-variant font-bold text-sm">بسته شده</span>
+</td>
+<td class="p-3 text-left">
+<button class="text-secondary px-3 py-1.5 font-label-md text-sm hover:text-on-surface transition-colors">بایگانی</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Right Column: Analytics & Response Interface -->
+<div class="flex flex-col gap-gutter">
+<!-- Response Interface Panel -->
+<div class="bg-surface border border-outline rounded-xl p-gutter shadow-sm flex flex-col h-full">
+<div class="flex items-center gap-2 mb-4 border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-primary">reply</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">رابط پاسخگویی سریع</h3>
+</div>
+<div class="mb-4 bg-surface-container-lowest p-3 rounded border border-outline-variant text-sm">
+<p class="font-label-md text-on-surface-variant mb-1 text-xs">در حال پاسخ به: <span class="font-data-mono font-bold text-error">#F-809</span></p>
+<p class="font-body-md text-on-surface">"پله برقی سکو جنوبی از کار افتاده و ازدحام جمعیت ایجاد شده است. لطفا سریعا تیم فنی اعزام شود."</p>
+</div>
+<div class="flex-1 flex flex-col gap-3">
+<label class="font-label-md text-label-md text-on-surface-variant">متن پاسخ رسمی / دستورالعمل:</label>
+<textarea class="w-full bg-surface-container-lowest border border-outline rounded p-3 font-body-md text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary h-32 resize-none" placeholder="پاسخ خود را اینجا تایپ کنید..."></textarea>
+<div class="flex items-center gap-4 mt-auto pt-2">
+<label class="flex items-center gap-2 font-label-md text-sm cursor-pointer">
+<input checked="" class="rounded border-outline text-primary focus:ring-primary" type="checkbox"/>
+                                    ارسال رونوشت به تیم فنی
+                                </label>
+</div>
+<div class="flex gap-2 w-full mt-2">
+<button class="flex-1 bg-primary text-on-primary py-2.5 rounded font-label-md text-label-md hover:bg-primary-container hover:text-on-primary-container transition-colors active:shadow-inner flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-sm">send</span>
+                                    ارسال و تغییر وضعیت
+                                </button>
+<button class="bg-surface-variant text-on-surface px-4 py-2.5 rounded font-label-md border border-outline hover:bg-surface-container-highest transition-colors active:shadow-inner">
+<span class="material-symbols-outlined">attach_file</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

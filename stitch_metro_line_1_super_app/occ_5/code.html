@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Live Track Map - Redline Command</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "on-surface-variant": "#5d3f3b",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "inverse-on-surface": "#f0f1f2",
+                        "tertiary": "#5d5c5b",
+                        "surface-container": "#edeeef",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "tertiary-container": "#767474",
+                        "surface-variant": "#e1e3e4",
+                        "background": "#f8f9fa",
+                        "error-container": "#ffdad6",
+                        "on-surface": "#191c1d",
+                        "primary-container": "#e1271c",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "on-tertiary-container": "#f7feff",
+                        "inverse-surface": "#2e3132",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e1e3e4",
+                        "surface-bright": "#f8f9fa",
+                        "surface-container-low": "#f3f4f5",
+                        "surface": "#f8f9fa",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "tertiary-fixed": "#e5e2e1",
+                        "surface-container-high": "#e7e8e9",
+                        "on-background": "#191c1d",
+                        "on-primary-fixed-variant": "#930002",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "secondary-container": "#e4e2e1",
+                        "outline": "#926f6a",
+                        "on-primary": "#ffffff",
+                        "primary-fixed": "#ffdad5",
+                        "on-error": "#ffffff",
+                        "surface-tint": "#c00205",
+                        "on-secondary-container": "#656464",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#bc0004",
+                        "on-primary-container": "#fffbff",
+                        "on-secondary-fixed-variant": "#474747",
+                        "secondary": "#5f5e5e",
+                        "error": "#ba1a1a",
+                        "outline-variant": "#e7bdb7",
+                        "secondary-fixed": "#e4e2e1",
+                        "on-primary-fixed": "#410000",
+                        "inverse-primary": "#ffb4a9",
+                        "surface-dim": "#d9dadb",
+                        "on-secondary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "32px",
+                        "touch-target-min": "48px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Vazirmatn"],
+                        "body-md": ["Vazirmatn"],
+                        "headline-lg-mobile": ["Vazirmatn"],
+                        "headline-lg": ["Vazirmatn"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-md": ["Vazirmatn"],
+                        "label-md": ["Vazirmatn"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "48px", "fontWeight": "700"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .pulse-cell {
+            animation: pulse-bg 2s infinite;
+        }
+        @keyframes pulse-bg {
+            0% { background-color: rgba(188, 0, 4, 0.1); }
+            50% { background-color: rgba(188, 0, 4, 0.3); }
+            100% { background-color: rgba(188, 0, 4, 0.1); }
+        }
+        .track-line {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawLine 3s ease forwards;
+        }
+        @keyframes drawLine {
+            to { stroke-dashoffset: 0; }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col md:flex-row overflow-hidden">
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 border-r border-outline-variant bg-surface-container py-4 rtl:right-0 rtl:left-auto z-40">
+<div class="px-margin-desktop mb-8">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Redline Command</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Line 1 Supervision</p>
+</div>
+<ul class="flex flex-col gap-1 px-2">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-primary font-bold border-r-4 border-primary bg-secondary-container transition-colors inner-shadow duration-100" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">fact_check</span>
+<span class="font-label-md text-label-md">Approval Queue</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">verified_user</span>
+<span class="font-label-md text-label-md">Verified Personnel</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</li>
+</ul>
+<div class="mt-auto px-4 pt-4 border-t border-outline-variant">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a metro supervisor in uniform, serious expression, high contrast lighting, industrial aesthetic, corporate ID photo style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9XQZQo7G4ZMwX4TEf-RvLFFgnI601e3ZGUKD5VM7EHhDg7wIcmGTTHgFD4lwL86v_XrxP9XGS1_r2wUKmKNk2pD37gdCu3dG4DTVC73USbCdFYF9xt8LM2983tjmHlhemVIyf_nvp-27zQlgSM0NGtbFKIKALc3RaeHay8itTUK4qHYzmQLW1tNYMELqSOJeOk1qSsiEg754VVUpaTcxgnRgDtqYznsAOEbDv-J5iKIvk7TjX8hqS5hEREdziCE2I6qGY6zhIEaoQ"/>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Supervisor</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:pr-64 flex flex-col h-screen overflow-hidden">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center px-margin-desktop h-16 border-b border-outline-variant bg-surface shrink-0 z-30 relative">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Live Track Map</h2>
+</div>
+<!-- System Health Indicators -->
+<div class="flex items-center gap-6 bg-surface-container-low px-4 py-2 rounded border border-outline-variant">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-green-600 shadow-[0_0_8px_rgba(22,163,74,0.5)]"></span>
+<span class="font-data-mono text-data-mono text-on-surface">SRV</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-green-600 shadow-[0_0_8px_rgba(22,163,74,0.5)]"></span>
+<span class="font-data-mono text-data-mono text-on-surface">NET</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]"></span>
+<span class="font-data-mono text-data-mono text-on-surface">RAD</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded hover:bg-surface-container-low transition-all text-on-surface">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded hover:bg-surface-container-low transition-all text-on-surface">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+</header>
+<!-- Track Canvas -->
+<div class="flex-1 relative bg-surface-container-lowest overflow-hidden p-margin-desktop flex items-center justify-center">
+<!-- Grid Background Pattern -->
+<div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(circle at 2px 2px, #000 1px, transparent 0); background-size: 24px 24px;"></div>
+<!-- SVG Track Map -->
+<div class="relative w-full max-w-6xl aspect-[21/9] border border-outline-variant bg-surface rounded-lg shadow-sm overflow-hidden">
+<svg class="w-full h-full" preserveaspectratio="xMidYMid meet" viewbox="0 0 1200 500">
+<!-- Base Track Background Line -->
+<path d="M 100 250 L 1100 250" fill="none" stroke="#e1e3e4" stroke-linecap="round" stroke-width="12"></path>
+<!-- Segmented Track Health Status -->
+<!-- Tajrish to Mirdamad (Normal - Green implied by design system, but using grey for normal to not overwhelm, highlight issues) -->
+<path class="track-line" d="M 100 250 L 400 250" fill="none" stroke="#5d5c5b" stroke-linecap="round" stroke-width="6"></path>
+<!-- Mirdamad to Darvazeh Dowlat (Caution) -->
+<path class="track-line" d="M 400 250 L 700 250" fill="none" stroke="#eab308" stroke-linecap="round" stroke-width="6"></path>
+<!-- Darvazeh Dowlat to Kahrizak (Normal) -->
+<path class="track-line" d="M 700 250 L 1100 250" fill="none" stroke="#5d5c5b" stroke-linecap="round" stroke-width="6"></path>
+<!-- Stations (Nodes) -->
+<!-- Tajrish -->
+<circle class="cursor-pointer hover:stroke-primary transition-colors" cx="100" cy="250" fill="#f8f9fa" onclick="document.getElementById('station-modal').classList.remove('hidden')" r="10" stroke="#5d5c5b" stroke-width="4"></circle>
+<text fill="#191c1d" font-family="Vazirmatn" font-size="14" font-weight="600" text-anchor="middle" x="100" y="280">Tajrish</text>
+<!-- Shahid Sadr -->
+<circle cx="250" cy="250" fill="#f8f9fa" r="8" stroke="#5d5c5b" stroke-width="3"></circle>
+<text fill="#5d3f3b" font-family="Vazirmatn" font-size="12" text-anchor="middle" x="250" y="225">Shahid Sadr</text>
+<!-- Mirdamad -->
+<circle class="cursor-pointer hover:stroke-primary transition-colors" cx="400" cy="250" fill="#f8f9fa" r="10" stroke="#eab308" stroke-width="4"></circle>
+<text fill="#191c1d" font-family="Vazirmatn" font-size="14" font-weight="600" text-anchor="middle" x="400" y="280">Mirdamad</text>
+<!-- Shahid Beheshti -->
+<circle cx="550" cy="250" fill="#f8f9fa" r="8" stroke="#eab308" stroke-width="3"></circle>
+<text fill="#5d3f3b" font-family="Vazirmatn" font-size="12" text-anchor="middle" x="550" y="225">Shahid Beheshti</text>
+<!-- Darvazeh Dowlat -->
+<circle class="cursor-pointer hover:stroke-primary transition-colors" cx="700" cy="250" fill="#f8f9fa" r="10" stroke="#5d5c5b" stroke-width="4"></circle>
+<text fill="#191c1d" font-family="Vazirmatn" font-size="14" font-weight="600" text-anchor="middle" x="700" y="280">Darvazeh Dowlat</text>
+<!-- Shahr-e Rey -->
+<circle cx="900" cy="250" fill="#f8f9fa" r="8" stroke="#5d5c5b" stroke-width="3"></circle>
+<text fill="#5d3f3b" font-family="Vazirmatn" font-size="12" text-anchor="middle" x="900" y="225">Shahr-e Rey</text>
+<!-- Kahrizak -->
+<circle class="cursor-pointer hover:stroke-primary transition-colors" cx="1100" cy="250" fill="#f8f9fa" r="10" stroke="#5d5c5b" stroke-width="4"></circle>
+<text fill="#191c1d" font-family="Vazirmatn" font-size="14" font-weight="600" text-anchor="middle" x="1100" y="280">Kahrizak</text>
+<!-- Live Trains (Moving Markers) -->
+<!-- Train T-104 (Normal) -->
+<g transform="translate(320, 250)">
+<rect fill="#191c1d" height="28" rx="4" width="48" x="-24" y="-14"></rect>
+<text fill="#ffffff" font-family="JetBrains Mono" font-size="12" font-weight="500" text-anchor="middle" x="0" y="4">T-104</text>
+<path d="M 24 -4 L 32 0 L 24 4 Z" fill="#191c1d"></path> <!-- Direction Indicator -->
+</g>
+<!-- Train T-211 (Caution Area) -->
+<g class="pulse-cell" transform="translate(620, 250)">
+<rect fill="#bc0004" height="28" rx="4" width="48" x="-24" y="-14"></rect>
+<text fill="#ffffff" font-family="JetBrains Mono" font-size="12" font-weight="500" text-anchor="middle" x="0" y="4">T-211</text>
+<path d="M 24 -4 L 32 0 L 24 4 Z" fill="#bc0004"></path>
+</g>
+<!-- Train T-088 (Normal) -->
+<g transform="translate(980, 250)">
+<rect fill="#191c1d" height="28" rx="4" width="48" x="-24" y="-14"></rect>
+<text fill="#ffffff" font-family="JetBrains Mono" font-size="12" font-weight="500" text-anchor="middle" x="0" y="4">T-088</text>
+<path d="M 24 -4 L 32 0 L 24 4 Z" fill="#191c1d"></path>
+</g>
+</svg>
+<!-- Legend Overlay -->
+<div class="absolute bottom-4 left-4 bg-surface-container border border-outline-variant p-3 rounded shadow-sm">
+<p class="font-label-md text-label-md text-on-surface mb-2 border-b border-outline-variant pb-1">Status Legend</p>
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<span class="w-4 h-1 bg-[#5d5c5b] rounded"></span>
+<span class="font-label-md text-label-md text-on-surface-variant">Nominal Operation</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-4 h-1 bg-[#eab308] rounded"></span>
+<span class="font-label-md text-label-md text-on-surface-variant">Speed Restriction / Caution</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-4 h-1 bg-[#bc0004] rounded"></span>
+<span class="font-label-md text-label-md text-on-surface-variant">Incident / Stop Order</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Data Table (Bottom Panel) -->
+<div class="h-64 border-t border-outline-variant bg-surface flex flex-col shrink-0">
+<div class="px-4 py-2 border-b border-outline-variant bg-inverse-surface text-inverse-on-surface flex justify-between items-center">
+<span class="font-label-md text-label-md font-bold">Live Asset Telemetry</span>
+<button class="px-3 py-1 text-sm bg-primary text-on-primary rounded font-label-md hover:bg-surface-tint transition-colors">
+                    Download Log
+                </button>
+</div>
+<div class="flex-1 overflow-auto">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-surface z-10 border-b border-outline-variant">
+<tr>
+<th class="px-4 py-2 font-label-md text-label-md text-on-surface-variant">Asset ID</th>
+<th class="px-4 py-2 font-label-md text-label-md text-on-surface-variant">Current Block</th>
+<th class="px-4 py-2 font-label-md text-label-md text-on-surface-variant">Speed (km/h)</th>
+<th class="px-4 py-2 font-label-md text-label-md text-on-surface-variant">Next Station ETA</th>
+<th class="px-4 py-2 font-label-md text-label-md text-on-surface-variant">Status</th>
+</tr>
+</thead>
+<tbody class="font-data-mono text-data-mono text-on-surface">
+<tr class="border-b border-outline-variant bg-background hover:bg-surface-container-low transition-colors">
+<td class="px-4 py-3">T-104</td>
+<td class="px-4 py-3">BLK-A12</td>
+<td class="px-4 py-3">65</td>
+<td class="px-4 py-3 pulse-cell">02:14</td>
+<td class="px-4 py-3"><span class="px-2 py-1 bg-surface-container text-on-surface rounded text-xs">NOMINAL</span></td>
+</tr>
+<tr class="border-b border-outline-variant bg-[#f1f1f1] hover:bg-surface-container-low transition-colors">
+<td class="px-4 py-3">T-211</td>
+<td class="px-4 py-3">BLK-C45</td>
+<td class="px-4 py-3 text-error font-bold">15</td>
+<td class="px-4 py-3 pulse-cell">08:45</td>
+<td class="px-4 py-3"><span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs border border-yellow-300">RESTRICTED</span></td>
+</tr>
+<tr class="border-b border-outline-variant bg-background hover:bg-surface-container-low transition-colors">
+<td class="px-4 py-3">T-088</td>
+<td class="px-4 py-3">BLK-F90</td>
+<td class="px-4 py-3">70</td>
+<td class="px-4 py-3 pulse-cell">01:05</td>
+<td class="px-4 py-3"><span class="px-2 py-1 bg-surface-container text-on-surface rounded text-xs">NOMINAL</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+<!-- Station Detail Modal (Hidden by default) -->
+<div class="hidden fixed inset-0 bg-on-background/50 z-50 flex items-center justify-center p-4" id="station-modal">
+<div class="bg-surface rounded-lg shadow-xl w-full max-w-md overflow-hidden border border-outline-variant">
+<div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface-container">
+<h3 class="font-headline-md text-headline-md text-on-surface font-bold">Tajrish Station</h3>
+<button class="text-on-surface-variant hover:text-on-surface" onclick="document.getElementById('station-modal').classList.add('hidden')">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="p-6">
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-surface-container-low p-4 rounded border border-outline-variant">
+<p class="font-label-md text-label-md text-on-surface-variant mb-1">Passenger Density</p>
+<p class="font-headline-md text-headline-md text-on-surface font-bold">High</p>
+<div class="w-full bg-surface-variant h-2 mt-2 rounded overflow-hidden">
+<div class="bg-primary h-full w-[85%]"></div>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded border border-outline-variant">
+<p class="font-label-md text-label-md text-on-surface-variant mb-1">Platform Status</p>
+<p class="font-headline-md text-headline-md text-on-surface font-bold flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-green-500"></span> Clear
+                        </p>
+</div>
+</div>
+<h4 class="font-label-md text-label-md text-on-surface font-bold mb-3 border-b border-outline-variant pb-2">Active Incidents</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">No active incidents reported at this station.</p>
+<div class="mt-6 pt-4 border-t border-outline-variant flex gap-3">
+<button class="flex-1 py-2 bg-secondary-container text-on-secondary-container rounded font-label-md border border-outline-variant hover:bg-surface-container transition-colors">
+                        View Cameras
+                    </button>
+<button class="flex-1 py-2 bg-primary text-on-primary rounded font-label-md hover:bg-surface-tint transition-colors inner-shadow">
+                        Dispatch Sec
+                    </button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

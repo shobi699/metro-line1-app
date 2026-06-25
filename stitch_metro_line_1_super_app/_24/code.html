@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Driver Qualification: Technical L1-A</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e7e8e9",
+                        "surface": "#f8f9fa",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#656464",
+                        "secondary-fixed": "#e4e2e1",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "inverse-surface": "#2e3132",
+                        "primary": "#bc0004",
+                        "tertiary-container": "#767474",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "surface-bright": "#f8f9fa",
+                        "on-primary-fixed-variant": "#930002",
+                        "secondary": "#5f5e5e",
+                        "on-primary-fixed": "#410000",
+                        "background": "#f8f9fa",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "surface-variant": "#e1e3e4",
+                        "error": "#ba1a1a",
+                        "inverse-on-surface": "#f0f1f2",
+                        "outline": "#926f6a",
+                        "primary-fixed": "#ffdad5",
+                        "surface-container": "#edeeef",
+                        "tertiary-fixed": "#e5e2e1",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f3f4f5",
+                        "on-background": "#191c1d",
+                        "primary-container": "#e1271c",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "surface-dim": "#d9dadb",
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "on-tertiary-container": "#f7feff",
+                        "inverse-primary": "#ffb4a9",
+                        "secondary-container": "#e4e2e1",
+                        "on-surface": "#191c1d",
+                        "surface-tint": "#c00205",
+                        "on-error": "#ffffff",
+                        "tertiary": "#5d5c5b",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#e7bdb7",
+                        "on-surface-variant": "#5d3f3b",
+                        "on-secondary-fixed-variant": "#474747",
+                        "on-primary-container": "#fffbff",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "margin-desktop": "32px",
+                        "touch-target-min": "48px",
+                        "gutter": "16px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Vazirmatn"],
+                        "headline-lg": ["Vazirmatn"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Vazirmatn"],
+                        "label-md": ["Vazirmatn"],
+                        "body-md": ["Vazirmatn"],
+                        "body-lg": ["Vazirmatn"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "48px", "fontWeight": "700" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #121212; color: #e0e0e0; font-family: 'Vazirmatn', sans-serif; }
+        .dark-surface { background-color: #1e1e1e; }
+        .dark-surface-elevated { background-color: #2a2a2a; }
+        .border-dark-outline { border-color: #3d3d3d; }
+        .text-dark-secondary { color: #a0a0a0; }
+        
+        /* Custom Checkbox/Radio */
+        .custom-radio input:checked + div {
+            border-color: #bc0004;
+            background-color: rgba(188, 0, 4, 0.1);
+        }
+        .custom-radio input:checked + div .radio-icon {
+            color: #bc0004;
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col md:flex-row overflow-hidden">
+<!-- TopAppBar (From JSON - Simulated Top App Bar for Tablet/Desktop) -->
+<header class="bg-inverse-surface dark:bg-inverse-surface docked full-width top-0 border-b border-outline-variant flat no shadows transition-colors duration-200 fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-desktop h-touch-target-min md:pr-64 hidden md:flex">
+<div class="flex items-center gap-4">
+<span class="text-headline-md font-headline-md font-bold text-on-primary-container">Line 1 Driver Qualification</span>
+</div>
+<div class="flex items-center gap-4 text-primary">
+<button aria-label="timer" class="w-touch-target-min h-touch-target-min flex items-center justify-center rounded-full hover:bg-surface-variant text-on-surface-variant transition-colors duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">timer</span>
+</button>
+<button aria-label="account_circle" class="w-touch-target-min h-touch-target-min flex items-center justify-center rounded-full hover:bg-surface-variant text-on-surface-variant transition-colors duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar (From JSON) -->
+<nav aria-label="Main Navigation" class="bg-surface-container-low dark:bg-surface-container-low text-primary font-label-md text-label-md docked left-0 h-full w-64 border-r border-outline-variant flat no shadows active:scale-95 transition-transform fixed right-0 top-0 md:top-touch-target-min h-screen md:h-[calc(100vh-48px)] flex flex-col py-4 hidden md:flex z-40">
+<!-- Header Info -->
+<div class="px-6 mb-6 flex flex-col gap-2 border-b border-outline-variant pb-4">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-variant flex-shrink-0">
+<img alt="Driver Profile Photo" class="w-full h-full object-cover" data-alt="A professional headshot of a metro train driver in a crisp, dark blue uniform, neutral expression, industrial lighting, high-contrast corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-sLFFi8jHDl0Roc4NhmBFV1ZUBy1A3Uizy549nenoFFpR9BXmsftfHCciPkZcmHMa75tJS5mEjY-S-Q6PVAQSY0DXbFh-AaZDXfqtHlgk2EtaGCoI6kRkYDOqefuulVcOrnXLqyAlFBbuxPGFkky0vlnygsv3kThPFxO_XfbBB9x6dsj2wM2IljRJnkeiyIjgXG3ggQlxE6gNdLH20tcVgUgMmCaGF-4MdsujjM-DLIZKk-KuIQ7io8gZkNPwijoAqebmL3gnkt-C"/>
+</div>
+<div>
+<h2 class="font-headline-md text-primary text-sm font-bold">Driver ID: 4829</h2>
+<p class="text-on-surface-variant text-xs">Exam: Technical L1-A</p>
+</div>
+</div>
+</div>
+<!-- Navigation Links -->
+<ul class="flex flex-col flex-grow gap-1">
+<li>
+<a aria-current="page" class="bg-primary text-on-primary rounded-lg mx-2 flex items-center gap-4 px-4 h-touch-target-min transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">quiz</span>
+<span>Current Question</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:bg-surface-variant mx-2 flex items-center gap-4 px-4 h-touch-target-min transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">grid_view</span>
+<span>Question Map</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:bg-surface-variant mx-2 flex items-center gap-4 px-4 h-touch-target-min transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">flag</span>
+<span>Flagged Items</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:bg-surface-variant mx-2 flex items-center gap-4 px-4 h-touch-target-min transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu_book</span>
+<span>Reference Manual</span>
+</a>
+</li>
+</ul>
+<!-- CTA -->
+<div class="px-4 mt-auto">
+<button class="w-full bg-primary text-on-primary h-touch-target-min rounded-full font-label-md hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm font-bold">Submit Exam</button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:pr-64 pt-touch-target-min pb-20 md:pb-24 px-margin-mobile md:px-margin-desktop overflow-y-auto">
+<div class="max-w-4xl mx-auto py-8">
+<!-- Progress Header -->
+<div class="mb-8">
+<div class="flex justify-between items-end mb-2">
+<h1 class="font-headline-lg text-headline-lg text-on-surface dark:text-gray-100">سؤال ۱۴ از ۴۰</h1>
+<span class="font-data-mono text-data-mono text-primary font-bold">35%</span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 35%;"></div>
+</div>
+</div>
+<!-- Question Card -->
+<div class="dark-surface-elevated rounded-xl border border-dark-outline p-6 md:p-8 shadow-sm">
+<!-- Question Text -->
+<p class="font-body-lg text-body-lg text-on-surface dark:text-gray-100 mb-6 leading-relaxed">
+                    در صورت بروز خطای Code 43 در سیستم ترمز اضطراری در شیب بیش از ۲٪، اولویت اول عملیاتی راهبر چیست؟
+                </p>
+<!-- Technical Illustration -->
+<div class="w-full h-64 md:h-80 bg-surface-variant rounded-lg mb-8 relative overflow-hidden border border-dark-outline flex items-center justify-center">
+<img alt="Braking System Schematic" class="w-full h-full object-cover opacity-80" data-alt="A high-contrast, blueprint-style technical schematic of a modern metro train braking system situated on a gradient slope. Deep black background with crisp white and primary red vector lines. Industrial, precise, no text." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCu3OG0KKiRgv8l4jea5KkATavgZN_VLIbtuM7tuujTFS7LyyaQSS-KEUjF4NoNZ2XClvSCHcpedkcs6qDXZWe7EopsD513o1UVh-mOEaYzQ_1mdnjOpCovC6TYYrJc3Q1pZowCUhlNjyQqkzm_42g0clMh9XJNZ92I_dNb7kdBCXFxf5wn9JPEjgbssVG68LvfGS6rcPVLPJ9Izhv04kYEOP4AtnHLzEzRI3BUXoLeMmHFyuZ2Dwf8EhR4ONYDUo46G1FtCFnPRD8Z"/>
+<div class="absolute top-4 left-4 bg-inverse-surface/80 px-3 py-1 rounded text-xs font-data-mono text-on-secondary flex items-center gap-2 backdrop-blur-sm border border-outline-variant">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                         LIVE TELEMETRY
+                     </div>
+</div>
+<!-- Options Grid -->
+<div class="grid grid-cols-1 gap-4">
+<label class="custom-radio cursor-pointer group">
+<input class="sr-only" name="q14" type="radio"/>
+<div class="flex items-start gap-4 p-4 rounded-lg border border-dark-outline dark-surface transition-colors duration-200 group-hover:border-primary/50">
+<span class="material-symbols-outlined radio-icon text-dark-secondary mt-1 transition-colors" style="font-variation-settings: 'FILL' 0;">radio_button_unchecked</span>
+<div>
+<span class="font-label-md text-label-md text-gray-200 block mb-1">گزینه الف</span>
+<span class="font-body-md text-body-md text-gray-300">ریست کردن سیستم ATO و تلاش مجدد برای حرکت</span>
+</div>
+</div>
+</label>
+<label class="custom-radio cursor-pointer group">
+<input checked="" class="sr-only" name="q14" type="radio"/>
+<div class="flex items-start gap-4 p-4 rounded-lg border border-primary bg-primary/10 transition-colors duration-200">
+<span class="material-symbols-outlined radio-icon text-primary mt-1" style="font-variation-settings: 'FILL' 1;">radio_button_checked</span>
+<div>
+<span class="font-label-md text-label-md text-primary font-bold block mb-1">گزینه ب</span>
+<span class="font-body-md text-body-md text-gray-100 font-medium">توقف کامل قطار، اعمال ترمز پارکینگ و تماس فوری با مرکز فرمان</span>
+</div>
+</div>
+</label>
+<label class="custom-radio cursor-pointer group">
+<input class="sr-only" name="q14" type="radio"/>
+<div class="flex items-start gap-4 p-4 rounded-lg border border-dark-outline dark-surface transition-colors duration-200 group-hover:border-primary/50">
+<span class="material-symbols-outlined radio-icon text-dark-secondary mt-1 transition-colors" style="font-variation-settings: 'FILL' 0;">radio_button_unchecked</span>
+<div>
+<span class="font-label-md text-label-md text-gray-200 block mb-1">گزینه ج</span>
+<span class="font-body-md text-body-md text-gray-300">ادامه حرکت با سرعت محدود تا اولین ایستگاه</span>
+</div>
+</div>
+</label>
+<label class="custom-radio cursor-pointer group">
+<input class="sr-only" name="q14" type="radio"/>
+<div class="flex items-start gap-4 p-4 rounded-lg border border-dark-outline dark-surface transition-colors duration-200 group-hover:border-primary/50">
+<span class="material-symbols-outlined radio-icon text-dark-secondary mt-1 transition-colors" style="font-variation-settings: 'FILL' 0;">radio_button_unchecked</span>
+<div>
+<span class="font-label-md text-label-md text-gray-200 block mb-1">گزینه د</span>
+<span class="font-body-md text-body-md text-gray-300">بررسی فیوزهای ترمز در کابین عقب</span>
+</div>
+</div>
+</label>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (From JSON) -->
+<nav aria-label="Bottom Navigation" class="bg-inverse-surface dark:bg-inverse-surface text-primary font-label-md text-label-md docked full-width bottom-0 border-t border-outline-variant flat no shadows active:inner-shadow transition-all fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 px-margin-desktop md:pr-64">
+<button class="text-on-secondary-fixed-variant px-6 py-2 flex flex-col items-center gap-1 hover:bg-secondary-container rounded-lg transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_forward</span>
+<span class="text-xs">Previous</span>
+</button>
+<button class="text-on-secondary-fixed-variant px-6 py-2 flex flex-col items-center gap-1 hover:bg-secondary-container rounded-lg transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">flag</span>
+<span class="text-xs">Flag Question</span>
+</button>
+<button class="bg-primary-container text-on-primary-container rounded-full px-6 py-2 flex items-center gap-2 hover:bg-secondary-container transition-colors shadow-sm">
+<span>Next</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+</button>
+</nav>
+</body></html>

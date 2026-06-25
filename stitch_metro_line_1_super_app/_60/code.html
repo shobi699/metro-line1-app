@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html class="light" dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tehran Metro Line 1 - Operational Chat</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Vazirmatn & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Vazirmatn:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Config Injection -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-container": "#fffbff",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "surface-bright": "#f8f9fa",
+                    "on-secondary-container": "#656464",
+                    "secondary-container": "#e4e2e1",
+                    "primary-container": "#e1271c",
+                    "surface-container-low": "#f3f4f5",
+                    "on-error": "#ffffff",
+                    "tertiary-container": "#767474",
+                    "surface-variant": "#e1e3e4",
+                    "primary-fixed-dim": "#ffb4a9",
+                    "inverse-on-surface": "#f0f1f2",
+                    "on-secondary-fixed-variant": "#474747",
+                    "surface-dim": "#d9dadb",
+                    "tertiary-fixed": "#e5e2e1",
+                    "surface-tint": "#c00205",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-fixed": "#410000",
+                    "error": "#ba1a1a",
+                    "surface-container-lowest": "#ffffff",
+                    "background": "#f8f9fa",
+                    "outline": "#926f6a",
+                    "surface-container-high": "#e7e8e9",
+                    "primary": "#bc0004",
+                    "on-surface": "#191c1d",
+                    "secondary-fixed-dim": "#c8c6c6",
+                    "tertiary": "#5d5c5b",
+                    "outline-variant": "#e7bdb7",
+                    "on-error-container": "#93000a",
+                    "inverse-primary": "#ffb4a9",
+                    "surface": "#f8f9fa",
+                    "on-secondary-fixed": "#1b1c1c",
+                    "surface-container": "#edeeef",
+                    "on-tertiary-fixed-variant": "#474646",
+                    "inverse-surface": "#2e3132",
+                    "primary-fixed": "#ffdad5",
+                    "on-primary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-tertiary-fixed": "#1c1b1b",
+                    "on-primary-fixed-variant": "#930002",
+                    "on-background": "#191c1d",
+                    "error-container": "#ffdad6",
+                    "secondary": "#5f5e5e",
+                    "secondary-fixed": "#e4e2e1",
+                    "on-surface-variant": "#5d3f3b",
+                    "on-tertiary-container": "#f7feff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "touch-target-min": "48px",
+                    "margin-mobile": "16px",
+                    "unit": "4px",
+                    "margin-desktop": "32px",
+                    "gutter": "16px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Vazirmatn"],
+                    "body-md": ["Vazirmatn"],
+                    "body-lg": ["Vazirmatn"],
+                    "label-md": ["Vazirmatn"],
+                    "headline-lg": ["Vazirmatn"],
+                    "data-mono": ["JetBrains Mono"],
+                    "headline-lg-mobile": ["Vazirmatn"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "48px", "fontWeight": "700"}],
+                    "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "36px", "fontWeight": "700"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #e1e3e4; /* surface-variant */
+            border-radius: 4px;
+        }
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Mobile padding safe area for iOS */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md text-body-md flex flex-col h-screen overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar (Derived from JSON) -->
+<nav class="bg-surface text-primary font-body-md text-body-md full-width top-0 border-b border-outline-variant flex flex-row-reverse justify-between items-center w-full px-margin-mobile z-50 h-16 shrink-0 shadow-sm relative">
+<!-- Brand / Identity -->
+<div class="font-headline-md text-headline-md font-bold text-primary whitespace-nowrap">Tehran Metro Line 1</div>
+<!-- Trailing Actions -->
+<div class="flex flex-row-reverse items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined hover:bg-surface-container-high transition-colors duration-200 cursor-pointer p-2 rounded-full flex items-center justify-center w-[40px] h-[40px]" style="font-variation-settings: 'FILL' 0;">notifications</span>
+<span class="material-symbols-outlined hover:bg-surface-container-high transition-colors duration-200 cursor-pointer p-2 rounded-full flex items-center justify-center w-[40px] h-[40px]" style="font-variation-settings: 'FILL' 0;">person_search</span>
+<span class="material-symbols-outlined hover:bg-surface-container-high transition-colors duration-200 cursor-pointer p-2 rounded-full flex items-center justify-center w-[40px] h-[40px]" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+</div>
+</nav>
+<!-- Sub-header: Channel Status & Search -->
+<div class="bg-surface-container-low px-margin-mobile py-3 flex items-center justify-between shrink-0 shadow-[0_2px_4px_rgba(0,0,0,0.02)] z-40 relative border-b border-surface-variant">
+<div class="flex items-center gap-3">
+<div class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-[#10b981]"></span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface leading-tight">خط ۱ عمومی</span>
+<span class="font-data-mono text-data-mono text-[10px] text-tertiary">General Line 1</span>
+</div>
+</div>
+<button class="bg-surface-container rounded-full p-2 text-on-surface-variant hover:bg-surface-variant transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</button>
+</div>
+<!-- Chat Canvas (Main Scrollable Area) -->
+<main class="flex-1 overflow-y-auto p-margin-mobile flex flex-col gap-6 bg-surface-bright relative scroll-smooth">
+<!-- Pinned Directive (High Visibility) -->
+<div class="bg-secondary-container text-on-secondary-container rounded-xl p-3 border-r-4 border-primary flex items-start gap-3 shadow-sm sticky top-0 z-30 opacity-95 backdrop-blur-sm">
+<span class="material-symbols-outlined text-primary mt-0.5" style="font-variation-settings: 'FILL' 1;">push_pin</span>
+<div class="flex-1">
+<h3 class="font-label-md text-label-md font-bold mb-1 text-primary-container">دستورالعمل‌های عملیاتی</h3>
+<p class="font-body-md text-body-md text-sm leading-snug">تمامی قطارها در ایستگاه دروازه دولت توقف کامل داشته باشند. بررسی سیگنال پیش از حرکت الزامی است.</p>
+</div>
+</div>
+<!-- Date Separator -->
+<div class="flex items-center justify-center my-2">
+<span class="bg-surface-container-high text-on-surface-variant font-data-mono text-data-mono text-xs px-3 py-1 rounded-full shadow-sm">امروز - 1403/08/15</span>
+</div>
+<!-- Message (Them - Maintenance Team) -->
+<div class="flex gap-3 max-w-[90%] self-start">
+<div class="w-10 h-10 rounded-full bg-tertiary-container flex flex-col items-center justify-center text-on-tertiary-container shrink-0 shadow-sm">
+<span class="font-label-md text-label-md text-xs font-bold leading-none">MT</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-baseline gap-2 px-1">
+<span class="font-label-md text-label-md text-secondary text-xs">تیم نگهداری خط (Maintenance)</span>
+<span class="font-data-mono text-data-mono text-[10px] text-tertiary-fixed-dim">14:05</span>
+</div>
+<div class="bg-surface-container text-on-surface rounded-xl rounded-tr-none p-3 shadow-sm font-body-md text-body-md border border-surface-variant">
+                    گزارش بررسی سوزن خط ۳ شمالی ارسال شد. تست مکانیکی موفقیت‌آمیز بود و مشکلی مشاهده نشد.
+                </div>
+</div>
+</div>
+<!-- Attachment Message (Them - Maintenance Team) -->
+<div class="flex gap-3 max-w-[90%] self-start mt-[-12px]">
+<div class="w-10 h-10 shrink-0 opacity-0"></div> <!-- Spacer for alignment -->
+<div class="flex flex-col gap-1 w-full">
+<div class="bg-surface-container text-on-surface rounded-xl p-3 shadow-sm font-body-md text-body-md flex items-center gap-3 border border-outline-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-[0.98]">
+<div class="bg-error-container text-on-error-container p-2 rounded-lg flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</div>
+<div class="flex flex-col flex-1 min-w-0 overflow-hidden">
+<span class="font-label-md text-label-md truncate text-sm" dir="ltr">Switch_Report_L1_N.pdf</span>
+<span class="font-data-mono text-data-mono text-[10px] text-tertiary" dir="ltr">2.4 MB • Technical Report</span>
+</div>
+<span class="material-symbols-outlined text-primary shrink-0 bg-surface rounded-full p-1 shadow-sm">download</span>
+</div>
+</div>
+</div>
+<!-- Message (Me - OCC Control) -->
+<div class="flex gap-3 max-w-[90%] self-end flex-row-reverse">
+<div class="w-10 h-10 rounded-full bg-primary flex flex-col items-center justify-center text-on-primary shrink-0 shadow-sm border-2 border-surface">
+<span class="font-label-md text-label-md text-xs font-bold leading-none">OCC</span>
+</div>
+<div class="flex flex-col gap-1 items-end">
+<div class="flex items-baseline gap-2 px-1 flex-row-reverse">
+<span class="font-label-md text-label-md text-primary text-xs">مرکز فرمان (OCC Control)</span>
+<span class="font-data-mono text-data-mono text-[10px] text-tertiary-fixed-dim">14:08</span>
+</div>
+<div class="bg-inverse-surface text-inverse-on-surface rounded-xl rounded-tl-none p-3 shadow-md font-body-md text-body-md text-right border border-inverse-surface">
+                    گزارش دریافت شد. لطفاً نیروهای واکنش سریع را برای بررسی نهایی به ایستگاه امام خمینی اعزام کنید. وضعیت زرد اعلام می‌شود.
+                </div>
+</div>
+</div>
+<!-- High-Priority / Emergency Message (OCC Alert) -->
+<div class="flex flex-col w-full bg-error-container border-2 border-error rounded-xl p-4 shadow-lg my-4 relative overflow-hidden">
+<!-- Alert Pattern Background (Subtle) -->
+<div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, #ba1a1a 10px, #ba1a1a 20px);"></div>
+<div class="relative z-10">
+<div class="flex items-center gap-2 text-on-error-container mb-3 border-b border-error/30 pb-2">
+<span class="material-symbols-outlined text-error animate-pulse text-[28px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md text-base font-extrabold text-error uppercase tracking-widest leading-none">هشدار اضطراری سطح ۱</span>
+<span class="font-data-mono text-data-mono text-[10px] text-error font-bold mt-1" dir="ltr">CRITICAL OPERATION ALERT</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-error-container font-bold text-justify leading-relaxed">
+                    نوسان شدید برق در بخش جنوبی خط ۱ (حدفاصل شهرری تا کهریزک). تمامی قطارهای این مسیر بلافاصله در نزدیک‌ترین ایستگاه متوقف شوند. پروتکل تخلیه اضطراری و قطع قدرت (Traction Power) در حالت آماده‌باش قرار گیرد.
+                </p>
+<div class="mt-4 flex justify-between items-end">
+<button class="bg-error text-on-error font-label-md text-label-md px-4 py-2 rounded-lg shadow-sm active:scale-95 transition-transform flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                        تایید دریافت
+                    </button>
+<div class="font-data-mono text-data-mono text-xs text-on-error-container font-bold bg-error/10 px-2 py-1 rounded" dir="ltr">
+                        T-STAMP: 14:15:00 IRST
+                    </div>
+</div>
+</div>
+</div>
+<!-- Bottom spacing to ensure input doesn't cover last message -->
+<div class="h-4"></div>
+</main>
+<!-- Input Area -->
+<div class="bg-surface border-t border-outline-variant p-3 flex items-end gap-2 shrink-0 w-full z-40 relative shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+<button class="w-[44px] h-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors bg-surface-container hover:bg-surface-container-high rounded-full shrink-0 active:scale-95">
+<span class="material-symbols-outlined text-[22px]">attach_file</span>
+</button>
+<div class="flex-1 bg-surface-bright border border-outline-variant rounded-2xl flex items-center px-3 py-1 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary focus-within:bg-surface transition-all shadow-inner relative">
+<textarea class="w-full bg-transparent border-none focus:ring-0 resize-none py-2.5 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant placeholder:opacity-70 leading-normal" placeholder="پیام عملیاتی خود را بنویسید..." rows="1" style="min-height: 44px; max-height: 120px;"></textarea>
+</div>
+<button class="w-[44px] h-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors bg-surface-container hover:bg-surface-container-high rounded-full shrink-0 active:scale-95">
+<span class="material-symbols-outlined text-[22px]">mic</span>
+</button>
+<button class="w-[48px] h-[48px] bg-primary text-on-primary rounded-full shrink-0 flex items-center justify-center hover:bg-surface-tint transition-all shadow-md active:scale-90 active:shadow-inner border border-primary-fixed-dim">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1; margin-right: 2px;">send</span>
+</button>
+</div>
+<!-- Bottom Navigation Shell (Constructed from SideNavBar JSON for Mobile) -->
+<!-- Applying shell layout principles: fixed bottom, separated by subtle tonal shift/shadow instead of hard top border -->
+<nav class="bg-surface full-width bottom-0 shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.08)] z-50 h-[72px] flex items-center justify-around px-2 shrink-0 pb-safe">
+<!-- Dashboard -->
+<a class="flex flex-col items-center justify-center gap-1 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest p-2 rounded-lg transition-all min-w-[64px] h-full group" href="#">
+<div class="relative flex items-center justify-center w-8 h-8 rounded-full group-hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[24px]">dashboard</span>
+</div>
+<span class="font-label-md text-label-md text-[10px] tracking-wide">Dashboard</span>
+</a>
+<!-- Bulletins -->
+<a class="flex flex-col items-center justify-center gap-1 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest p-2 rounded-lg transition-all min-w-[64px] h-full group relative" href="#">
+<div class="relative flex items-center justify-center w-8 h-8 rounded-full group-hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[24px]">campaign</span>
+<!-- Notification Badge -->
+<span class="absolute top-0 right-0 w-2.5 h-2.5 bg-primary rounded-full border border-surface"></span>
+</div>
+<span class="font-label-md text-label-md text-[10px] tracking-wide">Bulletins</span>
+</a>
+<!-- Chat (ACTIVE STATE applied directly from JSON logic) -->
+<a class="flex flex-col items-center justify-center gap-1 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary font-bold rounded-lg p-2 transition-all min-w-[72px] h-[90%] shadow-inner border border-outline-variant/20" href="#">
+<div class="relative flex items-center justify-center w-8 h-8">
+<span class="material-symbols-outlined text-[26px] text-primary" style="font-variation-settings: 'FILL' 1;">forum</span>
+</div>
+<span class="font-label-md text-label-md text-[11px] text-primary tracking-wide">Chat</span>
+</a>
+<!-- Phonebook -->
+<a class="flex flex-col items-center justify-center gap-1 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest p-2 rounded-lg transition-all min-w-[64px] h-full group" href="#">
+<div class="relative flex items-center justify-center w-8 h-8 rounded-full group-hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[24px]">contact_phone</span>
+</div>
+<span class="font-label-md text-label-md text-[10px] tracking-wide">Phonebook</span>
+</a>
+<!-- Roster -->
+<a class="flex flex-col items-center justify-center gap-1 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest p-2 rounded-lg transition-all min-w-[64px] h-full group" href="#">
+<div class="relative flex items-center justify-center w-8 h-8 rounded-full group-hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[24px]">calendar_month</span>
+</div>
+<span class="font-label-md text-label-md text-[10px] tracking-wide">Roster</span>
+</a>
+</nav>
+<!-- Inline Script for Auto-resizing Textarea and simple interactions -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const textarea = document.querySelector('textarea');
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+                if(this.value === '') {
+                    this.style.height = '44px';
+                }
+            });
+            
+            // Auto scroll to bottom of chat on load
+            const mainChat = document.querySelector('main');
+            mainChat.scrollTop = mainChat.scrollHeight;
+        });
+    </script>
+</body></html>

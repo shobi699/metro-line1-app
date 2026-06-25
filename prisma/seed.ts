@@ -3,11 +3,11 @@ import path from 'node:path'
 
 config({ path: path.resolve(process.cwd(), '.env'), override: true })
 
-import { PrismaClient, type RoleKey } from '../src/generated/prisma/client'
+import { PrismaClient } from '../src/generated/prisma/client'
 import { PrismaLibSql } from '@prisma/adapter-libsql'
 import bcrypt from 'bcryptjs'
 
-const DEMO_PASSWORD = 'demo1234'
+const DEMO_PASSWORD = 'admin123'
 
 async function main() {
   const dbPath = path.resolve(process.cwd(), 'prisma', 'dev.db')
@@ -15,50 +15,73 @@ async function main() {
   const prisma = new PrismaClient({ adapter })
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 12)
 
-  // ── Roles ──────────────────────────────────────────────
-  const roles = {} as Record<RoleKey, string>
-  for (const [key, name, perms] of [
-    [
-      'super_admin',
-      'مدیر ارشد',
-      {
-        users: ['create', 'read', 'update', 'delete'],
-        shifts: ['create', 'read', 'update', 'delete'],
-        tickets: ['create', 'read', 'update', 'delete'],
-        bulletins: ['create', 'read', 'update', 'delete'],
-        imports: ['create', 'read'],
-        settings: ['read', 'update'],
-      },
-    ],
-    [
-      'admin',
-      'مدیر',
-      {
-        users: ['read', 'update'],
-        shifts: ['create', 'read', 'update'],
-        tickets: ['create', 'read', 'update'],
-        bulletins: ['create', 'read', 'update'],
-        imports: ['create', 'read'],
-        settings: ['read'],
-      },
-    ],
-    [
-      'operator',
-      'اپراتور',
-      {
-        users: ['read'],
-        shifts: ['read'],
-        tickets: ['create', 'read', 'update'],
-        bulletins: ['read'],
-        imports: ['read'],
-        settings: ['read'],
-      },
-    ],
+  // ── Roles (dynamic RBAC: flat permission keys) ─────────
+  const roles = {} as Record<string, string>
+  const adminPerms = [
+    'users:read',
+    'users:update',
+    'shifts:create',
+    'shifts:read',
+    'shifts:update',
+    'tickets:create',
+    'tickets:read',
+    'tickets:update',
+    'bulletins:create',
+    'bulletins:read',
+    'bulletins:update',
+    'posts:create',
+    'posts:read',
+    'posts:update',
+    'posts:delete',
+    'imports:create',
+    'imports:read',
+    'settings:read',
+    'meetings:read',
+    'meetings:manage',
+    'feedback:read',
+    'feedback:respond',
+    'notifications:send',
+    'chat:access',
+  ]
+
+  const operatorPerms = [
+    'users:read',
+    'shifts:read',
+    'tickets:create',
+    'tickets:read',
+    'tickets:update',
+    'bulletins:read',
+    'posts:read',
+    'imports:read',
+    'settings:read',
+    'meetings:create',
+    'feedback:create',
+    'chat:access',
+  ]
+
+  for (const [key, name, perms, rank] of [
+    ['super_admin', 'مدیر ارشد', ['*'], 2],
+    ['admin', 'مدیر سیستم', adminPerms, 1],
+    ['manager', 'مدیر', adminPerms, 1],
+    ['chief', 'رئیس', adminPerms, 1],
+    ['supervisor', 'سرپرست', adminPerms, 1],
+    ['operator', 'اپراتور', operatorPerms, 0],
+    ['shift_lead', 'مسئول شیفت', operatorPerms, 0],
+    ['driver', 'راهبر', operatorPerms, 0],
+    ['expert', 'کارشناس', operatorPerms, 0],
+    ['dispatch_tech', 'تکنسین اعزام پذیرش', operatorPerms, 0],
+    ['clerical', 'دفتری', operatorPerms, 0],
   ] as const) {
     const role = await prisma.role.upsert({
       where: { key },
-      update: {},
-      create: { key, name, permissions: JSON.stringify(perms) },
+      update: { permissions: JSON.stringify(perms), rank, isSystem: true },
+      create: {
+        key,
+        name,
+        permissions: JSON.stringify(perms),
+        rank,
+        isSystem: true,
+      },
     })
     roles[key] = role.id
   }
@@ -287,31 +310,35 @@ async function main() {
   // ── Custom field definitions ───────────────────────────
   await prisma.customFieldDef.createMany({
     data: [
-      {
-        entityType: 'user',
-        name: 'station',
-        label: 'ایستگاه',
-        type: 'text',
-        required: false,
-        sortOrder: 0,
-      },
-      {
-        entityType: 'user',
-        name: 'line',
-        label: 'خط',
-        type: 'select',
-        options: JSON.stringify(['خط ۱', 'خط ۲', 'خط ۳', 'خط ۴']),
-        required: false,
-        sortOrder: 1,
-      },
-      {
-        entityType: 'user',
-        name: 'emergencyContact',
-        label: 'تماس اضطراری',
-        type: 'text',
-        required: false,
-        sortOrder: 2,
-      },
+      { entityType: 'User', name: 'personnelNo', label: 'کد پرسنلی', type: 'text', required: false, sortOrder: 0 },
+      { entityType: 'User', name: 'idNumber', label: 'شماره شناسنامه', type: 'text', required: false, sortOrder: 1 },
+      { entityType: 'User', name: 'fatherName', label: 'نام پدر', type: 'text', required: false, sortOrder: 2 },
+      { entityType: 'User', name: 'shiftType', label: 'نوع شيفت', type: 'text', required: false, sortOrder: 3 },
+      { entityType: 'User', name: 'shift', label: 'نام شيفت', type: 'text', required: false, sortOrder: 4 },
+      { entityType: 'User', name: 'group', label: 'كد گروه راهبري', type: 'text', required: false, sortOrder: 5 },
+      { entityType: 'User', name: 'post', label: 'عنوان پست', type: 'text', required: false, sortOrder: 6 },
+      { entityType: 'User', name: 'drivingStatus', label: 'وضعيت راهبری', type: 'text', required: false, sortOrder: 7 },
+      { entityType: 'User', name: 'birthDate', label: 'تاریخ تولد', type: 'text', required: false, sortOrder: 8 },
+      { entityType: 'User', name: 'birthPlace', label: 'محل تولد', type: 'text', required: false, sortOrder: 9 },
+      { entityType: 'User', name: 'issueDate', label: 'تاریخ صدور', type: 'text', required: false, sortOrder: 10 },
+      { entityType: 'User', name: 'maritalStatus', label: 'وضعیت تاهل \r\n تعداد فرزند', type: 'text', required: false, sortOrder: 11 },
+      { entityType: 'User', name: 'phone2', label: 'تلفن2', type: 'text', required: false, sortOrder: 12 },
+      { entityType: 'User', name: 'phone3', label: 'تلفن3', type: 'text', required: false, sortOrder: 13 },
+      { entityType: 'User', name: 'phone4', label: 'تلفن4', type: 'text', required: false, sortOrder: 14 },
+      { entityType: 'User', name: 'education', label: 'اطلاعات \r\n تحصیلی', type: 'text', required: false, sortOrder: 15 },
+      { entityType: 'User', name: 'hireDate', label: 'تاریخ استخدام \r\nگروه شغلی', type: 'text', required: false, sortOrder: 16 },
+      { entityType: 'User', name: 'licenseDates', label: 'تاریخ پایه دو\r\nتاریخ پایه یک', type: 'text', required: false, sortOrder: 17 },
+      { entityType: 'User', name: 'carSpecs', label: 'مشخصات \r\n خودرو', type: 'text', required: false, sortOrder: 18 },
+      { entityType: 'User', name: 'insuranceNo', label: 'گروه خونی \r\nشماره بیمه', type: 'text', required: false, sortOrder: 19 },
+      { entityType: 'User', name: 'address', label: 'آدرس پستی', type: 'text', required: false, sortOrder: 20 },
+      { entityType: 'User', name: 'medicalExamValidity', label: 'اعتبار معاينه پزشكي', type: 'text', required: false, sortOrder: 21 },
+      { entityType: 'User', name: 'startLocation', label: 'ايستگاه شروع', type: 'text', required: false, sortOrder: 22 },
+      { entityType: 'User', name: 'driverPercent', label: 'درصد راهبر', type: 'text', required: false, sortOrder: 23 },
+      { entityType: 'User', name: 'coDriverPercent', label: 'درصد كمك راهبري', type: 'text', required: false, sortOrder: 24 },
+      { entityType: 'User', name: 'traineeDriverPercent', label: 'درصد راهبري آموزشي', type: 'text', required: false, sortOrder: 25 },
+      { entityType: 'User', name: 'licenseClass1Date', label: 'تاریخ اخذ گواهینامه پایه1', type: 'text', required: false, sortOrder: 26 },
+      { entityType: 'User', name: 'licenseClass2Date', label: 'تاریخ اخذ گواهینامه پایه2', type: 'text', required: false, sortOrder: 27 },
+      { entityType: 'User', name: 'age', label: 'سن', type: 'text', required: false, sortOrder: 28 },
     ],
   })
 
@@ -328,6 +355,271 @@ async function main() {
     })
   }
 
+  // ── Chat rooms ─────────────────────────────────────────
+  const adminIds = new Set([superAdmin.id, admin.id])
+
+  const generalRoom = await prisma.chatRoom.create({
+    data: {
+      name: 'عمومی',
+      type: 'group',
+      kind: 'general',
+      members: {
+        create: allOperators.map((u) => ({
+          userId: u.id,
+          isAdmin: adminIds.has(u.id),
+        })),
+      },
+    },
+  })
+
+  await prisma.chatRoom.create({
+    data: {
+      name: 'راهبران',
+      type: 'group',
+      kind: 'operators',
+      members: {
+        create: [admin, ...operators].map((u) => ({
+          userId: u.id,
+          isAdmin: u.id === admin.id,
+        })),
+      },
+    },
+  })
+
+  await prisma.chatRoom.create({
+    data: {
+      name: 'مرکز فرمان (OCC)',
+      type: 'group',
+      kind: 'occ',
+      members: {
+        create: [superAdmin, admin].map((u) => ({
+          userId: u.id,
+          isAdmin: true,
+        })),
+      },
+    },
+  })
+
+  await prisma.message.create({
+    data: {
+      roomId: generalRoom.id,
+      senderId: admin.id,
+      body: 'به سامانه گفت‌وگوی سیر و حرکت خط ۱ خوش آمدید.',
+    },
+  })
+
+  // ── Content posts ──────────────────────────────────────
+  await prisma.post.createMany({
+    data: [
+      {
+        type: 'news',
+        title: 'افتتاح سامانه یکپارچه سیر و حرکت خط ۱',
+        slug: 'launch-line1-superapp-001abc',
+        excerpt: 'سامانه پرسنلی و اطلاع‌رسانی خط ۱ به‌صورت رسمی آغاز به کار کرد.',
+        body: 'با هدف یکپارچه‌سازی ارتباطات، آموزش و امور اداری، سامانه جدید معاونت سیر و حرکت خط ۱ راه‌اندازی شد. در این فاز ماژول‌های دفتر تلفن، چت، لوحه و ابلاغیه در دسترس است.',
+        category: 'سازمانی',
+        published: true,
+        mandatory: false,
+        authorId: admin.id,
+      },
+      {
+        type: 'circular',
+        title: 'بخش‌نامه رعایت فاصله ایمن در سکوها',
+        slug: 'circular-platform-safety-002def',
+        excerpt: 'دستورالعمل جدید فاصله ایمن مسافران از لبه سکو ابلاغ شد.',
+        body: 'کلیه راهبران و پرسنل ایستگاه موظف‌اند نسبت به اطلاع‌رسانی فاصله ایمن مسافران از لبه سکو اقدام کنند. این بخش‌نامه از تاریخ ابلاغ لازم‌الاجراست.',
+        category: 'ایمنی',
+        published: true,
+        mandatory: true,
+        authorId: superAdmin.id,
+      },
+      {
+        type: 'training',
+        title: 'آموزش رویه توقف اضطراری قطار',
+        slug: 'training-emergency-stop-003ghi',
+        excerpt: 'ویدیو و دستورالعمل گام‌به‌گام توقف اضطراری قطار.',
+        body: 'در این دوره آموزشی، مراحل صحیح توقف اضطراری قطار، اطلاع‌رسانی به مرکز فرمان و اقدامات ایمنی پس از توقف تشریح می‌شود.',
+        category: 'فنی',
+        published: true,
+        mandatory: false,
+        authorId: admin.id,
+      },
+    ],
+  })
+
+  // ── Settings ───────────────────────────────────────────
+  await prisma.setting.createMany({
+    data: [
+      {
+        key: 'general.appName',
+        label: 'نام سامانه',
+        description: 'عنوان فارسی اصلی سامانه در بالای صفحات و اپلیکیشن',
+        type: 'text',
+        value: JSON.stringify('سیر و حرکت خط یک مترو'),
+        defaultValue: JSON.stringify('سیر و حرکت خط یک مترو'),
+        category: 'general',
+        isEnabled: true,
+      },
+      {
+        key: 'general.brandColor',
+        label: 'رنگ شاخص برند',
+        description: 'کد هگز رنگ اصلی برند خط مترو (مثلاً قرمز برای خط ۱)',
+        type: 'color',
+        value: JSON.stringify('#e53935'),
+        defaultValue: JSON.stringify('#e53935'),
+        category: 'general',
+        isEnabled: true,
+      },
+      {
+        key: 'shifts.minRestHours',
+        label: 'حداقل فاصله استراحت قانونی (ساعت)',
+        description: 'حداقل ساعت استراحت اجباری بین پایان یک شیفت و شروع شیفت بعدی',
+        type: 'number',
+        value: JSON.stringify(12),
+        defaultValue: JSON.stringify(12),
+        category: 'shifts',
+        min: 8,
+        max: 24,
+        isEnabled: true,
+      },
+      {
+        key: 'tickets.allowNoWagon',
+        label: 'امکان ثبت تیکت بدون شماره واگن',
+        description: 'آیا کاربران می‌توانند خرابی‌هایی را ثبت کنند که مربوط به واگن خاصی نباشد؟',
+        type: 'boolean',
+        value: JSON.stringify(true),
+        defaultValue: JSON.stringify(true),
+        category: 'tickets',
+        isEnabled: true,
+      },
+      {
+        key: 'tickets.aiPriorityEnabled',
+        label: 'تحلیلگر هوشمند اولویت AI',
+        description: 'پیش‌بینی خودکار شدت و اولویت تیکت بر اساس متن گزارش خرابی',
+        type: 'boolean',
+        value: JSON.stringify(true),
+        defaultValue: JSON.stringify(true),
+        category: 'tickets',
+        isEnabled: true,
+      },
+      {
+        key: 'tickets.criticalKeywords',
+        label: 'کلمات کلیدی اولویت بحرانی',
+        description: 'کلمات کلیدی نشان‌دهنده اولویت بحرانی (جدا شده با کاما)',
+        type: 'text',
+        value: JSON.stringify('آتش,حریق,انفجار,سقوط,برق‌گرفتگی,خروج از ریل,ترمز اضطراری,دود'),
+        defaultValue: JSON.stringify('آتش,حریق,انفجار,سقوط,برق‌گرفتگی,خروج از ریل,ترمز اضطراری,دود'),
+        category: 'tickets',
+        isEnabled: true,
+      },
+      {
+        key: 'tickets.highKeywords',
+        label: 'کلمات کلیدی اولویت عمده',
+        description: 'کلمات کلیدی نشان‌دهنده اولویت عمده (جدا شده با کاما)',
+        type: 'text',
+        value: JSON.stringify('آسانسور,پله برقی,سیگنالینگ,تهویه,نشت آب,دوربین,سنسور'),
+        defaultValue: JSON.stringify('آسانسور,پله برقی,سیگنالینگ,تهویه,نشت آب,دوربین,سنسور'),
+        category: 'tickets',
+        isEnabled: true,
+      },
+      {
+        key: 'tickets.mediumKeywords',
+        label: 'کلمات کلیدی اولویت جزئی',
+        description: 'کلمات کلیدی نشان‌دهنده اولویت جزئی (جدا شده با کاما)',
+        type: 'text',
+        value: JSON.stringify('روشنایی,مانیتور,ساعت,بلندگو,تلفن,درب,صندلی'),
+        defaultValue: JSON.stringify('روشنایی,مانیتور,ساعت,بلندگو,تلفن,درب,صندلی'),
+        category: 'tickets',
+        isEnabled: true,
+      },
+      {
+        key: 'tickets.lowKeywords',
+        label: 'کلمات کلیدی اولویت کم‌اهمیت',
+        description: 'کلمات کلیدی نشان‌دهنده اولویت کم‌اهمیت (جدا شده با کاما)',
+        type: 'text',
+        value: JSON.stringify('نظافت,سطل زباله,پوستر,پله,سنگفرش,پنجره'),
+        defaultValue: JSON.stringify('نظافت,سطل زباله,پوستر,پله,سنگفرش,پنجره'),
+        category: 'tickets',
+        isEnabled: true,
+      },
+      {
+        key: 'chat.maxMessageLength',
+        label: 'حداکثر طول پیام چت',
+        description: 'حداکثر تعداد نویسه‌های مجاز برای هر پیام ارسالی در روم‌ها',
+        type: 'number',
+        value: JSON.stringify(1000),
+        defaultValue: JSON.stringify(1000),
+        category: 'chat',
+        min: 100,
+        max: 5000,
+        isEnabled: true,
+      },
+      {
+        key: 'mobile.enableSos',
+        label: 'دکمه اضطراری SOS',
+        description: 'فعال یا غیرفعال بودن دکمه اضطراری SOS در اپلیکیشن موبایل پرسنل',
+        type: 'boolean',
+        value: JSON.stringify(true),
+        defaultValue: JSON.stringify(true),
+        category: 'mobile',
+        isEnabled: true,
+      },
+      {
+        key: 'mobile.geofencingEnabled',
+        label: 'حضور و غیاب Geofencing',
+        description: 'ثبت حضور و غیاب هوشمند پرسنل بر اساس موقعیت مکانی جی‌پی‌اس ایستگاه‌ها',
+        type: 'boolean',
+        value: JSON.stringify(true),
+        defaultValue: JSON.stringify(true),
+        category: 'mobile',
+        isEnabled: true,
+      },
+      {
+        key: 'mobile.geofencingRadius',
+        label: 'شعاع موقعیت‌یاب حضور و غیاب (متر)',
+        description: 'حداکثر شعاع فاصله مجاز راهبر از ایستگاه برای چک‌این خودکار',
+        type: 'number',
+        value: JSON.stringify(100),
+        defaultValue: JSON.stringify(100),
+        category: 'mobile',
+        min: 20,
+        max: 1000,
+        isEnabled: true,
+      },
+      {
+        key: 'mobile.offlineCacheEnabled',
+        label: 'ذخیره آفلاین اطلاعات',
+        description: 'فعال‌سازی کش آفلاین دفتر تلفن و شیفت‌های کاری در محیط‌های بدون سیگنال تونل',
+        type: 'boolean',
+        value: JSON.stringify(true),
+        defaultValue: JSON.stringify(true),
+        category: 'mobile',
+        isEnabled: true,
+      },
+      {
+        key: 'mobile.sosRecipientPhone',
+        label: 'شماره پیامک اضطراری SOS',
+        description: 'شماره تلفن مستقیم دیسپچر مرکز فرمان جهت ارسال پیام اضطراری در زمان قطع اینترنت',
+        type: 'text',
+        value: JSON.stringify('09120000000'),
+        defaultValue: JSON.stringify('09120000000'),
+        category: 'mobile',
+        isEnabled: true,
+      },
+      {
+        key: 'mobile.activeTheme',
+        label: 'تم پیش‌فرض موبایل',
+        description: 'تم رنگی پیش‌فرض رابط کاربری موبایل',
+        type: 'select',
+        value: JSON.stringify('dark'),
+        defaultValue: JSON.stringify('dark'),
+        category: 'mobile',
+        options: JSON.stringify(['dark', 'light', 'system']),
+        isEnabled: true,
+      }
+    ]
+  })
+
   console.log('Seed complete:')
   console.log(`  Roles: super_admin, admin, operator`)
   console.log(`  Users: ${allOperators.length} (${superAdmin.nationalId} / admin123)`)
@@ -336,6 +628,8 @@ async function main() {
   console.log(`  Tickets: ${tickets.length}`)
   console.log(`  Custom fields: 3`)
   console.log(`  Audit logs: ${operators.length}`)
+  console.log(`  Chat rooms: 3 (عمومی، راهبران، مرکز فرمان)`)
+  console.log(`  Posts: 3 (اخبار، بخش‌نامه، آموزش)`)
 
   await prisma.$disconnect()
 }

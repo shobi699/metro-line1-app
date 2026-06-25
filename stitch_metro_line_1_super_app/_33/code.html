@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>سامانه پلاک‌خوان خط ۱ - جستجو</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container-high": "#e7e8e9",
+                      "secondary-container": "#e4e2e1",
+                      "primary-fixed": "#ffdad5",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "error-container": "#ffdad6",
+                      "on-tertiary": "#ffffff",
+                      "outline": "#926f6a",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "on-secondary-fixed-variant": "#474747",
+                      "background": "#f8f9fa",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "on-secondary-container": "#656464",
+                      "surface-variant": "#e1e3e4",
+                      "on-error-container": "#93000a",
+                      "tertiary": "#5d5c5b",
+                      "error": "#ba1a1a",
+                      "on-primary": "#ffffff",
+                      "on-tertiary-container": "#f7feff",
+                      "inverse-primary": "#ffb4a9",
+                      "primary-fixed-dim": "#ffb4a9",
+                      "primary": "#bc0004",
+                      "surface-container-low": "#f3f4f5",
+                      "on-primary-fixed": "#410000",
+                      "surface-container": "#edeeef",
+                      "outline-variant": "#e7bdb7",
+                      "tertiary-container": "#767474",
+                      "on-surface-variant": "#5d3f3b",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-surface": "#191c1d",
+                      "inverse-on-surface": "#f0f1f2",
+                      "surface-tint": "#c00205",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "surface-bright": "#f8f9fa",
+                      "secondary-fixed": "#e4e2e1",
+                      "on-error": "#ffffff",
+                      "inverse-surface": "#2e3132",
+                      "secondary": "#5f5e5e",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "on-primary-fixed-variant": "#930002",
+                      "tertiary-fixed": "#e5e2e1",
+                      "primary-container": "#e1271c",
+                      "surface": "#f8f9fa",
+                      "on-secondary": "#ffffff",
+                      "on-background": "#191c1d",
+                      "on-primary-container": "#fffbff",
+                      "surface-dim": "#d9dadb"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "unit": "4px",
+                      "margin-mobile": "16px",
+                      "touch-target-min": "48px",
+                      "margin-desktop": "32px"
+              },
+              "fontFamily": {
+                      "headline-lg": [
+                              "Vazirmatn"
+                      ],
+                      "label-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg-mobile": [
+                              "Vazirmatn"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "body-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-md": [
+                              "Vazirmatn"
+                      ],
+                      "body-lg": [
+                              "Vazirmatn"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "48px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "data-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body { font-family: 'Vazirmatn', sans-serif; }
+        .persian-plate-input { direction: ltr; font-family: 'Vazirmatn'; text-align: center; }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-24 md:hidden">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-dim flex justify-between items-center px-margin-mobile h-touch-target-min w-full z-50 sticky top-0 border-b border-outline-variant">
+<button class="text-on-surface hover:bg-surface-container-high active:scale-95 transition-transform duration-100 p-2 rounded-full flex items-center justify-center h-touch-target-min w-touch-target-min">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">سامانه پلاک‌خوان خط ۱</h1>
+<button class="text-primary dark:text-primary-fixed hover:bg-surface-container-high active:scale-95 transition-transform duration-100 p-2 rounded-full flex items-center justify-center h-touch-target-min w-touch-target-min">
+<span class="material-symbols-outlined" data-icon="emergency_home">emergency_home</span>
+</button>
+</header>
+<main class="p-margin-mobile space-y-6">
+<!-- Search Section -->
+<section class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
+<h2 class="font-headline-md text-headline-md mb-4 text-on-surface">استعلام پلاک</h2>
+<div class="flex flex-col gap-4">
+<!-- Iranian Plate Input Visualization -->
+<div class="flex border-2 border-primary rounded-lg overflow-hidden h-16 relative">
+<div class="w-12 bg-blue-700 flex flex-col justify-between items-center py-1">
+<img alt="Iran Flag" class="w-6" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfvuYZfeM5QdgVhHnWvye-oAYYm9Qm-CK0pCqV5HtKcWD2onfk2GGQpzGQMahMpeBPhJuo1Rh4pZv3pG1ozg5jgiiYLkE1aK4Bbw0aXeg8HRenliAfXNcqcUUXJV14z-LJIZfhU_JH2HARESIpIb_zscW-3zTTYig0Sks9f17Gghf-vP8hIsrPtzWdrCN4_S1FFCqlESlIQyqenaLs5M7mwTrGbF9GQFrDM6QZicOomqpUw6sm0K5ZIApC4FKfq8HqXeEJ70WrpUGL"/>
+<span class="text-white text-[10px] font-bold">I.R. IRAN</span>
+</div>
+<div class="flex-1 flex items-center justify-center bg-white persian-plate-input text-2xl font-bold gap-2 text-on-surface">
+<input class="w-12 text-center border-none focus:ring-0 text-2xl p-0 h-full" maxlength="2" placeholder="۱۱" type="text"/>
+<span class="text-on-surface-variant font-bold text-xl">ص</span>
+<input class="w-16 text-center border-none focus:ring-0 text-2xl p-0 h-full" maxlength="3" placeholder="۳۳۳" type="text"/>
+<div class="h-full border-l-2 border-outline-variant flex items-center justify-center px-3 bg-surface-container-low">
+<div class="flex flex-col items-center">
+<span class="text-[10px] text-on-surface-variant leading-none">ایران</span>
+<input class="w-10 text-center border-none focus:ring-0 text-xl font-bold p-0 h-6 bg-transparent" maxlength="2" placeholder="۴۴" type="text"/>
+</div>
+</div>
+</div>
+</div>
+<button class="bg-primary text-on-primary w-full h-touch-target-min rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 active:shadow-inner">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+                    جستجوی خودرو
+                </button>
+</div>
+<!-- Quick Filters -->
+<div class="flex gap-2 mt-4 overflow-x-auto pb-2 scrollbar-hide">
+<button class="whitespace-nowrap px-4 py-2 rounded-full border border-outline-variant bg-surface-container-low text-on-surface font-label-md text-label-md hover:bg-surface-container">دپو</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full border border-outline-variant bg-surface-container-low text-on-surface font-label-md text-label-md hover:bg-surface-container">پارکینگ ایستگاه</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full border border-primary bg-primary-container text-on-primary-container font-label-md text-label-md">فقط مجاز</button>
+</div>
+</section>
+<!-- Result Card -->
+<section class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">نتیجه یافت شد</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></span>
+<span class="font-label-md text-label-md text-secondary">حضور در سایت (گیت ۲)</span>
+</div>
+</div>
+<!-- Static Display of searched plate -->
+<div class="flex border border-outline-variant rounded bg-white h-8 overflow-hidden scale-75 origin-top-left">
+<div class="w-6 bg-blue-700"></div>
+<div class="flex items-center px-2 font-bold gap-1 text-black">
+<span>۴۴</span><span class="text-xs">ایران</span><span>|</span><span>۳۳۳</span><span>ص</span><span>۱۱</span>
+</div>
+</div>
+</div>
+<div class="space-y-3 mb-6 bg-surface-container-low p-3 rounded-lg border border-surface-variant">
+<div class="flex justify-between border-b border-surface-variant pb-2">
+<span class="font-body-md text-body-md text-secondary">مالک:</span>
+<span class="font-label-md text-label-md text-on-surface font-bold">علیرضا کریمی (مدیر حراست)</span>
+</div>
+<div class="flex justify-between border-b border-surface-variant pb-2">
+<span class="font-body-md text-body-md text-secondary">خودرو:</span>
+<span class="font-label-md text-label-md text-on-surface">Toyota Hilux (سفید)</span>
+</div>
+<div class="flex justify-between">
+<span class="font-body-md text-body-md text-secondary">آخرین تردد:</span>
+<span class="font-data-mono text-data-mono text-on-surface" dir="ltr">14:23:05</span>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<button class="bg-primary text-on-primary w-full h-touch-target-min rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 active:shadow-inner">
+<span class="material-symbols-outlined" data-icon="call">call</span>
+                    تماس با مالک
+                </button>
+<div class="flex gap-2">
+<button class="flex-1 border border-outline-variant bg-surface-container-lowest text-on-surface h-touch-target-min rounded-lg font-label-md text-label-md flex items-center justify-center gap-1 hover:bg-surface-container">
+<span class="material-symbols-outlined text-xl" data-icon="warning">warning</span>
+                        ارسال هشدار
+                    </button>
+<button class="flex-1 border border-outline-variant bg-surface-container-lowest text-on-surface h-touch-target-min rounded-lg font-label-md text-label-md flex items-center justify-center gap-1 hover:bg-surface-container">
+<span class="material-symbols-outlined text-xl" data-icon="receipt_long">receipt_long</span>
+                        ثبت تخلف
+                    </button>
+</div>
+</div>
+</section>
+<!-- Recent History -->
+<section>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-3 px-1">آخرین استعلام‌ها</h3>
+<div class="space-y-2">
+<!-- History Item 1 -->
+<div class="bg-surface-container-lowest p-3 rounded-lg border border-outline-variant flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="directions_car">directions_car</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface" dir="ltr">99 د 123 | 22</div>
+<span class="font-body-md text-body-md text-secondary text-sm">مجاز - پژو پارس</span>
+</div>
+</div>
+<span class="font-data-mono text-data-mono text-secondary text-xs" dir="ltr">14:10</span>
+</div>
+<!-- History Item 2 -->
+<div class="bg-surface-container-lowest p-3 rounded-lg border border-outline-variant flex justify-between items-center relative overflow-hidden">
+<div class="absolute right-0 top-0 w-1 h-full bg-red-500"></div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="block">block</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface" dir="ltr">65 ب 888 | 11</div>
+<span class="font-body-md text-body-md text-error text-sm font-bold">غیرمجاز (لیست سیاه)</span>
+</div>
+</div>
+<span class="font-data-mono text-data-mono text-secondary text-xs" dir="ltr">13:45</span>
+</div>
+<!-- History Item 3 -->
+<div class="bg-surface-container-lowest p-3 rounded-lg border border-outline-variant flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="directions_car">directions_car</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface" dir="ltr">12 ج 456 | 33</div>
+<span class="font-body-md text-body-md text-secondary text-sm">پیمانکار - سایپا</span>
+</div>
+</div>
+<span class="font-data-mono text-data-mono text-secondary text-xs" dir="ltr">12:30</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-gutter py-2 pb-safe bg-surface-container-lowest dark:bg-surface-container shadow-md">
+<button class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 font-label-md text-label-md active:inner-shadow transition-all w-16 h-14">
+<span class="material-symbols-outlined" data-icon="search" data-weight="fill" style="font-variation-settings: 'FILL' 1;">search</span>
+<span class="text-[10px] mt-1">جستجو</span>
+</button>
+<button class="flex flex-col items-center justify-center text-secondary font-label-md text-label-md hover:bg-secondary-container active:inner-shadow transition-all rounded-full px-4 py-1 w-16 h-14">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="text-[10px] mt-1">تاریخچه</span>
+</button>
+<button class="flex flex-col items-center justify-center text-secondary font-label-md text-label-md hover:bg-secondary-container active:inner-shadow transition-all rounded-full px-4 py-1 w-16 h-14">
+<span class="material-symbols-outlined" data-icon="report_problem">report_problem</span>
+<span class="text-[10px] mt-1">گزارشات</span>
+</button>
+<button class="flex flex-col items-center justify-center text-secondary font-label-md text-label-md hover:bg-secondary-container active:inner-shadow transition-all rounded-full px-4 py-1 w-16 h-14">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="text-[10px] mt-1">پروفایل</span>
+</button>
+</nav>
+</body></html>

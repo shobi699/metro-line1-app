@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html class="light" dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>تنظیمات - مرکز فرماندهی مترو</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#e1e3e4",
+                        "outline-variant": "#e7bdb7",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "tertiary-fixed": "#e5e2e1",
+                        "on-primary-fixed": "#410000",
+                        "background": "#f8f9fa",
+                        "on-primary-container": "#fffbff",
+                        "tertiary-container": "#767474",
+                        "secondary": "#5f5e5e",
+                        "primary": "#bc0004",
+                        "on-background": "#191c1d",
+                        "error": "#ba1a1a",
+                        "tertiary": "#5d5c5b",
+                        "surface-bright": "#f8f9fa",
+                        "surface-tint": "#c00205",
+                        "on-surface": "#191c1d",
+                        "on-tertiary": "#ffffff",
+                        "inverse-surface": "#2e3132",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#e4e2e1",
+                        "primary-fixed": "#ffdad5",
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "inverse-primary": "#ffb4a9",
+                        "surface-container-low": "#f3f4f5",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "surface-container": "#edeeef",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#930002",
+                        "on-primary": "#ffffff",
+                        "surface-container-high": "#e7e8e9",
+                        "primary-container": "#e1271c",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#e4e2e1",
+                        "outline": "#926f6a",
+                        "on-tertiary-container": "#f7feff",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-surface-variant": "#5d3f3b",
+                        "on-secondary-fixed-variant": "#474747",
+                        "surface": "#f8f9fa",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "inverse-on-surface": "#f0f1f2",
+                        "surface-dim": "#d9dadb",
+                        "on-secondary-container": "#656464"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "touch-target-min": "48px",
+                        "gutter": "16px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Vazirmatn"],
+                        "headline-lg-mobile": ["Vazirmatn"],
+                        "headline-md": ["Vazirmatn"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-lg": ["Vazirmatn"],
+                        "headline-lg": ["Vazirmatn"],
+                        "body-md": ["Vazirmatn"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "48px", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #f8f9fa; }
+        .inner-shadow { box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .material-symbols-outlined.fill { font-variation-settings: 'FILL' 1; }
+        input:focus, select:focus { border-color: #bc0004 !important; outline: none; box-shadow: 0 0 0 1px #bc0004 !important; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col md:flex-row">
+<!-- SideNavBar (from JSON) -->
+<aside class="hidden md:flex flex-col bg-surface-container border-l border-outline-variant right-0 h-screen w-64 fixed z-40 p-4">
+<div class="mb-8 flex items-center gap-3">
+<img alt="لوگوی مترو تهران" class="w-10 h-10 rounded object-cover" data-alt="A clean, modern, high-contrast industrial logo for the Tehran Metro Line 1 Operations Center. The logo features abstract geometric shapes representing train tracks or connectivity, utilizing a deep red and stark white color palette. The design is authoritative and precise, suitable for a highly technical government dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBn81sITZdEBgUnQaST8i5PtmOCZUgM3B9gLr3U04lrfdgEv_dOtTf5fowzkm88oH8-Yw3Ezf-YGXSvg_Xqy1caovaUoh-DdniPizHN-Y0W6Qi3hmBeFbxO1bQjLsfcUwDPR1g0xRgA6AJxpqred_f9ruKXk0iJOI0GBb-nv8DksEdaiPf0FqFKszp_TH2sA5nRNP_fWLkID0E8vKLhPxKWNOSmuFmbRC7Rzt-M0c3YfD81XhKbUami01ncUX6lKaeNSey0a6mvJ_QY"/>
+<div>
+<h1 class="font-headline-md text-label-md font-bold text-on-surface">مرکز کنترل عملیات</h1>
+<p class="font-body-md text-[12px] text-on-surface-variant">خط ۱ - تجریش به کهریزک</p>
+</div>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 hover:bg-secondary-container transition-all cursor-pointer rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">داشبورد</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 hover:bg-secondary-container transition-all cursor-pointer rounded-lg" href="#">
+<span class="material-symbols-outlined">train</span>
+<span class="font-body-md text-body-md">مدیریت ناوگان</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 hover:bg-secondary-container transition-all cursor-pointer rounded-lg" href="#">
+<span class="material-symbols-outlined">bolt</span>
+<span class="font-body-md text-body-md">شبکه برق</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 hover:bg-secondary-container transition-all cursor-pointer rounded-lg" href="#">
+<span class="material-symbols-outlined">engineering</span>
+<span class="font-body-md text-body-md">گزارش‌های نگهداری</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 hover:bg-secondary-container transition-all cursor-pointer rounded-lg" href="#">
+<span class="material-symbols-outlined">emergency</span>
+<span class="font-body-md text-body-md">پروتکل‌های اضطراری</span>
+</a>
+</nav>
+<div class="mt-auto">
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 hover:bg-secondary-container transition-all cursor-pointer rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-md text-body-md">خروج</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 md:mr-64 flex flex-col min-h-screen">
+<!-- TopNavBar (from JSON) -->
+<header class="flex flex-row-reverse justify-between items-center w-full px-margin-desktop h-touch-target-min bg-surface border-b border-outline-variant sticky top-0 z-30">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined cursor-pointer hover:bg-surface-container-high p-2 rounded-full transition-colors text-on-surface-variant">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:bg-surface-container-high p-2 rounded-full transition-colors text-primary border-b-2 border-primary pb-1 font-bold fill">settings</span>
+<span class="material-symbols-outlined cursor-pointer hover:bg-surface-container-high p-2 rounded-full transition-colors text-on-surface-variant">help</span>
+<img alt="تصویر پروفایل کاربر عملیاتی" class="w-8 h-8 rounded-full ml-2 object-cover" data-alt="A professional headshot of an operational control center staff member, wearing a crisp dark uniform. The lighting is bright and even, typical of a modern office environment. High quality, realistic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBK-EBjnoUVaXGUPV73-xK9xMNDVGLwQTxN_j_-IwbRoORxw68Hu-zGNsB-UJK-1hwANzAtUjJ89WihD_zicJsXu5WgO0E2fJ0VOFfD5N2RvxX3_66qNfnPKLWfo2zVIakLGYcqzK5ji7GPCIuRJvlCaNHc3SxaSZlq64KVU8xwBWigU_9kRX9TpS4dcoofQD9YFVZWT1TuM39rcdAyXYR3a-oZlxi16NxBKuI9glaYciHH1IsL7aEUjNbqfRZGr9sqtEL98sTuUzGG"/>
+</div>
+<div class="font-headline-md text-headline-md font-bold text-primary">
+                 سامانه فرماندهی خط ۱
+             </div>
+</header>
+<!-- Settings Canvas -->
+<div class="p-margin-desktop flex gap-8">
+<!-- Settings Inner Navigation (Sidebar style) -->
+<div class="w-64 shrink-0 bg-surface-container-lowest rounded-xl border border-surface-variant p-4 self-start sticky top-24 shadow-sm">
+<h2 class="font-label-md text-label-md text-on-surface-variant mb-4 px-2 uppercase tracking-wide">بخش‌های تنظیمات</h2>
+<nav class="space-y-1">
+<button class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md text-right transition-colors" onclick="switchTab('profile')">
+<span class="material-symbols-outlined text-primary">person</span>
+                        پروفایل و حساب کاربری
+                    </button>
+<button class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface hover:bg-surface-container-high font-label-md text-label-md text-right transition-colors" onclick="switchTab('system')">
+<span class="material-symbols-outlined text-on-surface-variant">memory</span>
+                        پیکربندی سیستم
+                    </button>
+<button class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface hover:bg-surface-container-high font-label-md text-label-md text-right transition-colors" onclick="switchTab('notifications')">
+<span class="material-symbols-outlined text-on-surface-variant">notifications_active</span>
+                        مدیریت اعلان‌ها
+                    </button>
+<button class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface hover:bg-surface-container-high font-label-md text-label-md text-right transition-colors" onclick="switchTab('access')">
+<span class="material-symbols-outlined text-on-surface-variant">admin_panel_settings</span>
+                        کنترل دسترسی
+                    </button>
+<button class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface hover:bg-surface-container-high font-label-md text-label-md text-right transition-colors" onclick="switchTab('display')">
+<span class="material-symbols-outlined text-on-surface-variant">palette</span>
+                        نمایش و رابط کاربری
+                    </button>
+<button class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface hover:bg-surface-container-high font-label-md text-label-md text-right transition-colors" onclick="switchTab('network')">
+<span class="material-symbols-outlined text-on-surface-variant">router</span>
+                        شبکه و ارتباطات
+                    </button>
+</nav>
+</div>
+<!-- Settings Content Forms -->
+<div class="flex-1 max-w-4xl space-y-8">
+<!-- Profile Section -->
+<section class="bg-surface-container-lowest rounded-xl border border-surface-variant p-6 shadow-sm" id="profile">
+<div class="border-b border-surface-variant pb-4 mb-6">
+<h3 class="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">person</span>
+                            پروفایل و حساب کاربری
+                        </h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">اطلاعات هویتی و تنظیمات امنیتی حساب کاربری خود را مدیریت کنید.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-4">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1">نام کامل</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg px-4 py-2 font-body-md text-on-surface focus:border-primary transition-colors" type="text" value="علی احمدی"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1">کد پرسنلی</label>
+<input class="w-full bg-surface-container-low border border-surface-variant rounded-lg px-4 py-2 font-data-mono text-data-mono text-on-surface-variant cursor-not-allowed" disabled="" type="text" value="OP-10452"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1">ایمیل سازمانی</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg px-4 py-2 font-body-md text-on-surface focus:border-primary transition-colors" type="email" value="a.ahmadi@tehranmetro.ir"/>
+</div>
+</div>
+<div class="flex flex-col items-center justify-center border-2 border-dashed border-outline-variant rounded-xl p-6 bg-surface">
+<img alt="تصویر پروفایل" class="w-32 h-32 rounded-full mb-4 object-cover ring-4 ring-surface-variant" data-alt="A professional headshot of an operational control center staff member, wearing a crisp dark uniform. The lighting is bright and even, typical of a modern office environment. High quality, realistic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC14jnGemWctTZ820BJFTaBIyz2FuD60k8Jz_KZRmBpvAtvfWCmdl-qMSxl9g_HzOtDsldgLskokwL1vVFbHMPh4jsfX8Zx112BJBWzkTDOzzzF9EJCT2W0P8OId-NVeBh-VTEaChVFrGf7Q1InzA3rIhAmWxN6XP-zsBsOZUdtOLCw02HzZMCQqHU75Xr2Dt0Vfohp18-2vp7upeH9NvKUnGrz14mZ_27n-IjYQbmg8TdkvgeWWQqbQQ511qC-X3ubaIcDo6ML9fIV"/>
+<button class="bg-secondary text-on-secondary font-label-md text-label-md px-4 py-2 rounded hover:bg-tertiary transition-colors">تغییر تصویر</button>
+</div>
+</div>
+<div class="mt-8 pt-6 border-t border-surface-variant">
+<h4 class="font-label-md text-label-md text-on-surface mb-4">امنیت حساب</h4>
+<div class="flex items-center justify-between bg-surface-container p-4 rounded-lg">
+<div>
+<div class="font-label-md text-label-md text-on-surface">رمز عبور</div>
+<div class="font-body-md text-[14px] text-on-surface-variant">آخرین تغییر: ۳۰ روز پیش</div>
+</div>
+<button class="border border-outline text-on-surface font-label-md text-label-md px-4 py-2 rounded hover:bg-surface-variant transition-colors">تغییر رمز عبور</button>
+</div>
+</div>
+</section>
+<!-- System Config Section (Hidden by default in this layout demo, showing one active) -->
+<!-- <section id="system" class="hidden..."> ... </section> -->
+</div>
+</div>
+</main>
+<script>
+        function switchTab(tabId) {
+            // Placeholder for tab switching logic
+            console.log('Switching to', tabId);
+            // In a full implementation, this would hide other sections and show the selected one,
+            // and update the active state on the sidebar nav.
+        }
+    </script>
+</body></html>

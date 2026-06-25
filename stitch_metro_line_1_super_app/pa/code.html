@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Public Announcement (PA) Control System - Redline Command</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#191c1d",
+                        "secondary-container": "#e4e2e1",
+                        "surface-variant": "#e1e3e4",
+                        "surface-dim": "#d9dadb",
+                        "tertiary-container": "#767474",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#ffb4a9",
+                        "surface-container-high": "#e7e8e9",
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#5d3f3b",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#5d5c5b",
+                        "on-primary": "#ffffff",
+                        "on-secondary-container": "#656464",
+                        "surface-container": "#edeeef",
+                        "surface-bright": "#f8f9fa",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#e7bdb7",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "on-secondary-fixed-variant": "#474747",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "primary-container": "#e1271c",
+                        "on-background": "#191c1d",
+                        "inverse-surface": "#2e3132",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "on-error-container": "#93000a",
+                        "surface": "#f8f9fa",
+                        "on-primary-fixed": "#410000",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-primary-container": "#fffbff",
+                        "surface-container-low": "#f3f4f5",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "primary": "#bc0004",
+                        "secondary-fixed": "#e4e2e1",
+                        "secondary": "#5f5e5e",
+                        "primary-fixed": "#ffdad5",
+                        "outline": "#926f6a",
+                        "on-tertiary-container": "#f7feff",
+                        "surface-tint": "#c00205",
+                        "tertiary-fixed": "#e5e2e1",
+                        "background": "#f8f9fa",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-primary-fixed-variant": "#930002"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "32px",
+                        "touch-target-min": "48px",
+                        "margin-mobile": "16px",
+                        "gutter": "16px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-md": ["Vazirmatn"],
+                        "headline-lg-mobile": ["Vazirmatn"],
+                        "body-md": ["Vazirmatn"],
+                        "label-md": ["Vazirmatn"],
+                        "headline-lg": ["Vazirmatn"],
+                        "body-lg": ["Vazirmatn"]
+                    },
+                    "fontSize": {
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "48px", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #f8f9fa; }
+        .dark body { background-color: #191c1d; }
+        
+        /* Data Table Animations */
+        @keyframes pulse-live {
+            0% { background-color: transparent; }
+            50% { background-color: rgba(188, 0, 4, 0.1); }
+            100% { background-color: transparent; }
+        }
+        .live-cell { animation: pulse-live 2s infinite; }
+        
+        /* Audio Meter Animations */
+        @keyframes meter-bounce {
+            0% { height: 10%; }
+            50% { height: 80%; }
+            100% { height: 30%; }
+        }
+        .meter-bar { animation: meter-bounce 1s infinite alternate ease-in-out; }
+        .meter-bar:nth-child(even) { animation-delay: 0.2s; }
+        .meter-bar:nth-child(3n) { animation-delay: 0.4s; }
+        .meter-bar.idle { animation: none; height: 10%; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e1e3e4; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #474646; }
+        ::-webkit-scrollbar-thumb:hover { background: #c8c6c5; }
+    </style>
+</head>
+<body class="text-on-background bg-background h-screen overflow-hidden antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-64 h-16 z-30 border-b border-outline-variant bg-surface dark:bg-surface-dim flex justify-between items-center px-margin-desktop w-full rtl:pr-64 rtl:pl-0">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Redline Command</span>
+<div class="h-6 w-px bg-outline-variant mx-2"></div>
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">campaign</span>
+                Public Announcement System
+            </span>
+</div>
+<div class="flex items-center gap-4">
+<!-- System Health Utility -->
+<div class="flex items-center gap-3 px-3 py-1.5 bg-surface-container rounded border border-outline-variant mr-4">
+<div class="flex items-center gap-1.5" title="Radio Status: Optimal">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-xs">RAD</span>
+</div>
+<div class="flex items-center gap-1.5" title="Network Status: Optimal">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-xs">NET</span>
+</div>
+<div class="flex items-center gap-1.5" title="Server Status: Optimal">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-xs">SRV</span>
+</div>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded text-on-surface dark:text-on-surface hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded text-on-surface dark:text-on-surface hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded bg-surface-container-high border border-outline flex items-center justify-center overflow-hidden">
+<img alt="Supervisor Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a metro operations supervisor in a control room, bright lighting, corporate industrial style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCopyvb_HBgNvFxCrQEeV9kV8pN3qXpM79iVthKtyidSJdcruV-5ExtJ8d-4YwF7ZN3EyP_4VzMZnND22m3gifuY_nvVeQu4UlIv9tboDhiRnuFxTlL2CtAGZ4lfYzCqgjk5rI7aM8KF1f7HJNEivm192W3_fp5vX2RsZsIvkXnUnLy89uYVPO-5I4srUOoMbARMG7l7PJU0Hpf5Yd_FAgWigibnPiCM4j0mDvIwpKuj2ph0-T7aNcaKHxPNa7rHB9tJsR7rOW5nOj1"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 border-r border-outline-variant bg-surface-container dark:bg-surface-container-low flex flex-col py-4 rtl:right-0 rtl:left-auto z-40">
+<div class="px-6 mb-8 mt-2">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Redline Command</h1>
+<p class="font-label-md text-label-md text-on-surface-variant mt-1">Line 1 Supervision</p>
+</div>
+<div class="flex-1 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-6 py-3 font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<!-- Active State using semantic intent matching the PA system context -->
+<a class="flex items-center gap-3 px-6 py-3 font-body-md text-body-md text-primary dark:text-primary-fixed font-bold border-r-4 border-primary dark:border-primary-fixed bg-secondary-container dark:bg-secondary-container shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] duration-100" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">fact_check</span>
+                Approval Queue
+            </a>
+<a class="flex items-center gap-3 px-6 py-3 font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">verified_user</span>
+                Verified Personnel
+            </a>
+<a class="flex items-center gap-3 px-6 py-3 font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+                Analytics
+            </a>
+<a class="flex items-center gap-3 px-6 py-3 font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors mt-auto" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="pt-16 rtl:pr-64 rtl:pl-0 h-full overflow-hidden flex flex-col">
+<div class="flex-1 p-margin-desktop overflow-y-auto">
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-gutter h-full min-h-[600px]">
+<!-- Left Column: Station Selector & Map (7 cols) -->
+<div class="col-span-7 flex flex-col gap-gutter h-full">
+<!-- Target Selection Panel -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 flex flex-col flex-none">
+<div class="flex justify-between items-center mb-4 border-b border-outline-variant pb-2">
+<h2 class="font-headline-md text-headline-md font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">route</span>
+                                Station Target Selector
+                            </h2>
+<div class="flex gap-2">
+<button class="px-4 py-1.5 border border-outline rounded font-label-md text-label-md hover:bg-surface-container transition-colors" onclick="selectAllStations()">Select All Line 1</button>
+<button class="px-4 py-1.5 border border-outline rounded font-label-md text-label-md hover:bg-surface-container transition-colors" onclick="clearSelection()">Clear</button>
+</div>
+</div>
+<!-- Station Map Abstraction -->
+<div class="flex-1 min-h-[200px] bg-surface-container rounded border border-outline-variant relative overflow-hidden flex items-center justify-center p-4">
+<!-- Track Line -->
+<div class="absolute w-[80%] h-1 bg-tertiary-fixed-dim z-0"></div>
+<!-- Stations -->
+<div class="relative z-10 flex justify-between w-[80%]">
+<!-- Station 1 -->
+<div class="flex flex-col items-center gap-2 cursor-pointer group" onclick="toggleStation(this)">
+<div class="w-6 h-6 rounded-full bg-surface border-2 border-primary group-hover:bg-primary-container transition-colors flex items-center justify-center station-node">
+<div class="w-2 h-2 rounded-full bg-primary inner-dot"></div>
+</div>
+<span class="font-data-mono text-data-mono text-xs rotate-45 origin-top-left mt-2">Tajrish</span>
+</div>
+<!-- Station 2 -->
+<div class="flex flex-col items-center gap-2 cursor-pointer group" onclick="toggleStation(this)">
+<div class="w-6 h-6 rounded-full bg-surface border-2 border-primary group-hover:bg-primary-container transition-colors flex items-center justify-center station-node">
+<div class="w-2 h-2 rounded-full bg-transparent inner-dot"></div>
+</div>
+<span class="font-data-mono text-data-mono text-xs rotate-45 origin-top-left mt-2">Qeytariyeh</span>
+</div>
+<!-- Station 3 -->
+<div class="flex flex-col items-center gap-2 cursor-pointer group" onclick="toggleStation(this)">
+<div class="w-6 h-6 rounded-full bg-surface border-2 border-primary group-hover:bg-primary-container transition-colors flex items-center justify-center station-node">
+<div class="w-2 h-2 rounded-full bg-primary inner-dot"></div>
+</div>
+<span class="font-data-mono text-data-mono text-xs rotate-45 origin-top-left mt-2" style="white-space: nowrap;">Shahid Sadr</span>
+</div>
+<!-- Station 4 -->
+<div class="flex flex-col items-center gap-2 cursor-pointer group" onclick="toggleStation(this)">
+<div class="w-6 h-6 rounded-full bg-surface border-2 border-primary group-hover:bg-primary-container transition-colors flex items-center justify-center station-node">
+<div class="w-2 h-2 rounded-full bg-transparent inner-dot"></div>
+</div>
+<span class="font-data-mono text-data-mono text-xs rotate-45 origin-top-left mt-2">Gholhak</span>
+</div>
+<!-- Station 5 -->
+<div class="flex flex-col items-center gap-2 cursor-pointer group" onclick="toggleStation(this)">
+<div class="w-6 h-6 rounded-full bg-surface border-2 border-primary group-hover:bg-primary-container transition-colors flex items-center justify-center station-node">
+<div class="w-2 h-2 rounded-full bg-transparent inner-dot"></div>
+</div>
+<span class="font-data-mono text-data-mono text-xs rotate-45 origin-top-left mt-2" style="white-space: nowrap;">Doctor Shariati</span>
+</div>
+<!-- Station 6 -->
+<div class="flex flex-col items-center gap-2 cursor-pointer group" onclick="toggleStation(this)">
+<div class="w-6 h-6 rounded-full bg-surface border-2 border-primary group-hover:bg-primary-container transition-colors flex items-center justify-center station-node">
+<div class="w-2 h-2 rounded-full bg-transparent inner-dot"></div>
+</div>
+<span class="font-data-mono text-data-mono text-xs rotate-45 origin-top-left mt-2">Mirdamad</span>
+</div>
+</div>
+</div>
+<div class="mt-2 text-right">
+<span class="font-data-mono text-data-mono text-sm text-on-surface-variant">Selected Zones: <span class="font-bold text-primary" id="selected-count">2</span> / 29</span>
+</div>
+</div>
+<!-- Broadcast History Log -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 flex-1 flex flex-col min-h-0">
+<h2 class="font-headline-md text-headline-md font-semibold flex items-center gap-2 mb-4 border-b border-outline-variant pb-2 flex-none">
+<span class="material-symbols-outlined text-secondary">history</span>
+                            Recent Broadcast Log
+                        </h2>
+<div class="flex-1 overflow-y-auto">
+<table class="w-full text-right border-collapse">
+<thead class="sticky top-0 bg-[#2D2D2D] text-white z-10 font-label-md text-label-md">
+<tr>
+<th class="py-2 px-3 font-normal">Timestamp</th>
+<th class="py-2 px-3 font-normal">Type</th>
+<th class="py-2 px-3 font-normal">Target</th>
+<th class="py-2 px-3 font-normal">Operator</th>
+<th class="py-2 px-3 font-normal">Status</th>
+</tr>
+</thead>
+<tbody class="font-data-mono text-data-mono text-sm">
+<tr class="border-b border-surface-variant bg-[#F1F1F1] dark:bg-surface-container hover:bg-surface-container-high transition-colors">
+<td class="py-2 px-3">14:02:15</td>
+<td class="py-2 px-3">Live Mic</td>
+<td class="py-2 px-3">Tajrish</td>
+<td class="py-2 px-3">OP-402</td>
+<td class="py-2 px-3 text-green-600 dark:text-green-400">Completed</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-surface-container-high transition-colors">
+<td class="py-2 px-3">13:45:00</td>
+<td class="py-2 px-3">Pre-recorded: Delay</td>
+<td class="py-2 px-3">Line 1 (All)</td>
+<td class="py-2 px-3">System</td>
+<td class="py-2 px-3 text-green-600 dark:text-green-400">Completed</td>
+</tr>
+<tr class="border-b border-surface-variant bg-[#F1F1F1] dark:bg-surface-container hover:bg-surface-container-high transition-colors live-cell">
+<td class="py-2 px-3">13:30:22</td>
+<td class="py-2 px-3 text-error">Pre-recorded: Fire Alarm</td>
+<td class="py-2 px-3">Shahid Sadr</td>
+<td class="py-2 px-3">OP-402</td>
+<td class="py-2 px-3 text-error font-bold">ACTIVE LOOP</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-surface-container-high transition-colors">
+<td class="py-2 px-3">12:15:05</td>
+<td class="py-2 px-3">Live Mic</td>
+<td class="py-2 px-3">Mirdamad</td>
+<td class="py-2 px-3">OP-311</td>
+<td class="py-2 px-3 text-green-600 dark:text-green-400">Completed</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Right Column: Controls (5 cols) -->
+<div class="col-span-5 flex flex-col gap-gutter h-full">
+<!-- Live Mic Control -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 flex flex-col shadow-sm relative overflow-hidden flex-none">
+<!-- Active recording indicator styling wrapper -->
+<div class="absolute inset-0 border-2 border-transparent pointer-events-none transition-colors duration-300" id="mic-active-ring"></div>
+<h2 class="font-headline-md text-headline-md font-semibold flex items-center gap-2 mb-4 border-b border-outline-variant pb-2 relative z-10">
+<span class="material-symbols-outlined text-primary">mic</span>
+                            Live Broadcast Control
+                        </h2>
+<div class="flex items-center justify-between mb-6 relative z-10">
+<!-- Visual Audio Meter -->
+<div class="flex-1 h-12 bg-[#2D2D2D] rounded border inset-shadow border-outline-variant mr-4 p-1 flex items-end gap-1 overflow-hidden" id="audio-meter">
+<div class="w-full bg-green-500 rounded-t meter-bar idle"></div>
+<div class="w-full bg-green-500 rounded-t meter-bar idle"></div>
+<div class="w-full bg-green-400 rounded-t meter-bar idle"></div>
+<div class="w-full bg-yellow-400 rounded-t meter-bar idle"></div>
+<div class="w-full bg-yellow-500 rounded-t meter-bar idle"></div>
+<div class="w-full bg-orange-500 rounded-t meter-bar idle"></div>
+<div class="w-full bg-error rounded-t meter-bar idle"></div>
+<div class="w-full bg-error rounded-t meter-bar idle"></div>
+</div>
+<!-- Master Volume -->
+<div class="flex flex-col items-center w-24">
+<span class="font-label-md text-label-md text-on-surface-variant mb-1">Gain Level</span>
+<input class="w-full h-2 bg-surface-variant rounded-lg appearance-none cursor-pointer accent-primary" max="100" min="0" type="range" value="75"/>
+</div>
+</div>
+<!-- PTT Button -->
+<button class="w-full bg-primary hover:bg-primary-container text-white py-6 rounded border border-on-primary-fixed font-headline-md text-headline-md font-bold uppercase tracking-wider transition-all shadow-[0_4px_0_#930002] active:shadow-[0_0_0_#930002] active:translate-y-1 relative z-10 flex flex-col items-center justify-center" id="ptt-btn" onmousedown="startBroadcast()" onmouseleave="stopBroadcast()" onmouseup="stopBroadcast()">
+<span class="material-symbols-outlined text-[32px] mb-1">podcasts</span>
+                            Push To Talk (PTT)
+                        </button>
+<p class="text-center font-label-md text-label-md text-on-surface-variant mt-2 relative z-10">Hold to broadcast to selected zones</p>
+</div>
+<!-- Pre-recorded Library -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 flex-1 flex flex-col min-h-0">
+<h2 class="font-headline-md text-headline-md font-semibold flex items-center gap-2 mb-4 border-b border-outline-variant pb-2 flex-none">
+<span class="material-symbols-outlined text-secondary">library_music</span>
+                            Standard Announcements
+                        </h2>
+<div class="grid grid-cols-1 gap-2 flex-1 overflow-y-auto pr-2">
+<!-- Emergency Category -->
+<div class="mb-2">
+<h3 class="font-label-md text-label-md text-error mb-2 px-1">Critical / Emergency</h3>
+<button class="w-full text-right bg-error-container hover:bg-surface-tint hover:text-white text-on-error-container border border-outline-variant p-3 rounded flex justify-between items-center transition-colors group mb-2">
+<div class="flex flex-col">
+<span class="font-body-md font-semibold">Fire Evacuation</span>
+<span class="font-data-mono text-xs opacity-80">FA-01 - Loops automatically</span>
+</div>
+<span class="material-symbols-outlined group-hover:animate-pulse">play_circle</span>
+</button>
+<button class="w-full text-right bg-surface hover:bg-surface-container-high border border-outline-variant p-3 rounded flex justify-between items-center transition-colors group">
+<div class="flex flex-col">
+<span class="font-body-md font-semibold">Security Incident - Stay on Train</span>
+<span class="font-data-mono text-xs opacity-80">SEC-04 - Single play</span>
+</div>
+<span class="material-symbols-outlined text-primary">play_circle</span>
+</button>
+</div>
+<!-- Operational Category -->
+<div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-2 px-1 mt-2">Operational</h3>
+<button class="w-full text-right bg-surface hover:bg-surface-container-high border border-outline-variant p-3 rounded flex justify-between items-center transition-colors group mb-2">
+<div class="flex flex-col">
+<span class="font-body-md font-semibold">Train Delay - Technical Fault</span>
+<span class="font-data-mono text-xs opacity-80">OPS-12 - Single play</span>
+</div>
+<span class="material-symbols-outlined text-primary">play_circle</span>
+</button>
+<button class="w-full text-right bg-surface hover:bg-surface-container-high border border-outline-variant p-3 rounded flex justify-between items-center transition-colors group mb-2">
+<div class="flex flex-col">
+<span class="font-body-md font-semibold">Platform Crowding - Stand Back</span>
+<span class="font-data-mono text-xs opacity-80">SAF-02 - Single play</span>
+</div>
+<span class="material-symbols-outlined text-primary">play_circle</span>
+</button>
+<button class="w-full text-right bg-surface hover:bg-surface-container-high border border-outline-variant p-3 rounded flex justify-between items-center transition-colors group">
+<div class="flex flex-col">
+<span class="font-body-md font-semibold">End of Service Reminder</span>
+<span class="font-data-mono text-xs opacity-80">INFO-09 - Single play</span>
+</div>
+<span class="material-symbols-outlined text-primary">play_circle</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple Interaction Logic
+        function toggleStation(element) {
+            const innerDot = element.querySelector('.inner-dot');
+            if (innerDot.classList.contains('bg-transparent')) {
+                innerDot.classList.remove('bg-transparent');
+                innerDot.classList.add('bg-primary');
+            } else {
+                innerDot.classList.remove('bg-primary');
+                innerDot.classList.add('bg-transparent');
+            }
+            updateSelectedCount();
+        }
+
+        function selectAllStations() {
+            document.querySelectorAll('.inner-dot').forEach(dot => {
+                dot.classList.remove('bg-transparent');
+                dot.classList.add('bg-primary');
+            });
+            updateSelectedCount();
+        }
+
+        function clearSelection() {
+            document.querySelectorAll('.inner-dot').forEach(dot => {
+                dot.classList.remove('bg-primary');
+                dot.classList.add('bg-transparent');
+            });
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const count = document.querySelectorAll('.inner-dot.bg-primary').length;
+            document.getElementById('selected-count').innerText = count;
+        }
+
+        // Live Mic Interaction
+        let broadcastInterval;
+        function startBroadcast() {
+            const ring = document.getElementById('mic-active-ring');
+            ring.classList.remove('border-transparent');
+            ring.classList.add('border-primary', 'bg-error-container', 'opacity-20');
+            
+            // Start meter animation
+            document.querySelectorAll('.meter-bar').forEach(bar => {
+                bar.classList.remove('idle');
+            });
+        }
+
+        function stopBroadcast() {
+            const ring = document.getElementById('mic-active-ring');
+            ring.classList.add('border-transparent');
+            ring.classList.remove('border-primary', 'bg-error-container', 'opacity-20');
+            
+            // Stop meter animation
+            document.querySelectorAll('.meter-bar').forEach(bar => {
+                bar.classList.add('idle');
+            });
+        }
+    </script>
+</body></html>

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+
+<html class="light" dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>مدیریت زمان‌بندی و شیفت پرسنل - Redline Command</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface": "#191c1d",
+                      "secondary-container": "#e4e2e1",
+                      "surface-variant": "#e1e3e4",
+                      "surface-dim": "#d9dadb",
+                      "tertiary-container": "#767474",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "on-secondary": "#ffffff",
+                      "on-error": "#ffffff",
+                      "inverse-primary": "#ffb4a9",
+                      "surface-container-high": "#e7e8e9",
+                      "error": "#ba1a1a",
+                      "on-surface-variant": "#5d3f3b",
+                      "error-container": "#ffdad6",
+                      "tertiary": "#5d5c5b",
+                      "on-primary": "#ffffff",
+                      "on-secondary-container": "#656464",
+                      "surface-container": "#edeeef",
+                      "surface-bright": "#f8f9fa",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "on-tertiary": "#ffffff",
+                      "outline-variant": "#e7bdb7",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "on-secondary-fixed-variant": "#474747",
+                      "primary-fixed-dim": "#ffb4a9",
+                      "primary-container": "#e1271c",
+                      "on-background": "#191c1d",
+                      "inverse-surface": "#2e3132",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "on-error-container": "#93000a",
+                      "surface": "#f8f9fa",
+                      "on-primary-fixed": "#410000",
+                      "inverse-on-surface": "#f0f1f2",
+                      "on-primary-container": "#fffbff",
+                      "surface-container-low": "#f3f4f5",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "primary": "#bc0004",
+                      "secondary-fixed": "#e4e2e1",
+                      "secondary": "#5f5e5e",
+                      "primary-fixed": "#ffdad5",
+                      "outline": "#926f6a",
+                      "on-tertiary-container": "#f7feff",
+                      "surface-tint": "#c00205",
+                      "tertiary-fixed": "#e5e2e1",
+                      "background": "#f8f9fa",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-primary-fixed-variant": "#930002"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-desktop": "32px",
+                      "touch-target-min": "48px",
+                      "margin-mobile": "16px",
+                      "gutter": "16px",
+                      "unit": "4px"
+              },
+              "fontFamily": {
+                      "data-mono": ["JetBrains Mono"],
+                      "headline-md": ["Vazirmatn"],
+                      "headline-lg-mobile": ["Vazirmatn"],
+                      "body-md": ["Vazirmatn"],
+                      "label-md": ["Vazirmatn"],
+                      "headline-lg": ["Vazirmatn"],
+                      "body-lg": ["Vazirmatn"]
+              },
+              "fontSize": {
+                      "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                      "headline-md": ["24px", { "lineHeight": "36px", "fontWeight": "600" }],
+                      "headline-lg-mobile": ["24px", { "lineHeight": "36px", "fontWeight": "700" }],
+                      "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                      "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                      "headline-lg": ["32px", { "lineHeight": "48px", "fontWeight": "700" }],
+                      "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Custom scrollbar for data tables */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: theme('colors.surface-container-low');
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.outline-variant');
+            border-radius: theme('borderRadius.full');
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: theme('colors.tertiary');
+        }
+        
+        /* Pulse animation for live data cells */
+        @keyframes pulse-cell {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: theme('colors.primary-container'); }
+        }
+        .live-cell-pulse {
+            animation: pulse-cell 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen overflow-hidden">
+<!-- SideNavBar (Shared Component JSON) -->
+<nav class="h-screen w-64 fixed rtl:right-0 rtl:left-auto top-0 border-l border-outline-variant bg-surface-container flex flex-col py-4 z-40 hidden md:flex">
+<div class="px-6 mb-8 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined fill">train</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Redline Command</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Line 1 Supervision</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto px-4 space-y-2">
+<!-- Tabs -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-bold border-r-4 border-primary bg-secondary-container hover:bg-surface-container-high transition-colors" href="#" style="box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);">
+<span class="material-symbols-outlined fill">event_available</span>
+<span class="font-label-md text-label-md">مدیریت زمان‌بندی</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">fact_check</span>
+<span class="font-label-md text-label-md">Approval Queue</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">verified_user</span>
+<span class="font-label-md text-label-md">Verified Personnel</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+<div class="px-6 mt-auto">
+<div class="flex items-center gap-3 border-t border-outline-variant pt-4">
+<img alt="Supervisor Profile" class="w-10 h-10 rounded-full object-cover border border-outline-variant" data-alt="A professional headshot portrait of an Iranian metro supervisor wearing a formal dark corporate uniform. Bright, clean industrial lighting. Neutral grey background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuE0lL8pZLV5o5kmC2pP2TS_mt41oMjpXI35y6eQR7PVO8yjgFRVVBCORl4TSRsVaFWHZ-wN2NyYpbGbyh1mm2GIJNIFSLMbaEuyeffX8_FRcBNWgBk4n2OVm8wP8IM7o20Bs5-itl-7wSZujhjoA589nm21-IKpYPGktgUOCdu7iBkNFE6sRSfRr4h7vE9EVDzIKIiSZxX7lmkd9I3sWY9EGN27X9NxbQwp-OyhyhhwrdFOv0WfkFHHkYMG_tzB6XXQ6-0n0kzO57"/>
+<div>
+<p class="font-label-md text-label-md text-on-surface">ناظر خط یک</p>
+<p class="font-data-mono text-data-mono text-on-surface-variant text-xs">ID: RLC-9942</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- TopAppBar (Shared Component JSON) -->
+<header class="fixed top-0 rtl:right-64 rtl:left-0 h-16 z-30 border-b border-outline-variant bg-surface flex justify-between items-center px-margin-desktop w-[calc(100%-16rem)] hidden md:flex">
+<!-- Search -->
+<div class="flex-1 max-w-md relative">
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-full py-2 pr-10 pl-4 font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="جستجوی پرسنل، ایستگاه یا شیفت..." type="text"/>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-4">
+<!-- System Health Utility -->
+<div class="flex items-center gap-3 mr-6 bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant">
+<div class="flex items-center gap-1.5">
+<div class="w-2 h-2 rounded-full bg-[#10b981]"></div>
+<span class="font-data-mono text-data-mono text-xs">SYS: OK</span>
+</div>
+<div class="w-px h-4 bg-outline-variant"></div>
+<div class="flex items-center gap-1.5">
+<div class="w-2 h-2 rounded-full bg-[#10b981]"></div>
+<span class="font-data-mono text-data-mono text-xs">NET: 98%</span>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-all relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-error"></span>
+</button>
+<button class="w-10 h-10 rounded-full hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-all">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="rtl:mr-64 pt-16 h-screen flex flex-col bg-surface-bright">
+<!-- Header Actions & Controls -->
+<div class="px-margin-desktop py-4 bg-surface border-b border-outline-variant flex justify-between items-center shrink-0">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">مدیریت شیفت پرسنل</h2>
+<div class="flex items-center gap-2 mt-1 text-on-surface-variant font-body-md">
+<span class="material-symbols-outlined text-sm">calendar_month</span>
+<span>هفته جاری: ۱۲ تا ۱۸ آبان ۱۴۰۳</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-4 py-2 bg-surface-container border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">swap_horiz</span>
+                    درخواست‌های جابجایی
+                    <span class="bg-error-container text-on-error-container px-1.5 py-0.5 rounded-full text-xs">۳</span>
+</button>
+<button class="px-4 py-2 bg-[#191c1d] text-on-primary rounded-lg font-label-md text-label-md hover:bg-tertiary transition-colors flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">magic_button</span>
+                    زمان‌بندی خودکار AI
+                </button>
+<button class="px-6 py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-[#a60003] transition-colors flex items-center gap-2 shadow-sm active:shadow-inner">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                    شیفت جدید
+                </button>
+</div>
+</div>
+<!-- Dashboard Canvas -->
+<div class="flex-1 overflow-hidden p-gutter flex gap-gutter">
+<!-- Left Column: Roster Grid (Takes up 70%) -->
+<div class="w-full lg:w-8/12 flex flex-col gap-gutter h-full">
+<!-- Filters & Controls -->
+<div class="bg-surface rounded-xl border border-outline-variant p-3 flex justify-between items-center shrink-0">
+<div class="flex gap-2">
+<select class="bg-surface-container-low border border-outline-variant rounded-lg px-3 py-1.5 font-label-md text-label-md text-on-surface outline-none focus:border-primary">
+<option>همه دپارتمان‌ها</option>
+<option>راهبران قطار</option>
+<option>پرسنل ایستگاه</option>
+<option>نگهبانی</option>
+</select>
+<select class="bg-surface-container-low border border-outline-variant rounded-lg px-3 py-1.5 font-label-md text-label-md text-on-surface outline-none focus:border-primary">
+<option>خط ۱ - تجریش به کهریزک</option>
+</select>
+</div>
+<div class="flex bg-surface-container-low rounded-lg p-1 border border-outline-variant">
+<button class="px-3 py-1 bg-surface shadow-sm rounded-md font-label-md text-label-md text-on-surface">هفتگی</button>
+<button class="px-3 py-1 rounded-md font-label-md text-label-md text-on-surface-variant hover:bg-surface-container">ماهانه</button>
+</div>
+</div>
+<!-- Main Schedule Grid -->
+<div class="bg-surface rounded-xl border border-outline-variant flex-1 overflow-hidden flex flex-col shadow-sm">
+<div class="overflow-x-auto flex-1 h-full">
+<table class="w-full text-right border-collapse min-w-[800px]">
+<thead class="bg-[#2D2D2D] text-white sticky top-0 z-10">
+<tr>
+<th class="py-3 px-4 font-label-md text-label-md border-b border-[#474747] w-64 text-right">پرسنل</th>
+<th class="py-3 px-2 font-label-md text-label-md border-b border-[#474747] text-center border-r border-[#474747]">شنبه<br/><span class="text-xs text-gray-400 font-data-mono">12/08</span></th>
+<th class="py-3 px-2 font-label-md text-label-md border-b border-[#474747] text-center border-r border-[#474747]">یکشنبه<br/><span class="text-xs text-gray-400 font-data-mono">13/08</span></th>
+<th class="py-3 px-2 font-label-md text-label-md border-b border-[#474747] text-center border-r border-[#474747]">دوشنبه<br/><span class="text-xs text-gray-400 font-data-mono">14/08</span></th>
+<th class="py-3 px-2 font-label-md text-label-md border-b border-[#474747] text-center border-r border-[#474747] bg-[#474747]">سه‌شنبه<br/><span class="text-xs text-gray-200 font-data-mono">15/08</span></th>
+<th class="py-3 px-2 font-label-md text-label-md border-b border-[#474747] text-center border-r border-[#474747]">چهارشنبه<br/><span class="text-xs text-gray-400 font-data-mono">16/08</span></th>
+<th class="py-3 px-2 font-label-md text-label-md border-b border-[#474747] text-center border-r border-[#474747]">پنجشنبه<br/><span class="text-xs text-gray-400 font-data-mono">17/08</span></th>
+<th class="py-3 px-2 font-label-md text-label-md border-b border-[#474747] text-center border-r border-[#474747]">جمعه<br/><span class="text-xs text-gray-400 font-data-mono">18/08</span></th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md bg-surface divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-[#F1F1F1] transition-colors">
+<td class="py-2 px-4 border-r border-outline-variant border-l">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center font-label-md text-on-secondary-container">ع.م</div>
+<div>
+<div class="font-label-md text-on-surface">علی محمدی</div>
+<div class="font-data-mono text-xs text-on-surface-variant">راهبر قطار - ارشد</div>
+</div>
+</div>
+</td>
+<td class="p-1 border-l border-outline-variant">
+<div class="bg-surface-container-high rounded p-1.5 text-center border border-outline-variant cursor-pointer hover:border-primary">
+<div class="font-data-mono text-xs font-bold">06:00 - 14:00</div>
+<div class="text-[10px] text-on-surface-variant mt-0.5">خط ۱ - قطار A12</div>
+</div>
+</td>
+<td class="p-1 border-l border-outline-variant">
+<div class="bg-surface-container-high rounded p-1.5 text-center border border-outline-variant cursor-pointer hover:border-primary">
+<div class="font-data-mono text-xs font-bold">06:00 - 14:00</div>
+<div class="text-[10px] text-on-surface-variant mt-0.5">خط ۱ - قطار A12</div>
+</div>
+</td>
+<td class="p-1 border-l border-outline-variant bg-[#F1F1F1]">
+<div class="bg-error-container text-on-error-container rounded p-1.5 text-center border border-error cursor-pointer hover:opacity-80">
+<div class="font-data-mono text-xs font-bold">14:00 - 22:00</div>
+<div class="text-[10px] mt-0.5 font-bold flex items-center justify-center gap-1"><span class="material-symbols-outlined text-[12px]">warning</span>تداخل استراحت</div>
+</div>
+</td>
+<td class="p-1 border-l border-outline-variant bg-surface-container">
+<div class="bg-primary text-on-primary rounded p-1.5 text-center shadow-sm cursor-pointer border border-[#8a0003] live-cell-pulse">
+<div class="font-data-mono text-xs font-bold">06:00 - 14:00</div>
+<div class="text-[10px] mt-0.5 opacity-90 flex items-center justify-center gap-1"><span class="material-symbols-outlined text-[12px] fill">trip_origin</span>در حال انجام</div>
+</div>
+</td>
+<td class="p-1 border-l border-outline-variant">
+<div class="bg-surface-container-lowest rounded p-1.5 text-center border border-dashed border-outline-variant text-on-surface-variant">
+<div class="font-data-mono text-xs">استراحت</div>
+</div>
+</td>
+<td class="p-1 border-l border-outline-variant">
+<div class="bg-surface-container-high rounded p-1.5 text-center border border-outline-variant cursor-pointer hover:border-primary">
+<div class="font-data-mono text-xs font-bold">14:00 - 22:00</div>
+<div class="text-[10px] text-on-surface-variant mt-0.5">خط ۱ - قطار B04</div>
+</div>
+</td>
+<td class="p-1 border-l border-outline-variant">
+<div class="bg-[#e8f5e9] text-[#1b5e20] rounded p-1.5 text-center border border-[#a5d6a7] cursor-pointer">
+<div class="font-data-mono text-xs font-bold">اضافه‌کار</div>
+<div class="text-[10px] mt-0.5">08:00 - 12:00</div>
+</div>
+</td>
+</tr>
+<!-- Row 2 (Zebra) -->
+<tr class="bg-[#F8F9FA] hover:bg-[#F1F1F1] transition-colors">
+<td class="py-2 px-4 border-r border-outline-variant border-l">
+<div class="flex items-center gap-3">
+<img alt="Profile" class="w-8 h-8 rounded-full object-cover" data-alt="A small circular profile picture of an Iranian female metro station manager wearing a dark uniform and hijab. Professional corporate lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7miVYJsVmzvtj_JpmqZcFeTh6x6875Z-u_nH6exfprgnQMf2K3IXNeXMMQrUC_FCkKKLxO4Pu5QLeEvVd1-D26nnVtm_8aaOz1md_b23Odjoi64v0JeF4pfEOecGr-8hr8rBA8EdpYQ_gXSXG_jw2e77am7RYG6fuunM5r4KD2-QgvBjCIAzlZrZXx-eIWSOVDPyfLwkDqskaQxUfyp6tlcmx6yygznkanySx35i1Yk0j0PeywMDlpNDv2E-9iCVrgdVPc3wK70vY"/>
+<div>
+<div class="font-label-md text-on-surface">سارا کریمی</div>
+<div class="font-data-mono text-xs text-on-surface-variant">مدیر ایستگاه تجریش</div>
+</div>
+</div>
+</td>
+<td class="p-1 border-l border-outline-variant"><div class="bg-surface-container-high rounded p-1.5 text-center border border-outline-variant"><div class="font-data-mono text-xs font-bold">22:00 - 06:00</div></div></td>
+<td class="p-1 border-l border-outline-variant"><div class="bg-surface-container-high rounded p-1.5 text-center border border-outline-variant"><div class="font-data-mono text-xs font-bold">22:00 - 06:00</div></div></td>
+<td class="p-1 border-l border-outline-variant"><div class="bg-surface-container-high rounded p-1.5 text-center border border-outline-variant"><div class="font-data-mono text-xs font-bold">22:00 - 06:00</div></div></td>
+<td class="p-1 border-l border-outline-variant bg-surface-container"><div class="bg-surface-container-lowest rounded p-1.5 text-center border border-dashed border-outline-variant text-on-surface-variant"><div class="font-data-mono text-xs">استراحت</div></div></td>
+<td class="p-1 border-l border-outline-variant"><div class="bg-surface-container-high rounded p-1.5 text-center border border-outline-variant"><div class="font-data-mono text-xs font-bold">14:00 - 22:00</div></div></td>
+<td class="p-1 border-l border-outline-variant"><div class="bg-[#e3f2fd] text-[#0d47a1] rounded p-1.5 text-center border border-[#90caf9] relative"><div class="font-data-mono text-xs font-bold">14:00 - 22:00</div><span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#ff9800] rounded-full border border-white" title="درخواست جابجایی"></span></div></td>
+<td class="p-1 border-l border-outline-variant"><div class="bg-surface-container-high rounded p-1.5 text-center border border-outline-variant"><div class="font-data-mono text-xs font-bold">14:00 - 22:00</div></div></td>
+</tr>
+<!-- Empty Rows for Data Density Demo -->
+<tr class="hover:bg-[#F1F1F1] transition-colors"><td class="py-2 px-4 border-r border-outline-variant border-l"><div class="font-label-md text-on-surface">رضا احمدی</div><div class="font-data-mono text-xs text-on-surface-variant">راهبر قطار</div></td><td class="p-2 border-l border-outline-variant text-center text-on-surface-variant font-data-mono text-sm" colspan="7">ردیف داده نمونه</td></tr>
+<tr class="bg-[#F8F9FA] hover:bg-[#F1F1F1] transition-colors"><td class="py-2 px-4 border-r border-outline-variant border-l"><div class="font-label-md text-on-surface">مریم حسینی</div><div class="font-data-mono text-xs text-on-surface-variant">اپراتور مرکز کنترل</div></td><td class="p-2 border-l border-outline-variant text-center text-on-surface-variant font-data-mono text-sm" colspan="7">ردیف داده نمونه</td></tr>
+<tr class="hover:bg-[#F1F1F1] transition-colors"><td class="py-2 px-4 border-r border-outline-variant border-l"><div class="font-label-md text-on-surface">حسین رضایی</div><div class="font-data-mono text-xs text-on-surface-variant">نگهبان ایستگاه</div></td><td class="p-2 border-l border-outline-variant text-center text-on-surface-variant font-data-mono text-sm" colspan="7">ردیف داده نمونه</td></tr>
+<tr class="bg-[#F8F9FA] hover:bg-[#F1F1F1] transition-colors"><td class="py-2 px-4 border-r border-outline-variant border-l"><div class="font-label-md text-on-surface">زهرا نوری</div><div class="font-data-mono text-xs text-on-surface-variant">مدیر شیفت</div></td><td class="p-2 border-l border-outline-variant text-center text-on-surface-variant font-data-mono text-sm" colspan="7">ردیف داده نمونه</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Right Column: Status & Overtime Widgets (Takes up 30%) -->
+<div class="w-full lg:w-4/12 flex flex-col gap-gutter h-full overflow-y-auto pr-2 pb-4 custom-scrollbar">
+<!-- System Health Summary Card (Glass/Bento style attempt) -->
+<div class="bg-surface rounded-xl border border-outline-variant p-4 shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 w-full h-1 bg-gradient-to-l from-primary to-surface-container"></div>
+<h3 class="font-headline-md text-[18px] text-on-surface mb-4">وضعیت پرسنل (شیفت فعلی)</h3>
+<div class="grid grid-cols-2 gap-3 mb-4">
+<div class="bg-surface-container-low rounded-lg p-3 border border-outline-variant flex flex-col items-center justify-center">
+<span class="font-headline-lg text-primary">۴۲</span>
+<span class="font-label-md text-on-surface-variant text-xs">حاضر در شیفت</span>
+</div>
+<div class="bg-surface-container-low rounded-lg p-3 border border-outline-variant flex flex-col items-center justify-center">
+<span class="font-headline-lg text-on-surface">۸</span>
+<span class="font-label-md text-on-surface-variant text-xs">در استراحت (Break)</span>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between items-center py-1">
+<span class="font-label-md text-sm text-on-surface-variant">راهبران آماده به کار (Standby)</span>
+<span class="font-data-mono font-bold text-on-surface">۳ نفر</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-1.5">
+<div class="bg-[#10b981] h-1.5 rounded-full" style="width: 75%"></div>
+</div>
+<div class="flex justify-between items-center py-1 mt-2">
+<span class="font-label-md text-sm text-on-surface-variant">کسری پرسنل (ایستگاهی)</span>
+<span class="font-data-mono font-bold text-error">۱ نفر</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-1.5">
+<div class="bg-error h-1.5 rounded-full" style="width: 10%"></div>
+</div>
+</div>
+</div>
+<!-- Shift Swap Requests -->
+<div class="bg-surface rounded-xl border border-outline-variant p-4 shadow-sm flex-1 flex flex-col min-h-[300px]">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline-md text-[18px] text-on-surface">درخواست‌های جابجایی</h3>
+<span class="text-xs font-label-md text-primary cursor-pointer hover:underline">مشاهده همه</span>
+</div>
+<div class="space-y-3 overflow-y-auto flex-1">
+<!-- Request Card 1 -->
+<div class="bg-surface-container-low rounded-lg border border-outline-variant p-3">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-[#1e88e5] text-white flex items-center justify-center text-[10px] font-bold">س.ک</div>
+<span class="font-label-md text-sm text-on-surface">سارا کریمی</span>
+</div>
+<span class="text-[10px] text-on-surface-variant font-data-mono">10 دقیقه پیش</span>
+</div>
+<div class="bg-surface-container p-2 rounded text-xs font-data-mono text-on-surface-variant mb-3 flex items-center justify-center gap-2 border border-surface-variant">
+<span>چهارشنبه 14:00</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+<span>پنجشنبه 06:00</span>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 bg-surface border border-outline-variant text-on-surface text-xs font-label-md py-1.5 rounded hover:bg-surface-container transition-colors">رد</button>
+<button class="flex-1 bg-[#191c1d] text-on-primary text-xs font-label-md py-1.5 rounded hover:bg-tertiary transition-colors">تایید موقت</button>
+</div>
+</div>
+<!-- Conflict Alert Card -->
+<div class="bg-error-container rounded-lg border border-error p-3 relative overflow-hidden">
+<div class="absolute right-0 top-0 w-1 h-full bg-error"></div>
+<div class="flex items-center gap-2 mb-2 text-on-error-container">
+<span class="material-symbols-outlined text-[18px]">error</span>
+<span class="font-label-md text-sm font-bold">تداخل سیستمی شناسایی شد</span>
+</div>
+<p class="text-xs text-on-error-container font-body-md mb-3 opacity-90 leading-relaxed">
+                                شیفت دوشنبه علی محمدی (14:00-22:00) قانون حداقل ۱۲ ساعت استراحت بین شیفت‌ها را نقض می‌کند.
+                            </p>
+<button class="w-full bg-error text-on-error text-xs font-label-md py-1.5 rounded hover:bg-[#8a0003] transition-colors shadow-sm">
+                                رفع خودکار توسط AI
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

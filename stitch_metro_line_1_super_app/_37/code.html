@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>کوییز ارزیابی</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary": "#ffffff",
+                    "inverse-surface": "#2e3132",
+                    "on-tertiary-fixed": "#1c1b1b",
+                    "on-secondary-container": "#656464",
+                    "error": "#ba1a1a",
+                    "secondary-fixed-dim": "#c8c6c6",
+                    "on-tertiary-container": "#f7feff",
+                    "on-error-container": "#93000a",
+                    "surface-container": "#edeeef",
+                    "surface-container-highest": "#e1e3e4",
+                    "surface-container-high": "#e7e8e9",
+                    "on-secondary": "#ffffff",
+                    "on-surface": "#191c1d",
+                    "tertiary-container": "#767474",
+                    "on-background": "#191c1d",
+                    "inverse-on-surface": "#f0f1f2",
+                    "tertiary": "#5d5c5b",
+                    "surface-bright": "#f8f9fa",
+                    "secondary-fixed": "#e4e2e1",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#ffb4a9",
+                    "background": "#f8f9fa",
+                    "surface-tint": "#c00205",
+                    "on-primary-fixed-variant": "#930002",
+                    "surface-variant": "#e1e3e4",
+                    "primary-fixed-dim": "#ffb4a9",
+                    "on-secondary-fixed-variant": "#474747",
+                    "error-container": "#ffdad6",
+                    "surface-dim": "#d9dadb",
+                    "surface": "#f8f9fa",
+                    "primary-fixed": "#ffdad5",
+                    "secondary-container": "#e4e2e1",
+                    "primary-container": "#e1271c",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "primary": "#bc0004",
+                    "on-tertiary-fixed-variant": "#474646",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#926f6a",
+                    "on-primary": "#ffffff",
+                    "secondary": "#5f5e5e",
+                    "surface-container-low": "#f3f4f5",
+                    "outline-variant": "#e7bdb7",
+                    "on-primary-fixed": "#410000",
+                    "on-surface-variant": "#5d3f3b",
+                    "on-secondary-fixed": "#1b1c1c",
+                    "on-primary-container": "#fffbff",
+                    "tertiary-fixed": "#e5e2e1"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "margin-mobile": "16px",
+                    "unit": "4px",
+                    "touch-target-min": "48px",
+                    "gutter": "16px",
+                    "margin-desktop": "32px"
+            },
+            "fontFamily": {
+                    "body-md": [
+                            "Vazirmatn"
+                    ],
+                    "headline-lg-mobile": [
+                            "Vazirmatn"
+                    ],
+                    "label-md": [
+                            "Vazirmatn"
+                    ],
+                    "headline-lg": [
+                            "Vazirmatn"
+                    ],
+                    "headline-md": [
+                            "Vazirmatn"
+                    ],
+                    "body-lg": [
+                            "Vazirmatn"
+                    ],
+                    "data-mono": [
+                            "JetBrains Mono"
+                    ]
+            },
+            "fontSize": {
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "24px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "label-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "letterSpacing": "0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "48px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "data-mono": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "500"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.surface');
+            color: theme('colors.on-surface');
+            font-family: 'Vazirmatn', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Radio button custom styling */
+        input[type="radio"]:checked + div {
+            border-color: theme('colors.primary');
+            background-color: theme('colors.primary-fixed');
+            color: theme('colors.on-primary-fixed');
+        }
+        input[type="radio"]:checked + div .radio-indicator {
+            background-color: theme('colors.primary');
+            border-color: theme('colors.primary');
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col min-h-screen">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline flat no shadows flex justify-between items-center px-margin-mobile h-touch-target-min">
+<button aria-label="بستن" class="flex items-center justify-center w-touch-target-min h-touch-target-min text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-100 rounded-full">
+<span class="material-symbols-outlined text-[24px]" data-icon="close">close</span>
+</button>
+<h1 class="font-headline-md text-headline-md-mobile font-bold text-primary dark:text-primary-fixed-dim">بررسی سریع درک مطلب</h1>
+<div class="w-touch-target-min"></div> <!-- Spacer for centering -->
+</header>
+<!-- Main Content -->
+<main class="flex-1 px-margin-mobile pt-[calc(theme(spacing.touch-target-min)+theme(spacing.margin-mobile))] pb-[calc(theme(spacing.touch-target-min)+theme(spacing.margin-mobile)*2)] overflow-y-auto">
+<!-- Progress Header -->
+<div class="mb-gutter">
+<div class="flex justify-between items-center mb-unit">
+<span class="font-label-md text-label-md text-on-surface-variant">سوال ۱ از ۳</span>
+<span class="font-data-mono text-data-mono text-secondary">۳۳٪</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 33%;"></div>
+</div>
+</div>
+<!-- Question Container -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter shadow-sm mb-gutter">
+<h2 class="font-headline-md text-headline-md-mobile text-on-surface mb-gutter leading-tight">در صورت مشاهده دود در تونل، اولین اقدام اپراتور خط چیست؟</h2>
+<!-- Options List -->
+<div class="flex flex-col gap-unit">
+<!-- Option A -->
+<label class="relative cursor-pointer group">
+<input class="peer sr-only" name="quiz-question" type="radio" value="A"/>
+<div class="flex items-start gap-gutter p-gutter rounded-lg border-2 border-surface-container-highest bg-surface hover:bg-surface-container-low transition-colors duration-200">
+<div class="radio-indicator flex-shrink-0 w-6 h-6 rounded-full border-2 border-outline flex items-center justify-center mt-1 transition-colors duration-200">
+<!-- Inner dot for checked state -->
+<div class="w-2.5 h-2.5 rounded-full bg-on-primary hidden peer-checked:block"></div>
+</div>
+<div class="flex-1">
+<span class="font-body-md text-body-md text-on-surface block">توقف اضطراری و باز کردن درها</span>
+</div>
+</div>
+</label>
+<!-- Option B -->
+<label class="relative cursor-pointer group">
+<input class="peer sr-only" name="quiz-question" type="radio" value="B"/>
+<div class="flex items-start gap-gutter p-gutter rounded-lg border-2 border-surface-container-highest bg-surface hover:bg-surface-container-low transition-colors duration-200">
+<div class="radio-indicator flex-shrink-0 w-6 h-6 rounded-full border-2 border-outline flex items-center justify-center mt-1 transition-colors duration-200">
+<!-- Inner dot for checked state -->
+<div class="w-2.5 h-2.5 rounded-full bg-on-primary hidden peer-checked:block"></div>
+</div>
+<div class="flex-1">
+<span class="font-body-md text-body-md text-on-surface block">اطلاع سریع به مرکز فرمان (OCC)</span>
+</div>
+</div>
+</label>
+<!-- Option C -->
+<label class="relative cursor-pointer group">
+<input class="peer sr-only" name="quiz-question" type="radio" value="C"/>
+<div class="flex items-start gap-gutter p-gutter rounded-lg border-2 border-surface-container-highest bg-surface hover:bg-surface-container-low transition-colors duration-200">
+<div class="radio-indicator flex-shrink-0 w-6 h-6 rounded-full border-2 border-outline flex items-center justify-center mt-1 transition-colors duration-200">
+<!-- Inner dot for checked state -->
+<div class="w-2.5 h-2.5 rounded-full bg-on-primary hidden peer-checked:block"></div>
+</div>
+<div class="flex-1">
+<span class="font-body-md text-body-md text-on-surface block">ادامه مسیر تا ایستگاه بعدی با سرعت کم</span>
+</div>
+</div>
+</label>
+</div>
+</div>
+</main>
+<!-- Bottom Action Area -->
+<div class="fixed bottom-0 w-full bg-surface-container-lowest border-t border-surface-variant p-margin-mobile z-50">
+<button class="w-full h-touch-target-min bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md rounded-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-sm" type="button">
+<span>ثبت و مرحله بعد</span>
+<span class="material-symbols-outlined text-[20px]" data-icon="arrow_back">arrow_back</span>
+</button>
+</div>
+<!-- Navigation suppressed as this is a transactional task-focused screen -->
+<script>
+        // Simple script to handle radio selection visual updates specifically if needed beyond CSS
+        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                // Remove checked dot from all
+                document.querySelectorAll('.radio-indicator div').forEach(dot => {
+                    dot.classList.add('hidden');
+                });
+                // Add to selected
+                if(e.target.checked) {
+                    const indicator = e.target.nextElementSibling.querySelector('.radio-indicator div');
+                    if(indicator) indicator.classList.remove('hidden');
+                }
+            });
+        });
+    </script>
+</body></html>

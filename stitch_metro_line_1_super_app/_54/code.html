@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>صف تایید مدارک - Redline Command</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-error-container": "#93000a",
+                      "tertiary": "#5d5c5b",
+                      "primary-fixed-dim": "#ffb4a9",
+                      "surface-variant": "#e1e3e4",
+                      "on-primary-container": "#fffbff",
+                      "on-background": "#191c1d",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "inverse-surface": "#2e3132",
+                      "secondary": "#5f5e5e",
+                      "primary-fixed": "#ffdad5",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-secondary-container": "#656464",
+                      "surface-tint": "#c00205",
+                      "surface-container-low": "#f3f4f5",
+                      "on-tertiary-container": "#f7feff",
+                      "outline-variant": "#e7bdb7",
+                      "on-primary-fixed": "#410000",
+                      "error-container": "#ffdad6",
+                      "tertiary-fixed": "#e5e2e1",
+                      "on-primary-fixed-variant": "#930002",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "outline": "#926f6a",
+                      "inverse-primary": "#ffb4a9",
+                      "surface-container": "#edeeef",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "on-primary": "#ffffff",
+                      "surface": "#f8f9fa",
+                      "surface-bright": "#f8f9fa",
+                      "secondary-container": "#e4e2e1",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "primary-container": "#e1271c",
+                      "surface-container-high": "#e7e8e9",
+                      "on-secondary-fixed-variant": "#474747",
+                      "error": "#ba1a1a",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "inverse-on-surface": "#f0f1f2",
+                      "background": "#f8f9fa",
+                      "on-surface-variant": "#5d3f3b",
+                      "on-surface": "#191c1d",
+                      "on-secondary": "#ffffff",
+                      "tertiary-container": "#767474",
+                      "on-error": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "secondary-fixed": "#e4e2e1",
+                      "surface-dim": "#d9dadb",
+                      "primary": "#bc0004"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-desktop": "32px",
+                      "gutter": "16px",
+                      "margin-mobile": "16px",
+                      "unit": "4px",
+                      "touch-target-min": "48px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg": [
+                              "Vazirmatn"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "body-lg": [
+                              "Vazirmatn"
+                      ],
+                      "headline-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg-mobile": [
+                              "Vazirmatn"
+                      ],
+                      "label-md": [
+                              "Vazirmatn"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "48px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "data-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+            }
+          }
+        }
+      </script>
+<style>
+        .pulse-cell {
+            animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-border {
+            0%, 100% { border-color: transparent; }
+            50% { border-color: #bc0004; }
+        }
+        .slide-over-open {
+            transform: translateX(0%);
+        }
+        .slide-over-closed {
+            transform: translateX(-100%);
+        }
+      </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen antialiased flex flex-col md:flex-row overflow-hidden">
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex h-screen w-64 fixed left-0 top-0 border-r border-outline-variant bg-surface-container dark:bg-surface-container-low flex-col py-4 rtl:right-0 rtl:left-auto z-40">
+<div class="px-gutter mb-8">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Redline Command</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Line 1 Supervision</p>
+</div>
+<div class="flex-1 overflow-y-auto px-unit">
+<a class="flex items-center gap-4 px-gutter py-3 rounded text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors mb-unit" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-4 px-gutter py-3 rounded text-primary dark:text-primary-fixed font-bold border-r-4 border-primary dark:border-primary-fixed bg-secondary-container dark:bg-secondary-container active:inner-shadow duration-100 mb-unit" href="#">
+<span class="material-symbols-outlined" data-icon="fact_check" style="font-variation-settings: 'FILL' 1;">fact_check</span>
+<span class="font-label-md text-label-md">Approval Queue</span>
+</a>
+<a class="flex items-center gap-4 px-gutter py-3 rounded text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors mb-unit" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+<span class="font-label-md text-label-md">Verified Personnel</span>
+</a>
+<a class="flex items-center gap-4 px-gutter py-3 rounded text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- TopAppBar (Mobile & Desktop Header Area) -->
+<header class="md:fixed md:top-0 md:right-0 md:left-64 md:h-16 md:z-30 border-b border-outline-variant bg-surface dark:bg-surface-dim flex justify-between items-center px-margin-desktop w-full rtl:md:pr-64 rtl:md:pl-0 h-16 shrink-0 z-30 relative">
+<div class="flex items-center md:hidden">
+<span class="material-symbols-outlined text-on-surface text-[24px]">menu</span>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed ml-4 rtl:ml-0 rtl:mr-4">Redline Command</h1>
+</div>
+<div class="hidden md:flex flex-1 justify-start">
+<!-- Search placeholder if needed -->
+</div>
+<div class="flex items-center gap-gutter">
+<button class="p-unit rounded-full hover:bg-surface-container-low transition-all active:scale-95 duration-150 text-on-surface">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-unit rounded-full hover:bg-surface-container-low transition-all active:scale-95 duration-150 text-on-surface">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant overflow-hidden shrink-0 ml-2 rtl:ml-0 rtl:mr-2">
+<img alt="Supervisor Profile" class="w-full h-full object-cover" data-alt="Close up portrait of a serious middle eastern man in a transit authority uniform, highly detailed face, industrial lighting, stark contrast, conveying authority and experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAninI8m-D_-AI8z9upM0-2lLXUbS0UI8SCHEej3f0oDRfURfOarhe6p6bVkbQfRYAncE0duSEnJt7ENzEx0KRRD_87JPeHaviKhv6DYCy3uh_C6UESYHFTOU96hqJoD6Jw1u7z939Q-ktDhWptWfN4sajObjZrsLQJ597iMkWCMFpFRYmodZM7hI7moEJNmegna60q9NTN9N9ciRSY_PTN7LyEIXgYFXPaEuBKCz96MHqqHy6KkFFYMi5thDnEFwlb-tguvHdOPEnQ"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col md:pl-64 rtl:md:pr-64 rtl:md:pl-0 pt-0 md:pt-16 h-screen overflow-y-auto bg-surface relative">
+<div class="p-margin-mobile md:p-margin-desktop flex-1 flex flex-col gap-margin-desktop max-w-7xl mx-auto w-full">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-gutter">
+<div>
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-unit">صف تایید مدارک</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage and verify personnel qualifications for Line 1 operations.</p>
+</div>
+<div class="text-right rtl:text-left font-data-mono text-data-mono text-on-surface-variant">
+<span id="current-date-time">1402/08/15 - 08:45 AM IRST</span>
+</div>
+</div>
+<!-- Summary Metrics Bento -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter flex flex-col justify-between h-32 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-error-container/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="flex justify-between items-start z-10">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">در انتظار بررسی</span>
+<span class="material-symbols-outlined text-primary">pending_actions</span>
+</div>
+<div class="z-10">
+<span class="font-headline-lg text-headline-lg text-on-surface">12</span>
+<span class="font-body-md text-body-md text-on-surface-variant ml-2 rtl:ml-0 rtl:mr-2">پرونده</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter flex flex-col justify-between h-32 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-secondary-container/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="flex justify-between items-start z-10">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">در حال بازبینی</span>
+<span class="material-symbols-outlined text-secondary">rate_review</span>
+</div>
+<div class="z-10">
+<span class="font-headline-lg text-headline-lg text-on-surface">4</span>
+<span class="font-body-md text-body-md text-on-surface-variant ml-2 rtl:ml-0 rtl:mr-2">پرونده</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter flex flex-col justify-between h-32 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-surface-container-high to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="flex justify-between items-start z-10">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">تایید شده امروز</span>
+<span class="material-symbols-outlined text-on-surface">task_alt</span>
+</div>
+<div class="z-10">
+<span class="font-headline-lg text-headline-lg text-on-surface">28</span>
+<span class="font-body-md text-body-md text-on-surface-variant ml-2 rtl:ml-0 rtl:mr-2">پرسنل</span>
+</div>
+</div>
+</div>
+<!-- Data Table Section -->
+<div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col overflow-hidden">
+<div class="bg-inverse-surface px-gutter py-3 flex justify-between items-center border-b border-outline-variant">
+<h3 class="font-label-md text-label-md text-on-secondary uppercase tracking-widest">لیست درخواست‌های معلق</h3>
+<button class="text-on-secondary hover:text-outline-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+</button>
+</div>
+<div class="overflow-x-auto flex-1">
+<table class="w-full text-right rtl:text-right border-collapse">
+<thead class="bg-surface-container font-label-md text-label-md text-on-surface-variant sticky top-0 z-10">
+<tr>
+<th class="py-3 px-gutter border-b border-outline-variant font-semibold w-12">#</th>
+<th class="py-3 px-gutter border-b border-outline-variant font-semibold">نام پرسنل</th>
+<th class="py-3 px-gutter border-b border-outline-variant font-semibold font-data-mono">کد پرسنلی</th>
+<th class="py-3 px-gutter border-b border-outline-variant font-semibold">نمره آزمون</th>
+<th class="py-3 px-gutter border-b border-outline-variant font-semibold">وضعیت مدارک</th>
+<th class="py-3 px-gutter border-b border-outline-variant font-semibold text-center w-64">اقدامات</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md divide-y divide-surface-container">
+<!-- Row 1 -->
+<tr class="hover:bg-[#F1F1F1] transition-colors group">
+<td class="py-4 px-gutter font-data-mono text-on-surface-variant">1</td>
+<td class="py-4 px-gutter font-semibold text-on-surface">علی رضایی</td>
+<td class="py-4 px-gutter font-data-mono text-tertiary">DRV-8492</td>
+<td class="py-4 px-gutter">
+<div class="flex items-center gap-2">
+<span class="font-data-mono text-primary font-bold">92%</span>
+<a class="text-secondary hover:text-primary transition-colors" href="#" title="Performance Analysis">
+<span class="material-symbols-outlined text-[16px]">monitoring</span>
+</a>
+</div>
+</td>
+<td class="py-4 px-gutter">
+<span class="inline-flex items-center px-2 py-1 rounded bg-surface-container-high text-on-surface-variant text-[12px] font-label-md border border-outline-variant border-dashed pulse-cell">
+                                        گواهی پزشکی - در انتظار
+                                    </span>
+</td>
+<td class="py-4 px-gutter">
+<div class="flex items-center justify-center gap-2">
+<button class="font-label-md text-label-md px-3 py-1.5 border border-[#2D2D2D] text-[#2D2D2D] hover:bg-surface-container rounded transition-colors active:shadow-inner flex items-center gap-1" onclick="toggleSidebar(true)">
+<span class="material-symbols-outlined text-[18px]">find_in_page</span>
+                                            بررسی مدارک
+                                        </button>
+<button class="font-label-md text-label-md px-3 py-1.5 bg-[#EE3124] text-white hover:bg-primary-container rounded transition-colors active:shadow-inner flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+                                            تایید سریع
+                                        </button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="bg-[#F1F1F1] hover:bg-surface-container-high transition-colors group">
+<td class="py-4 px-gutter font-data-mono text-on-surface-variant">2</td>
+<td class="py-4 px-gutter font-semibold text-on-surface">محمد حسینی</td>
+<td class="py-4 px-gutter font-data-mono text-tertiary">DRV-7731</td>
+<td class="py-4 px-gutter">
+<div class="flex items-center gap-2">
+<span class="font-data-mono text-on-surface font-bold">85%</span>
+<a class="text-secondary hover:text-primary transition-colors" href="#" title="Performance Analysis">
+<span class="material-symbols-outlined text-[16px]">monitoring</span>
+</a>
+</div>
+</td>
+<td class="py-4 px-gutter">
+<span class="inline-flex items-center px-2 py-1 rounded bg-surface-container text-on-surface-variant text-[12px] font-label-md">
+                                        گواهی فنی - در انتظار
+                                    </span>
+</td>
+<td class="py-4 px-gutter">
+<div class="flex items-center justify-center gap-2">
+<button class="font-label-md text-label-md px-3 py-1.5 border border-[#2D2D2D] text-[#2D2D2D] hover:bg-surface-container rounded transition-colors active:shadow-inner flex items-center gap-1" onclick="toggleSidebar(true)">
+<span class="material-symbols-outlined text-[18px]">find_in_page</span>
+                                            بررسی مدارک
+                                        </button>
+<button class="font-label-md text-label-md px-3 py-1.5 bg-[#EE3124] text-white hover:bg-primary-container rounded transition-colors active:shadow-inner flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+                                            تایید سریع
+                                        </button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-[#F1F1F1] transition-colors group">
+<td class="py-4 px-gutter font-data-mono text-on-surface-variant">3</td>
+<td class="py-4 px-gutter font-semibold text-on-surface">سارا احمدی</td>
+<td class="py-4 px-gutter font-data-mono text-tertiary">DSP-9012</td>
+<td class="py-4 px-gutter">
+<div class="flex items-center gap-2">
+<span class="font-data-mono text-on-surface font-bold">98%</span>
+<a class="text-secondary hover:text-primary transition-colors" href="#" title="Performance Analysis">
+<span class="material-symbols-outlined text-[16px]">monitoring</span>
+</a>
+</div>
+</td>
+<td class="py-4 px-gutter">
+<span class="inline-flex items-center px-2 py-1 rounded bg-surface-container text-on-surface-variant text-[12px] font-label-md">
+                                        آموزش ایمنی - در انتظار
+                                    </span>
+</td>
+<td class="py-4 px-gutter">
+<div class="flex items-center justify-center gap-2">
+<button class="font-label-md text-label-md px-3 py-1.5 border border-[#2D2D2D] text-[#2D2D2D] hover:bg-surface-container rounded transition-colors active:shadow-inner flex items-center gap-1" onclick="toggleSidebar(true)">
+<span class="material-symbols-outlined text-[18px]">find_in_page</span>
+                                            بررسی مدارک
+                                        </button>
+<button class="font-label-md text-label-md px-3 py-1.5 bg-[#EE3124] text-white hover:bg-primary-container rounded transition-colors active:shadow-inner flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+                                            تایید سریع
+                                        </button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination minimal -->
+<div class="bg-surface-container px-gutter py-2 flex justify-between items-center border-t border-outline-variant font-data-mono text-[12px] text-tertiary">
+<span>نمایش ۱ تا ۳ از ۱۲</span>
+<div class="flex gap-1">
+<button class="p-1 hover:bg-surface-variant rounded"><span class="material-symbols-outlined text-[16px]">chevron_right</span></button>
+<button class="p-1 hover:bg-surface-variant rounded"><span class="material-symbols-outlined text-[16px]">chevron_left</span></button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Slide-over / Sidebar Detail (Hidden by default) -->
+<div class="fixed inset-y-0 left-0 rtl:right-0 rtl:left-auto w-full md:w-[480px] bg-surface-container-lowest border-r rtl:border-r-0 rtl:border-l border-outline-variant shadow-2xl z-50 flex flex-col slide-over-closed transition-transform duration-300 ease-in-out" id="detail-sidebar">
+<!-- Sidebar Header -->
+<div class="bg-inverse-surface px-gutter py-4 flex justify-between items-center text-on-secondary shrink-0">
+<div>
+<h3 class="font-headline-md text-[20px] font-bold">بررسی پرونده: علی رضایی</h3>
+<p class="font-data-mono text-[12px] text-surface-variant">ID: DRV-8492 | Seq: #001</p>
+</div>
+<button class="p-2 hover:bg-white/10 rounded-full transition-colors" onclick="toggleSidebar(false)">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Sidebar Content -->
+<div class="flex-1 overflow-y-auto p-gutter flex flex-col gap-gutter">
+<!-- Document Preview -->
+<div class="border border-outline-variant rounded bg-surface p-2 flex flex-col">
+<div class="flex justify-between items-center mb-2 px-1">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">سند: گواهی سلامت پزشکی</span>
+<button class="text-primary hover:bg-primary-fixed rounded p-1 transition-colors"><span class="material-symbols-outlined text-[18px]">open_in_new</span></button>
+</div>
+<div class="aspect-[3/4] bg-surface-container-high border border-outline-variant border-dashed rounded relative overflow-hidden flex items-center justify-center">
+<!-- Image Placeholder for Document -->
+<div class="absolute inset-0 bg-cover bg-center w-full h-full opacity-50 grayscale mix-blend-multiply" data-alt="A scanned official medical clearance certificate for transit personnel, featuring official stamps, signatures, and formal typography in Persian, high contrast black and white scan aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuABg9oBfTioXukzNESD9JK5YoLPqcr8IqdE5IBoyPTZU_OWEAj29l6WwPe4qzZOTtxXqO4GDU-qgu-ODCk42s65ARQEosN0Yi9XxekdCpCBBkjmZPyvo8iR4SFPP7OXV8mAA5aTIHDjUzBRPjxMn_IEB-iq-wQAkr1frd1GZHYg6WMwHp2QVXH9abR5LKRGf0WPHfVlA4oreWoheUldu36gLu9ZcfHN_QVjXjs-dAAkBIPlin_qkKNXLQKT2MkbYeYf_XDZ5QJRSNj6')"></div>
+<span class="material-symbols-outlined text-[48px] text-tertiary opacity-50 z-10">description</span>
+</div>
+</div>
+<!-- Review Form -->
+<div class="bg-surface-container-low border border-outline-variant rounded p-gutter flex flex-col gap-4">
+<h4 class="font-label-md text-label-md text-on-surface font-bold border-b border-outline-variant pb-2">ثبت نظر کارشناسی</h4>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant">دلیل رد درخواست (در صورت لزوم)</label>
+<textarea class="w-full bg-surface-container-lowest border border-outline-variant rounded p-2 font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none h-24" placeholder="دلایل نقص مدارک را اینجا وارد کنید..."></textarea>
+</div>
+</div>
+</div>
+<!-- Sidebar Actions -->
+<div class="p-gutter border-t border-outline-variant bg-surface flex flex-col gap-3 shrink-0">
+<button class="w-full py-3 bg-[#EE3124] text-white font-label-md text-label-md rounded hover:bg-primary-container active:inner-shadow transition-all flex justify-center items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                تایید نهایی و صدور گواهی
+            </button>
+<button class="w-full py-3 border border-[#2D2D2D] text-[#2D2D2D] font-label-md text-label-md rounded hover:bg-surface-container-high active:inner-shadow transition-all flex justify-center items-center gap-2">
+<span class="material-symbols-outlined">block</span>
+                رد درخواست
+            </button>
+</div>
+</div>
+<!-- Sidebar Overlay -->
+<div class="fixed inset-0 bg-on-surface/50 z-40 hidden transition-opacity opacity-0" id="sidebar-overlay" onclick="toggleSidebar(false)"></div>
+<script>
+        function toggleSidebar(open) {
+            const sidebar = document.getElementById('detail-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            if (open) {
+                sidebar.classList.remove('slide-over-closed');
+                sidebar.classList.add('slide-over-open');
+                overlay.classList.remove('hidden');
+                // small delay to allow display:block to apply before fading in
+                setTimeout(() => {
+                    overlay.classList.remove('opacity-0');
+                    overlay.classList.add('opacity-100');
+                }, 10);
+            } else {
+                sidebar.classList.remove('slide-over-open');
+                sidebar.classList.add('slide-over-closed');
+                overlay.classList.remove('opacity-100');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 300); // match transition duration
+            }
+        }
+    </script>
+</body></html>

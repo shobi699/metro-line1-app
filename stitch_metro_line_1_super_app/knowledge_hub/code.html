@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Knowledge Hub Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#f3f4f5",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "on-primary-container": "#fffbff",
+                        "primary": "#bc0004",
+                        "inverse-on-surface": "#f0f1f2",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "on-error-container": "#93000a",
+                        "surface": "#f8f9fa",
+                        "on-primary-fixed": "#410000",
+                        "tertiary-fixed": "#e5e2e1",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-primary-fixed-variant": "#930002",
+                        "background": "#f8f9fa",
+                        "on-tertiary-container": "#f7feff",
+                        "outline": "#926f6a",
+                        "surface-tint": "#c00205",
+                        "secondary": "#5f5e5e",
+                        "primary-fixed": "#ffdad5",
+                        "secondary-fixed": "#e4e2e1",
+                        "on-surface-variant": "#5d3f3b",
+                        "surface-container-high": "#e7e8e9",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#767474",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#ffb4a9",
+                        "surface-variant": "#e1e3e4",
+                        "surface-dim": "#d9dadb",
+                        "secondary-container": "#e4e2e1",
+                        "on-surface": "#191c1d",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "inverse-surface": "#2e3132",
+                        "primary-container": "#e1271c",
+                        "on-background": "#191c1d",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "on-secondary-fixed-variant": "#474747",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#e7bdb7",
+                        "tertiary": "#5d5c5b",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#edeeef",
+                        "surface-bright": "#f8f9fa",
+                        "on-secondary-container": "#656464"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "32px",
+                        "touch-target-min": "48px",
+                        "margin-mobile": "16px",
+                        "gutter": "16px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Vazirmatn"],
+                        "headline-lg": ["Vazirmatn"],
+                        "body-lg": ["Vazirmatn"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-md": ["Vazirmatn"],
+                        "headline-lg-mobile": ["Vazirmatn"],
+                        "body-md": ["Vazirmatn"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "48px", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col md:flex-row">
+<!-- TopNavBar (Mobile Only) -->
+<header class="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-margin-mobile h-touch-target-min bg-surface-container-lowest border-b border-outline-variant">
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">METRO COMM</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined">search</span>
+</button>
+<img alt="User profile" class="w-8 h-8 rounded-full object-cover border border-outline-variant" data-alt="A small, circular avatar portrait of a serious-looking transportation engineer or technician in a high-vis uniform. The lighting is bright and professional, set against a neutral gray background. The style is hyper-realistic photography, matching an industrial corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNKV5eQ79yya3nZK4eBoM0uLAzlndvPs_kvl3eRWsa7Hw9UCi_TB3zOMJWRzeparq5dk0JuOU2NOud6RDtepyG6hvqU1GqdkuOLap2QPR7jbKtwx-WTOojO_fhp3Xl_QnjizhAW0KWMB-q92lgbpjelBO4zKEZe-PHu-ZVZjoHVDlrTQ1ONxfWZv4k3sQD0TfVcAcEivEpUnFqvYvn6F06GA0SfFFeflYrytpyUW4KImuJi0_D52PvlLwOODZbQzFM06wOJ5wHELIK"/>
+</div>
+</header>
+<!-- SideNavBar (Desktop) -->
+<aside class="hidden md:flex fixed right-0 top-0 h-screen w-64 flex-col p-gutter z-40 bg-surface-container-low border-l border-outline-variant">
+<div class="mb-8">
+<div class="flex items-center gap-3 mb-2">
+<img alt="Metro Logo" class="w-10 h-10 object-contain rounded bg-surface-container-lowest p-1 border border-outline-variant" data-alt="A stylized, flat vector logo depicting a modern subway train emerging from a tunnel, rendered in stark high-contrast red and deep charcoal gray. The design is authoritative, precise, and highly industrial, suitable for a government or transit authority emblem." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJSb7GlxEo_CISYYpESI0v9Dq8ACJ3sdi2Htypd7Hdy5coZG0hDns9WPhTI-W0XpcqNTPSqHQFWLsm-yzMS9OH4sjpclhKjqMIaWM-a9ZC9K1344_KYRdg7goB8y0uVNtHttD0fX-Sjpw7KUxBsByHOkVHLTJfkpMyi9l9YzPd_m1Z9dqSJg99qGH59bvPXK_uMrXCDJVkCVSw81OuGFZSvWozGYxKNKcU4tm0piTU1NMQGej_qN-Iy0U8OkxdSTmCzuVLgJ7oIe48"/>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">OPERATIONS HUB</h1>
+<span class="font-label-md text-label-md text-on-surface-variant">Line 1 Technical Portal</span>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">newspaper</span>
+<span class="font-label-md text-label-md">Organization News</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container font-bold rounded-lg scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined icon-fill">school</span>
+<span class="font-label-md text-label-md">Technical Training</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">assignment_late</span>
+<span class="font-label-md text-label-md">Directives</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-md text-label-md">Technical Articles</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-outline-variant pt-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+<span class="font-label-md text-label-md">Admin Panel</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-error hover:bg-error-container transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:mr-64 pt-[48px] md:pt-0 p-margin-mobile md:p-margin-desktop bg-surface min-h-screen">
+<!-- Header Section -->
+<div class="flex justify-between items-center mb-6">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Knowledge Hub</h2>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md flex items-center gap-2 hover:bg-primary-container hover:shadow-md transition-all active:shadow-inner active:scale-95">
+<span class="material-symbols-outlined">add</span>
+                Create Post
+            </button>
+</div>
+<div class="flex flex-col lg:flex-row gap-gutter">
+<!-- Main Content Area -->
+<div class="flex-1 space-y-gutter">
+<!-- Featured Banner -->
+<article class="relative bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant shadow-sm group cursor-pointer hover:shadow-md transition-shadow">
+<div class="w-full h-64 bg-cover bg-center" data-alt="A dramatic, high-contrast wide shot of a modern subway tunnel interior under construction or heavy maintenance. Brilliant construction lights cast harsh white and deep black shadows. Sparks fly from a distant welder, adding a bright red accent to the otherwise monochrome, industrial scene. The composition is highly structured and authoritative." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCdx6Kz0TPqFsnovN-yFTcUQfSPRU4UVbPUQLvHk-_0Wfx363cb1yI0IJv5qOf-ODMFJG3s1o-uAg_EuT_nBPi12yYRZBAzU9JkhQu_raazTWvPtWg_SfnpkiRddiPUE_bk_0Ro10KfnL_bVm0ge52myeQboXkyMPVoNi6n4Bba3Y1Xmajuk-ej5EjejjKNk4SHrGhqhifufa9Z_Gxe4vW-vGvr55kmq8o6Mt806Rldl4Ax7CGbQ_Z7_s-u0O9h9gk0-8lE3TjYfNg6')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-inverse/90 to-transparent flex flex-col justify-end p-6">
+<span class="inline-block bg-primary text-on-primary px-2 py-1 rounded font-label-md text-[12px] mb-2 self-start uppercase tracking-wider">Featured</span>
+<h3 class="font-headline-md text-headline-md text-on-primary-container mb-2 group-hover:text-primary-fixed transition-colors">Overhaul Procedures for Series 4 Braking Systems</h3>
+<p class="font-body-md text-body-md text-surface-container-low line-clamp-2 mb-4 max-w-2xl">A comprehensive guide detailing the newly mandated safety protocols and mechanical tolerances for the upcoming fleet-wide maintenance cycle. Mandatory reading for all Level 3 technicians.</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3 text-surface-variant text-sm font-data-mono">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">calendar_today</span> ۱۴۰۲/۰۸/۱۵</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">visibility</span> 1,240 Views</span>
+</div>
+<button class="bg-surface-container-lowest text-primary px-6 py-2 rounded-lg font-label-md text-label-md hover:bg-surface-container-high transition-colors">Read Now</button>
+</div>
+</div>
+</article>
+<!-- Content Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter">
+<!-- Card 1: Directive (Mandatory) -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm flex flex-col hover:border-primary/50 transition-colors">
+<div class="p-4 flex-1">
+<div class="flex justify-between items-start mb-3">
+<span class="text-on-surface-variant font-label-md text-[12px] uppercase tracking-wide">Directive</span>
+<span class="bg-error text-on-error px-2 py-0.5 rounded font-label-md text-[10px] uppercase animate-pulse">Required</span>
+</div>
+<h4 class="font-headline-md text-[18px] leading-snug mb-2 text-on-surface">Updated Evacuation Routing: Station 12</h4>
+<p class="text-on-surface-variant text-sm line-clamp-3 mb-4">Immediate implementation required. The secondary egress route through sector 4G has been compromised due to water ingress. All staff must memorize the new schematic.</p>
+<div class="flex items-center gap-2 mt-auto">
+<img alt="Author" class="w-6 h-6 rounded-full object-cover" data-alt="A professional headshot of a female transit authority director in a dark navy uniform blazer. She looks authoritative and focused. The background is a clean, bright control room environment with subtle high-tech screens blurred out. High-contrast, sharp industrial lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAW5VQk1-SzuVXOo3vdwzr2yY02U3QlBI-zMG6S2VEzOcFRXJR43rl9Wd0leMcBNmEXEmUoep7tqRXV4fnkKVymAND-Jgn39XkQl7S1phTcn5qMA2mUvZsZj5yHp0Stjadlbex60hifdrmBO0RttJ62ojbvLq9jwi8j-2e6_ivE9WT1qfwvJSaGCqWpOqDYoeCtTaOhIWj5XT8z5DszyQtHAtL1CVuCwcrNxPoIezHnX96WvkrR9uwBTRVsHo1vO6TLAwzQhacYjiJE"/>
+<span class="text-xs font-label-md text-on-surface">Cmdr. Jafari</span>
+</div>
+</div>
+<div class="bg-surface-container border-t border-outline-variant px-4 py-2 flex items-center justify-between text-on-surface-variant text-sm font-data-mono">
+<span>۱۴۰۲/۰۸/۱۴</span>
+<div class="flex gap-3">
+<span class="flex items-center gap-1 hover:text-primary cursor-pointer"><span class="material-symbols-outlined text-[16px]">thumb_up</span> 42</span>
+<span class="flex items-center gap-1 hover:text-primary cursor-pointer"><span class="material-symbols-outlined text-[16px]">chat_bubble_outline</span> 12</span>
+</div>
+</div>
+</article>
+<!-- Card 2: Training -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm flex flex-col hover:border-primary/50 transition-colors">
+<div class="h-32 bg-cover bg-center border-b border-outline-variant" data-alt="A close-up, highly detailed view of complex electrical relays and wiring inside a subway train control panel. The lighting is stark and technical, highlighting the precision of the components. Colors are mostly gray, silver, and black, with small vivid flashes of red and yellow wires. The aesthetic is purely industrial and functional." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCovKAwlZJmC_nZSmIqWgHbJ90PRHniH0yOSrg5HVUoU30lO-qCFKjJgwJ8eayQD2_9u67lG73c_c3eCXZsm6scqDzwveTENzkMUN4N3Nu95Ju33hZ9K457TmnIWSN2_QJ0wZkYgrTozp1uYfPJjiiDvCa6Qgz2EqF7l0AO8JQG5rR60Q-pRNHJF938Ccw0AnsUPlwWJi4DtnZm9kgNnISr4o_pjOesMRJ273L9pLvl88QW5ngvboQKuRubkGvuYm7AVoH57wwawgHM')"></div>
+<div class="p-4 flex-1">
+<div class="flex justify-between items-start mb-3">
+<span class="text-on-surface-variant font-label-md text-[12px] uppercase tracking-wide">Training</span>
+</div>
+<h4 class="font-headline-md text-[18px] leading-snug mb-2 text-on-surface">Introduction to Next-Gen Signaling Displays</h4>
+<p class="text-on-surface-variant text-sm line-clamp-2 mb-4">Module 1 of 4. A primer on interpreting the new high-density data readouts on the central command consoles.</p>
+<div class="flex items-center gap-2 mt-auto">
+<div class="w-6 h-6 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold text-xs">TR</div>
+<span class="text-xs font-label-md text-on-surface">Training Dept</span>
+</div>
+</div>
+<div class="bg-surface-container border-t border-outline-variant px-4 py-2 flex items-center justify-between text-on-surface-variant text-sm font-data-mono">
+<span>۱۴۰۲/۰۸/۱۲</span>
+<div class="flex gap-3">
+<span class="flex items-center gap-1 hover:text-primary cursor-pointer"><span class="material-symbols-outlined text-[16px]">thumb_up</span> 156</span>
+<span class="flex items-center gap-1 hover:text-primary cursor-pointer"><span class="material-symbols-outlined text-[16px]">chat_bubble_outline</span> 4</span>
+</div>
+</div>
+</article>
+<!-- Card 3: News -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm flex flex-col hover:border-primary/50 transition-colors">
+<div class="p-4 flex-1">
+<div class="flex justify-between items-start mb-3">
+<span class="text-on-surface-variant font-label-md text-[12px] uppercase tracking-wide">News</span>
+</div>
+<h4 class="font-headline-md text-[18px] leading-snug mb-2 text-on-surface">Line 1 Extension Project: Phase 2 Complete</h4>
+<p class="text-on-surface-variant text-sm line-clamp-3 mb-4">The northern tunnel boring operation has successfully breached the terminus wall. Track laying will commence ahead of schedule next month.</p>
+<div class="flex items-center gap-2 mt-auto">
+<div class="w-6 h-6 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold text-xs">PR</div>
+<span class="text-xs font-label-md text-on-surface">Public Relations</span>
+</div>
+</div>
+<div class="bg-surface-container border-t border-outline-variant px-4 py-2 flex items-center justify-between text-on-surface-variant text-sm font-data-mono">
+<span>۱۴۰۲/۰۸/۱۰</span>
+<div class="flex gap-3">
+<span class="flex items-center gap-1 hover:text-primary cursor-pointer"><span class="material-symbols-outlined text-[16px]">thumb_up</span> 342</span>
+<span class="flex items-center gap-1 hover:text-primary cursor-pointer"><span class="material-symbols-outlined text-[16px]">chat_bubble_outline</span> 89</span>
+</div>
+</div>
+</article>
+</div>
+</div>
+<!-- Sidebar / Filter Bar -->
+<aside class="w-full lg:w-80 flex-shrink-0 space-y-6">
+<!-- Search -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
+<label class="sr-only" for="search">Search Knowledge Hub</label>
+<div class="relative">
+<span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-on-surface-variant">
+<span class="material-symbols-outlined">search</span>
+</span>
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-2 pl-3 pr-10 text-on-surface font-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" id="search" placeholder="Search documents..." type="text"/>
+</div>
+</div>
+<!-- Popular Tags -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
+<h3 class="font-headline-md text-[16px] mb-4 text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">tag</span>
+                        Trending Topics
+                    </h3>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-surface-container-high hover:bg-primary-container hover:text-on-primary-container text-on-surface-variant text-sm rounded-full cursor-pointer transition-colors font-label-md border border-outline-variant">#Signaling</span>
+<span class="px-3 py-1 bg-surface-container-high hover:bg-primary-container hover:text-on-primary-container text-on-surface-variant text-sm rounded-full cursor-pointer transition-colors font-label-md border border-outline-variant">#SafetyFirst</span>
+<span class="px-3 py-1 bg-surface-container-high hover:bg-primary-container hover:text-on-primary-container text-on-surface-variant text-sm rounded-full cursor-pointer transition-colors font-label-md border border-outline-variant">#Line1Updates</span>
+<span class="px-3 py-1 bg-surface-container-high hover:bg-primary-container hover:text-on-primary-container text-on-surface-variant text-sm rounded-full cursor-pointer transition-colors font-label-md border border-outline-variant">#Maintenance</span>
+<span class="px-3 py-1 bg-surface-container-high hover:bg-primary-container hover:text-on-primary-container text-on-surface-variant text-sm rounded-full cursor-pointer transition-colors font-label-md border border-outline-variant">#EmergencyProtocols</span>
+</div>
+</div>
+<!-- System Status Mini-Widget -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
+<h3 class="font-headline-md text-[16px] mb-4 text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">monitor_heart</span>
+                        Portal Status
+                    </h3>
+<ul class="space-y-3 font-data-mono text-sm">
+<li class="flex justify-between items-center">
+<span class="text-on-surface-variant">Document Server</span>
+<span class="flex items-center gap-1 text-[#008000]"><span class="w-2 h-2 rounded-full bg-[#008000] animate-pulse"></span> Online</span>
+</li>
+<li class="flex justify-between items-center">
+<span class="text-on-surface-variant">Sync DB</span>
+<span class="flex items-center gap-1 text-[#008000]"><span class="w-2 h-2 rounded-full bg-[#008000]"></span> Updated</span>
+</li>
+</ul>
+</div>
+</aside>
+</div>
+</main>
+</body></html>

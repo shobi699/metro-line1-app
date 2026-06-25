@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>مخزن مستندات فنی</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css" rel="stylesheet" type="text/css"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Vazirmatn', sans-serif; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed-dim": "#ffb4a9",
+                      "on-tertiary": "#ffffff",
+                      "on-background": "#191c1d",
+                      "outline-variant": "#e7bdb7",
+                      "on-surface-variant": "#5d3f3b",
+                      "on-secondary": "#ffffff",
+                      "secondary": "#5f5e5e",
+                      "surface-container-high": "#e7e8e9",
+                      "surface-tint": "#c00205",
+                      "surface-dim": "#d9dadb",
+                      "on-primary-fixed-variant": "#930002",
+                      "on-primary-fixed": "#410000",
+                      "surface-container-highest": "#e1e3e4",
+                      "tertiary": "#5d5c5b",
+                      "on-error": "#ffffff",
+                      "on-tertiary-container": "#f7feff",
+                      "on-primary": "#ffffff",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "on-primary-container": "#fffbff",
+                      "on-surface": "#191c1d",
+                      "secondary-fixed": "#e4e2e1",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "error-container": "#ffdad6",
+                      "inverse-primary": "#ffb4a9",
+                      "outline": "#926f6a",
+                      "surface-container": "#edeeef",
+                      "background": "#f8f9fa",
+                      "error": "#ba1a1a",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "tertiary-container": "#767474",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "surface-container-low": "#f3f4f5",
+                      "on-secondary-fixed-variant": "#474747",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "on-secondary-container": "#656464",
+                      "secondary-container": "#e4e2e1",
+                      "surface": "#f8f9fa",
+                      "inverse-surface": "#2e3132",
+                      "surface-bright": "#f8f9fa",
+                      "primary": "#bc0004",
+                      "surface-variant": "#e1e3e4",
+                      "primary-container": "#e1271c",
+                      "primary-fixed": "#ffdad5",
+                      "inverse-on-surface": "#f0f1f2",
+                      "tertiary-fixed": "#e5e2e1",
+                      "on-error-container": "#93000a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "touch-target-min": "48px",
+                      "margin-mobile": "16px",
+                      "margin-desktop": "32px",
+                      "gutter": "16px"
+              },
+              "fontFamily": {
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg-mobile": [
+                              "Vazirmatn"
+                      ],
+                      "body-lg": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg": [
+                              "Vazirmatn"
+                      ],
+                      "label-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-md": [
+                              "Vazirmatn"
+                      ],
+                      "body-md": [
+                              "Vazirmatn"
+                      ]
+              },
+              "fontSize": {
+                      "data-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "48px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background pb-[80px]">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-dim font-headline-md text-headline-md-mobile docked full-width top-0 border-b border-outline-variant dark:border-outline flat no shadows flex flex-row-reverse justify-between items-center px-margin-mobile w-full h-touch-target-min">
+<div class="font-headline-md text-headline-md-mobile font-bold text-primary dark:text-primary-fixed-dim">ایستگاه تجریش</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest active:scale-95 transition-transform duration-100 rounded-full p-2 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-primary dark:text-primary-fixed-dim hover:bg-surface-container-high dark:hover:bg-surface-container-highest active:scale-95 transition-transform duration-100 rounded-full p-2 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</div>
+</header>
+<main class="p-margin-mobile flex flex-col gap-6">
+<!-- Search Bar -->
+<div class="relative">
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="search">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-lg py-3 pr-10 pl-4 font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-on-surface placeholder-on-surface-variant" placeholder="جستجوی سریع مستندات فنی..." type="text"/>
+</div>
+<!-- Emergency Protocols -->
+<section>
+<h2 class="font-headline-md text-headline-md-mobile text-error mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="warning" data-weight="fill" style="font-variation-settings: 'FILL' 1;">warning</span>
+                پروتکل‌های اضطراری
+            </h2>
+<div class="grid grid-cols-2 gap-3">
+<button class="bg-error text-on-error p-4 rounded-lg flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform shadow-md">
+<span class="material-symbols-outlined text-3xl" data-icon="directions_run" data-weight="fill" style="font-variation-settings: 'FILL' 1;">directions_run</span>
+<span class="font-label-md text-label-md text-center">تخلیه اضطراری</span>
+</button>
+<button class="bg-error text-on-error p-4 rounded-lg flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform shadow-md">
+<span class="material-symbols-outlined text-3xl" data-icon="security" data-weight="fill" style="font-variation-settings: 'FILL' 1;">security</span>
+<span class="font-label-md text-label-md text-center">ایمنی تونل</span>
+</button>
+</div>
+</section>
+<!-- Technical Categories (Bento Grid) -->
+<section>
+<h2 class="font-headline-md text-headline-md-mobile mb-3">دسته‌بندی‌های فنی</h2>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface-container rounded-lg p-4 flex flex-col justify-between aspect-square border border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="settings_input_hdmi">settings_input_hdmi</span>
+<span class="font-label-md text-label-md">سیستم‌های ATP</span>
+</div>
+<div class="bg-surface-container rounded-lg p-4 flex flex-col justify-between aspect-square border border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="electrical_services">electrical_services</span>
+<span class="font-label-md text-label-md">تأسیسات الکتریکی</span>
+</div>
+<div class="bg-surface-container rounded-lg p-4 flex flex-col justify-between aspect-square border border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer col-span-2 flex-row items-center">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="map">map</span>
+<span class="font-label-md text-label-md">نقشه‌های ایستگاه</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_left">chevron_left</span>
+</div>
+<div class="bg-surface-container rounded-lg p-4 flex flex-col justify-between aspect-square border border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="train">train</span>
+<span class="font-label-md text-label-md">ناوگان (Rolling Stock)</span>
+</div>
+<div class="bg-surface-container rounded-lg p-4 flex flex-col justify-between aspect-square border border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer flex items-center justify-center">
+<span class="font-label-md text-label-md text-on-surface-variant">مشاهده همه</span>
+</div>
+</div>
+</section>
+<!-- Recent Documents -->
+<section>
+<div class="flex justify-between items-center mb-3">
+<h2 class="font-headline-md text-headline-md-mobile">مستندات اخیر</h2>
+<button class="text-primary font-label-md text-label-md">نمایش همه</button>
+</div>
+<div class="flex flex-col gap-2">
+<!-- Doc 1 -->
+<div class="bg-surface p-3 rounded-lg border border-outline-variant flex items-center gap-3 hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="bg-error-container text-error rounded p-2 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="picture_as_pdf">picture_as_pdf</span>
+</div>
+<div class="flex-1">
+<div class="font-label-md text-label-md text-on-surface">راهنمای عیب‌یابی سیستم ترمز قطار سری ۱۰۰</div>
+<div class="font-data-mono text-data-mono text-on-surface-variant mt-1">v2.4 • ۱۴۰۲/۰۸/۱۵</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="more_vert">more_vert</span>
+</div>
+<!-- Doc 2 -->
+<div class="bg-surface p-3 rounded-lg border border-outline-variant flex items-center gap-3 hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="bg-primary-container text-on-primary-container rounded p-2 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+</div>
+<div class="flex-1">
+<div class="font-label-md text-label-md text-on-surface">مشخصات فنی تابلوهای فشار قوی ایستگاه حقانی</div>
+<div class="font-data-mono text-data-mono text-on-surface-variant mt-1">v1.1 • ۱۴۰۲/۰۸/۱۰</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="more_vert">more_vert</span>
+</div>
+<!-- Doc 3 -->
+<div class="bg-surface p-3 rounded-lg border border-outline-variant flex items-center gap-3 hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="bg-error-container text-error rounded p-2 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="picture_as_pdf">picture_as_pdf</span>
+</div>
+<div class="flex-1">
+<div class="font-label-md text-label-md text-on-surface">پروتکل ارتباطی سیگنالینگ خط ۱</div>
+<div class="font-data-mono text-data-mono text-on-surface-variant mt-1">v3.0 • ۱۴۰۲/۰۷/۲۵</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="more_vert">more_vert</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-surface dark:bg-surface-dim font-label-md text-label-md docked full-width bottom-0 rounded-t-xl border-t border-outline-variant dark:border-outline flat no shadows fixed bottom-0 w-full z-50 flex flex-row-reverse justify-around items-center h-[80px] pb-safe">
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container-low active:inner-shadow transition-all duration-75 p-2 w-16">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard">dashboard</span>
+<span>داشبورد</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container-low active:inner-shadow transition-all duration-75 p-2 w-16">
+<span class="material-symbols-outlined mb-1" data-icon="calendar_today">calendar_today</span>
+<span>برنامه</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container-low active:inner-shadow transition-all duration-75 p-2 w-16">
+<span class="material-symbols-outlined mb-1" data-icon="chat">chat</span>
+<span>گفتگو</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim bg-primary-fixed dark:bg-on-primary-fixed-variant rounded-full px-4 py-1 hover:bg-surface-container-low active:inner-shadow transition-all duration-75">
+<span class="material-symbols-outlined mb-1" data-icon="menu_book" data-weight="fill" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+<span>دفترچه</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-surface-container-low active:inner-shadow transition-all duration-75 p-2 w-16">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span>پروفایل</span>
+</button>
+</nav>
+</body></html>

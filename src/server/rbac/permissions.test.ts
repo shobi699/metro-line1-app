@@ -1,89 +1,73 @@
 import { describe, it, expect } from 'vitest'
 import {
-  hasMinRole,
   hasPermission,
-  getRolePermissions,
-  PERMISSION_MATRIX,
+  coercePermissions,
+  rankForRoleKey,
+  SYSTEM_ROLE_RANKS,
+  ALL_PERMISSIONS,
 } from './permissions'
 
 describe('RBAC permissions', () => {
-  describe('hasMinRole', () => {
-    it('operator meets operator requirement', () => {
-      expect(hasMinRole('operator', 'operator')).toBe(true)
+  describe('rankForRoleKey', () => {
+    it('orders system roles operator < admin < super_admin', () => {
+      expect(rankForRoleKey('operator')).toBeLessThan(rankForRoleKey('admin'))
+      expect(rankForRoleKey('admin')).toBeLessThan(rankForRoleKey('super_admin'))
     })
 
-    it('operator does NOT meet admin requirement', () => {
-      expect(hasMinRole('operator', 'admin')).toBe(false)
+    it('defaults unknown (custom) roles to rank 0', () => {
+      expect(rankForRoleKey('safety_officer')).toBe(0)
     })
 
-    it('operator does NOT meet super_admin requirement', () => {
-      expect(hasMinRole('operator', 'super_admin')).toBe(false)
-    })
-
-    it('admin meets operator requirement', () => {
-      expect(hasMinRole('admin', 'operator')).toBe(true)
-    })
-
-    it('admin meets admin requirement', () => {
-      expect(hasMinRole('admin', 'admin')).toBe(true)
-    })
-
-    it('admin does NOT meet super_admin requirement', () => {
-      expect(hasMinRole('admin', 'super_admin')).toBe(false)
-    })
-
-    it('super_admin meets all requirements', () => {
-      expect(hasMinRole('super_admin', 'operator')).toBe(true)
-      expect(hasMinRole('super_admin', 'admin')).toBe(true)
-      expect(hasMinRole('super_admin', 'super_admin')).toBe(true)
+    it('matches SYSTEM_ROLE_RANKS', () => {
+      expect(rankForRoleKey('admin')).toBe(SYSTEM_ROLE_RANKS.admin)
     })
   })
 
   describe('hasPermission', () => {
-    it('operator can read tickets', () => {
-      expect(hasPermission('operator', 'tickets:read')).toBe(true)
+    it('grants when the permission is present', () => {
+      expect(hasPermission(['tickets:read', 'shifts:read'], 'tickets:read')).toBe(true)
     })
 
-    it('operator cannot delete users', () => {
-      expect(hasPermission('operator', 'users:delete')).toBe(false)
+    it('denies when the permission is absent', () => {
+      expect(hasPermission(['tickets:read'], 'users:delete')).toBe(false)
     })
 
-    it('admin can update shifts', () => {
-      expect(hasPermission('admin', 'shifts:update')).toBe(true)
+    it('wildcard grants everything', () => {
+      expect(hasPermission(['*'], 'users:delete')).toBe(true)
+      expect(hasPermission(['*'], 'roles:manage')).toBe(true)
     })
 
-    it('admin cannot delete users', () => {
-      expect(hasPermission('admin', 'users:delete')).toBe(false)
-    })
-
-    it('super_admin has all permissions', () => {
-      for (const perm of PERMISSION_MATRIX.super_admin) {
-        expect(hasPermission('super_admin', perm)).toBe(true)
-      }
+    it('empty permissions deny all', () => {
+      expect(hasPermission([], 'tickets:read')).toBe(false)
     })
   })
 
-  describe('getRolePermissions', () => {
-    it('returns correct permissions for each role', () => {
-      expect(getRolePermissions('operator')).toEqual(
-        PERMISSION_MATRIX.operator,
-      )
-      expect(getRolePermissions('admin')).toEqual(PERMISSION_MATRIX.admin)
-      expect(getRolePermissions('super_admin')).toEqual(
-        PERMISSION_MATRIX.super_admin,
-      )
+  describe('coercePermissions', () => {
+    it('passes through a flat array', () => {
+      expect(coercePermissions(['users:read', '*'])).toEqual(['users:read', '*'])
     })
 
-    it('super_admin has more permissions than admin', () => {
-      expect(
-        getRolePermissions('super_admin').length,
-      ).toBeGreaterThan(getRolePermissions('admin').length)
+    it('parses a JSON string', () => {
+      expect(coercePermissions('["users:read"]')).toEqual(['users:read'])
     })
 
-    it('admin has more permissions than operator', () => {
+    it('flattens an object matrix to resource:action', () => {
       expect(
-        getRolePermissions('admin').length,
-      ).toBeGreaterThan(getRolePermissions('operator').length)
+        coercePermissions({ users: ['read', 'create'], shifts: ['read'] }),
+      ).toEqual(['users:read', 'users:create', 'shifts:read'])
+    })
+
+    it('returns empty for invalid input', () => {
+      expect(coercePermissions(null)).toEqual([])
+      expect(coercePermissions('not-json')).toEqual([])
+    })
+  })
+
+  describe('catalog', () => {
+    it('exposes a non-empty flat permission list', () => {
+      expect(ALL_PERMISSIONS).toContain('roles:manage')
+      expect(ALL_PERMISSIONS).toContain('meetings:manage')
+      expect(ALL_PERMISSIONS.length).toBeGreaterThan(10)
     })
   })
 })

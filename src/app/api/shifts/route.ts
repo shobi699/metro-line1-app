@@ -5,24 +5,130 @@ import {
   authErrorResponse,
 } from '@/server/rbac/guard'
 import { getAllShifts } from '@/server/modules/roster/shifts'
-import type { RoleKey } from '@/generated/prisma/client'
+import { prisma } from '@/server/db'
+import { z } from 'zod'
 
+// GET /api/shifts - دریافت شیفت‌ها در یک بازه زمانی خاص
 export async function GET(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'admin')
+  const roleErr = requireRole(user, 'operator')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { searchParams } = new URL(request.url)
   const now = new Date()
   const month = Number(searchParams.get('month') ?? now.getMonth() + 1)
   const year = Number(searchParams.get('year') ?? now.getFullYear())
-  const roleFilter = searchParams.get('role') as RoleKey | null
+  const roleFilter = searchParams.get('role') ?? undefined
 
-  const startDate = new Date(year, month - 1, 1)
-  const endDate = new Date(year, month, 0, 23, 59, 59)
+  const startDateParam = searchParams.get('startDate')
+  const endDateParam = searchParams.get('endDate')
+
+  let startDate = new Date(year, month - 1, 1)
+  let endDate = new Date(year, month, 0, 23, 59, 59)
+
+  if (startDateParam && endDateParam) {
+    startDate = new Date(startDateParam)
+    endDate = new Date(endDateParam)
+  }
 
   const shifts = await getAllShifts(startDate, endDate, roleFilter ?? undefined)
   return NextResponse.json({ data: shifts })
+}
+
+const assignShiftSchema = z.object({
+  userId: z.string().min(1, 'شناسه کاربر الزامی است'),
+  date: z.string().min(1, 'تاریخ الزامی است'),
+  code: z.enum(['morning', 'evening', 'night', 'off']),
+  note: z.string().optional().nullable(),
+})
+
+// POST /api/shifts - ایجاد یا به‌روزرسانی دستی شیفت پرسنل توسط مدیر
+export async function POST(request: Request) {
+  const user = await getSessionUser(request)
+  if ('error' in user) return authErrorResponse(user)
+
+  const roleErr = requireRole(user, 'admin')
+  if (roleErr) return authErrorResponse(roleErr)
+
+  try {
+    const body = await request.json()
+    const parsed = assignShiftSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0].message },
+        { status: 400 }
+      )
+    }
+
+    const { userId, date, code, note } = parsed.data
+
+    // Standardize date to midnight local/UTC representation
+    const dateObj = new Date(date)
+    dateObj.setHours(0, 0, 0, 0)
+
+    // Check if the user exists
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+    })
+
+    if (!targetUser) {
+      return NextResponse.json(
+        { error: 'کاربر مورد نظر یافت نشد' },
+        { status: 404 }
+      )
+    }
+
+    // Check if there is an existing shift for this user on this date
+    const existingShift = await prisma.shift.findUnique({
+      where: {
+        userId_date: {
+          userId,
+          date: dateObj,
+        },
+      },
+    })
+
+    const [shift] = await prisma.$transaction([
+      prisma.shift.upsert({
+        where: {
+          userId_date: {
+            userId,
+            date: dateObj,
+          },
+        },
+        update: {
+          code,
+          note: note || null,
+        },
+        create: {
+          userId,
+          date: dateObj,
+          code,
+          note: note || null,
+        },
+      }),
+      prisma.auditLog.create({
+        data: {
+          actorId: user.id,
+          entity: 'Shift',
+          entityId: `${userId}_${dateObj.toISOString().slice(0, 10)}`,
+          action: existingShift ? 'update' : 'create',
+          before: existingShift ? { code: existingShift.code, note: existingShift.note } : undefined,
+          after: { code, note },
+        },
+      }),
+    ])
+
+    return NextResponse.json({ data: shift, message: 'شیفت با موفقیت ثبت و به‌روزرسانی شد' })
+  } catch (error: unknown) {
+    console.error('Error saving shift:', error)
+    const message = error instanceof Error ? error.message : String(error)
+    return NextResponse.json(
+      { error: `خطا در ثبت شیفت: ${message}` },
+      { status: 500 }
+    )
+  }
 }

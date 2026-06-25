@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import dayjs from 'dayjs'
-import jalaliPlugin from 'dayjs-jalali'
-import { useAuthStore } from '@/stores/auth'
+import 'dayjs-jalali'
+import { useAuthStore } from '@/features/auth'
 import { Button } from '@/components/ui/button'
 import { toFa } from '@/lib/fa'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-
-dayjs.extend(jalaliPlugin as Parameters<typeof dayjs.extend>[0])
+import { cn } from '@/lib/utils'
 
 interface Shift {
   id: string
@@ -19,9 +18,9 @@ interface Shift {
 }
 
 const SHIFT_COLORS: Record<string, string> = {
-  morning: 'bg-success/10 text-success border-success/20',
-  evening: 'bg-info/10 text-info border-info/20',
-  night: 'bg-neutral-700 text-foreground-muted border-neutral-600',
+  morning: 'bg-success/15 text-success border-success/30',
+  evening: 'bg-info/15 text-info border-info/30',
+  night: 'bg-surface-container-highest text-foreground-muted border-outline-variant',
   off: 'bg-background-subtle text-foreground-muted border-border-subtle',
 }
 
@@ -37,28 +36,11 @@ interface ShiftCalendarProps {
   isAdmin?: boolean
 }
 
-// Use a typed helper for jalali methods
-function jalaliMonth(d: dayjs.Dayjs): number {
-  return (d as unknown as { jMonth(): number }).jMonth() + 1
-}
-
-function jalaliYear(d: dayjs.Dayjs): number {
-  return (d as unknown as { jYear(): number }).jYear()
-}
-
-function jalaliDaysInMonth(d: dayjs.Dayjs): number {
-  return (d as unknown as { jDaysInMonth(): number }).jDaysInMonth()
-}
-
-function jalaliDate(d: dayjs.Dayjs, day: number): dayjs.Dayjs {
-  return (d as unknown as { jDate(n: number): dayjs.Dayjs }).jDate(day)
-}
-
 export function ShiftCalendar({ userId, isAdmin }: ShiftCalendarProps) {
   const accessToken = useAuthStore((s) => s.accessToken)
-  const now = dayjs()
-  const [currentMonth, setCurrentMonth] = useState(() => jalaliMonth(now))
-  const [currentYear, setCurrentYear] = useState(() => jalaliYear(now))
+  const now = dayjs().locale('jalali')
+  const [currentMonth, setCurrentMonth] = useState(() => now.month() + 1)
+  const [currentYear, setCurrentYear] = useState(() => now.year())
   const [shifts, setShifts] = useState<Shift[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -89,21 +71,32 @@ export function ShiftCalendar({ userId, isAdmin }: ShiftCalendarProps) {
     load()
   }, [currentMonth, currentYear, userId, accessToken])
 
-  const firstDay = dayjs(
-    `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`,
-    'jYYYY-jMM-jDD',
-  )
-  const daysInMonth = jalaliDaysInMonth(firstDay)
+  const firstDay = dayjs()
+    .locale('jalali')
+    .year(currentYear)
+    .month(currentMonth - 1)
+    .date(1)
+  const daysInMonth = firstDay.daysInMonth()
   const startWeekday = firstDay.day()
 
-  const days: Array<{ day: number; shifts: Shift[] }> = []
+  const today = dayjs().locale('jalali')
+  const todayStr = today.format('YYYY-MM-DD')
+
+  const days: Array<{ day: number; dateStr: string; shifts: Shift[]; isToday: boolean; isFriday: boolean }> = []
   for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = jalaliDate(firstDay, d).format('YYYY-MM-DD')
+    const date = firstDay.date(d)
+    const dateStr = date.format('YYYY-MM-DD')
     const dayShifts = shifts.filter((s) => {
       const sDate = dayjs(s.date).format('YYYY-MM-DD')
       return sDate === dateStr
     })
-    days.push({ day: d, shifts: dayShifts })
+    days.push({
+      day: d,
+      dateStr,
+      shifts: dayShifts,
+      isToday: dateStr === todayStr,
+      isFriday: date.day() === 5,
+    })
   }
 
   function prevMonth() {
@@ -126,32 +119,67 @@ export function ShiftCalendar({ userId, isAdmin }: ShiftCalendarProps) {
 
   const weekdays = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج']
 
+  const shiftCounts = shifts.reduce(
+    (acc, s) => {
+      acc[s.code] = (acc[s.code] ?? 0) + 1
+      return acc
+    },
+    {} as Record<string, number>,
+  )
+
   return (
     <div className="space-y-4">
+      {/* Month Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">
-          {toFa(currentYear)}/{toFa(String(currentMonth).padStart(2, '0'))}
+        <h2 className="font-headline-md text-foreground">
+          {firstDay.format('jMMMM jYYYY')}
         </h2>
         <div className="flex gap-1">
-          <Button variant="outline" size="sm" onClick={prevMonth}>
+          <Button variant="outline" size="icon-sm" onClick={prevMonth}>
             <ChevronRight className="size-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={nextMonth}>
+          <Button variant="outline" size="icon-sm" onClick={nextMonth}>
             <ChevronLeft className="size-4" />
           </Button>
         </div>
       </div>
 
+      {/* Shift Legend */}
+      {!loading && shifts.length > 0 && (
+        <div className="flex flex-wrap gap-3 text-xs">
+          {Object.entries(SHIFT_LABELS).map(([code, label]) => (
+            <div key={code} className="flex items-center gap-1.5">
+              <div className={cn('size-2.5 rounded-sm', SHIFT_COLORS[code]?.split(' ')[0])} />
+              <span className="text-foreground-muted">{label}</span>
+              {shiftCounts[code] !== undefined && (
+                <span className="font-data-mono text-foreground-muted">
+                  {toFa(shiftCounts[code])}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Calendar Grid */}
       {loading ? (
-        <div className="rounded-lg border border-border p-8 text-center">
-          <p className="text-sm text-foreground-muted">در حال بارگذاری...</p>
+        <div className="grid grid-cols-7 gap-1">
+          {Array.from({ length: 35 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-20 animate-pulse rounded-lg border border-border-subtle bg-surface-container-low"
+            />
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-7 gap-1">
-          {weekdays.map((wd) => (
+          {weekdays.map((wd, i) => (
             <div
               key={wd}
-              className="p-1 text-center text-xs font-medium text-foreground-muted"
+              className={cn(
+                'p-1 text-center text-xs font-medium',
+                i === 6 ? 'text-critical' : 'text-foreground-muted',
+              )}
             >
               {wd}
             </div>
@@ -161,19 +189,37 @@ export function ShiftCalendar({ userId, isAdmin }: ShiftCalendarProps) {
             <div key={`empty-${i}`} />
           ))}
 
-          {days.map(({ day, shifts: dayShifts }) => (
+          {days.map(({ day, shifts: dayShifts, isToday, isFriday }) => (
             <div
               key={day}
-              className="min-h-[4rem] rounded-lg border border-border-subtle p-1"
+              className={cn(
+                'min-h-[4.5rem] rounded-lg border p-1 transition-colors',
+                isToday
+                  ? 'border-accent bg-accent/5 ring-1 ring-accent/30'
+                  : 'border-border-subtle',
+              )}
             >
-              <div className="mb-1 text-center text-xs font-mono text-foreground-muted">
+              <div
+                className={cn(
+                  'mb-1 text-center text-xs font-data-mono',
+                  isToday
+                    ? 'font-bold text-accent'
+                    : isFriday
+                      ? 'text-critical'
+                      : 'text-foreground-muted',
+                )}
+              >
                 {toFa(day)}
               </div>
               <div className="space-y-0.5">
                 {dayShifts.map((shift) => (
                   <div
                     key={shift.id}
-                    className={`rounded-sm border px-1 py-0.5 text-center text-[10px] font-medium ${SHIFT_COLORS[shift.code] ?? ''}`}
+                    className={cn(
+                      'rounded border px-1 py-0.5 text-center text-[10px] font-medium',
+                      SHIFT_COLORS[shift.code] ?? '',
+                    )}
+                    title={shift.note ?? undefined}
                   >
                     {isAdmin && shift.user && (
                       <div className="truncate">{shift.user.name}</div>

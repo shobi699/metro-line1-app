@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Metro Comm - Content Editor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#f3f4f5",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "on-primary-container": "#fffbff",
+                        "primary": "#bc0004",
+                        "inverse-on-surface": "#f0f1f2",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "on-error-container": "#93000a",
+                        "surface": "#f8f9fa",
+                        "on-primary-fixed": "#410000",
+                        "tertiary-fixed": "#e5e2e1",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-primary-fixed-variant": "#930002",
+                        "background": "#f8f9fa",
+                        "on-tertiary-container": "#f7feff",
+                        "outline": "#926f6a",
+                        "surface-tint": "#c00205",
+                        "secondary": "#5f5e5e",
+                        "primary-fixed": "#ffdad5",
+                        "secondary-fixed": "#e4e2e1",
+                        "on-surface-variant": "#5d3f3b",
+                        "surface-container-high": "#e7e8e9",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#767474",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#ffb4a9",
+                        "surface-variant": "#e1e3e4",
+                        "surface-dim": "#d9dadb",
+                        "secondary-container": "#e4e2e1",
+                        "on-surface": "#191c1d",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "inverse-surface": "#2e3132",
+                        "primary-container": "#e1271c",
+                        "on-background": "#191c1d",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "on-secondary-fixed-variant": "#474747",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#e7bdb7",
+                        "tertiary": "#5d5c5b",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#edeeef",
+                        "surface-bright": "#f8f9fa",
+                        "on-secondary-container": "#656464"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "32px",
+                        "touch-target-min": "48px",
+                        "margin-mobile": "16px",
+                        "gutter": "16px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Vazirmatn"],
+                        "headline-lg": ["Vazirmatn"],
+                        "body-lg": ["Vazirmatn"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-md": ["Vazirmatn"],
+                        "headline-lg-mobile": ["Vazirmatn"],
+                        "body-md": ["Vazirmatn"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "48px", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Custom Scrollbar for Industrial Feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f3f4f5; 
+            border-left: 1px solid #e1e3e4;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c8c6c6; 
+            border-radius: 0;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #926f6a; 
+        }
+
+        /* Toggle Switch Styles */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #bc0004;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #bc0004;
+        }
+        .toggle-checkbox:checked + .toggle-label:after {
+            transform: translateX(-100%);
+            border-color: white;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen font-body-md text-body-md selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-margin-desktop h-touch-target-min bg-surface-container-lowest border-b border-outline-variant pr-64">
+<!-- Search (on_left in LTR, so right in RTL visual flow within the header content area) -->
+<div class="flex items-center space-x-reverse space-x-4">
+<div class="relative hidden md:flex items-center">
+<span class="material-symbols-outlined absolute right-3 text-on-surface-variant text-lg">search</span>
+<input class="h-8 w-64 bg-surface-container-low border border-outline-variant rounded-DEFAULT pr-10 pl-3 font-body-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" placeholder="Search..." type="text"/>
+</div>
+</div>
+<!-- Trailing Actions & Logo -->
+<div class="flex items-center space-x-reverse space-x-6">
+<button class="bg-primary text-on-primary hover:bg-surface-tint transition-colors h-8 px-4 rounded-DEFAULT font-label-md text-label-md flex items-center shadow-sm active:shadow-inner">
+<span class="material-symbols-outlined ml-2 text-[18px]">add</span>
+                Create Post
+            </button>
+<div class="flex items-center space-x-reverse space-x-2 border-r border-outline-variant pr-4 mr-4">
+<button class="text-on-surface-variant hover:bg-surface-container-high transition-colors w-8 h-8 rounded-DEFAULT flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high transition-colors w-8 h-8 rounded-DEFAULT flex items-center justify-center">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high transition-colors w-8 h-8 rounded-DEFAULT flex items-center justify-center">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+<div class="w-8 h-8 rounded-full bg-secondary-fixed overflow-hidden border border-outline-variant shrink-0">
+<img alt="User profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfcURiw-BnsC_eWOUvs0nWJzVpqgrYAhrit16u8h03ILPvfuzxS61XTku7mN-7f-uZAC-XSv_m3dhsinXX3bSG0NxXwrFFdQlocjFrxUmW8eF3IG_wgtVMwa09RWEoKdaqrunWJHnoVScDRo88KkRqy53Es731nCunUnAwnGo9LpGE3iPS4pAcuM0WnGyrWC_N8ktuE_VbbSnw0F7RIRZrq7tuRsYV8DuRz2csudGhwM96bCWFH7JuLKsnzik49q44p7DfUi45Ajhi"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar (Strict adherence to JSON: left-0, even in RTL dir, this places it physically on the left screen edge) -->
+<nav class="fixed left-0 top-touch-target-min h-[calc(100vh-48px)] w-64 flex flex-col p-gutter z-40 bg-surface-container-low border-r border-outline-variant">
+<!-- Header -->
+<div class="mb-8 px-2 flex items-center">
+<div class="w-10 h-10 bg-primary rounded-DEFAULT flex items-center justify-center mr-3 shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-on-primary icon-fill">subway</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tight">METRO COMM</h1>
+<p class="font-label-md text-[12px] text-on-surface-variant uppercase tracking-wider mt-1">OPERATIONS HUB</p>
+<p class="font-body-md text-[11px] text-secondary">Line 1 Technical Portal</p>
+</div>
+</div>
+<!-- Main Tabs -->
+<div class="flex-1 space-y-1">
+<a class="bg-primary-container text-on-primary-container font-label-md text-label-md rounded-lg px-3 py-2 flex items-center group scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined ml-3 text-on-primary-container icon-fill">newspaper</span>
+                Organization News
+            </a>
+<a class="text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md rounded-lg px-3 py-2 flex items-center transition-all hover:bg-surface-container-highest" href="#">
+<span class="material-symbols-outlined ml-3">school</span>
+                Technical Training
+            </a>
+<a class="text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md rounded-lg px-3 py-2 flex items-center transition-all hover:bg-surface-container-highest" href="#">
+<span class="material-symbols-outlined ml-3">assignment_late</span>
+                Directives
+            </a>
+<a class="text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md rounded-lg px-3 py-2 flex items-center transition-all hover:bg-surface-container-highest" href="#">
+<span class="material-symbols-outlined ml-3">description</span>
+                Technical Articles
+            </a>
+</div>
+<!-- Footer Tabs -->
+<div class="pt-4 border-t border-outline-variant space-y-1">
+<a class="text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md rounded-lg px-3 py-2 flex items-center transition-all hover:bg-surface-container-highest" href="#">
+<span class="material-symbols-outlined ml-3">admin_panel_settings</span>
+                Admin Panel
+            </a>
+<a class="text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md rounded-lg px-3 py-2 flex items-center transition-all hover:bg-surface-container-highest text-error" href="#">
+<span class="material-symbols-outlined ml-3">logout</span>
+                Logout
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="pt-[calc(48px+32px)] pl-[calc(256px+32px)] pr-margin-desktop pb-margin-desktop min-h-screen">
+<div class="mb-6 flex justify-between items-end border-b border-outline-variant pb-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Compose Dispatch</h2>
+<p class="font-body-md text-on-surface-variant mt-1">Create and distribute operational content to Line 1 personnel.</p>
+</div>
+<div class="flex space-x-reverse space-x-3">
+<button class="px-4 py-2 border border-outline text-on-surface font-label-md text-label-md rounded-DEFAULT hover:bg-surface-container-low transition-colors shadow-sm">
+                    Preview
+                </button>
+<button class="px-6 py-2 bg-primary text-on-primary font-label-md text-label-md rounded-DEFAULT hover:bg-surface-tint transition-colors shadow-sm active:shadow-inner flex items-center">
+<span class="material-symbols-outlined ml-2 text-[18px]">send</span>
+                    Publish
+                </button>
+</div>
+</div>
+<!-- Grid Layout for Editor and Settings -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Main Editor Area (Takes up more space, visually on the right in RTL within its container) -->
+<div class="lg:col-span-8 flex flex-col gap-unit">
+<!-- Title Input -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-4 shadow-sm">
+<input class="w-full bg-transparent border-none font-headline-md text-headline-md text-on-surface focus:outline-none focus:ring-0 p-0 placeholder:text-outline" placeholder="Enter Dispatch Title..." type="text"/>
+</div>
+<!-- Rich Text Editor Container -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT shadow-sm flex-1 flex flex-col min-h-[500px]">
+<!-- Formatting Toolbar -->
+<div class="flex items-center flex-wrap gap-1 p-2 border-b border-outline-variant bg-surface-container-low">
+<!-- Text Styles -->
+<div class="flex items-center space-x-reverse space-x-1 pr-2 border-l border-outline-variant">
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors" title="Bold">
+<span class="material-symbols-outlined text-[20px]">format_bold</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors" title="Italic">
+<span class="material-symbols-outlined text-[20px]">format_italic</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors" title="Underline">
+<span class="material-symbols-outlined text-[20px]">format_underlined</span>
+</button>
+</div>
+<!-- Lists -->
+<div class="flex items-center space-x-reverse space-x-1 px-2 border-l border-outline-variant">
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors" title="Bulleted List">
+<span class="material-symbols-outlined text-[20px]">format_list_bulleted</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors" title="Numbered List">
+<span class="material-symbols-outlined text-[20px]">format_list_numbered</span>
+</button>
+</div>
+<!-- Insert -->
+<div class="flex items-center space-x-reverse space-x-1 px-2">
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors" title="Insert Link">
+<span class="material-symbols-outlined text-[20px]">link</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors" title="Upload Image">
+<span class="material-symbols-outlined text-[20px]">image</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors" title="Insert Table">
+<span class="material-symbols-outlined text-[20px]">table_chart</span>
+</button>
+</div>
+<div class="flex-1"></div>
+<!-- RTL/LTR Toggle (Contextual for Persian interface) -->
+<div class="flex items-center space-x-reverse space-x-1 pl-2">
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT text-on-surface-variant bg-surface-container-highest transition-colors" title="Right-to-Left">
+<span class="material-symbols-outlined text-[20px]">format_textdirection_r_to_l</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest transition-colors" title="Left-to-Right">
+<span class="material-symbols-outlined text-[20px]">format_textdirection_l_to_r</span>
+</button>
+</div>
+</div>
+<!-- Editor Canvas -->
+<div class="flex-1 p-6 relative">
+<textarea class="w-full h-full resize-none bg-transparent border-none focus:ring-0 focus:outline-none font-body-md text-body-md text-on-surface leading-relaxed placeholder:text-outline-variant" placeholder="Begin typing dispatch content here..."></textarea>
+</div>
+<!-- Editor Footer/Status -->
+<div class="px-4 py-2 border-t border-outline-variant bg-surface-container-lowest flex justify-between items-center text-[12px] font-data-mono text-on-surface-variant">
+<span>Auto-saved: Just now</span>
+<span>Words: 0</span>
+</div>
+</div>
+</div>
+<!-- Publishing Settings Panel (Visually on the left) -->
+<div class="lg:col-span-4 space-y-gutter">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT shadow-sm p-6">
+<h3 class="font-headline-md text-headline-md text-on-surface border-b border-outline-variant pb-2 mb-4 flex items-center">
+<span class="material-symbols-outlined ml-2 text-primary">settings_applications</span>
+                        Publishing Parameters
+                    </h3>
+<!-- Category Selection -->
+<div class="mb-6">
+<label class="block font-label-md text-label-md text-on-surface mb-2">Primary Category</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface-container-low border border-outline-variant rounded-DEFAULT px-4 py-2.5 font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer pr-10">
+<option>Organization News</option>
+<option>Technical Training</option>
+<option>Directives</option>
+<option>Technical Articles</option>
+<option>Emergency Alert</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">arrow_drop_down</span>
+</div>
+</div>
+<!-- Tags Input -->
+<div class="mb-6">
+<label class="block font-label-md text-label-md text-on-surface mb-2">Operational Tags</label>
+<div class="flex items-center bg-surface-container-low border border-outline-variant rounded-DEFAULT px-3 py-1 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant ml-2 text-[18px]">sell</span>
+<input class="flex-1 bg-transparent border-none focus:ring-0 p-1.5 font-body-md text-sm placeholder:text-outline-variant" placeholder="Add tag and press Enter..." type="text"/>
+</div>
+<!-- Tag Chips -->
+<div class="flex flex-wrap gap-2 mt-3">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-data-mono bg-secondary-container text-on-secondary-container border border-outline-variant">
+                                Maintenance
+                                <button class="mr-1 hover:text-error focus:outline-none"><span class="material-symbols-outlined text-[14px]">close</span></button>
+</span>
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-data-mono bg-secondary-container text-on-secondary-container border border-outline-variant">
+                                Line 1
+                                <button class="mr-1 hover:text-error focus:outline-none"><span class="material-symbols-outlined text-[14px]">close</span></button>
+</span>
+</div>
+</div>
+<!-- Advanced Options (Mandatory Toggle) -->
+<div class="pt-4 border-t border-outline-variant">
+<h4 class="font-label-md text-label-md text-on-surface mb-4">Compliance Tracking</h4>
+<div class="flex items-center justify-between p-3 bg-surface-container-low border border-outline-variant rounded-DEFAULT">
+<div>
+<span class="block font-label-md text-sm text-on-surface">Mandatory Read-Receipt</span>
+<span class="block font-body-md text-xs text-on-surface-variant mt-0.5">Requires personnel acknowledgment.</span>
+</div>
+<!-- Custom Toggle Switch -->
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-surface-variant appearance-none cursor-pointer z-10 transition-transform duration-200 ease-in-out" id="toggle" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer transition-colors duration-200 ease-in-out" for="toggle"></label>
+</div>
+</div>
+</div>
+</div>
+<!-- Secondary Info Card -->
+<div class="bg-surface-container-low border border-outline-variant rounded-DEFAULT p-4 shadow-sm">
+<div class="flex items-start">
+<span class="material-symbols-outlined text-primary ml-3 mt-0.5">info</span>
+<div>
+<p class="font-label-md text-sm text-on-surface">Content Guidelines</p>
+<p class="font-body-md text-xs text-on-surface-variant mt-1">Ensure all technical details cross-reference the official Line 1 manual. Emergency alerts will bypass standard notification schedules.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

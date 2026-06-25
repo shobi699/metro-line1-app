@@ -1,0 +1,628 @@
+<!DOCTYPE html><html dir="rtl" lang="fa" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Tehran Metro Line 1 - Communications</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary": "#bc0004",
+                      "background": "#f8f9fa",
+                      "secondary-fixed": "#e4e2e1",
+                      "on-surface": "#191c1d",
+                      "on-secondary-container": "#656464",
+                      "surface-container-high": "#e7e8e9",
+                      "secondary": "#5f5e5e",
+                      "secondary-container": "#e4e2e1",
+                      "tertiary-container": "#767474",
+                      "on-surface-variant": "#5d3f3b",
+                      "on-tertiary": "#ffffff",
+                      "surface-dim": "#d9dadb",
+                      "tertiary": "#5d5c5b",
+                      "outline": "#926f6a",
+                      "on-tertiary-container": "#f7feff",
+                      "on-secondary-fixed-variant": "#474747",
+                      "surface-tint": "#c00205",
+                      "surface-container-highest": "#e1e3e4",
+                      "inverse-surface": "#2e3132",
+                      "on-background": "#191c1d",
+                      "on-primary-fixed": "#410000",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "tertiary-fixed": "#e5e2e1",
+                      "surface-variant": "#e1e3e4",
+                      "on-primary-container": "#fffbff",
+                      "inverse-primary": "#ffb4a9",
+                      "surface-container-low": "#f3f4f5",
+                      "surface": "#f8f9fa",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "on-error": "#ffffff",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "primary-fixed": "#ffdad5",
+                      "error": "#ba1a1a",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "primary-fixed-dim": "#ffb4a9",
+                      "on-primary": "#ffffff",
+                      "primary-container": "#e1271c",
+                      "outline-variant": "#e7bdb7",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-bright": "#f8f9fa",
+                      "error-container": "#ffdad6",
+                      "inverse-on-surface": "#f0f1f2",
+                      "on-primary-fixed-variant": "#930002",
+                      "surface-container": "#edeeef"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "gutter": "16px",
+                      "margin-desktop": "32px",
+                      "unit": "4px",
+                      "touch-target-min": "48px"
+              },
+              "fontFamily": {
+                      "label-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg": [
+                              "Vazirmatn"
+                      ],
+                      "body-md": [
+                              "Vazirmatn"
+                      ],
+                      "body-lg": [
+                              "Vazirmatn"
+                      ],
+                      "headline-md": [
+                              "Vazirmatn"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg-mobile": [
+                              "Vazirmatn"
+                      ]
+              },
+              "fontSize": {
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "48px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "data-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for industrial feel */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d9dadb; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #926f6a; }
+        
+        /* Pulse animation for live indicators */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(188, 0, 4, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 4px rgba(188, 0, 4, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(188, 0, 4, 0); }
+        }
+        .live-pulse {
+            animation: pulse-ring 2s infinite;
+        }
+        .typing-dot {
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface h-screen overflow-hidden flex flex-col font-body-md text-body-md">
+<!-- TopNavBar -->
+<header class="bg-surface border-b border-outline-variant fixed full-width top-0 w-full z-50 h-16 flex flex-row justify-between items-center px-margin-desktop transition-colors duration-200">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-bold text-primary">Tehran Metro Line 1</span>
+</div>
+<div class="flex items-center gap-6">
+<!-- Search on left (RTL means physically left side) -->
+<div class="relative hidden md:flex items-center">
+<span class="material-symbols-outlined absolute right-3 text-on-surface-variant">search</span>
+<input class="bg-surface-container-low border border-outline-variant rounded-DEFAULT h-10 pr-10 pl-4 font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary w-64" placeholder="جستجو در ارتباطات..." type="text">
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary live-pulse"></span>
+</button>
+<button class="p-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">person_search</span>
+</button>
+<button class="p-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<div class="flex flex-1 pt-16 h-full relative">
+<!-- SideNavBar (Main App Nav) -->
+<nav class="bg-surface-container-low border-l border-outline-variant fixed right-0 top-0 h-full w-64 flex flex-col z-40 pt-16 rtl">
+<!-- Header Section -->
+<div class="p-4 border-b border-outline-variant flex items-center gap-3">
+<img alt="Personnel Profile" class="w-12 h-12 rounded-full border-2 border-primary object-cover" data-alt="A professional headshot of a metro operations commander in uniform, harsh industrial lighting, serious expression, wearing a communication headset." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCD0kM--ll4KY3GnKaXWtaEyUBpm3m3rCPyqu1s7GEGcPN7_73zWZjZiGVdEcNE7W3DqPCMB4ANInoj1IQoTTVJWVNTk6Ii_I19JzbsLP_ov7hPCAaBbSQrJGqOeleeN1AG6L41ufzr2Dk1xDnx3p93hQzxzM7HUXuQq8TkcFxTn49N18Mehn6hfOcQyuW1lY6GdNmlycqpLEAAQPCP2ZQj0fInm09MVJyFmlyHfmFBz68tnoZ29-mNqqtiIc4D91JxCsMouswi5uwr">
+<div>
+<h2 class="font-label-md text-label-md font-bold text-on-surface">Command Center</h2>
+<p class="font-data-mono text-data-mono text-on-surface-variant text-[12px]">Metro Line 1 Ops</p>
+</div>
+</div>
+<!-- Nav Links -->
+<ul class="flex flex-col gap-1 p-2 flex-1 overflow-y-auto">
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2 text-secondary hover:bg-surface-container-highest transition-all scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="">Dashboard</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2 text-secondary hover:bg-surface-container-highest transition-all scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="">Roster</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2 text-secondary hover:bg-surface-container-highest transition-all scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">contact_phone</span>
+<span class="">Phonebook</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2 text-secondary hover:bg-surface-container-highest transition-all scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">campaign</span>
+<span class="">Bulletins</span>
+</a>
+</li>
+<!-- Active Tab -->
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2 bg-secondary-container text-on-secondary-container font-bold rounded-lg transition-all scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">forum</span>
+<span class="">Chat</span>
+</a>
+</li>
+<li class=""><a class="flex items-center gap-3 px-3 py-2 text-secondary hover:bg-surface-container-highest transition-all scale-95 active:scale-90 font-label-md text-label-md" href="#"><span class="material-symbols-outlined">settings_voice</span><span class="">آرشیو صوتی</span></a></li><li class="">
+<a class="flex items-center gap-3 px-3 py-2 text-secondary hover:bg-surface-container-highest transition-all scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="">Training</span>
+</a>
+</li>
+<li class="mt-auto">
+<a class="flex items-center gap-3 px-3 py-2 text-secondary hover:bg-surface-container-highest transition-all scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="">Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Workspace Area -->
+<main class="flex flex-1 mr-64 h-full">
+<!-- Conversations List Panel (Physically to the right of chat area, left of main nav) -->
+<aside class="w-80 bg-surface border-l border-outline-variant flex flex-col h-full z-30 shrink-0">
+<div class="p-4 border-b border-outline-variant bg-surface-container-lowest">
+<div class="flex justify-between items-center mb-4">
+<h2 class="font-headline-md text-headline-md text-on-surface">گفتگوها</h2>
+<button class="text-primary hover:bg-primary-fixed p-1 rounded-DEFAULT transition-colors">
+<span class="material-symbols-outlined">edit_square</span>
+</button>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute right-2 text-on-surface-variant top-2">filter_list</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-DEFAULT h-10 pr-9 pl-3 font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="فیلتر پیام‌ها..." type="text">
+</div>
+</div>
+<div class="flex-1 overflow-y-auto">
+<!-- Smart Assistant Section -->
+<div class="px-4 py-2 mt-2">
+<ul class="space-y-1">
+<li class="hover:bg-surface-container-low rounded-DEFAULT transition-colors cursor-pointer border border-primary/20 bg-primary-fixed/10">
+<div class="px-3 py-3 flex gap-3 items-center">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0 shadow-sm">
+<span class="material-symbols-outlined">smart_toy</span>
+</div>
+<div class="flex-1 min-w-0">
+<span class="font-label-md text-label-md text-on-surface block truncate font-bold">دستیار هوشمند (AI)</span>
+<span class="font-data-mono text-xs text-primary block truncate">آماده پاسخگویی...</span>
+</div>
+</div>
+</li>
+</ul>
+</div>
+<!-- Groups Section -->
+<div class="px-4 py-2">
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-2">گروه‌های عملیاتی</h3>
+<ul class="space-y-1">
+<!-- Active Chat -->
+<li class="bg-surface-container-high rounded-DEFAULT border-r-4 border-primary overflow-hidden cursor-pointer">
+<div class="px-3 py-3 flex gap-3 items-start">
+<div class="w-12 h-12 rounded-DEFAULT bg-primary flex items-center justify-center text-on-primary shrink-0 shadow-sm">
+<span class="material-symbols-outlined">emergency</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-on-surface truncate">General Line 1</span>
+<span class="font-data-mono text-data-mono text-[11px] text-primary font-bold">اکنون</span>
+</div>
+<p class="text-sm text-on-surface-variant truncate font-body-md text-body-md">دستیار: بر اساس آیین‌نامه...</p>
+</div>
+</div>
+</li>
+<li class="hover:bg-surface-container-low rounded-DEFAULT transition-colors cursor-pointer">
+<div class="px-3 py-3 flex gap-3 items-start">
+<div class="w-12 h-12 rounded-DEFAULT bg-secondary-fixed flex items-center justify-center text-on-surface shrink-0">
+<span class="material-symbols-outlined">directions_transit</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-on-surface truncate">Drivers Room</span>
+<span class="font-data-mono text-data-mono text-[11px] text-on-surface-variant">۱۱:۳۰</span>
+</div>
+<p class="text-sm text-on-surface-variant truncate font-body-md text-body-md">راهبر احمدی: شیفت تحویل شد.</p>
+</div>
+</div>
+</li>
+<li class="hover:bg-surface-container-low rounded-DEFAULT transition-colors cursor-pointer">
+<div class="px-3 py-3 flex gap-3 items-start">
+<div class="w-12 h-12 rounded-DEFAULT bg-secondary-fixed flex items-center justify-center text-on-surface shrink-0">
+<span class="material-symbols-outlined">group</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-on-surface truncate">Shift A</span>
+<span class="font-data-mono text-data-mono text-[11px] text-on-surface-variant">۱۰:۱۵</span>
+</div>
+<p class="text-sm text-on-surface-variant truncate font-body-md text-body-md">مهندس رضایی: تست سیگنال انجام شد.</p>
+</div>
+</div>
+</li>
+<li class="hover:bg-surface-container-low rounded-DEFAULT transition-colors cursor-pointer">
+<div class="px-3 py-3 flex gap-3 items-start">
+<div class="w-12 h-12 rounded-DEFAULT bg-inverse-surface flex items-center justify-center text-on-secondary shrink-0">
+<span class="material-symbols-outlined">router</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-on-surface truncate">OCC/Dispatchers</span>
+<span class="font-data-mono text-data-mono text-[11px] text-on-surface-variant">دیروز</span>
+</div>
+<p class="text-sm text-on-surface-variant truncate font-body-md text-body-md">سیستم: بروزرسانی شبکه ساعت ۰۲:۰۰</p>
+</div>
+</div>
+</li>
+<li class="hover:bg-surface-container-low rounded-DEFAULT transition-colors cursor-pointer border border-outline-variant border-dashed"><div class="px-3 py-3 flex gap-3 items-start"><div class="w-12 h-12 rounded-DEFAULT bg-surface-container-highest flex items-center justify-center text-primary shrink-0"><span class="material-symbols-outlined">play_circle</span></div><div class="flex-1 min-w-0"><div class="flex justify-between items-center mb-1"><span class="font-label-md text-label-md text-on-surface truncate">Archive: OCC Briefing - Shift A</span><span class="font-data-mono text-data-mono text-[11px] text-on-surface-variant">۰۸:۴۵</span></div><p class="text-sm text-secondary truncate font-body-md text-body-md flex items-center gap-1"><span class="material-symbols-outlined text-xs">schedule</span> ۱۲:۴۰ دقیقه</p></div></div></li></ul>
+</div>
+<!-- Direct Messages Section -->
+<div class="px-4 py-2 mt-2">
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-2">پیام‌های مستقیم</h3>
+<ul class="space-y-1">
+<li class="hover:bg-surface-container-low rounded-DEFAULT transition-colors cursor-pointer">
+<div class="px-3 py-3 flex gap-3 items-center">
+<div class="relative shrink-0">
+<img alt="User" class="w-10 h-10 rounded-full object-cover" data-alt="Close up of a metro train driver, wearing safety vest, looking focused inside the driving cabin." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjh9zwJ4c_KVSxcx-x8SJdpElYPKQbRgzbIVWAxdBBllkORXxZnrZ3BLkfqbgRe5ynH90BgLc-tRaLuLFRu6R_JCYRzWKxTXTFPtEx5xWsdt3bpbZAoNEg_e59-nv7-Cvw0TfWTh5so4HJdtquVi4VZDsYc7P4FMAMU8hJnKO0FdH2zOHkobVIVyn0auJzPSXAtZpuZz92pEoY3lsMErjIZVag_h3KdS14RCuBoeQpoU0ahJmhZYX61ympgLnIlxAqFw9BtCMKY32B">
+<div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-surface"></div>
+</div>
+<div class="flex-1 min-w-0">
+<span class="font-label-md text-label-md text-on-surface block truncate">راهبر اکبری</span>
+<span class="font-data-mono text-data-mono text-xs text-on-surface-variant block">آنلاین</span>
+</div>
+</div>
+</li>
+<li class="hover:bg-surface-container-low rounded-DEFAULT transition-colors cursor-pointer">
+<div class="px-3 py-3 flex gap-3 items-center">
+<div class="relative shrink-0">
+<img alt="User" class="w-10 h-10 rounded-full object-cover" data-alt="A station manager standing on a busy metro platform, holding a radio unit, professional demeanor." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB399WyklGk-KdaxH9v1TOzvp6axlVSuxUJF0b-10qk6xmms5cGK-_ZNiQWArUL7bMqppQUk_m5AOViBL71oLDuxbM4MOh3TiRCMF7OF2jAGWlm-x1uqgM1WjTq3sGjKRoSyNws8gtXX8COq0DlmExAxu7BG1Uw2ZeJVbBrGuv4ad1wAlkI5rMBfI08SjD9vt_W0kgLdFAzqURsS282n3jw9ZsxCN2F-0oZf7A8AR-38A60xs7ycPGO_-l3CcUY9XqE5IYJW62GPY8P">
+<div class="absolute bottom-0 right-0 w-3 h-3 bg-gray-400 rounded-full border-2 border-surface"></div>
+</div>
+<div class="flex-1 min-w-0">
+<span class="font-label-md text-label-md text-on-surface block truncate">مدیر ایستگاه تجریش</span>
+<span class="font-data-mono text-data-mono text-xs text-on-surface-variant block">آفلاین</span>
+</div>
+<div class="bg-primary text-on-primary font-data-mono text-xs rounded-full w-5 h-5 flex items-center justify-center shadow-sm">۲</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</aside>
+<!-- Chat Window Container -->
+<section class="flex-1 flex flex-col bg-surface-bright relative min-w-0">
+<!-- Chat Header -->
+<header class="bg-surface border-b border-outline-variant p-4 flex justify-between items-center h-[72px] shrink-0 shadow-sm z-20">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-DEFAULT bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined">emergency</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">General Line 1</h2>
+<p class="font-data-mono text-data-mono text-xs text-on-surface-variant flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
+                                کانال عملیاتی اصلی - ۴۵ عضو آنلاین
+                            </p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-DEFAULT"><span class="material-symbols-outlined">search</span></button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-DEFAULT"><span class="material-symbols-outlined">call</span></button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-DEFAULT"><span class="material-symbols-outlined">more_vert</span></button>
+</div>
+</header>
+<!-- Pinned Message -->
+<div class="bg-primary-fixed/20 border-b border-primary/30 p-3 flex items-start gap-3 shadow-sm z-10">
+<span class="material-symbols-outlined text-primary mt-0.5">push_pin</span>
+<div class="flex-1">
+<span class="font-label-md text-label-md text-primary block font-bold">دستورالعمل عملیاتی (۱۴۰۲/۰۸/۱۲)</span>
+<p class="font-body-md text-body-md text-on-surface text-sm truncate">کاهش سرعت در محدوده ایستگاه دروازه دولت به دلیل عملیات عمرانی شبانه. حداکثر سرعت ۲۰ کیلومتر بر ساعت.</p>
+</div>
+</div>
+<!-- Messages Area -->
+<div class="bg-surface-container-high border-b border-outline-variant px-4 py-2 flex items-center justify-between z-20 shadow-sm"><div class="flex items-center gap-2 mr-4 border-r border-outline-variant pr-4"><span class="w-2 h-2 bg-primary rounded-full live-pulse"></span><span class="font-data-mono text-[10px] text-primary font-bold animate-pulse">RECORDING...</span></div>
+  <div class="flex items-center gap-3">
+    <div class="relative">
+      <span class="material-symbols-outlined text-primary live-pulse">settings_voice</span>
+      <span class="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></span>
+    </div>
+    <div>
+      <span class="font-label-md text-label-md text-on-surface block">کنفرانس صوتی زنده</span>
+      <span class="font-data-mono text-[10px] text-on-surface-variant">۱۲ نفر در حال گفتگو</span>
+    </div>
+  </div>
+  <button class="bg-primary text-on-primary px-4 py-1.5 rounded-full font-label-md text-sm hover:bg-surface-tint transition-all active:scale-95 flex items-center gap-2">
+    <span class="material-symbols-outlined text-sm">headset_mic</span>
+    <span class="">پیوستن</span>
+  </button>
+</div><div class="flex-1 overflow-y-auto p-6 flex flex-col bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiNlN2U4ZTkiLz48L3N2Zz4=')] space-y-8">
+<!-- System Message -->
+<div class="text-center">
+<span class="inline-block bg-surface-container px-3 py-1 rounded-full font-data-mono text-xs text-on-surface-variant border border-outline-variant">امروز - شیفت صبح</span>
+</div>
+<!-- Received Message -->
+<div class="flex items-end gap-2 w-max max-w-[70%]">
+<img alt="Dispatcher" class="w-8 h-8 rounded-full object-cover mb-1 shrink-0" data-alt="A focused dispatcher in the OCC monitoring screens, professional attire, clear resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxl0bQ9GomcYnP5baK1svXowhYf7Iyfe2B9eIVHLnFiEAQFiv5tPXhjXBFovevwREGnvMCSaEtA-XqK_oWso7J_2s7TdssKKlJ7OpcrgYhaDk1DPta8FUCRnmibSr0RkSDivlL63qWT9iG3ZwqofEAZdN3UeI4mNc0h6HmkpEuokWdv5kdj7rFMqFLXlSX5z6iV3VfOvtHWlV7qC_092pOlZNn_JG9u16fe3XaBSdKDZuBtPHN5p2AD9gW4ZQQp-bF7AH6TnN-Lgrm">
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md text-on-surface-variant text-xs ml-2">مرکز فرمان (OCC)</span>
+<div class="bg-surface border border-outline-variant p-3 rounded-xl rounded-br-none shadow-sm relative">
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">تست رادیویی خط ۱. ایستگاه‌های شمالی وضعیت را گزارش کنند.</p>
+<span class="font-data-mono text-data-mono text-[10px] text-on-surface-variant absolute bottom-1 left-3 dir-ltr">08:00 AM</span>
+<button class="absolute -bottom-6 right-0 flex items-center gap-1 text-[11px] text-primary hover:underline font-label-md">
+  <span class="material-symbols-outlined text-[14px]">translate</span>
+  <span class="">ترجمه</span>
+</button></div>
+</div>
+</div>
+<!-- Sent Message -->
+<div class="flex items-end gap-2 w-max max-w-[70%] self-end flex-row-reverse">
+<div class="flex flex-col gap-1 items-end">
+<span class="font-label-md text-label-md text-on-surface-variant text-xs mr-2">شما</span>
+<div class="bg-surface-container-highest border border-outline p-3 rounded-xl rounded-bl-none shadow-sm relative">
+<p class="font-body-md text-body-md text-on-surface leading-relaxed text-right">ایستگاه تجریش. سیگنال دریافت شد. وضعیت عادی است.</p>
+<div class="flex items-center gap-1 mt-1 justify-start">
+<span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1;">done_all</span>
+<span class="font-data-mono text-data-mono text-[10px] text-on-surface-variant dir-ltr">08:02 AM</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Urgent Message -->
+<div class="flex items-end gap-2 w-max max-w-[70%]">
+<img alt="Dispatcher" class="w-8 h-8 rounded-full object-cover mb-1 shrink-0" data-alt="A focused dispatcher in the OCC monitoring screens, professional attire, clear resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDy6qIYJeJyh-GlbvRpveJlYLtrTnDOUMUcSTDjBWb5Sju4WthhJEhtr-7fLsju-TUEmyEHRdmlgpwyJhHi5XgEwv2ZOHmCaLin3KmPn_Eo7hEJGp7QDO7eYHZSJdaCg_Af0M3UDx6IZ8rFDemSxj-VIa2-nfB3NIUxG_SjwOYH1yjtLs9mnZ0FKzkbyidXW8-0-96kdzNhTTpOzCx8YF0eFy3rzYX_4Xozba6NMW2Ff3o5eSCydpZsojPbQ2HzVBVRDHFhmLj1CIHD">
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md text-primary font-bold text-xs ml-2">مرکز فرمان (OCC) - فوری</span>
+<div class="bg-error-container border-2 border-error p-3 rounded-xl rounded-br-none shadow-sm relative">
+<p class="font-body-md text-body-md text-on-error-container font-bold leading-relaxed">توجه: قطار ۳۱۲ در ایستگاه دروازه دولت متوقف شده است. نقص فنی در درها. تیم فنی اعزام شود.</p>
+<span class="font-data-mono text-data-mono text-[10px] text-error absolute bottom-1 left-3 dir-ltr">09:12 AM</span>
+<button class="absolute -bottom-6 right-0 flex items-center gap-1 text-[11px] text-primary hover:underline font-label-md">
+  <span class="material-symbols-outlined text-[14px]">translate</span>
+  <span class="">ترجمه</span>
+</button></div>
+</div>
+</div>
+<!-- Sent Message to AI -->
+<div class="flex items-end gap-2 w-max max-w-[70%] self-end flex-row-reverse">
+<div class="flex flex-col gap-1 items-end">
+<span class="font-label-md text-label-md text-on-surface-variant text-xs mr-2">شما</span>
+<div class="bg-surface-container-highest border border-outline p-3 rounded-xl rounded-bl-none shadow-sm relative">
+<p class="font-body-md text-body-md text-on-surface leading-relaxed text-right">@دستیار روال فنی در صورت نقص درهای قطار در ایستگاه چیست؟</p>
+<div class="flex items-center gap-1 mt-1 justify-start">
+<span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1;">done_all</span>
+<span class="font-data-mono text-data-mono text-[10px] text-on-surface-variant dir-ltr">09:14 AM</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Bot Response -->
+<div class="flex items-end gap-2 w-max max-w-[80%]">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary mb-1 shrink-0">
+<span class="material-symbols-outlined text-sm">smart_toy</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md text-primary text-xs ml-2 font-bold">دستیار هوشمند</span>
+<div class="bg-primary-fixed/10 border border-primary/30 p-3 rounded-xl rounded-br-none shadow-sm relative">
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">بر اساس آیین‌نامه فنی خط ۱ (ماده ۴۲):<br>۱. راهبر موظف است ابتدا سیستم درها را ریست کند (۳۰ ثانیه).<br>۲. در صورت عدم رفع مشکل، تکنسین مقیم ایستگاه باید درها را به صورت دستی قفل (Isolate) کند.<br>۳. مسافران واگن مربوطه باید تخلیه شوند.<br>۴. قطار با سرعت محدود (حداکثر ۳۰ کیلومتر بر ساعت) به پایانه منتقل شود.</p>
+<span class="font-data-mono text-data-mono text-[10px] text-on-surface-variant absolute bottom-1 left-3 dir-ltr">09:14 AM</span>
+<button class="absolute -bottom-6 right-0 flex items-center gap-1 text-[11px] text-primary hover:underline font-label-md">
+  <span class="material-symbols-outlined text-[14px]">translate</span>
+  <span class="">ترجمه</span>
+</button></div>
+</div>
+</div>
+<!-- Typing Indicator -->
+<div class="flex items-end gap-2 w-max max-w-[70%] mt-2">
+<img alt="User" class="w-8 h-8 rounded-full object-cover mb-1 shrink-0" data-alt="A station manager standing on a busy metro platform, holding a radio unit, professional demeanor." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB399WyklGk-KdaxH9v1TOzvp6axlVSuxUJF0b-10qk6xmms5cGK-_ZNiQWArUL7bMqppQUk_m5AOViBL71oLDuxbM4MOh3TiRCMF7OF2jAGWlm-x1uqgM1WjTq3sGjKRoSyNws8gtXX8COq0DlmExAxu7BG1Uw2ZeJVbBrGuv4ad1wAlkI5rMBfI08SjD9vt_W0kgLdFAzqURsS282n3jw9ZsxCN2F-0oZf7A8AR-38A60xs7ycPGO_-l3CcUY9XqE5IYJW62GPY8P">
+<div class="bg-surface border border-outline-variant p-3 rounded-xl rounded-br-none shadow-sm flex gap-1 items-center h-10">
+<div class="w-2 h-2 bg-on-surface-variant rounded-full typing-dot"></div>
+<div class="w-2 h-2 bg-on-surface-variant rounded-full typing-dot"></div>
+<div class="w-2 h-2 bg-on-surface-variant rounded-full typing-dot"></div>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="bg-surface border-t border-outline-variant p-4 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+<div class="flex items-end gap-2">
+<button class="p-3 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors shrink-0" title="پیوست فایل">
+<span class="material-symbols-outlined">attach_file</span>
+</button>
+<button class="p-3 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors shrink-0" title="ارسال تصویر">
+<span class="material-symbols-outlined">image</span>
+</button>
+<div class="flex-1 relative">
+<textarea class="w-full bg-surface-container-low border border-outline-variant rounded-xl py-3 px-4 pr-12 font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none max-h-32 overflow-y-auto" placeholder="پیام خود را بنویسید..." rows="1"></textarea>
+<button class="absolute right-2 bottom-2 p-1 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">sentiment_satisfied</span>
+</button>
+</div>
+<button class="p-3 bg-surface-container-high text-on-surface hover:bg-surface-container-highest rounded-full transition-colors shrink-0" title="پیام صوتی">
+<span class="material-symbols-outlined">mic</span>
+</button>
+<button class="p-3 bg-primary text-on-primary hover:bg-surface-tint rounded-full transition-all active:scale-95 shrink-0 shadow-md">
+<span class="material-symbols-outlined rtl:rotate-180">send</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Info Panel (3rd Column) -->
+<aside class="w-80 bg-surface border-r border-outline-variant flex flex-col h-full z-30 shrink-0 hidden lg:flex">
+<div class="p-4 border-b border-outline-variant bg-surface-container-lowest h-[72px] flex items-center shrink-0">
+<h2 class="font-headline-md text-headline-md text-on-surface">اطلاعات گروه</h2>
+</div>
+<div class="flex-1 overflow-y-auto p-4">
+<div class="text-center mb-6">
+<div class="w-20 h-20 mx-auto rounded-DEFAULT bg-primary flex items-center justify-center text-on-primary text-4xl mb-3 shadow-md">
+<span class="material-symbols-outlined text-[40px]">emergency</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">General Line 1</h3>
+<p class="font-body-md text-on-surface-variant text-sm mt-1">کانال هماهنگی عملیات خط ۱</p>
+</div>
+<div class="mb-6">
+<h4 class="font-label-md text-label-md text-on-surface-variant mb-3 flex items-center justify-between">
+<span class="">شرکت‌کنندگان (۴۵)</span>
+<span class="material-symbols-outlined text-sm">search</span>
+</h4>
+<ul class="space-y-3">
+<li class="flex items-center gap-3">
+<img alt="User" class="w-8 h-8 rounded-full object-cover shrink-0" data-alt="A focused dispatcher in the OCC monitoring screens, professional attire, clear resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxl0bQ9GomcYnP5baK1svXowhYf7Iyfe2B9eIVHLnFiEAQFiv5tPXhjXBFovevwREGnvMCSaEtA-XqK_oWso7J_2s7TdssKKlJ7OpcrgYhaDk1DPta8FUCRnmibSr0RkSDivlL63qWT9iG3ZwqofEAZdN3UeI4mNc0h6HmkpEuokWdv5kdj7rFMqFLXlSX5z6iV3VfOvtHWlV7qC_092pOlZNn_JG9u16fe3XaBSdKDZuBtPHN5p2AD9gW4ZQQp-bF7AH6TnN-Lgrm">
+<div class="flex-1 min-w-0">
+<span class="font-label-md text-label-md text-on-surface block truncate">مرکز فرمان (OCC)</span>
+<span class="font-data-mono text-[10px] text-primary block">مدیر گروه</span>
+</div>
+</li>
+<li class="flex items-center gap-3">
+<img alt="User" class="w-8 h-8 rounded-full object-cover shrink-0" data-alt="Close up of a metro train driver, wearing safety vest, looking focused inside the driving cabin." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjh9zwJ4c_KVSxcx-x8SJdpElYPKQbRgzbIVWAxdBBllkORXxZnrZ3BLkfqbgRe5ynH90BgLc-tRaLuLFRu6R_JCYRzWKxTXTFPtEx5xWsdt3bpbZAoNEg_e59-nv7-Cvw0TfWTh5so4HJdtquVi4VZDsYc7P4FMAMU8hJnKO0FdH2zOHkobVIVyn0auJzPSXAtZpuZz92pEoY3lsMErjIZVag_h3KdS14RCuBoeQpoU0ahJmhZYX61ympgLnIlxAqFw9BtCMKY32B">
+<div class="flex-1 min-w-0">
+<span class="font-label-md text-label-md text-on-surface block truncate">شما (ایستگاه تجریش)</span>
+<span class="font-data-mono text-[10px] text-green-600 block">آنلاین</span>
+</div>
+</li>
+<li class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-on-secondary shrink-0">
+<span class="material-symbols-outlined text-sm">engineering</span>
+</div>
+<div class="flex-1 min-w-0">
+<span class="font-label-md text-label-md text-on-surface block truncate">تیم نگهداری خطوط</span>
+<span class="font-data-mono text-[10px] text-on-surface-variant block">آنلاین</span>
+</div>
+</li>
+</ul>
+<button class="text-primary font-label-md text-sm mt-3 hover:underline">نمایش همه...</button>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface-variant mb-3">فایل‌های به اشتراک گذاشته شده</h4>
+<div class="space-y-2">
+<div class="flex items-center gap-3 p-2 rounded-DEFAULT hover:bg-surface-container-low transition-colors cursor-pointer border border-transparent hover:border-outline-variant">
+<div class="w-10 h-10 bg-primary-fixed text-on-primary-fixed flex items-center justify-center rounded-DEFAULT shrink-0">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</div>
+<div class="flex-1 min-w-0">
+<span class="block font-label-md text-sm truncate text-on-surface">Report_Switch_Haghani.pdf</span>
+<span class="block font-data-mono text-xs text-on-surface-variant">2.4 MB • امروز</span>
+</div>
+</div>
+<div class="flex items-center gap-3 p-2 rounded-DEFAULT hover:bg-surface-container-low transition-colors cursor-pointer border border-transparent hover:border-outline-variant">
+<div class="w-10 h-10 bg-surface-container-high text-on-surface flex items-center justify-center rounded-DEFAULT shrink-0">
+<span class="material-symbols-outlined">image</span>
+</div>
+<div class="flex-1 min-w-0">
+<span class="block font-label-md text-sm truncate text-on-surface">Station_Map_v2.jpg</span>
+<span class="block font-data-mono text-xs text-on-surface-variant">1.1 MB • دیروز</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</main>
+</div>
+
+
+</body></html>

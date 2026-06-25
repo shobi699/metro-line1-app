@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>پروتکل‌های قطع اضطراری شبکه برق - خط ۱ مترو تهران</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#ffffff",
+                        "surface": "#f8f9fa",
+                        "on-surface-variant": "#5d3f3b",
+                        "primary-container": "#e1271c",
+                        "on-primary-fixed-variant": "#930002",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#fffbff",
+                        "background": "#f8f9fa",
+                        "on-surface": "#191c1d",
+                        "on-tertiary": "#ffffff",
+                        "tertiary": "#5d5c5b",
+                        "surface-container-highest": "#e1e3e4",
+                        "surface-container-high": "#e7e8e9",
+                        "on-secondary-container": "#656464",
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "primary-fixed": "#ffdad5",
+                        "surface-container-low": "#f3f4f5",
+                        "surface-tint": "#c00205",
+                        "primary": "#bc0004",
+                        "inverse-primary": "#ffb4a9",
+                        "tertiary-fixed": "#e5e2e1",
+                        "surface-dim": "#d9dadb",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#e1e3e4",
+                        "surface-container": "#edeeef",
+                        "secondary-container": "#e4e2e1",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "tertiary-container": "#767474",
+                        "outline": "#926f6a",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "outline-variant": "#e7bdb7",
+                        "inverse-surface": "#2e3132",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#474747",
+                        "secondary-fixed": "#e4e2e1",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "secondary": "#5f5e5e",
+                        "surface-bright": "#f8f9fa",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "on-tertiary-container": "#f7feff",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-primary-fixed": "#410000",
+                        "on-background": "#191c1d",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "32px",
+                        "gutter": "16px",
+                        "touch-target-min": "48px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Vazirmatn"],
+                        "label-md": ["Vazirmatn"],
+                        "headline-md": ["Vazirmatn"],
+                        "headline-lg": ["Vazirmatn"],
+                        "body-md": ["Vazirmatn"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-lg": ["Vazirmatn"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "48px", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .pulse-critical {
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0% { background-color: rgba(186, 26, 26, 0.1); }
+            50% { background-color: rgba(186, 26, 26, 0.3); }
+            100% { background-color: rgba(186, 26, 26, 0.1); }
+        }
+        .data-flash {
+            animation: data-update 1s ease-out;
+        }
+        @keyframes data-update {
+            0% { background-color: #ffdad6; }
+            100% { background-color: transparent; }
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-full py-4 gap-2 bg-surface-container-low dark:bg-surface-container-lowest docked left-0 w-64 border-r border-outline dark:border-outline-variant flat no shadows fixed right-0 z-10 font-label-md text-label-md">
+<div class="px-gutter mb-6 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">subway</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface text-lg leading-tight">Line 1 Control</h2>
+<p class="text-secondary text-xs">Operational Hub</p>
+</div>
+</div>
+<div class="flex flex-col flex-grow w-full px-2">
+<a class="flex items-center gap-3 px-4 h-touch-target-min rounded text-secondary hover:bg-surface-container-high transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 h-touch-target-min rounded text-secondary hover:bg-surface-container-high transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span>Roster</span>
+</a>
+<a class="flex items-center gap-3 px-4 h-touch-target-min rounded text-secondary hover:bg-surface-container-high transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">engineering</span>
+<span>Maintenance</span>
+</a>
+<a class="flex items-center gap-3 px-4 h-touch-target-min rounded bg-primary-container text-on-primary-container border-r-4 border-primary Active: scale-[0.98] transition-transform duration-100" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span>Power Grid</span>
+</a>
+<a class="flex items-center gap-3 px-4 h-touch-target-min rounded text-secondary hover:bg-surface-container-high transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">traffic</span>
+<span>Signaling</span>
+</a>
+</div>
+<div class="mt-auto px-2 border-t border-outline-variant pt-2 w-full">
+<a class="flex items-center gap-3 px-4 h-touch-target-min rounded text-secondary hover:bg-surface-container-high transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">help</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 h-touch-target-min rounded text-secondary hover:bg-surface-container-high transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">history</span>
+<span>Logs</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:mr-64 flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="bg-surface-container-highest dark:bg-surface-dim docked full-width top-0 border-b border-outline dark:border-outline-variant flat no shadows flex justify-between items-center px-margin-desktop w-full h-touch-target-min sticky z-20">
+<div class="flex items-center gap-4">
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary dark:text-on-primary-fixed-variant text-xl tracking-tight">Redline Command</h1>
+<div class="hidden lg:flex items-center bg-surface rounded h-8 px-3 border border-outline-variant">
+<span class="material-symbols-outlined text-secondary text-sm ml-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-48 font-body-md p-0" dir="rtl" placeholder="جستجو در سیستم..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 rounded-full hover:bg-primary-container hover:text-on-primary-container text-on-secondary-container flex items-center justify-center transition-colors duration-150">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 rounded-full hover:bg-primary-container hover:text-on-primary-container text-on-secondary-container flex items-center justify-center transition-colors duration-150">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="w-10 h-10 rounded-full hover:bg-primary-container hover:text-on-primary-container text-on-secondary-container flex items-center justify-center transition-colors duration-150">
+<span class="material-symbols-outlined">wifi_tethering</span>
+</button>
+<div class="h-6 w-px bg-outline-variant mx-2"></div>
+<button class="flex items-center gap-2 px-3 h-10 rounded hover:bg-primary-container hover:text-on-primary-container text-primary font-bold transition-colors duration-150">
+<span class="font-label-md text-label-md">Profile</span>
+<div class="w-8 h-8 rounded-full bg-surface-variant border border-outline overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A small, professional headshot portrait of a serious-looking system administrator in industrial attire, well-lit against a neutral background. High-contrast, sharp focus, corporate industrial aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0Ps3Qs8gKq1HXj6GhUC6zuvYeFXztSIj_P0ryjIiLyOdblbKM51_ERI-81UPZrj7WQkG0xU0COSzAB-U9uGuBac7HaWJe4Kz-WLKohaNVVJ8o1RpVCD068XzZH73J-098INCkuCLtN4kzI3T7kkYPDXM_ZbITw_OZGYUKGWXwz8RU5NGrq2LMta_HAQhl1ac698lO-iVcGI3QkbGNGEzODPnsI2aU_e7UrUh2XHi1oGFN1TH0Pe9hCdKvy9bcqohBdhjzpZMW5Jdh"/>
+</div>
+</button>
+</div>
+</header>
+<div class="flex-1 p-margin-mobile md:p-margin-desktop overflow-y-auto bg-background">
+<div class="mb-6 flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-1">پروتکل‌های قطع اضطراری شبکه برق</h2>
+<p class="font-body-md text-body-md text-secondary">وضعیت فعلی: <span class="text-error font-bold ml-1 pulse-critical px-2 py-1 rounded inline-block">هشدار سطح ۳ - ناپایداری بخش شمالی</span></p>
+</div>
+<div class="font-data-mono text-data-mono text-on-surface-variant flex gap-4">
+<span>زمان محلی: ۱۲:۴۵:۳۳</span>
+<span>تأخیر شبکه: ۱۲ms</span>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Power Grid Diagram (Spans 8 cols on desktop) -->
+<div class="col-span-1 lg:col-span-8 bg-surface-container-lowest border border-outline rounded-xl p-4 flex flex-col relative overflow-hidden">
+<div class="flex justify-between items-center mb-4 border-b border-outline-variant pb-2">
+<h3 class="font-headline-md text-headline-md text-on-surface text-lg">نقشه زنده شبکه برق (خط ۱)</h3>
+<div class="flex gap-2">
+<span class="flex items-center gap-1 font-label-md text-label-md text-secondary text-xs"><div class="w-2 h-2 rounded-full bg-primary-container"></div> فعال</span>
+<span class="flex items-center gap-1 font-label-md text-label-md text-secondary text-xs"><div class="w-2 h-2 rounded-full bg-error"></div> بحرانی</span>
+<span class="flex items-center gap-1 font-label-md text-label-md text-secondary text-xs"><div class="w-2 h-2 rounded-full bg-tertiary"></div> آفلاین</span>
+</div>
+</div>
+<div class="flex-1 bg-surface relative rounded border border-outline-variant p-4 min-h-[400px]">
+<!-- SVG Placeholder for Grid Diagram - keeping it conceptual with HTML/CSS -->
+<div class="absolute inset-0 flex items-center justify-center">
+<!-- Section: North -->
+<div class="absolute top-1/4 right-1/4 w-32 bg-surface-container-lowest border-2 border-error rounded p-2 text-center shadow-sm z-10">
+<p class="font-label-md text-label-md text-on-surface mb-1 border-b border-outline-variant pb-1">پست تجریش</p>
+<p class="font-data-mono text-data-mono text-error font-bold">14.2 MW <span class="material-symbols-outlined text-sm align-middle">warning</span></p>
+</div>
+<!-- Connection Line -->
+<div class="absolute top-[35%] right-[40%] w-32 h-1 bg-error pulse-critical transform -rotate-45 z-0"></div>
+<!-- Section: Central -->
+<div class="absolute top-1/2 right-1/2 transform translate-x-1/2 -translate-y-1/2 w-40 bg-surface-container-lowest border border-outline rounded p-2 text-center shadow-sm z-10">
+<p class="font-label-md text-label-md text-on-surface mb-1 border-b border-outline-variant pb-1">پست مرکزی دروازه دولت</p>
+<p class="font-data-mono text-data-mono text-primary">28.5 MW</p>
+</div>
+<!-- Connection Line -->
+<div class="absolute top-[60%] right-[60%] w-24 h-1 bg-primary transform -rotate-12 z-0"></div>
+<!-- Section: South -->
+<div class="absolute bottom-1/4 left-1/4 w-32 bg-surface-container-lowest border border-outline rounded p-2 text-center shadow-sm z-10">
+<p class="font-label-md text-label-md text-on-surface mb-1 border-b border-outline-variant pb-1">پست شهرری</p>
+<p class="font-data-mono text-data-mono text-primary">12.1 MW</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Emergency Actions (Spans 4 cols on desktop) -->
+<div class="col-span-1 lg:col-span-4 bg-surface-container-lowest border border-outline rounded-xl p-4 flex flex-col">
+<h3 class="font-headline-md text-headline-md text-error flex items-center gap-2 mb-4 text-lg border-b border-error-container pb-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">electric_bolt</span>
+                        فرمان‌های قطع اضطراری
+                    </h3>
+<div class="flex flex-col gap-3">
+<button class="w-full bg-error text-on-error py-4 px-4 rounded-xl flex items-center justify-between hover:bg-on-error-container transition-all active:shadow-inner border border-on-error-container relative overflow-hidden group">
+<div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity"></div>
+<div class="flex items-center gap-3 relative z-10">
+<span class="material-symbols-outlined text-2xl">power_settings_new</span>
+<div class="text-right">
+<span class="block font-label-md text-label-md font-bold text-lg">قطع کل بخش شمالی</span>
+<span class="block font-body-md text-sm opacity-90">ایستگاه‌های تجریش تا میرداماد</span>
+</div>
+</div>
+<span class="material-symbols-outlined relative z-10">chevron_left</span>
+</button>
+<button class="w-full bg-surface-variant text-on-surface py-3 px-4 rounded-lg flex items-center justify-between hover:bg-surface-dim transition-all border border-outline">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary">power_settings_new</span>
+<div class="text-right">
+<span class="block font-label-md text-label-md font-bold">قطع بخش مرکزی</span>
+</div>
+</div>
+</button>
+<button class="w-full bg-surface-variant text-on-surface py-3 px-4 rounded-lg flex items-center justify-between hover:bg-surface-dim transition-all border border-outline">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary">power_settings_new</span>
+<div class="text-right">
+<span class="block font-label-md text-label-md font-bold">قطع بخش جنوبی</span>
+</div>
+</div>
+</button>
+</div>
+<div class="mt-auto pt-6">
+<button class="w-full bg-surface text-error border-2 border-error border-dashed py-4 px-4 rounded-xl flex justify-center items-center gap-2 font-headline-md text-headline-md hover:bg-error-container transition-colors">
+<span class="material-symbols-outlined text-2xl">warning</span>
+                            توقف کامل خط ۱ (SYSTEM SCRAM)
+                        </button>
+</div>
+</div>
+<!-- Load Metrics Table (Spans 6 cols) -->
+<div class="col-span-1 lg:col-span-6 bg-surface-container-lowest border border-outline rounded-xl overflow-hidden flex flex-col">
+<div class="bg-inverse-surface text-inverse-on-surface p-3 border-b border-outline flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md text-base">متریک‌های بار لحظه‌ای</h3>
+<span class="material-symbols-outlined text-sm">update</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-right font-body-md text-body-md">
+<thead class="bg-surface-container-low border-b border-outline text-secondary font-label-md text-label-md text-sm">
+<tr>
+<th class="p-3">پست/سکشن</th>
+<th class="p-3">بار (MW)</th>
+<th class="p-3">ولتاژ (kV)</th>
+<th class="p-3">وضعیت حرارتی</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="bg-surface-bright hover:bg-surface-container-low transition-colors">
+<td class="p-3 font-medium">تجریش - قلهک (S1)</td>
+<td class="p-3 font-data-mono text-error font-bold data-flash" id="metric-1">14.2</td>
+<td class="p-3 font-data-mono">20.1</td>
+<td class="p-3"><span class="bg-error-container text-on-error-container px-2 py-1 rounded text-xs">بحرانی - ۸۵°C</span></td>
+</tr>
+<tr class="bg-surface hover:bg-surface-container-low transition-colors">
+<td class="p-3 font-medium">قلهک - میرداماد (S2)</td>
+<td class="p-3 font-data-mono text-on-surface">11.4</td>
+<td class="p-3 font-data-mono">20.4</td>
+<td class="p-3"><span class="bg-surface-variant text-on-surface px-2 py-1 rounded text-xs">عادی - ۴۵°C</span></td>
+</tr>
+<tr class="bg-surface-bright hover:bg-surface-container-low transition-colors">
+<td class="p-3 font-medium">دروازه دولت - امام خمینی (C1)</td>
+<td class="p-3 font-data-mono text-on-surface">18.5</td>
+<td class="p-3 font-data-mono">20.5</td>
+<td class="p-3"><span class="bg-surface-variant text-on-surface px-2 py-1 rounded text-xs">عادی - ۵۲°C</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Safety Protocols Checklist (Spans 6 cols) -->
+<div class="col-span-1 lg:col-span-6 bg-surface-container-lowest border border-outline rounded-xl p-4 flex flex-col">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4 border-b border-outline-variant pb-2 flex items-center gap-2 text-lg">
+<span class="material-symbols-outlined text-primary">fact_check</span>
+                        چک‌لیست پروتکل‌های ایمنی حین قطعی
+                    </h3>
+<div class="flex-1 space-y-2 overflow-y-auto pr-2">
+<label class="flex items-start gap-3 p-3 bg-surface rounded border border-outline-variant cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="mt-1 w-5 h-5 text-primary bg-surface-container-lowest border-outline rounded focus:ring-primary focus:ring-2" type="checkbox"/>
+<div>
+<span class="block font-label-md text-label-md font-bold text-on-surface">تایید توقف تمام قطارها در ایستگاه‌ها</span>
+<span class="block font-body-md text-sm text-secondary mt-1">ارتباط با مرکز کنترل ترافیک (CTC) جهت اطمینان از عدم حضور قطار در تونل.</span>
+</div>
+</label>
+<label class="flex items-start gap-3 p-3 bg-surface rounded border border-outline-variant cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="mt-1 w-5 h-5 text-primary bg-surface-container-lowest border-outline rounded focus:ring-primary focus:ring-2" type="checkbox"/>
+<div>
+<span class="block font-label-md text-label-md font-bold text-on-surface">فعال‌سازی ژنراتورهای اضطراری ایستگاه‌ها</span>
+<span class="block font-body-md text-sm text-secondary mt-1">تامین روشنایی اضطراری و تهویه مطبوع (هواسازها) در مناطق قطع شده.</span>
+</div>
+</label>
+<label class="flex items-start gap-3 p-3 bg-surface rounded border border-outline-variant cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="mt-1 w-5 h-5 text-primary bg-surface-container-lowest border-outline rounded focus:ring-primary focus:ring-2" type="checkbox"/>
+<div>
+<span class="block font-label-md text-label-md font-bold text-on-surface">ایزولاسیون الکتریکی بخش آسیب‌دیده</span>
+<span class="block font-body-md text-sm text-secondary mt-1">باز کردن بریکرهای بالا دست و پایین دست برای جلوگیری از برگشت جریان.</span>
+</div>
+</label>
+<label class="flex items-start gap-3 p-3 bg-surface rounded border border-outline-variant cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="mt-1 w-5 h-5 text-primary bg-surface-container-lowest border-outline rounded focus:ring-primary focus:ring-2" type="checkbox"/>
+<div>
+<span class="block font-label-md text-label-md font-bold text-on-surface">اعزام تیم نگهداری خط (Line Maintenance)</span>
+<span class="block font-body-md text-sm text-secondary mt-1">ارسال مختصات دقیق خطا به تیم‌های واکنش سریع مستقر در پایانه‌ها.</span>
+</div>
+</label>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simulate real-time data flash
+        setInterval(() => {
+            const el = document.getElementById('metric-1');
+            if(el) {
+                el.classList.remove('data-flash');
+                void el.offsetWidth; // trigger reflow
+                const val = (14.2 + (Math.random() * 0.4 - 0.2)).toFixed(1);
+                el.textContent = val;
+                el.classList.add('data-flash');
+            }
+        }, 3000);
+    </script>
+</body></html>

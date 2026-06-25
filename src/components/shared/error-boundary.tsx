@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, RefreshCw } from 'lucide-react'
 
 interface ErrorBoundaryProps {
   children: React.ReactNode
@@ -42,31 +36,40 @@ export function ErrorBoundary({ children }: ErrorBoundaryProps) {
   if (errorState.error) {
     return (
       <div className="flex flex-1 items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <AlertTriangle className="size-5 text-destructive" />
+        <div className="w-full max-w-md animate-[fadeInUp_0.4s_ease-out]">
+          <style>{`
+            @keyframes fadeInUp {
+              from { opacity: 0; transform: translateY(16px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
+          <div className="rounded-xl border border-critical/30 bg-surface-container shadow-lg p-8 text-center">
+            <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-critical/10">
+              <AlertTriangle className="size-7 text-critical" />
+            </div>
+            <h2 className="font-headline-md text-foreground mb-2">
               خطای سیستمی
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-foreground-muted">
+            </h2>
+            <p className="text-sm text-foreground-muted mb-4">
               متأسفانه خطایی رخ داده است. لطفاً دوباره تلاش کنید.
             </p>
-            <p className="rounded-md bg-background-subtle p-3 font-mono text-xs text-foreground-muted">
-              {errorState.error.message}
-            </p>
+            <div className="mb-4 rounded-lg border border-outline-variant bg-surface-container-low p-3">
+              <p className="font-data-mono text-xs text-foreground-muted leading-relaxed" dir="ltr">
+                {errorState.error.message}
+              </p>
+            </div>
             <Button
-              className="w-full"
+              className="w-full h-11 gap-2"
               onClick={() => {
                 setErrorState({ error: null })
                 window.location.reload()
               }}
             >
+              <RefreshCw className="size-4" />
               بارگذاری مجدد
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     )
   }

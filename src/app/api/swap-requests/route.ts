@@ -2,8 +2,17 @@ import { NextResponse } from 'next/server'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
 import { swapRequestSchema } from '@/server/dto/roster'
 import { createSwapRequest } from '@/server/modules/swap/service'
+import { getSettingValue } from '@/server/modules/settings/service'
 
 export async function POST(request: Request) {
+  const allowSwapRequests = await getSettingValue('shifts.allowSwapRequests', true)
+  if (!allowSwapRequests) {
+    return NextResponse.json(
+      { error: 'ثبت درخواست تعویض شیفت در حال حاضر توسط مدیریت غیرفعال شده است.' },
+      { status: 403 }
+    )
+  }
+
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>مدیریت گواهینامه‌های خط ۱ - سامانه مدیریت گواهینامه‌های خط ۱</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "outline-variant": "#e7bdb7",
+                      "on-surface-variant": "#5d3f3b",
+                      "on-secondary-fixed-variant": "#474747",
+                      "on-primary-container": "#fffbff",
+                      "on-surface": "#191c1d",
+                      "surface-tint": "#c00205",
+                      "on-error": "#ffffff",
+                      "tertiary": "#5d5c5b",
+                      "on-tertiary": "#ffffff",
+                      "on-primary": "#ffffff",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-error-container": "#93000a",
+                      "error-container": "#ffdad6",
+                      "primary-fixed-dim": "#ffb4a9",
+                      "surface-dim": "#d9dadb",
+                      "on-background": "#191c1d",
+                      "primary-container": "#e1271c",
+                      "on-tertiary-container": "#f7feff",
+                      "inverse-primary": "#ffb4a9",
+                      "secondary-container": "#e4e2e1",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "inverse-on-surface": "#f0f1f2",
+                      "outline": "#926f6a",
+                      "background": "#f8f9fa",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "surface-variant": "#e1e3e4",
+                      "error": "#ba1a1a",
+                      "tertiary-fixed": "#e5e2e1",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container-low": "#f3f4f5",
+                      "primary-fixed": "#ffdad5",
+                      "surface-container": "#edeeef",
+                      "secondary-fixed": "#e4e2e1",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "inverse-surface": "#2e3132",
+                      "primary": "#bc0004",
+                      "surface-container-high": "#e7e8e9",
+                      "surface": "#f8f9fa",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-container": "#656464",
+                      "surface-bright": "#f8f9fa",
+                      "on-primary-fixed-variant": "#930002",
+                      "secondary": "#5f5e5e",
+                      "on-primary-fixed": "#410000",
+                      "tertiary-container": "#767474",
+                      "on-tertiary-fixed-variant": "#474646"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "margin-desktop": "32px",
+                      "unit": "4px",
+                      "touch-target-min": "48px",
+                      "gutter": "16px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg": [
+                              "Vazirmatn"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg-mobile": [
+                              "Vazirmatn"
+                      ],
+                      "label-md": [
+                              "Vazirmatn"
+                      ],
+                      "body-md": [
+                              "Vazirmatn"
+                      ],
+                      "body-lg": [
+                              "Vazirmatn"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "48px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "data-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        @keyframes pulse-live {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .animate-pulse-live {
+            animation: pulse-live 2s infinite;
+        }
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Layout resets */
+        html, body {
+            height: 100%;
+            margin: 0;
+            background-color: #f8f9fa; /* background */
+            color: #191c1d; /* on-surface */
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased overflow-hidden flex flex-col md:flex-row">
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex flex-col h-full py-4 gap-unit right-0 border-l border-outline-variant bg-surface-container docked left-0 w-64 z-40 shrink-0">
+<!-- Header -->
+<div class="px-gutter mb-6 flex flex-col items-center">
+<div class="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center mb-2 overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A stylized, highly technical logo representing a metro transport system. It features intersecting metallic tracks and a bold red central node, set against a pristine white background. The aesthetic is industrial, precise, and authoritative, matching a command center interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpb7izjjbWc1kQtUDb7TunlK-Fno1qV4hdu4OAvtFERFW8Ig41avHiyY554_7tgpTFhVCMW-uYYoLFOET6PCXyjmbpivWTQujEnpAZFDwINKMDBL_2dBOFESnzDSWTZjCci3leYAR59IZ8tenjPuc4ICAveFREZOtTm2E22gGtF3fbzEMTM6Q0uAVZu2ACy4XxxvYt_mnJe7wS6rOmDjMupLb0gosZR2j_YNr-axxLcMjvdDJuU-P_tjWNielUD9xgoNfg8HM8K7pD"/>
+</div>
+<div class="font-headline-lg text-headline-lg text-primary text-center">مدیریت عملیات</div>
+<div class="font-label-md text-label-md text-on-surface-variant mt-1 text-center">خط ۱ - مرکز فرمان</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-secondary-container transition-all duration-200 ease-in-out cursor-pointer active:opacity-80" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>داشبورد عملیاتی</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container rounded-lg font-bold font-label-md text-label-md transition-all duration-200 ease-in-out cursor-pointer active:opacity-80" href="#">
+<span class="material-symbols-outlined fill" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span>صدور گواهینامه</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-secondary-container transition-all duration-200 ease-in-out cursor-pointer active:opacity-80" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span>مدیریت پرسنل</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-secondary-container transition-all duration-200 ease-in-out cursor-pointer active:opacity-80" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span>گزارشات فنی</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-secondary-container transition-all duration-200 ease-in-out cursor-pointer active:opacity-80" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>مرکز اسناد</span>
+</a>
+</div>
+<!-- CTA -->
+<div class="px-4 mt-auto mb-4">
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-3 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-surface-tint transition-colors shadow-sm active:shadow-inner active:opacity-80">
+<span class="material-symbols-outlined">add_circle</span>
+<span>ثبت مدرک جدید</span>
+</button>
+</div>
+<!-- Footer -->
+<div class="px-4 mt-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-secondary-container transition-all duration-200 ease-in-out cursor-pointer active:opacity-80" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>خروج</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col h-full overflow-hidden w-full relative">
+<!-- TopAppBar (Desktop) -->
+<header class="hidden md:flex flex-row-reverse justify-between items-center px-margin-desktop w-full h-touch-target-min z-50 bg-surface docked full-width top-0 border-b border-outline-variant shrink-0">
+<!-- Brand / Title -->
+<div class="text-headline-md font-headline-md font-bold text-primary flex items-center">
+                سامانه مدیریت گواهینامه‌های خط ۱
+            </div>
+<!-- Trailing Icons -->
+<div class="flex items-center gap-4 flex-row-reverse">
+<button class="text-primary cursor-pointer active:opacity-80 hover:bg-surface-container-high transition-colors p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-primary cursor-pointer active:opacity-80 hover:bg-surface-container-high transition-colors p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="text-primary cursor-pointer active:opacity-80 hover:bg-surface-container-high transition-colors p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- TopAppBar (Mobile) -->
+<header class="md:hidden flex flex-row-reverse justify-between items-center px-margin-mobile w-full h-[56px] z-50 bg-surface border-b border-outline-variant shrink-0">
+<div class="text-headline-lg-mobile font-headline-lg-mobile font-bold text-primary truncate max-w-[70%]">
+                مدیریت گواهینامه‌ها
+            </div>
+<div class="flex items-center gap-2 flex-row-reverse">
+<button class="text-primary p-2">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-primary p-2">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</header>
+<!-- Scrollable Content Canvas -->
+<main class="flex-1 overflow-y-auto bg-surface-container-low p-margin-mobile md:p-margin-desktop pb-[80px] md:pb-margin-desktop">
+<!-- Page Header & Global Actions -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">صدور و پایش گواهینامه‌ها</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">نمای کلی وضعیت مدارک صلاحیت حرفه‌ای پرسنل خط ۱</p>
+</div>
+<button class="w-full md:w-auto bg-primary text-on-primary font-label-md text-label-md py-3 px-6 rounded-lg flex items-center justify-center gap-2 hover:bg-surface-tint transition-colors shadow-sm active:shadow-inner">
+<span class="material-symbols-outlined">workspace_premium</span>
+<span>صدور گواهینامه جدید</span>
+</button>
+</div>
+<!-- KPI Summary Bento Grid -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+<!-- KPI 1 -->
+<div class="bg-surface rounded-xl p-4 border border-outline-variant shadow-sm flex flex-col justify-between h-[120px]">
+<div class="flex justify-between items-start">
+<div class="font-label-md text-label-md text-on-surface-variant">کل صادر شده</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">badge</span>
+</div>
+</div>
+<div class="font-data-mono text-[32px] font-bold text-on-surface leading-none mt-2 flex items-baseline gap-2">
+                        1,452
+                        <span class="text-[12px] font-normal text-secondary font-body-md">+12 این ماه</span>
+</div>
+</div>
+<!-- KPI 2 -->
+<div class="bg-surface rounded-xl p-4 border border-outline-variant shadow-sm flex flex-col justify-between h-[120px]">
+<div class="flex justify-between items-start">
+<div class="font-label-md text-label-md text-on-surface-variant">فعال</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-[#1B5E20]">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</div>
+</div>
+<div class="font-data-mono text-[32px] font-bold text-on-surface leading-none mt-2 flex items-baseline gap-2">
+                        1,280
+                        <span class="text-[12px] font-normal text-[#1B5E20] font-body-md">88% کل</span>
+</div>
+</div>
+<!-- KPI 3 -->
+<div class="bg-error-container rounded-xl p-4 border border-outline-variant shadow-sm flex flex-col justify-between h-[120px] relative overflow-hidden">
+<div class="absolute inset-0 bg-primary opacity-5 animate-pulse-live"></div>
+<div class="flex justify-between items-start relative z-10">
+<div class="font-label-md text-label-md text-on-error-container font-bold">در شرف انقضا</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-lowest flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+</div>
+</div>
+<div class="font-data-mono text-[32px] font-bold text-on-error-container leading-none mt-2 flex items-baseline gap-2 relative z-10">
+                        45
+                        <span class="text-[12px] font-normal text-on-error-container font-body-md">کمتر از ۳۰ روز</span>
+</div>
+</div>
+<!-- KPI 4 -->
+<div class="bg-surface rounded-xl p-4 border border-outline-variant shadow-sm flex flex-col justify-between h-[120px]">
+<div class="flex justify-between items-start">
+<div class="font-label-md text-label-md text-on-surface-variant">در انتظار تایید</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">pending_actions</span>
+</div>
+</div>
+<div class="font-data-mono text-[32px] font-bold text-on-surface leading-none mt-2 flex items-baseline gap-2">
+                        12
+                        <span class="text-[12px] font-normal text-secondary font-body-md">نیاز به بررسی</span>
+</div>
+</div>
+</div>
+<!-- Search and Filter Bar -->
+<div class="bg-surface rounded-xl border border-outline-variant shadow-sm p-4 mb-6 flex flex-col md:flex-row gap-4 items-center">
+<div class="relative w-full md:flex-1">
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border-outline-variant rounded-lg pl-4 pr-10 py-2.5 font-body-md text-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary transition-shadow" placeholder="جستجو بر اساس نام، شناسه پرسنلی..." type="text"/>
+</div>
+<div class="w-full md:w-auto flex gap-2">
+<select class="flex-1 md:w-48 bg-surface-container-low border-outline-variant rounded-lg px-4 py-2.5 font-body-md text-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary">
+<option value="">نقش سازمانی (همه)</option>
+<option value="driver">راهبر قطار</option>
+<option value="tech">تکنسین فنی</option>
+<option value="control">اپراتور فرمان</option>
+</select>
+<button class="bg-surface-container-high text-on-surface p-2.5 rounded-lg border border-outline-variant flex items-center justify-center hover:bg-secondary-container transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Main Data Table -->
+<div class="bg-surface rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-right border-collapse">
+<thead>
+<tr class="bg-[#2D2D2D] text-white">
+<th class="p-4 font-label-md text-label-md whitespace-nowrap">شناسه پرسنلی</th>
+<th class="p-4 font-label-md text-label-md whitespace-nowrap">نام و نام خانوادگی</th>
+<th class="p-4 font-label-md text-label-md whitespace-nowrap">نقش / سمت</th>
+<th class="p-4 font-label-md text-label-md whitespace-nowrap">وضعیت گواهینامه</th>
+<th class="p-4 font-label-md text-label-md whitespace-nowrap">تاریخ صدور</th>
+<th class="p-4 font-label-md text-label-md whitespace-nowrap">تاریخ انقضا</th>
+<th class="p-4 font-label-md text-label-md whitespace-nowrap text-center">عملیات</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1 (Active) -->
+<tr class="hover:bg-surface-container-low transition-colors bg-[#F1F1F1]">
+<td class="p-4 font-data-mono text-data-mono text-on-surface">ID-10482</td>
+<td class="p-4 font-body-md text-body-md text-on-surface font-semibold">علیرضا محمدی</td>
+<td class="p-4 font-body-md text-body-md text-on-surface-variant">راهبر قطار - پایه ۱</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#E8F5E9] text-[#1B5E20] border border-[#A5D6A7] font-label-md text-[12px]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#1B5E20]"></span>
+                                        فعال
+                                    </span>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface-variant">1401/05/12</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface-variant">1403/05/12</td>
+<td class="p-4 flex gap-2 justify-center">
+<button class="p-1.5 text-secondary hover:text-primary hover:bg-surface-container-high rounded transition-colors" title="مشاهده">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 (Expiring Soon) -->
+<tr class="hover:bg-surface-container-low transition-colors bg-surface">
+<td class="p-4 font-data-mono text-data-mono text-on-surface">ID-10893</td>
+<td class="p-4 font-body-md text-body-md text-on-surface font-semibold">سعید رضایی</td>
+<td class="p-4 font-body-md text-body-md text-on-surface-variant">تکنسین برق - سطح ۲</td>
+<td class="p-4 relative">
+<div class="absolute inset-0 bg-error opacity-[0.03] animate-pulse-live pointer-events-none"></div>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-error-container text-on-error-container border border-error font-label-md text-[12px] relative z-10">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+                                        در شرف انقضا (۱۲ روز)
+                                    </span>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface-variant">1400/08/25</td>
+<td class="p-4 font-data-mono text-data-mono text-error font-bold">1402/08/25</td>
+<td class="p-4 flex gap-2 justify-center">
+<button class="p-1.5 text-secondary hover:text-primary hover:bg-surface-container-high rounded transition-colors" title="مشاهده">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="px-3 py-1.5 bg-primary text-on-primary text-[12px] font-label-md rounded shadow-sm hover:bg-surface-tint transition-colors">
+                                        تمدید
+                                    </button>
+</td>
+</tr>
+<!-- Row 3 (Expired) -->
+<tr class="hover:bg-surface-container-low transition-colors bg-[#F1F1F1]">
+<td class="p-4 font-data-mono text-data-mono text-on-surface">ID-09341</td>
+<td class="p-4 font-body-md text-body-md text-on-surface font-semibold">حسین کریمی</td>
+<td class="p-4 font-body-md text-body-md text-on-surface-variant">اپراتور سیگنالینگ</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-highest text-on-surface border border-outline font-label-md text-[12px]">
+<span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>
+                                        منقضی شده
+                                    </span>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface-variant opacity-60">1399/11/05</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface-variant opacity-60 line-through">1401/11/05</td>
+<td class="p-4 flex gap-2 justify-center">
+<button class="p-1.5 text-secondary hover:text-primary hover:bg-surface-container-high rounded transition-colors" title="مشاهده">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="px-3 py-1.5 bg-surface-container text-on-surface border border-outline-variant text-[12px] font-label-md rounded hover:bg-surface-container-high transition-colors">
+                                        صدور مجدد
+                                    </button>
+</td>
+</tr>
+<!-- Row 4 (Pending) -->
+<tr class="hover:bg-surface-container-low transition-colors bg-surface">
+<td class="p-4 font-data-mono text-data-mono text-on-surface">ID-11205</td>
+<td class="p-4 font-body-md text-body-md text-on-surface font-semibold">امیرحسین عباسی</td>
+<td class="p-4 font-body-md text-body-md text-on-surface-variant">راهبر آموزشی</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFF8E1] text-[#F57F17] border border-[#FFE082] font-label-md text-[12px]">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                                        در انتظار بررسی مدارک
+                                    </span>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface-variant">-</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface-variant">-</td>
+<td class="p-4 flex gap-2 justify-center">
+<button class="p-1.5 text-secondary hover:text-primary hover:bg-surface-container-high rounded transition-colors" title="بررسی پرونده">
+<span class="material-symbols-outlined text-[20px]">fact_check</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="border-t border-outline-variant p-4 flex justify-between items-center bg-surface-container-lowest">
+<span class="font-body-md text-[14px] text-on-surface-variant">نمایش ۱ تا ۴ از ۱,۴۵۲ رکورد</span>
+<div class="flex gap-1">
+<button class="w-8 h-8 rounded border border-outline-variant flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors disabled:opacity-50">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+<button class="w-8 h-8 rounded bg-primary text-on-primary flex items-center justify-center font-data-mono text-[14px]">1</button>
+<button class="w-8 h-8 rounded border border-outline-variant flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors font-data-mono text-[14px]">2</button>
+<button class="w-8 h-8 rounded border border-outline-variant flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors font-data-mono text-[14px]">3</button>
+<span class="w-8 h-8 flex items-center justify-center text-on-surface-variant">...</span>
+<button class="w-8 h-8 rounded border border-outline-variant flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors disabled:opacity-50">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 md:hidden bg-surface-container-highest border-t border-outline-variant shadow-lg rounded-t-xl shrink-0">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high scale-95 active:scale-90 transition-transform p-2 rounded-lg" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-md text-label-md text-[10px] mt-1">خانه</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary text-on-primary rounded-full px-4 py-1 scale-95 active:scale-90 transition-transform shadow-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">badge</span>
+<span class="font-label-md text-label-md text-[10px] mt-1 font-bold">گواهینامه‌ها</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high scale-95 active:scale-90 transition-transform p-2 rounded-lg" href="#">
+<span class="material-symbols-outlined">qr_code_scanner</span>
+<span class="font-label-md text-label-md text-[10px] mt-1">اسکن QR</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high scale-95 active:scale-90 transition-transform p-2 rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md text-[10px] mt-1">تنظیمات</span>
+</a>
+</nav>
+</body></html>

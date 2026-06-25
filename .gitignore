@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+mobile/node_modules
+**/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -41,3 +43,6 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# uploaded media (local storage driver)
+/public/uploads

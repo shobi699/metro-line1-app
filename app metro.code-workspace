@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "app metro",
+			"path": "../../../app metro"
+		},
+		{
+			"name": "prisma",
+			"path": "prisma"
+		}
+	],
+	"settings": {}
+}

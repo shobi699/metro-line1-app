@@ -1,0 +1,368 @@
+<!DOCTYPE html><html dir="rtl" lang="fa"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>داشبورد مدیریت - خط ۱ مترو تهران</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#ffb4a9",
+                        "surface-tint": "#c00205",
+                        "tertiary": "#5d5c5b",
+                        "on-primary-fixed": "#410000",
+                        "surface-container": "#edeeef",
+                        "on-tertiary-container": "#f7feff",
+                        "surface-dim": "#d9dadb",
+                        "primary": "#bc0004",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#e4e2e1",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "secondary-container": "#e4e2e1",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-container": "#767474",
+                        "surface-container-low": "#f3f4f5",
+                        "background": "#f8f9fa",
+                        "primary-fixed": "#ffdad5",
+                        "error-container": "#ffdad6",
+                        "outline": "#926f6a",
+                        "on-surface": "#191c1d",
+                        "inverse-surface": "#2e3132",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed-variant": "#474747",
+                        "tertiary-fixed": "#e5e2e1",
+                        "primary-container": "#e1271c",
+                        "surface-container-high": "#e7e8e9",
+                        "on-surface-variant": "#5d3f3b",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#ffb4a9",
+                        "on-primary-fixed-variant": "#930002",
+                        "on-secondary-container": "#656464",
+                        "surface-container-highest": "#e1e3e4",
+                        "inverse-on-surface": "#f0f1f2",
+                        "secondary": "#5f5e5e",
+                        "error": "#ba1a1a",
+                        "outline-variant": "#e7bdb7",
+                        "surface": "#f8f9fa",
+                        "surface-variant": "#e1e3e4",
+                        "on-background": "#191c1d",
+                        "on-primary-container": "#fffbff",
+                        "surface-bright": "#f8f9fa"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "32px",
+                        "gutter": "16px",
+                        "touch-target-min": "48px",
+                        "margin-mobile": "16px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Vazirmatn"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Vazirmatn"],
+                        "headline-md": ["Vazirmatn"],
+                        "body-lg": ["Vazirmatn"],
+                        "label-md": ["Vazirmatn"],
+                        "headline-lg": ["Vazirmatn"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "48px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .pulse-live {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md rtl pb-8">
+<!-- TopNavBar -->
+<nav class="bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline docked full-width top-0 flat no shadows flex flex-row-reverse justify-between items-center w-full px-margin-desktop z-50 h-16 sticky">
+<div class="flex items-center gap-gutter">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">Tehran Metro Line 1</span>
+</div>
+<div class="flex items-center gap-gutter">
+<span class="material-symbols-outlined text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors duration-200 cursor-pointer p-2 rounded-full" style="font-variation-settings: &quot;FILL&quot; 0;">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors duration-200 cursor-pointer p-2 rounded-full" style="font-variation-settings: &quot;FILL&quot; 0;">person_search</span>
+<span class="material-symbols-outlined text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors duration-200 cursor-pointer p-2 rounded-full" style="font-variation-settings: &quot;FILL&quot; 0;">account_circle</span>
+</div>
+</nav>
+<div class="flex">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col bg-surface-container-low dark:bg-surface-dim border-l border-outline-variant dark:border-outline fixed right-0 top-16 h-[calc(100vh-4rem)] w-64 z-40 rtl pt-8">
+<div class="px-gutter mb-8">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Command Center</h2>
+<p class="font-label-md text-label-md text-on-surface-variant">Metro Line 1 Ops</p>
+</div>
+<nav class="flex flex-col gap-2 px-gutter">
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary font-bold rounded-lg scale-95 active:scale-90 hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest rounded-lg scale-95 active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-label-md text-label-md">Roster</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest rounded-lg scale-95 active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined">contact_phone</span>
+<span class="font-label-md text-label-md">Phonebook</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest rounded-lg scale-95 active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined">campaign</span>
+<span class="font-label-md text-label-md">Bulletins</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest rounded-lg scale-95 active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined">forum</span>
+<span class="font-label-md text-label-md">Chat</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest rounded-lg scale-95 active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="font-label-md text-label-md">Training</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-highest rounded-lg scale-95 active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">تنظیمات</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:pr-64 p-margin-mobile md:p-margin-desktop space-y-gutter">
+<!-- Dashboard Header & Status Widget -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-gutter mb-8">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">داشبورد عملیات</h1>
+<p class="text-on-surface-variant">نمای کلی وضعیت خط ۱ مترو</p>
+</div>
+<div class="bg-surface-container-highest px-6 py-3 rounded-xl border border-outline flex items-center gap-4 shadow-sm">
+<div class="w-3 h-3 rounded-full bg-primary pulse-live"></div>
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant block">وضعیت فعلی خط</span>
+<span class="font-headline-md text-headline-md text-primary font-bold">عملیات عادی</span>
+</div>
+</div>
+</div>
+<!-- Bento Grid: Stats Overview -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Stat Card 1 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline shadow-sm flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-primary text-3xl">groups</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant bg-surface-container-low px-2 py-1 rounded">۸۴٪ فعال</span>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-1">کل پرسنل</h3>
+<p class="font-headline-lg text-headline-lg text-on-surface font-bold">۱,۲۴۵</p>
+</div>
+</div>
+<!-- Stat Card 2 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline shadow-sm flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-secondary text-3xl">badge</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant bg-surface-container-low px-2 py-1 rounded">در جریان</span>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-1">شیفت‌های فعال</h3>
+<p class="font-headline-lg text-headline-lg text-on-surface font-bold">۳۴۲</p>
+</div>
+</div>
+<!-- Stat Card 3 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline shadow-sm flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-tertiary text-3xl">swap_horizontal_circle</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant bg-surface-container-low px-2 py-1 rounded text-primary">نیاز به بررسی</span>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-1">درخواست جابجایی</h3>
+<p class="font-headline-lg text-headline-lg text-on-surface font-bold">۲۸</p>
+</div>
+</div>
+<!-- Stat Card 4 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline shadow-sm flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-error text-3xl">build</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant bg-error-container text-on-error-container px-2 py-1 rounded">فوری</span>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-1">تیکت‌های نقص فنی</h3>
+<p class="font-headline-lg text-headline-lg text-on-surface font-bold">۵</p>
+</div>
+</div>
+</div>
+<!-- Bento Grid: Map & Actions -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Live Map View (Spans 2 columns) -->
+<div class="lg:col-span-2 bg-surface-container-lowest rounded-xl border border-outline shadow-sm p-6">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md text-on-surface font-bold">نمای زنده خط ۱</h3>
+<button class="flex items-center gap-2 text-primary font-label-md text-label-md hover:bg-surface-container p-2 rounded transition-colors">
+<span class="material-symbols-outlined text-sm">refresh</span> بروزرسانی
+                        </button>
+</div>
+<!-- Simplified Linear Map -->
+<div class="relative py-8 px-4 overflow-x-auto">
+<!-- Map Line -->
+<div class="absolute top-1/2 left-4 right-4 h-1 bg-surface-variant -translate-y-1/2 rounded-full z-0"></div>
+<div class="absolute top-1/2 left-4 right-[25%] h-1 bg-primary -translate-y-1/2 rounded-full z-0 pulse-live"></div>
+<!-- Stations -->
+<div class="relative z-10 flex justify-between min-w-[600px]">
+<!-- Tajrish -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-4 h-4 rounded-full border-2 border-primary bg-surface-container-lowest group-hover:scale-125 transition-transform"></div>
+<span class="font-data-mono text-data-mono text-on-surface">تجریش</span>
+<span class="text-[10px] text-on-surface-variant">قطار ۱۲</span>
+</div>
+<!-- Shahid Haqani -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-4 h-4 rounded-full border-2 border-primary bg-surface-container-lowest group-hover:scale-125 transition-transform"></div>
+<span class="font-data-mono text-data-mono text-on-surface">حقانی</span>
+<span class="text-[10px] text-on-surface-variant">قطار ۰۵</span>
+</div>
+<!-- Imam Khomeini -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-4 h-4 rounded-full border-2 border-primary bg-primary group-hover:scale-125 transition-transform shadow-[0_0_8px_rgba(188,0,4,0.6)] pulse-live"></div>
+<span class="font-data-mono text-data-mono text-on-surface font-bold">امام خمینی</span>
+<span class="text-[10px] text-primary">توقف</span>
+</div>
+<!-- Shahr-e Rey -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-4 h-4 rounded-full border-2 border-surface-variant bg-surface-container-lowest group-hover:scale-125 transition-transform"></div>
+<span class="font-data-mono text-data-mono text-on-surface-variant">شهر ری</span>
+<span class="text-[10px] text-on-surface-variant">خالی</span>
+</div>
+<!-- Kahrizak -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-4 h-4 rounded-full border-2 border-surface-variant bg-surface-container-lowest group-hover:scale-125 transition-transform"></div>
+<span class="font-data-mono text-data-mono text-on-surface-variant">کهریزک</span>
+<span class="text-[10px] text-on-surface-variant">پایانه</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline shadow-sm p-6 flex flex-col gap-4">
+<h3 class="font-headline-md text-headline-md text-on-surface font-bold mb-2">عملیات سریع</h3>
+<button class="w-full bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md py-4 px-4 rounded-lg flex items-center justify-center gap-2 shadow-sm transition-colors active:shadow-inner active:scale-[0.98]">
+<span class="material-symbols-outlined">warning</span>
+                        صدور بخشنامه اضطراری
+                    </button>
+<button class="w-full border border-secondary text-secondary hover:bg-surface-container font-label-md text-label-md py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors active:shadow-inner active:scale-[0.98]">
+<span class="material-symbols-outlined">cell_tower</span>
+                        پخش پیام به راهبران
+                    </button>
+<button class="w-full border border-secondary text-secondary hover:bg-surface-container font-label-md text-label-md py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors active:shadow-inner active:scale-[0.98]">
+<span class="material-symbols-outlined">how_to_reg</span>
+                        تایید پرسنل جدید (۱۲)
+                    </button>
+</div>
+</div>
+<!-- Recent Bulletins Table -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline shadow-sm overflow-hidden">
+<div class="p-6 border-b border-outline bg-surface-container-low flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md text-on-surface font-bold">آخرین بخشنامه‌های ایمنی</h3>
+<button class="text-primary font-label-md text-label-md hover:underline">مشاهده همه</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-right">
+<thead class="bg-inverse-surface text-on-primary font-label-md text-label-md">
+<tr>
+<th class="py-3 px-6 font-medium">شماره</th>
+<th class="py-3 px-6 font-medium">موضوع</th>
+<th class="py-3 px-6 font-medium">تاریخ انتشار</th>
+<th class="py-3 px-6 font-medium">درصد بازدید</th>
+<th class="py-3 px-6 font-medium">وضعیت</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<tr class="border-b border-surface-variant hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-6 font-data-mono text-data-mono text-on-surface-variant">B-1402-09</td>
+<td class="py-4 px-6 font-medium">دستورالعمل ترمز اضطراری پاییزه</td>
+<td class="py-4 px-6 font-data-mono text-data-mono">۱۴۰۲/۰۸/۱۵</td>
+<td class="py-4 px-6">
+<div class="flex items-center gap-2">
+<div class="w-full bg-surface-variant rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 92%"></div>
+</div>
+<span class="font-data-mono text-data-mono text-sm">۹۲٪</span>
+</div>
+</td>
+<td class="py-4 px-6"><span class="bg-surface-container-highest px-2 py-1 rounded text-sm">فعال</span></td>
+</tr>
+<tr class="border-b border-surface-variant bg-[#F1F1F1] dark:bg-surface-container-highest hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-6 font-data-mono text-data-mono text-on-surface-variant">B-1402-08</td>
+<td class="py-4 px-6 font-medium">بروزرسانی پروتکل‌های ارتباط رادیویی</td>
+<td class="py-4 px-6 font-data-mono text-data-mono">۱۴۰۲/۰۸/۰۲</td>
+<td class="py-4 px-6">
+<div class="flex items-center gap-2">
+<div class="w-full bg-surface-variant rounded-full h-2">
+<div class="bg-secondary h-2 rounded-full" style="width: 100%"></div>
+</div>
+<span class="font-data-mono text-data-mono text-sm">۱۰۰٪</span>
+</div>
+</td>
+<td class="py-4 px-6"><span class="bg-surface-container-low px-2 py-1 rounded text-sm text-on-surface-variant">آرشیو</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-6 font-data-mono text-data-mono text-on-surface-variant">S-1402-01</td>
+<td class="py-4 px-6 font-medium text-error">اخطار محدودیت سرعت محدوده دروازه دولت</td>
+<td class="py-4 px-6 font-data-mono text-data-mono">۱۴۰۲/۰۸/۱۶</td>
+<td class="py-4 px-6">
+<div class="flex items-center gap-2">
+<div class="w-full bg-surface-variant rounded-full h-2">
+<div class="bg-error h-2 rounded-full" style="width: 45%"></div>
+</div>
+<span class="font-data-mono text-data-mono text-sm">۴۵٪</span>
+</div>
+</td>
+<td class="py-4 px-6"><span class="bg-error-container text-on-error-container px-2 py-1 rounded text-sm font-bold pulse-live">جدید</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="bg-inverse-surface dark:bg-surface-container-lowest text-primary-fixed dark:text-primary font-data-mono text-data-mono docked full-width bottom-0 border-t-2 border-primary shadow-lg fixed bottom-0 left-0 w-full z-50 h-8 flex items-center justify-between px-4 overflow-hidden">
+<div class="flex items-center gap-4">
+<span class="font-bold text-primary-fixed">Live Line 1 Status: Normal Operations | Signal: OK | Network: Stable</span>
+<div class="w-2 h-2 rounded-full bg-green-500 animate-pulse-slow"></div>
+</div>
+<div class="flex items-center gap-4">
+<a class="text-surface-variant hover:text-primary-fixed transition-colors" href="#">Operational Dashboard</a>
+<a class="text-surface-variant hover:text-primary-fixed transition-colors" href="#">TSR Alerts</a>
+</div>
+</footer>
+
+
+</body></html>

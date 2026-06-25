@@ -1,0 +1,34 @@
+PrismaClientKnownRequestError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.deleteMany()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__1-z_1v7._.js:3227:166
+
+  3224     }
+  3225 });
+  3226 // Now delete the non-admin users safely
+→ 3227 const deleteRes = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.deleteMany(
+Foreign key constraint violated on the foreign key
+    at zr.handleRequestError (D:\zanjirenabodii\app\metro-line1-app\node_modules\@prisma\client\runtime\client.js:65:8286)
+    at zr.handleAndLogRequestError (D:\zanjirenabodii\app\metro-line1-app\node_modules\@prisma\client\runtime\client.js:65:7581)
+    at zr.request (D:\zanjirenabodii\app\metro-line1-app\node_modules\@prisma\client\runtime\client.js:65:7288)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async a (D:\zanjirenabodii\app\metro-line1-app\node_modules\@prisma\client\runtime\client.js:75:6862)
+    at async GET (D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__1-z_1v7._.js:3227:27)
+    at async AppRouteRouteModule.do (D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:40131)
+    at async AppRouteRouteModule.handle (D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:47411)
+    at async responseGenerator (D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\node_modules_next_1b-y3oj._.js:16549:38)
+    at async AppRouteRouteModule.handleResponse (D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:228552)
+    at async handleResponse (D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\node_modules_next_1b-y3oj._.js:16612:32)
+    at async Module.handler (D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\node_modules_next_1b-y3oj._.js:16666:13)
+    at async DevServer.renderToResponseWithComponentsImpl (D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\server\base-server.js:1462:9)
+    at async DevServer.renderPageComponent (D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\server\base-server.js:1514:24)
+    at async DevServer.renderToResponseImpl (D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\server\base-server.js:1564:32)
+    at async DevServer.pipeImpl (D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\server\base-server.js:1044:25)
+    at async NextNodeServer.handleCatchallRenderRequest (D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\server\next-server.js:338:17)
+    at async DevServer.handleRequestImpl (D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\server\base-server.js:935:17)
+    at async D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\server\dev\next-dev-server.js:394:20
+    at async Span.traceAsyncFn (D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\trace\trace.js:164:20)
+    at async DevServer.handleRequest (D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\server\dev\next-dev-server.js:390:24)
+    at async invokeRender (D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\server\lib\router-server.js:266:21)
+    at async handleRequest (D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\server\lib\router-server.js:465:24)
+    at async requestHandlerImpl (D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\server\lib\router-server.js:514:13)
+    at async Server.requestListener (D:\zanjirenabodii\app\metro-line1-app\node_modules\next\dist\server\lib\start-server.js:225:13)

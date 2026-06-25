@@ -1,8 +1,9 @@
 'use client'
 
 import { useCallback, useRef, useState } from 'react'
-import { Upload, X, FileSpreadsheet } from 'lucide-react'
+import { Upload, X, CheckCircle } from 'lucide-react'
 import { toFa } from '@/lib/fa'
+import { cn } from '@/lib/utils'
 
 interface FileDropProps {
   accept: string
@@ -65,13 +66,14 @@ export function FileDrop({ accept, onFile, disabled }: FileDropProps) {
       onDrop={handleDrop}
       onClick={() => !disabled && inputRef.current?.click()}
       aria-label="آپلود فایل اکسل"
-      className={`cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors duration-150 ${
+      className={cn(
+        'cursor-pointer rounded-xl border-2 border-dashed p-8 text-center transition-all duration-200',
         disabled
           ? 'cursor-not-allowed opacity-50'
           : dragging
-            ? 'border-accent bg-accent/5'
-            : 'border-border hover:border-accent hover:bg-surface-hover'
-      }`}
+            ? 'border-accent bg-accent/5 scale-[1.02]'
+            : 'border-outline-variant hover:border-accent hover:bg-surface-container-low active:scale-[0.98]',
+      )}
     >
       <input
         ref={inputRef}
@@ -84,31 +86,39 @@ export function FileDrop({ accept, onFile, disabled }: FileDropProps) {
 
       {file ? (
         <div className="flex items-center justify-center gap-3">
-          <FileSpreadsheet className="size-4 text-success" />
-          <span className="text-sm text-foreground">{file.name}</span>
-          <span className="text-xs text-foreground-muted">
-            ({toFa((file.size / 1024).toFixed(1))} کیلوبایت)
-          </span>
+          <div className="flex size-9 items-center justify-center rounded-full bg-success/10">
+            <CheckCircle className="size-5 text-success" />
+          </div>
+          <div className="text-start">
+            <span className="block text-sm font-medium text-foreground">{file.name}</span>
+            <span className="text-xs text-foreground-muted">
+              {toFa((file.size / 1024).toFixed(1))} کیلوبایت
+            </span>
+          </div>
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation()
               clearFile()
             }}
-            className="rounded-md p-1 text-foreground-muted hover:bg-surface-hover hover:text-foreground"
+            className="rounded-lg p-1.5 text-foreground-muted hover:bg-surface-container-high hover:text-foreground transition-colors"
           >
             <X className="size-4" />
           </button>
         </div>
       ) : (
-        <div className="space-y-2">
-          <Upload className="mx-auto size-8 text-foreground-muted" />
-          <p className="text-sm text-foreground-muted">
-            فایل را اینجا رها کنید یا کلیک کنید
-          </p>
-          <p className="text-xs text-foreground-muted">
-            فایل Excel (.xlsx, .xls)
-          </p>
+        <div className="space-y-3">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-surface-container-high">
+            <Upload className="size-6 text-foreground-muted" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              فایل را اینجا رها کنید یا کلیک کنید
+            </p>
+            <p className="mt-1 text-xs text-foreground-muted">
+              فایل Excel (.xlsx, .xls)
+            </p>
+          </div>
         </div>
       )}
     </div>

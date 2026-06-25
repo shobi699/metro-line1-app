@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ثبت نام - خط‌ یار</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-container": "#9d0011",
+                        "surface-container-low": "#f2f4f7",
+                        "error-container": "#ffdad6",
+                        "background": "#f7f9fc",
+                        "primary-fixed": "#d7e2ff",
+                        "secondary-container": "#fcd400",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#ffe16d",
+                        "on-error-container": "#93000a",
+                        "primary": "#00346f",
+                        "on-secondary-fixed": "#221b00",
+                        "tertiary-fixed-dim": "#ffb3ac",
+                        "secondary-fixed-dim": "#e9c400",
+                        "on-tertiary-fixed-variant": "#930010",
+                        "tertiary": "#720009",
+                        "surface-tint": "#255dad",
+                        "on-primary-fixed": "#001b3f",
+                        "primary-fixed-dim": "#abc7ff",
+                        "on-tertiary-container": "#ffa59d",
+                        "surface-dim": "#d8dadd",
+                        "surface-container": "#eceef1",
+                        "error": "#ba1a1a",
+                        "on-background": "#191c1e",
+                        "surface-bright": "#f7f9fc",
+                        "on-primary-container": "#9bbdff",
+                        "surface-variant": "#e0e3e6",
+                        "surface": "#f7f9fc",
+                        "outline-variant": "#c2c6d3",
+                        "surface-container-highest": "#e0e3e6",
+                        "on-secondary-container": "#6e5c00",
+                        "inverse-on-surface": "#eff1f4",
+                        "secondary": "#705d00",
+                        "primary-container": "#004a99",
+                        "tertiary-fixed": "#ffdad6",
+                        "on-secondary-fixed-variant": "#544600",
+                        "on-primary-fixed-variant": "#00458f",
+                        "inverse-primary": "#abc7ff",
+                        "surface-container-high": "#e6e8eb",
+                        "on-surface-variant": "#424751",
+                        "on-error": "#ffffff",
+                        "outline": "#737783",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed": "#410003",
+                        "on-surface": "#191c1e",
+                        "inverse-surface": "#2d3133"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    spacing: {
+                        "xs": "4px",
+                        "margin-desktop": "32px",
+                        "sm": "8px",
+                        "xl": "32px",
+                        "gutter": "16px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "margin-mobile": "16px",
+                        "unit": "4px"
+                    },
+                    fontFamily: {
+                        "headline-lg-mobile": ["Vazirmatn"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-md": ["Vazirmatn"],
+                        "headline-lg": ["Vazirmatn"],
+                        "label-md": ["Vazirmatn"],
+                        "display-lg": ["Vazirmatn"],
+                        "headline-md": ["Vazirmatn"],
+                        "body-lg": ["Vazirmatn"]
+                    },
+                    fontSize: {
+                        "headline-lg-mobile": ["26px", { lineHeight: "1.3", fontWeight: "700" }],
+                        "data-mono": ["14px", { lineHeight: "1.2", fontWeight: "500" }],
+                        "body-md": ["16px", { lineHeight: "1.5", fontWeight: "400" }],
+                        "headline-lg": ["32px", { lineHeight: "1.3", fontWeight: "700" }],
+                        "label-md": ["14px", { lineHeight: "1.2", letterSpacing: "0.02em", fontWeight: "500" }],
+                        "display-lg": ["48px", { lineHeight: "1.2", fontWeight: "700" }],
+                        "headline-md": ["24px", { lineHeight: "1.4", fontWeight: "600" }],
+                        "body-lg": ["18px", { lineHeight: "1.6", fontWeight: "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex items-center justify-center p-4">
+<!-- Top Navigation Placeholder (Hidden for transactional screen, but present conceptually if user navigates away) -->
+<div class="hidden"></div>
+<div class="w-full max-w-2xl bg-surface-container-lowest border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm flex flex-col md:flex-row relative">
+<!-- Left Banner / Branding -->
+<div class="w-full md:w-1/3 bg-primary text-on-primary p-6 md:p-8 flex flex-col justify-between items-start md:items-center relative z-10 overflow-hidden">
+<div class="absolute inset-0 opacity-10 bg-cover bg-center" data-alt="A highly detailed industrial transit abstract background. Subtle geometric patterns of metro lines and grids overlay a dark blue steel texture. The lighting is cool and functional, reinforcing a corporate, mission-critical environment. The aesthetic is clean, professional, and slightly futuristic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAh37G7b8zbM4oVOb7YKuJtoqit0zNeC1U_Jg0LGSiqAuUKXvtT6FVaQbPPwr6kSe5ZuiAaEH3Xv7H3d1ECrkqmlhrY69yxRAQ2s1Vlke9y4LCKxzzBd23weLyRw8mo0Fj6PyvYjL28XUVhzt5vY0O9BwauUti9LyahQfUvzBjN9vj2acNqQ-saCyTGONurG0rpt1TDwORBfODwfgbMS76sK4gTOi16BKwY4EON2zO-VXqnT5CV2a3GXBTE4XJMtpp_8AAPm86ipMw')"></div>
+
+<div class="flex items-center gap-2 mb-8 md:mb-0 relative z-20">
+<span class="material-symbols-outlined text-4xl">subway</span>
+<span class="font-headline-md text-headline-md font-bold tracking-tight">خط‌ یار</span>
+</div>
+<div class="relative z-20 mt-auto hidden md:block w-full">
+<div class="bg-primary-container text-on-primary-container p-4 rounded-lg border border-primary/20">
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary-container mt-1">info</span>
+<div>
+<h3 class="font-label-md text-label-md font-bold mb-1">نیاز به تایید</h3>
+<p class="font-body-md text-sm leading-snug opacity-90">ثبت نام شما پس از تایید توسط مدیر سیستم فعال خواهد شد. این فرآیند ممکن است تا ۲۴ ساعت زمان ببرد.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Registration Form -->
+<div class="w-full md:w-2/3 p-6 md:p-8 md:pl-10">
+<div class="mb-8">
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary mb-2 hidden md:block">ایجاد حساب کاربری</h1>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary mb-2 md:hidden">ایجاد حساب کاربری</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">لطفا اطلاعات هویتی و سازمانی خود را برای ثبت در سیستم وارد کنید.</p>
+<!-- Mobile info banner -->
+<div class="mt-4 md:hidden bg-primary-container/10 text-on-primary-container p-3 rounded border border-primary/20 flex gap-2 items-start">
+<span class="material-symbols-outlined text-primary text-xl">info</span>
+<span class="font-label-md text-sm">ثبت نام نیازمند تایید مدیریت است.</span>
+</div>
+</div>
+<form action="#" class="space-y-6" method="POST">
+<!-- Grid layout for inputs -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Full Name -->
+<div class="col-span-1 md:col-span-2">
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="fullName">نام و نام خانوادگی <span class="text-error">*</span></label>
+<div class="relative">
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+<span class="material-symbols-outlined text-outline">person</span>
+</div>
+<input class="w-full bg-surface border border-outline-variant text-on-surface font-body-md text-body-md rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block pr-10 p-2.5" id="fullName" name="fullName" placeholder="مثال: علی رضایی" required="" type="text"/>
+</div>
+</div>
+<!-- Personnel ID -->
+<div class="col-span-1">
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="personnelId">کد پرسنلی <span class="text-error">*</span></label>
+<div class="relative">
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+<span class="material-symbols-outlined text-outline">badge</span>
+</div>
+<input class="w-full bg-surface border border-outline-variant text-on-surface font-data-mono text-data-mono rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block pr-10 p-2.5 text-left" dir="ltr" id="personnelId" name="personnelId" placeholder="12345678" required="" type="text"/>
+</div>
+</div>
+<!-- Phone Number -->
+<div class="col-span-1">
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="phone">شماره تماس <span class="text-error">*</span></label>
+<div class="relative">
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+<span class="material-symbols-outlined text-outline">call</span>
+</div>
+<input class="w-full bg-surface border border-outline-variant text-on-surface font-data-mono text-data-mono rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block pr-10 p-2.5 text-left" dir="ltr" id="phone" name="phone" placeholder="0912 345 6789" required="" type="tel"/>
+</div>
+</div>
+<!-- Role Selection -->
+<div class="col-span-1 md:col-span-2">
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="role">نقش سازمانی <span class="text-error">*</span></label>
+<div class="relative">
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+<span class="material-symbols-outlined text-outline">work</span>
+</div>
+<select class="w-full bg-surface border border-outline-variant text-on-surface font-body-md text-body-md rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block pr-10 p-2.5 appearance-none" id="role" name="role" required="">
+<option disabled="" selected="" value="">انتخاب کنید</option>
+<option value="راهبر قطار">راهبر قطار</option>
+<option value="تکنسین فنی">تکنسین فنی</option>
+<option value="پرسنل ایستگاه">پرسنل ایستگاه</option>
+<option value="بازرس">بازرس</option>
+</select>
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+<span class="material-symbols-outlined text-outline">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Vehicle Plate (Optional, contextual) -->
+<div class="col-span-1 md:col-span-2">
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="plate">شماره پلاک خودرو (اختیاری)</label>
+<div class="flex gap-2" dir="ltr">
+<input class="w-1/4 bg-surface border border-outline-variant text-on-surface font-data-mono text-data-mono rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-center p-2.5" maxlength="2" placeholder="11" type="text"/>
+<span class="text-outline self-center">-</span>
+<input class="w-1/3 bg-surface border border-outline-variant text-on-surface font-data-mono text-data-mono rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-center p-2.5" maxlength="3" placeholder="123" type="text"/>
+<select class="w-1/4 bg-surface border border-outline-variant text-on-surface font-body-md text-body-md rounded-lg focus:ring-2 focus:ring-primary focus:border-primary p-2.5 text-center text-sm appearance-none">
+<option>ب</option><option>ج</option><option>د</option>
+</select>
+<input class="w-1/4 bg-surface border border-outline-variant text-on-surface font-data-mono text-data-mono rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-center p-2.5" maxlength="2" placeholder="68" type="text"/>
+</div>
+</div>
+</div>
+<!-- Action Area -->
+<div class="pt-6 mt-6 border-t border-outline-variant/30 flex items-center justify-between">
+<a class="font-label-md text-label-md text-primary hover:text-primary-container transition-colors" href="#">بازگشت به ورود</a>
+<button class="bg-primary text-on-primary hover:bg-primary-container font-label-md text-label-md font-bold py-3 px-6 rounded-lg transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" type="submit">
+                        ثبت نام
+                        <span class="material-symbols-outlined text-sm">arrow_back</span>
+</button>
+</div>
+</form>
+</div>
+</div>
+</body></html>

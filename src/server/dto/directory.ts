@@ -22,6 +22,7 @@ export const customFieldDefSchema = z.object({
     .optional()
     .default([]),
   required: z.boolean().optional().default(false),
+  defaultValue: z.string().optional().nullable(),
   sortOrder: z.number().int().optional().default(0),
 })
 

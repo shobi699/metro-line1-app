@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>سامانه احراز هویت بیومتریک — خط ۱</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Vazirmatn:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#474747",
+                      "on-primary-container": "#fffbff",
+                      "on-error-container": "#93000a",
+                      "on-background": "#191c1d",
+                      "error-container": "#ffdad6",
+                      "background": "#f8f9fa",
+                      "tertiary": "#5d5c5b",
+                      "surface-bright": "#f8f9fa",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "inverse-surface": "#2e3132",
+                      "surface-dim": "#d9dadb",
+                      "outline-variant": "#e7bdb7",
+                      "surface-variant": "#e1e3e4",
+                      "on-secondary-container": "#656464",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-container": "#f7feff",
+                      "on-surface-variant": "#5d3f3b",
+                      "tertiary-container": "#767474",
+                      "surface-container-high": "#e7e8e9",
+                      "secondary-container": "#e4e2e1",
+                      "inverse-primary": "#ffb4a9",
+                      "on-tertiary": "#ffffff",
+                      "secondary": "#5f5e5e",
+                      "outline": "#926f6a",
+                      "secondary-fixed": "#e4e2e1",
+                      "surface-container-highest": "#e1e3e4",
+                      "error": "#ba1a1a",
+                      "primary-container": "#e1271c",
+                      "surface-tint": "#c00205",
+                      "on-primary-fixed": "#410000",
+                      "primary": "#bc0004",
+                      "on-primary": "#ffffff",
+                      "on-surface": "#191c1d",
+                      "on-error": "#ffffff",
+                      "surface-container": "#edeeef",
+                      "surface": "#f8f9fa",
+                      "tertiary-fixed": "#e5e2e1",
+                      "surface-container-low": "#f3f4f5",
+                      "primary-fixed": "#ffdad5",
+                      "inverse-on-surface": "#f0f1f2",
+                      "primary-fixed-dim": "#ffb4a9",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed-variant": "#930002"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "touch-target-min": "48px",
+                      "margin-desktop": "32px",
+                      "unit": "4px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg-mobile": [
+                              "Vazirmatn"
+                      ],
+                      "body-md": [
+                              "Vazirmatn"
+                      ],
+                      "body-lg": [
+                              "Vazirmatn"
+                      ],
+                      "label-md": [
+                              "Vazirmatn"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "48px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "data-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        .data-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { background-color: rgba(188, 0, 4, 0.1); }
+            50% { background-color: rgba(188, 0, 4, 0.3); }
+            100% { background-color: rgba(188, 0, 4, 0.1); }
+        }
+        .zebra-row:nth-child(even) {
+            background-color: #F1F1F1;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<header class="bg-surface-container-highest dark:bg-surface-dim border-b border-outline dark:border-outline-variant flex justify-between items-center px-margin-desktop w-full h-touch-target-min z-20 sticky top-0 shrink-0">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1;">fingerprint</span>
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-on-primary-fixed-variant tracking-tight">سامانه احراز هویت بیومتریک — خط ۱</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 bg-surface-container-low px-3 py-1 rounded-full border border-outline-variant">
+<span class="w-2 h-2 rounded-full bg-[#10b981] animate-pulse"></span>
+<span class="font-label-md text-label-md text-on-surface">Secure Status</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 rounded-full hover:bg-primary-container hover:text-on-primary-container text-on-secondary-container transition-colors duration-150 flex items-center justify-center relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+<button class="w-10 h-10 rounded-full hover:bg-primary-container hover:text-on-primary-container text-on-secondary-container transition-colors duration-150 flex items-center justify-center">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="w-10 h-10 rounded-full hover:bg-primary-container hover:text-on-primary-container text-on-secondary-container transition-colors duration-150 flex items-center justify-center">
+<span class="material-symbols-outlined">wifi_tethering</span>
+</button>
+</div>
+<div class="h-8 w-px bg-outline-variant mx-2"></div>
+<button class="flex items-center gap-3 hover:bg-surface-container-high p-1 pr-3 rounded-full transition-colors duration-150 border border-transparent hover:border-outline-variant">
+<div class="flex flex-col items-end">
+<span class="font-label-md text-label-md text-on-surface">فرمانده عملیات</span>
+<span class="text-xs text-secondary">Profile</span>
+</div>
+<img alt="Administrator Profile" class="w-10 h-10 rounded-full object-cover border-2 border-surface-container-highest" data-alt="A professional headshot of a middle-eastern male metro commander in a crisp dark blue operational uniform with red accents. He looks authoritative and precise. High-contrast studio lighting, industrial corporate background with subtle technical readouts. The image conveys resilience and command in a high-stakes environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQMZSKLNbXxY8m0vBViufDk5A7jO_XgNR-ObPiKZVy9YpRvsEFo_H77giY3yOkwkcNCNcachJHPDb56HVxj67H9StGk0dIjm41dm6yVuaATU-ioe4rDwFI57J2jr-DvfgkcCw5HAdnA6VdwJCBqYCAcV5Q20r2Idv7lSusdRdN3eHf9hPXAdWP9a9yEda3dTOOePFJ0xFzmeRal_jB53j9eB_PWSC3fYvHoVgGt-I6y0J7YUdae5--ZJqdcqLKsiWpXXnxu_QRFM7e"/>
+</button>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- SideNavBar -->
+<nav class="hidden md:flex bg-surface-container-low dark:bg-surface-container-lowest border-l border-outline dark:border-outline-variant w-64 flex-col h-full py-4 gap-2 z-10 shrink-0">
+<div class="px-6 mb-6 mt-2 flex flex-col items-center justify-center">
+<div class="w-16 h-16 bg-surface-container-highest rounded-full flex items-center justify-center mb-3 shadow-sm border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-[32px]" style="font-variation-settings: 'FILL' 1;">subway</span>
+</div>
+<h2 class="font-headline-md text-[18px] leading-6 font-bold text-on-surface text-center">Line 1 Control</h2>
+<p class="font-label-md text-label-md text-secondary mt-1">Operational Hub</p>
+</div>
+<div class="flex-1 flex flex-col gap-1 px-3 overflow-y-auto">
+<a class="bg-primary-container text-on-primary-container border-r-4 border-primary font-label-md text-label-md flex items-center gap-3 px-4 py-3 rounded-l-lg transition-transform duration-100 scale-[0.98]" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                    داشبورد هویت
+                </a>
+<a class="text-secondary hover:bg-surface-container-high hover:text-on-secondary-container font-label-md text-label-md flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-150 border-r-4 border-transparent" href="#">
+<span class="material-symbols-outlined">person_add</span>
+                    ثبت‌نام جدید
+                </a>
+<a class="text-secondary hover:bg-surface-container-high hover:text-on-secondary-container font-label-md text-label-md flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-150 border-r-4 border-transparent" href="#">
+<span class="material-symbols-outlined">history</span>
+                    لاگ‌های ورود
+                </a>
+<a class="text-secondary hover:bg-surface-container-high hover:text-on-secondary-container font-label-md text-label-md flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-150 border-r-4 border-transparent" href="#">
+<span class="material-symbols-outlined">devices</span>
+                    مدیریت دستگاه‌ها
+                </a>
+<a class="text-secondary hover:bg-surface-container-high hover:text-on-secondary-container font-label-md text-label-md flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-150 border-r-4 border-transparent" href="#">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+                    تنظیمات امنیتی
+                </a>
+</div>
+<div class="mt-auto px-3 border-t border-outline-variant pt-4 flex flex-col gap-1">
+<a class="text-secondary hover:bg-surface-container-high hover:text-on-secondary-container font-label-md text-label-md flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">help</span>
+                    Support
+                </a>
+<a class="text-secondary hover:bg-surface-container-high hover:text-on-secondary-container font-label-md text-label-md flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+                    Logs
+                </a>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto bg-surface p-margin-desktop md:p-6 lg:p-margin-desktop">
+<div class="flex justify-between items-end mb-6">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">نمای کلی بیومتریک</h1>
+<p class="font-body-md text-body-md text-secondary mt-1">مانیتورینگ و مدیریت احراز هویت پرسنل عملیاتی</p>
+</div>
+<div class="flex gap-3">
+<button class="bg-surface-container-lowest border border-outline text-on-surface font-label-md text-label-md px-4 py-2 rounded flex items-center gap-2 hover:bg-surface-container-low transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px]">download</span>
+                        گزارش کامل
+                    </button>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-6 py-2 rounded flex items-center gap-2 hover:bg-surface-tint transition-colors shadow-sm hover:shadow-md active:scale-95">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+                        افزودن پروفایل
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Live Verification Widget (Left Col, Top) -->
+<div class="lg:col-span-4 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm flex flex-col h-[420px]">
+<div class="bg-[#1e2324] px-4 py-3 border-b border-outline-variant flex justify-between items-center shrink-0">
+<h3 class="font-label-md text-label-md text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-[#10b981] text-[18px]">radar</span>
+                            تاییدیه زنده (Live Verification)
+                        </h3>
+<span class="w-2 h-2 rounded-full bg-[#10b981] animate-pulse"></span>
+</div>
+<div class="flex-1 p-0 overflow-y-auto bg-[#191c1d] relative">
+<!-- Abstract scanner background -->
+<div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(circle at center, #bc0004 1px, transparent 1px); background-size: 20px 20px;"></div>
+<div class="flex flex-col gap-[1px] p-2">
+<!-- Live Ping Items -->
+<div class="bg-[#2e3132] p-3 rounded flex items-center gap-3 border-l-4 border-[#10b981]">
+<div class="w-10 h-10 rounded bg-[#191c1d] flex items-center justify-center border border-outline-variant text-[#10b981]">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">face</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-center">
+<span class="font-data-mono text-[13px] text-white">OPR-7742</span>
+<span class="font-data-mono text-[11px] text-secondary-fixed">Just now</span>
+</div>
+<div class="flex justify-between items-center mt-1">
+<span class="font-label-md text-[12px] text-tertiary-fixed">ایستگاه تجریش - کابین A</span>
+<span class="text-[#10b981] text-[10px] uppercase font-bold tracking-wider">Matched 99.8%</span>
+</div>
+</div>
+</div>
+<div class="bg-[#2e3132] p-3 rounded flex items-center gap-3 border-l-4 border-[#10b981] mt-1">
+<div class="w-10 h-10 rounded bg-[#191c1d] flex items-center justify-center border border-outline-variant text-[#10b981]">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">fingerprint</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-center">
+<span class="font-data-mono text-[13px] text-white">OPR-3291</span>
+<span class="font-data-mono text-[11px] text-secondary-fixed">12s ago</span>
+</div>
+<div class="flex justify-between items-center mt-1">
+<span class="font-label-md text-[12px] text-tertiary-fixed">پایانه جنوب - گیت ۳</span>
+<span class="text-[#10b981] text-[10px] uppercase font-bold tracking-wider">Matched 98.2%</span>
+</div>
+</div>
+</div>
+<div class="bg-[#2e3132] p-3 rounded flex items-center gap-3 border-l-4 border-error mt-1">
+<div class="w-10 h-10 rounded bg-[#191c1d] flex items-center justify-center border border-outline-variant text-error">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">face</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-center">
+<span class="font-data-mono text-[13px] text-error">UNKNOWN</span>
+<span class="font-data-mono text-[11px] text-secondary-fixed">45s ago</span>
+</div>
+<div class="flex justify-between items-center mt-1">
+<span class="font-label-md text-[12px] text-tertiary-fixed">ایستگاه میرداماد - اتاق کنترل</span>
+<span class="text-error text-[10px] uppercase font-bold tracking-wider">REJECTED</span>
+</div>
+</div>
+</div>
+<div class="bg-[#2e3132] p-3 rounded flex items-center gap-3 border-l-4 border-[#f59e0b] mt-1 opacity-80">
+<div class="w-10 h-10 rounded bg-[#191c1d] flex items-center justify-center border border-outline-variant text-[#f59e0b]">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">fingerprint</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-center">
+<span class="font-data-mono text-[13px] text-white">MNT-1104</span>
+<span class="font-data-mono text-[11px] text-secondary-fixed">1m ago</span>
+</div>
+<div class="flex justify-between items-center mt-1">
+<span class="font-label-md text-[12px] text-tertiary-fixed">شفت تهویه آزادی</span>
+<span class="text-[#f59e0b] text-[10px] uppercase font-bold tracking-wider">LOW CONFIDENCE</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Enrollment Status Card (Right Col, Top) -->
+<div class="lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm flex flex-col h-[420px]">
+<div class="bg-surface-container-lowest px-5 py-4 border-b border-outline-variant flex justify-between items-center shrink-0">
+<h3 class="font-headline-md text-[18px] text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">badge</span>
+                            وضعیت ثبت‌نام اپراتورها (Enrollment Status)
+                        </h3>
+<div class="relative">
+<input class="bg-surface border border-outline-variant text-label-md rounded pl-3 pr-10 py-1.5 focus:border-primary focus:ring-1 focus:ring-primary w-64" placeholder="جستجوی شناسه یا نام..." type="text"/>
+<span class="material-symbols-outlined absolute right-3 top-2 text-secondary text-[18px]">search</span>
+</div>
+</div>
+<div class="flex-1 overflow-auto">
+<table class="w-full text-right border-collapse">
+<thead class="bg-[#2e3132] text-white sticky top-0 z-10 font-label-md text-[13px]">
+<tr>
+<th class="py-3 px-4 font-normal">شناسه پرسنلی</th>
+<th class="py-3 px-4 font-normal">نام و نام خانوادگی</th>
+<th class="py-3 px-4 font-normal">نقش سازمانی</th>
+<th class="py-3 px-4 font-normal text-center">Face ID</th>
+<th class="py-3 px-4 font-normal text-center">Fingerprint</th>
+<th class="py-3 px-4 font-normal text-left">عملیات</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-[14px] text-on-surface">
+<tr class="zebra-row border-b border-surface-container-high hover:bg-surface-container transition-colors">
+<td class="py-3 px-4 font-data-mono">OPR-7742</td>
+<td class="py-3 px-4 font-medium">رضا محمدی</td>
+<td class="py-3 px-4 text-secondary">راهبر قطار - گرید A</td>
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center bg-[#e6f4ea] text-[#1e8e3e] border border-[#ceead6] px-2 py-0.5 rounded text-[11px] font-bold">ACTIVE</span>
+</td>
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center bg-[#e6f4ea] text-[#1e8e3e] border border-[#ceead6] px-2 py-0.5 rounded text-[11px] font-bold">ACTIVE</span>
+</td>
+<td class="py-3 px-4 text-left">
+<button class="text-secondary hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+</td>
+</tr>
+<tr class="zebra-row border-b border-surface-container-high hover:bg-surface-container transition-colors">
+<td class="py-3 px-4 font-data-mono">OPR-3291</td>
+<td class="py-3 px-4 font-medium">علی حسینی</td>
+<td class="py-3 px-4 text-secondary">راهبر قطار - گرید B</td>
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center bg-[#fce8e6] text-[#d93025] border border-[#fad2cf] px-2 py-0.5 rounded text-[11px] font-bold">EXPIRED</span>
+</td>
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center bg-[#e6f4ea] text-[#1e8e3e] border border-[#ceead6] px-2 py-0.5 rounded text-[11px] font-bold">ACTIVE</span>
+</td>
+<td class="py-3 px-4 text-left">
+<button class="text-secondary hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+</td>
+</tr>
+<tr class="zebra-row border-b border-surface-container-high hover:bg-surface-container transition-colors pulse-animation">
+<td class="py-3 px-4 font-data-mono text-primary font-bold">MNT-1104</td>
+<td class="py-3 px-4 font-medium">سجاد کریمی</td>
+<td class="py-3 px-4 text-secondary">تکنسین نگهداری</td>
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center bg-surface-container text-secondary border border-outline-variant px-2 py-0.5 rounded text-[11px] font-bold">PENDING</span>
+</td>
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center bg-surface-container text-secondary border border-outline-variant px-2 py-0.5 rounded text-[11px] font-bold">PENDING</span>
+</td>
+<td class="py-3 px-4 text-left">
+<button class="text-primary hover:text-surface-tint font-label-md text-[12px] bg-primary-fixed text-on-primary-fixed px-2 py-1 rounded transition-colors">Enroll Now</button>
+</td>
+</tr>
+<tr class="zebra-row border-b border-surface-container-high hover:bg-surface-container transition-colors">
+<td class="py-3 px-4 font-data-mono">OPR-8820</td>
+<td class="py-3 px-4 font-medium">محمد طاهری</td>
+<td class="py-3 px-4 text-secondary">مدیر ایستگاه</td>
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center bg-[#e6f4ea] text-[#1e8e3e] border border-[#ceead6] px-2 py-0.5 rounded text-[11px] font-bold">ACTIVE</span>
+</td>
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center bg-[#e6f4ea] text-[#1e8e3e] border border-[#ceead6] px-2 py-0.5 rounded text-[11px] font-bold">ACTIVE</span>
+</td>
+<td class="py-3 px-4 text-left">
+<button class="text-secondary hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+</td>
+</tr>
+<tr class="zebra-row border-b border-surface-container-high hover:bg-surface-container transition-colors">
+<td class="py-3 px-4 font-data-mono">SEC-4021</td>
+<td class="py-3 px-4 font-medium">حامد نوری</td>
+<td class="py-3 px-4 text-secondary">حراست فیزیکی</td>
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center bg-[#fef7e0] text-[#ea8600] border border-[#fce8b2] px-2 py-0.5 rounded text-[11px] font-bold">WARNING</span>
+</td>
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center bg-[#e6f4ea] text-[#1e8e3e] border border-[#ceead6] px-2 py-0.5 rounded text-[11px] font-bold">ACTIVE</span>
+</td>
+<td class="py-3 px-4 text-left">
+<button class="text-secondary hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Security Level Toggle (Left Col, Bottom) -->
+<div class="lg:col-span-4 bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-sm flex flex-col h-[320px]">
+<h3 class="font-headline-md text-[18px] text-on-surface flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary text-[22px]">policy</span>
+                        سطح حساسیت امنیتی
+                    </h3>
+<p class="font-body-md text-[14px] text-secondary mb-6 leading-relaxed">تنظیم آستانه تطابق بیومتریک برای پایانه‌های درون کابین. سطوح بالاتر نیازمند کیفیت اسکن بهتری هستند.</p>
+<div class="flex-1 flex flex-col gap-3 justify-center relative">
+<!-- Decorative connector line -->
+<div class="absolute right-[22px] top-[20px] bottom-[20px] w-0.5 bg-surface-container-high -z-10"></div>
+<label class="flex items-start gap-4 p-3 rounded-lg border-2 border-primary bg-primary-fixed-dim bg-opacity-20 cursor-pointer transition-colors relative">
+<div class="mt-1 relative">
+<input checked="" class="sr-only" name="security_level" type="radio" value="high"/>
+<div class="w-5 h-5 rounded-full border-2 border-primary flex items-center justify-center bg-white">
+<div class="w-2.5 h-2.5 rounded-full bg-primary"></div>
+</div>
+</div>
+<div>
+<span class="block font-label-md text-[15px] font-bold text-on-surface">Maximum (FAR 0.001%)</span>
+<span class="block text-[13px] text-secondary mt-1">نیازمند تطابق ۹۹.۹٪. پیشنهاد شده برای شرایط اضطراری.</span>
+</div>
+</label>
+<label class="flex items-start gap-4 p-3 rounded-lg border border-outline-variant hover:bg-surface-container-low cursor-pointer transition-colors opacity-70">
+<div class="mt-1">
+<input class="sr-only" name="security_level" type="radio" value="medium"/>
+<div class="w-5 h-5 rounded-full border-2 border-secondary flex items-center justify-center bg-white"></div>
+</div>
+<div>
+<span class="block font-label-md text-[15px] font-bold text-on-surface">Standard (FAR 0.01%)</span>
+<span class="block text-[13px] text-secondary mt-1">نیازمند تطابق ۹۸.۰٪. حالت عملیاتی روزمره.</span>
+</div>
+</label>
+<label class="flex items-start gap-4 p-3 rounded-lg border border-outline-variant hover:bg-surface-container-low cursor-pointer transition-colors opacity-70">
+<div class="mt-1">
+<input class="sr-only" name="security_level" type="radio" value="low"/>
+<div class="w-5 h-5 rounded-full border-2 border-secondary flex items-center justify-center bg-white"></div>
+</div>
+<div>
+<span class="block font-label-md text-[15px] font-bold text-on-surface">Relaxed (FAR 0.1%)</span>
+<span class="block text-[13px] text-secondary mt-1">نیازمند تطابق ۹۵.۰٪. فقط برای محیط‌های غیر حساس.</span>
+</div>
+</label>
+</div>
+</div>
+<!-- Active Devices Map (Right Col, Bottom) -->
+<div class="lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm flex flex-col h-[320px] relative">
+<div class="absolute top-4 right-5 z-10 bg-surface-container-lowest bg-opacity-90 backdrop-blur-sm px-3 py-2 rounded shadow-sm border border-outline-variant">
+<h3 class="font-headline-md text-[16px] text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">map</span>
+                            سلامت پایانه‌های بیومتریک (Active Devices)
+                        </h3>
+</div>
+<!-- Map Placeholder / Background -->
+<div class="w-full h-full bg-[#e1e3e4] relative" data-alt="A stylized, flat, high-contrast schematic map of Tehran Metro Line 1. The map uses thick dark lines against a light industrial background. It is clean, technical, and corporate, devoid of cluttered text, focusing on geometric nodes representing stations. Small glowing indicators in red and green highlight specific terminal points." data-location="Tehran Metro Line 1" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBFgPP7jxH0NcqPb2Mm5lgQfbK3vgTDghaXJJVm9baBxyJRrgMVGqzSA5hJtbxD3PYJQRjSbRW9wLtPXNTj7HJXfURODGBFdyukC6v_FeCPZa3b6tPyEwn5MPxmS7xarjhNC87Vs8ipojN9ki0p-93Utn99ssTmcro5-zoJRh72uc_N7_jg3v2yKb3AowplQlQP_VtvT3dx-A0kWV8FiNT8hYyUnRiqfp3H3XaRQkpiek-zsuQKFbCjy1aWB2WyZQarmEuYEUGPnEWS')">
+<!-- Simulated Overlay Nodes -->
+<div class="absolute top-1/4 left-1/3 flex flex-col items-center">
+<span class="w-4 h-4 rounded-full bg-[#10b981] border-2 border-white shadow-md animate-pulse"></span>
+<span class="bg-surface-container-lowest text-on-surface text-[10px] px-1.5 py-0.5 rounded shadow mt-1 font-bold">تجریش</span>
+</div>
+<div class="absolute top-1/2 left-1/2 flex flex-col items-center">
+<span class="w-4 h-4 rounded-full bg-error border-2 border-white shadow-md pulse-animation"></span>
+<span class="bg-error text-white text-[10px] px-1.5 py-0.5 rounded shadow mt-1 font-bold">میرداماد (OFFLINE)</span>
+</div>
+<div class="absolute bottom-1/3 right-1/4 flex flex-col items-center">
+<span class="w-4 h-4 rounded-full bg-[#10b981] border-2 border-white shadow-md"></span>
+<span class="bg-surface-container-lowest text-on-surface text-[10px] px-1.5 py-0.5 rounded shadow mt-1 font-bold">پایانه جنوب</span>
+</div>
+<div class="absolute bottom-1/4 left-1/4 flex flex-col items-center">
+<span class="w-4 h-4 rounded-full bg-[#f59e0b] border-2 border-white shadow-md"></span>
+<span class="bg-surface-container-lowest text-on-surface text-[10px] px-1.5 py-0.5 rounded shadow mt-1 font-bold">کهریزک (DEGRADED)</span>
+</div>
+</div>
+<div class="absolute bottom-4 left-5 z-10 flex gap-2">
+<div class="bg-surface-container-lowest px-2 py-1 rounded shadow-sm border border-outline-variant flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-[#10b981]"></span>
+<span class="text-[11px] font-bold">Online (42)</span>
+</div>
+<div class="bg-surface-container-lowest px-2 py-1 rounded shadow-sm border border-outline-variant flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></span>
+<span class="text-[11px] font-bold">Degraded (3)</span>
+</div>
+<div class="bg-surface-container-lowest px-2 py-1 rounded shadow-sm border border-outline-variant flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-error"></span>
+<span class="text-[11px] font-bold">Offline (1)</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -15,12 +15,6 @@ enum UserStatus {
   suspended
 }
 
-enum RoleKey {
-  super_admin
-  admin
-  operator
-}
-
 enum ShiftCode {
   morning
   evening
@@ -73,6 +67,28 @@ enum AuditLogAction {
   export
 }
 
+enum ChatRoomType {
+  direct
+  group
+}
+
+enum ChatRoomKind {
+  general
+  operators
+  occ
+  shift
+  station
+  custom
+}
+
+enum PostType {
+  news
+  blog
+  training
+  circular
+  gallery
+}
+
 // ── Models ─────────────────────────────────────────────
 
 model User {
@@ -98,6 +114,29 @@ model User {
   ticketLogs        TicketLog[]       @relation("TicketLogActor")
   auditLogs         AuditLog[]        @relation("AuditActor")
   readReceipts      ReadReceipt[]     @relation("ReceiptUser")
+  chatMemberships   ChatMember[]      @relation("ChatMemberUser")
+  messages          Message[]         @relation("MessageSender")
+  posts             Post[]            @relation("PostAuthor")
+  postReads         PostRead[]        @relation("PostReadUser")
+  postReactions     PostReaction[]    @relation("PostReactionUser")
+  comments          Comment[]         @relation("CommentUser")
+  notifications     Notification[]
+  feedback          Feedback[]
+  attendance        AttendanceRecord[]
+  pollsCreated      Poll[]            @relation("PollCreator")
+  pollVotes         PollVote[]
+  meetingsInitiated MeetingRequest[]  @relation("MeetingRequester")
+  meetingsTarget    MeetingRequest[]  @relation("MeetingTarget")
+  checklistRecords  ChecklistRecord[]
+  knowledgeArticles KnowledgeArticle[]
+  crisisEvents      CrisisEvent[]     @relation("CrisisActivator")
+  gamificationScores GamificationScore[]
+  performanceLogsReceived   PerformanceLog[] @relation("PerformanceReceiver")
+  performanceLogsRecorded   PerformanceLog[] @relation("PerformanceRecorder")
+  performanceAppeals        PerformanceAppeal[] @relation("PerformanceAppealingUser")
+  performanceAppealsReviewed PerformanceAppeal[] @relation("PerformanceAppealReviewer")
+  scoreSnapshots            ScoreSnapshot[]
+  nominations               Nomination[]
 
   @@index([roleId])
   @@index([status])
@@ -105,9 +144,11 @@ model User {
 
 model Role {
   id          String   @id @default(cuid())
-  key         RoleKey  @unique
+  key         String   @unique
   name        String
   permissions Json
+  rank        Int      @default(0)
+  isSystem    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -117,16 +158,17 @@ model Role {
 }
 
 model CustomFieldDef {
-  id          String   @id @default(cuid())
-  entityType  String
-  name        String
-  label       String
-  type        String
-  options     Json?
-  required    Boolean  @default(false)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  entityType   String
+  name         String
+  label        String
+  type         String
+  options      Json?
+  required     Boolean  @default(false)
+  defaultValue String?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([entityType])
 }
@@ -234,6 +276,8 @@ model Ticket {
   priority    TicketPriority @default(medium)
   status      TicketStatus   @default(open)
   wagonCode   String?
+  photoUrl    String?
+  annotations Json?
   creatorId   String
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
@@ -277,4 +321,491 @@ model AuditLog {
   @@index([entity, entityId])
   @@index([action])
   @@index([createdAt])
+}
+
+// ── Chat ───────────────────────────────────────────────
+
+model ChatRoom {
+  id        String       @id @default(cuid())
+  name      String
+  type      ChatRoomType @default(group)
+  kind      ChatRoomKind @default(custom)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  members  ChatMember[]
+  messages Message[]
+
+  @@index([type])
+}
+
+model ChatMember {
+  id        String    @id @default(cuid())
+  roomId    String
+  userId    String
+  isAdmin   Boolean   @default(false)
+  lastReadAt DateTime?
+  joinedAt  DateTime  @default(now())
+
+  room ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User     @relation("ChatMemberUser", fields: [userId], references: [id])
+
+  @@unique([roomId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id             String    @id @default(cuid())
+  roomId         String
+  senderId       String
+  body           String?
+  attachmentUrl  String?
+  attachmentType String?
+  pinned         Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  editedAt       DateTime?
+
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender User     @relation("MessageSender", fields: [senderId], references: [id])
+
+  @@index([roomId, createdAt])
+}
+
+// ── Content (وبلاگ/اخبار/آموزش) ─────────────────────────
+
+model Post {
+  id          String   @id @default(cuid())
+  type        PostType @default(news)
+  title       String
+  slug        String   @unique
+  excerpt     String?
+  body        String
+  category    String?
+  coverUrl    String?
+  mediaUrl    String?
+  mediaType   String?
+  published   Boolean  @default(false)
+  mandatory   Boolean  @default(false)
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author    User           @relation("PostAuthor", fields: [authorId], references: [id])
+  reads     PostRead[]
+  reactions PostReaction[]
+  comments  Comment[]
+
+  @@index([type, published])
+  @@index([createdAt])
+}
+
+model PostRead {
+  id     String   @id @default(cuid())
+  postId String
+  userId String
+  readAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation("PostReadUser", fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+  @@index([postId])
+}
+
+model PostReaction {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation("PostReactionUser", fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+  @@index([postId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  body      String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation("CommentUser", fields: [userId], references: [id])
+
+  @@index([postId, createdAt])
+}
+
+model Setting {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  label        String
+  description  String?
+  type         String   // "number" | "text" | "boolean" | "color" | "select"
+  value        String   // JSON serialized value
+  defaultValue String   // JSON serialized defaultValue
+  category     String   // e.g. "general", "shifts", "tickets", "chat"
+  isEnabled    Boolean  @default(true)
+  min          Float?
+  max          Float?
+  options      String?  // JSON options for select type
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([category])
+}
+
+// ── Notifications ──────────────────────────────────────
+
+enum NotificationType {
+  info
+  warning
+  urgent
+  system
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType @default(info)
+  title     String
+  body      String?
+  link      String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
+
+// ── Feedback ───────────────────────────────────────────
+
+enum FeedbackType {
+  criticism
+  suggestion
+  complaint
+  appreciation
+}
+
+enum FeedbackStatus {
+  submitted
+  under_review
+  responded
+}
+
+model Feedback {
+  id          String         @id @default(cuid())
+  userId      String?
+  type        FeedbackType   @default(suggestion)
+  title       String
+  body        String
+  isAnonymous Boolean        @default(false)
+  status      FeedbackStatus @default(submitted)
+  reply       String?
+  repliedBy   String?
+  repliedAt   DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ── Attendance ─────────────────────────────────────────
+
+model AttendanceRecord {
+  id          String    @id @default(cuid())
+  userId      String
+  stationId   String?
+  checkInGeo  String?
+  checkInTime DateTime  @default(now())
+  checkOutGeo String?
+  checkOutTime DateTime?
+  method      String    @default("gps")
+  note        String?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, checkInTime])
+  @@index([stationId])
+}
+
+// ── Polls ──────────────────────────────────────────────
+
+model Poll {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime?
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  creator   User         @relation("PollCreator", fields: [createdById], references: [id])
+  options   PollOption[]
+  votes     PollVote[]
+
+  @@index([isActive])
+}
+
+model PollOption {
+  id     String     @id @default(cuid())
+  pollId String
+  label  String
+
+  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes PollVote[]
+
+  @@index([pollId])
+}
+
+model PollVote {
+  id       String   @id @default(cuid())
+  pollId   String
+  optionId String
+  userId   String
+  createdAt DateTime @default(now())
+
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id])
+
+  @@unique([pollId, userId])
+  @@index([pollId])
+}
+
+// ── Meetings ───────────────────────────────────────────
+
+enum MeetingStatus {
+  pending
+  approved
+  rejected
+  rescheduled
+}
+
+model MeetingRequest {
+  id              String        @id @default(cuid())
+  requesterId     String
+  targetManagerId String
+  title           String
+  description     String?
+  scheduledAt     DateTime
+  durationMinutes Int           @default(30)
+  status          MeetingStatus @default(pending)
+  note            String?
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  requester     User @relation("MeetingRequester", fields: [requesterId], references: [id])
+  targetManager User @relation("MeetingTarget", fields: [targetManagerId], references: [id])
+
+  @@index([requesterId])
+  @@index([targetManagerId])
+  @@index([status])
+}
+
+// ── Checklists ─────────────────────────────────────────
+
+model ChecklistTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  items       Json     // [{ label: string, required: boolean }]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  records ChecklistRecord[]
+}
+
+model ChecklistRecord {
+  id           String   @id @default(cuid())
+  templateId   String
+  userId       String
+  trainId      String?
+  stationId    String?
+  items        Json     // [{ label: string, checked: boolean, note?: string }]
+  signedAt     DateTime @default(now())
+  geoLocation  String?
+  createdAt    DateTime @default(now())
+
+  template ChecklistTemplate @relation(fields: [templateId], references: [id])
+  user     User              @relation(fields: [userId], references: [id])
+
+  @@index([userId, signedAt])
+  @@index([templateId])
+}
+
+// ── Knowledge Base ─────────────────────────────────────
+
+model KnowledgeArticle {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  body        String
+  category    String?
+  tags        String?  // comma-separated
+  attachments Json?    // [{ url, name, type }]
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id])
+
+  @@index([category])
+  @@index([createdAt])
+}
+
+// ── Crisis Management ──────────────────────────────────
+
+enum CrisisLevel {
+  normal
+  elevated
+  high
+  critical
+}
+
+model CrisisEvent {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  level       CrisisLevel @default(normal)
+  stationId   String?
+  activatedBy String
+  activatedAt DateTime    @default(now())
+  resolvedAt  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  activator User @relation("CrisisActivator", fields: [activatedBy], references: [id])
+
+  @@index([level])
+  @@index([activatedAt])
+}
+
+// ── Gamification ───────────────────────────────────────
+
+model GamificationScore {
+  id        String   @id @default(cuid())
+  userId    String
+  points    Int      @default(0)
+  reason    String
+  period    String   // e.g. "2026-03"
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, period, reason])
+  @@index([userId])
+  @@index([period])
+}
+
+// ── Performance Evaluation & KPIs ──────────────────────
+
+model Competency {
+  id          String   @id
+  name        String
+  weight      Float    @default(1.0)
+  direction   String   // "positive" | "negative" | "both"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  actionTypes PerformanceActionType[]
+}
+
+model PerformanceActionType {
+  id           String   @id
+  competencyId String
+  title        String
+  defaultScore Float
+  maxSeverity  String   // "L1" | "L2" | "L3"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  competency Competency       @relation(fields: [competencyId], references: [id])
+  logs       PerformanceLog[]
+}
+
+model PerformanceLog {
+  id            String   @id @default(cuid())
+  employeeId    String
+  recordedById  String
+  actionTypeId  String
+  severity      String   // "L1" | "L2" | "L3"
+  scoreValue    Float
+  note          String?
+  evidenceUrl   String?
+  periodId      String   // e.g., "1405-04" (jalali year-month)
+  status        String   @default("active") // "active" | "appealed" | "overturned"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  employee   User                  @relation("PerformanceReceiver", fields: [employeeId], references: [id])
+  recordedBy User                  @relation("PerformanceRecorder", fields: [recordedById], references: [id])
+  actionType PerformanceActionType @relation(fields: [actionTypeId], references: [id])
+  appeals    PerformanceAppeal[]
+
+  @@index([employeeId])
+  @@index([recordedById])
+  @@index([actionTypeId])
+  @@index([periodId])
+}
+
+model PerformanceAppeal {
+  id           String    @id @default(cuid())
+  logId        String
+  employeeId   String
+  reason       String
+  status       String    @default("pending") // "pending" | "approved" | "rejected"
+  reviewedById String?
+  note         String?   // Review note
+  createdAt    DateTime  @default(now())
+  resolvedAt   DateTime?
+
+  log        PerformanceLog @relation(fields: [logId], references: [id], onDelete: Cascade)
+  employee   User           @relation("PerformanceAppealingUser", fields: [employeeId], references: [id])
+  reviewedBy User?          @relation("PerformanceAppealReviewer", fields: [reviewedById], references: [id])
+
+  @@index([logId])
+  @@index([employeeId])
+}
+
+model ScoreSnapshot {
+  id              String   @id @default(cuid())
+  employeeId      String
+  periodId        String
+  rawScore        Float
+  normalizedScore Float
+  percentile      Float
+  createdAt       DateTime @default(now())
+
+  employee User @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, periodId])
+  @@index([periodId])
+}
+
+model Nomination {
+  id               String   @id @default(cuid())
+  periodId         String
+  employeeId       String
+  rank             Int
+  tiebreakerReason String?
+  status           String   @default("nominated") // "nominated" | "approved"
+  createdAt        DateTime @default(now())
+
+  periodEmployee User @relation(fields: [employeeId], references: [id])
+
+  @@unique([periodId, employeeId])
+  @@index([periodId])
 }

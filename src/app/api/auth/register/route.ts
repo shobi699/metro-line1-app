@@ -2,8 +2,17 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
 import { registerSchema } from '@/server/dto/auth'
 import { hashPassword } from '@/server/auth/password'
+import { getSettingValue } from '@/server/modules/settings/service'
 
 export async function POST(request: Request) {
+  const allowRegistration = await getSettingValue('general.allowRegistration', true)
+  if (!allowRegistration) {
+    return NextResponse.json(
+      { error: 'ثبت‌نام مستقیم پرسنل در حال حاضر غیرفعال است.' },
+      { status: 403 }
+    )
+  }
+
   const body = await request.json()
   const parsed = registerSchema.safeParse(body)
 
@@ -16,6 +25,14 @@ export async function POST(request: Request) {
 
   const { nationalId, name, phone, email, password } = parsed.data
 
+  const passwordPolicyMinLength = await getSettingValue('general.passwordPolicyMinLength', 8)
+  if (password.length < passwordPolicyMinLength) {
+    return NextResponse.json(
+      { error: `کلمه عبور باید حداقل ${passwordPolicyMinLength} نویسه باشد.` },
+      { status: 400 }
+    )
+  }
+
   const existing = await prisma.user.findUnique({ where: { nationalId } })
   if (existing) {
     return NextResponse.json(
@@ -24,12 +41,20 @@ export async function POST(request: Request) {
     )
   }
 
-  const defaultRole = await prisma.role.findUnique({
+  let defaultRole = await prisma.role.findUnique({
     where: { key: 'operator' },
   })
   if (!defaultRole) {
+    const { seedDatabase } = await import('@/server/db-seed')
+    await seedDatabase(prisma, true)
+    defaultRole = await prisma.role.findUnique({
+      where: { key: 'operator' },
+    })
+  }
+  if (!defaultRole) {
+    const allRoles = await prisma.role.findMany()
     return NextResponse.json(
-      { error: 'خطای سیستمی: نقش پیش‌فرض یافت نشد' },
+      { error: `خطای سیستمی: نقش پیش‌فرض یافت نشد. نقش‌های موجود: ${JSON.stringify(allRoles)}` },
       { status: 500 },
     )
   }

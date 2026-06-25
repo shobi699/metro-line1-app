@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mobile Notification Center &amp; Settings - Tehran Metro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#5d3f3b",
+                        "secondary-fixed": "#e4e2e1",
+                        "primary-fixed": "#ffdad5",
+                        "on-primary-container": "#fffbff",
+                        "tertiary-fixed": "#e5e2e1",
+                        "surface-container-high": "#e7e8e9",
+                        "on-secondary-fixed-variant": "#474747",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "surface-variant": "#e1e3e4",
+                        "outline": "#926f6a",
+                        "surface-tint": "#c00205",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "surface-container-low": "#f3f4f5",
+                        "secondary-container": "#e4e2e1",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "on-tertiary-container": "#f7feff",
+                        "on-background": "#191c1d",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e1e3e4",
+                        "inverse-surface": "#2e3132",
+                        "background": "#f8f9fa",
+                        "surface-bright": "#f8f9fa",
+                        "on-primary-fixed-variant": "#930002",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "on-primary-fixed": "#410000",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#5d5c5b",
+                        "secondary": "#5f5e5e",
+                        "primary-container": "#e1271c",
+                        "outline-variant": "#e7bdb7",
+                        "surface-container": "#edeeef",
+                        "surface-dim": "#d9dadb",
+                        "primary": "#bc0004",
+                        "surface": "#f8f9fa",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-surface": "#191c1d",
+                        "error": "#ba1a1a",
+                        "tertiary-container": "#767474",
+                        "on-secondary": "#ffffff",
+                        "inverse-primary": "#ffb4a9",
+                        "on-secondary-container": "#656464"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "touch-target-min": "48px",
+                        "margin-desktop": "32px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Vazirmatn"],
+                        "body-md": ["Vazirmatn"],
+                        "body-lg": ["Vazirmatn"],
+                        "label-md": ["Vazirmatn"],
+                        "headline-lg-mobile": ["Vazirmatn"],
+                        "headline-lg": ["Vazirmatn"],
+                        "data-mono": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "48px", "fontWeight": "700" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Vazirmatn', sans-serif; }
+        .tab-active { border-bottom: 2px solid #bc0004; color: #bc0004; }
+        .toggle-checkbox:checked { right: 0; border-color: #bc0004; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #bc0004; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background antialiased flex flex-col h-screen overflow-hidden">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-dim w-full top-0 sticky border-b border-outline-variant dark:border-secondary flex flex-row-reverse justify-between items-center px-margin-mobile h-touch-target-min z-10">
+<button class="text-on-surface-variant dark:text-secondary-fixed-dim hover:bg-surface-container-high transition-colors active:scale-95 duration-150 rounded-full p-2 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md-mobile font-bold text-primary dark:text-primary-fixed-dim">سامانه فرمان خط یک</h1>
+<button class="text-primary dark:text-primary-fixed-dim hover:bg-surface-container-high transition-colors active:scale-95 duration-150 rounded-full p-2 flex items-center justify-center relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-1 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto w-full pb-20">
+<!-- Page Title & DND -->
+<div class="px-margin-mobile py-4 flex justify-between items-center bg-surface">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">مرکز اعلان‌ها</h2>
+<div class="flex items-center gap-2 bg-surface-container-low px-3 py-2 rounded-lg border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">do_not_disturb_on</span>
+<span class="font-label-md text-label-md text-on-surface">استراحت (DND)</span>
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer transition-transform duration-200 ease-in-out z-10 right-5 border-outline-variant" id="dnd-toggle" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-surface-variant cursor-pointer transition-colors duration-200 ease-in-out" for="dnd-toggle"></label>
+</div>
+</div>
+</div>
+<!-- Notification Tabs -->
+<div class="px-margin-mobile bg-surface border-b border-outline-variant sticky top-0 z-10 pt-2">
+<div class="flex overflow-x-auto hide-scrollbar gap-6 font-label-md text-label-md text-on-surface-variant">
+<button class="whitespace-nowrap pb-2 px-1 tab-active" onclick="switchTab('all')">همه اعلان‌ها</button>
+<button class="whitespace-nowrap pb-2 px-1 hover:text-primary transition-colors" onclick="switchTab('emergency')">اضطراری</button>
+<button class="whitespace-nowrap pb-2 px-1 hover:text-primary transition-colors" onclick="switchTab('training')">آموزشی</button>
+<button class="whitespace-nowrap pb-2 px-1 hover:text-primary transition-colors" onclick="switchTab('admin')">مدیریتی</button>
+</div>
+</div>
+<!-- Action Bar -->
+<div class="px-margin-mobile py-3 flex justify-between items-center bg-surface-container-lowest border-b border-outline-variant">
+<span class="font-body-md text-body-md text-on-surface-variant">۳ اعلان خوانده نشده</span>
+<button class="text-primary font-label-md text-label-md hover:underline flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">done_all</span> خواندن همه
+            </button>
+</div>
+<!-- Notification List -->
+<div class="flex flex-col">
+<!-- Emergency Notification (Unread) -->
+<div class="px-margin-mobile py-4 border-b border-outline-variant bg-error-container/20 flex gap-3 relative">
+<div class="absolute right-0 top-0 bottom-0 w-1 bg-error"></div>
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-error flex items-center justify-center text-on-error">
+<span class="material-symbols-outlined" data-weight="fill">warning</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-label-md text-label-md text-on-surface">توقف اضطراری قطار ۱۱۴</h3>
+<span class="font-body-md text-body-md text-xs text-on-surface-variant">هم‌اکنون</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-2">قطار ۱۱۴ در ایستگاه دروازه دولت به دلیل نقص فنی متوقف شد. تیم فنی اعزام گردید.</p>
+<div class="flex gap-2">
+<button class="bg-primary text-on-primary font-label-md text-label-md px-4 py-1 rounded hover:bg-on-primary-fixed-variant transition-colors">مشاهده جزئیات</button>
+</div>
+</div>
+<div class="flex-shrink-0 w-2 h-2 rounded-full bg-error mt-2"></div>
+</div>
+<!-- Admin Notification (Unread) -->
+<div class="px-margin-mobile py-4 border-b border-outline-variant bg-surface flex gap-3 relative">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">campaign</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-label-md text-label-md text-on-surface">تغییر شیفت هفته آینده</h3>
+<span class="font-body-md text-body-md text-xs text-on-surface-variant">۲ ساعت پیش</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">برنامه شیفت‌های هفته اول ماه جدید در سامانه قرار گرفت. لطفا بررسی نمایید.</p>
+</div>
+<div class="flex-shrink-0 w-2 h-2 rounded-full bg-primary mt-2"></div>
+</div>
+<!-- Training Notification (Read) -->
+<div class="px-margin-mobile py-4 border-b border-outline-variant bg-surface opacity-80 flex gap-3">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">school</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-label-md text-label-md text-on-surface">دوره آموزشی ایمنی تونل</h3>
+<span class="font-body-md text-body-md text-xs text-on-surface-variant">دیروز</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">یادآوری: دوره آموزشی ایمنی کار در تونل فردا ساعت ۸ صبح برگزار می‌شود.</p>
+</div>
+</div>
+</div>
+<!-- Settings Divider -->
+<div class="mt-6 mb-2 px-margin-mobile">
+<h2 class="font-label-md text-label-md text-primary border-b border-outline-variant pb-2">تنظیمات دریافت اعلان</h2>
+</div>
+<!-- Notification Settings -->
+<div class="px-margin-mobile pb-8 space-y-4">
+<!-- Emergency Settings -->
+<div class="bg-surface border border-outline-variant rounded-lg p-4">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-error">warning</span>
+<h3 class="font-label-md text-label-md text-on-surface">اعلان‌های اضطراری</h3>
+</div>
+<div class="space-y-3 pl-2 border-r-2 border-error/30 pr-3">
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">پیامک (SMS)</span>
+<div class="relative inline-block w-10 align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 right-0 border-primary" id="em-sms" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-primary cursor-pointer" for="em-sms"></label>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">پوش نوتیفیکیشن</span>
+<div class="relative inline-block w-10 align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 right-0 border-primary" id="em-push" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-primary cursor-pointer" for="em-push"></label>
+</div>
+</div>
+</div>
+</div>
+<!-- Admin Settings -->
+<div class="bg-surface border border-outline-variant rounded-lg p-4">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-tertiary">campaign</span>
+<h3 class="font-label-md text-label-md text-on-surface">اعلان‌های مدیریتی</h3>
+</div>
+<div class="space-y-3 pl-2 border-r-2 border-outline-variant pr-3">
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">پیامک (SMS)</span>
+<div class="relative inline-block w-10 align-middle select-none">
+<input class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 right-5 border-outline-variant" id="ad-sms" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-surface-variant cursor-pointer" for="ad-sms"></label>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">درون برنامه‌ای</span>
+<div class="relative inline-block w-10 align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 right-0 border-primary" id="ad-app" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-primary cursor-pointer" for="ad-app"></label>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-surface dark:bg-surface-dim fixed bottom-0 w-full z-50 border-t border-outline-variant dark:border-secondary flex flex-row-reverse justify-around items-center h-16 md:hidden">
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-low transition-all active:inner-shadow duration-100 flex-1 h-full" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">داشبورد</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-low transition-all active:inner-shadow duration-100 flex-1 h-full" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="calendar_month">calendar_month</span>
+<span class="font-label-md text-label-md">برنامه کاری</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-low transition-all active:inner-shadow duration-100 flex-1 h-full" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="chat">chat</span>
+<span class="font-label-md text-label-md">گفتگو</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim font-bold hover:bg-surface-container-low transition-all active:inner-shadow duration-100 flex-1 h-full" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span class="font-label-md text-label-md">پروفایل</span>
+</a>
+</nav>
+<script>
+        // Simple tab switching logic for UI demonstration
+        function switchTab(tabId) {
+            const tabs = document.querySelectorAll('.px-1.whitespace-nowrap');
+            tabs.forEach(tab => {
+                tab.classList.remove('tab-active');
+                tab.classList.add('hover:text-primary');
+            });
+            event.currentTarget.classList.add('tab-active');
+            event.currentTarget.classList.remove('hover:text-primary');
+        }
+
+        // Toggle checkbox visual logic (basic)
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if(this.checked) {
+                    this.classList.replace('right-5', 'right-0');
+                    this.classList.replace('border-outline-variant', 'border-primary');
+                    this.nextElementSibling.classList.replace('bg-surface-variant', 'bg-primary');
+                } else {
+                    this.classList.replace('right-0', 'right-5');
+                    this.classList.replace('border-primary', 'border-outline-variant');
+                    this.nextElementSibling.classList.replace('bg-primary', 'bg-surface-variant');
+                }
+            });
+            // Initial setup based on checked state
+            if(checkbox.checked) {
+                checkbox.classList.add('right-0', 'border-primary');
+                checkbox.classList.remove('right-5', 'border-outline-variant');
+                if(checkbox.nextElementSibling) checkbox.nextElementSibling.classList.add('bg-primary');
+            } else {
+                checkbox.classList.add('right-5', 'border-outline-variant');
+                checkbox.classList.remove('right-0', 'border-primary');
+            }
+        });
+    </script>
+</body></html>

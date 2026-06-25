@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>مدیریت دسترسی و امنیت - مترو خط ۱</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary": "#ffffff",
+                      "surface-bright": "#f8f9fa",
+                      "surface-container-highest": "#e1e3e4",
+                      "tertiary-container": "#767474",
+                      "surface-dim": "#d9dadb",
+                      "error-container": "#ffdad6",
+                      "outline": "#926f6a",
+                      "background": "#f8f9fa",
+                      "outline-variant": "#e7bdb7",
+                      "on-secondary-container": "#656464",
+                      "tertiary": "#5d5c5b",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container": "#edeeef",
+                      "secondary-fixed": "#e4e2e1",
+                      "inverse-surface": "#2e3132",
+                      "on-surface-variant": "#5d3f3b",
+                      "surface-variant": "#e1e3e4",
+                      "on-primary": "#ffffff",
+                      "primary-container": "#e1271c",
+                      "surface-tint": "#c00205",
+                      "on-surface": "#191c1d",
+                      "inverse-primary": "#ffb4a9",
+                      "on-primary-fixed-variant": "#930002",
+                      "primary-fixed": "#ffdad5",
+                      "on-primary-container": "#fffbff",
+                      "on-secondary-fixed-variant": "#474747",
+                      "primary-fixed-dim": "#ffb4a9",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "inverse-on-surface": "#f0f1f2",
+                      "surface": "#f8f9fa",
+                      "secondary-container": "#e4e2e1",
+                      "on-background": "#191c1d",
+                      "tertiary-fixed": "#e5e2e1",
+                      "on-primary-fixed": "#410000",
+                      "on-error": "#ffffff",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "error": "#ba1a1a",
+                      "surface-container-low": "#f3f4f5",
+                      "primary": "#bc0004",
+                      "surface-container-high": "#e7e8e9",
+                      "secondary": "#5f5e5e",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "on-secondary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-container": "#f7feff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "touch-target-min": "48px",
+                      "gutter": "16px",
+                      "margin-desktop": "32px",
+                      "unit": "4px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "data-mono": ["JetBrains Mono"],
+                      "body-md": ["Vazirmatn"],
+                      "headline-lg-mobile": ["Vazirmatn"],
+                      "headline-md": ["Vazirmatn"],
+                      "headline-lg": ["Vazirmatn"],
+                      "label-md": ["Vazirmatn"],
+                      "body-lg": ["Vazirmatn"]
+              },
+              "fontSize": {
+                      "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "36px", "fontWeight": "700"}],
+                      "headline-md": ["24px", {"lineHeight": "36px", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "48px", "fontWeight": "700"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .filled-icon { font-variation-settings: 'FILL' 1; }
+        .pulse-animation { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        /* Light mode specific overrides for better contrast based on style guidance */
+        html:not(.dark) {
+            background-color: #F8F9FA;
+            color: #191c1d;
+        }
+        .zebra-row:nth-child(even) { background-color: #F1F1F1; }
+        .zebra-row:nth-child(odd) { background-color: #FFFFFF; }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            border: 1px solid #E0E0E0;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased flex h-screen overflow-hidden">
+<!-- SideNavBar (Shared Component) -->
+<nav class="hidden md:flex flex-col h-full py-4 gap-2 bg-surface-container-low border-l border-outline flat no shadows w-64 shrink-0">
+<div class="px-gutter mb-6 flex items-center gap-4">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="The Tehran Metro Line 1 command center logo. High contrast black and red industrial design. Professional corporate identity for a massive transportation infrastructure project. Clean, minimal, authoritative. 100x100 resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnFIHwYQfPeR-brrj6KrEclJHFa_QTzjb48bcay1EIMF-LZBir-OZWnE3vQB4EvdINxH1Eg3Hz2BiJOJC1vV_LLX_UxYBHDIqRcrMDgREN3rqtpMF9hxqCEjbtMBEkZOXkWKB4AlUsE4cEb0vPR8YB1xiwq3GmXJmQfKr1I4SAw1X_axitxG_vA3feuRWLQYp40vNBX3dDRi0U1fqK3dsADzuBIcjiEl_E5FukBiWQJz61UdPvWF8Z1a1aAMvdHIiTVLvyTeSxSdX2"/>
+<div>
+<h1 class="font-headline-md text-headline-md text-on-surface">Line 1 Control</h1>
+<p class="font-label-md text-label-md text-secondary">Operational Hub</p>
+</div>
+</div>
+<div class="flex flex-col gap-1 px-2 flex-grow">
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 rounded text-secondary hover:bg-surface-container-high transition-colors duration-100" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 rounded text-secondary hover:bg-surface-container-high transition-colors duration-100" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-label-md text-label-md">Roster</span>
+</a>
+<!-- Active (Semantic match: Security/Access Panel) -->
+<a class="flex items-center gap-3 px-4 py-3 rounded bg-primary-container text-on-primary-container border-r-4 border-primary scale-[0.98] transition-transform duration-100" href="#">
+<span class="material-symbols-outlined filled-icon">security</span>
+<span class="font-label-md text-label-md">Access Control</span>
+</a>
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 rounded text-secondary hover:bg-surface-container-high transition-colors duration-100" href="#">
+<span class="material-symbols-outlined">engineering</span>
+<span class="font-label-md text-label-md">Maintenance</span>
+</a>
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 rounded text-secondary hover:bg-surface-container-high transition-colors duration-100" href="#">
+<span class="material-symbols-outlined">bolt</span>
+<span class="font-label-md text-label-md">Power Grid</span>
+</a>
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 rounded text-secondary hover:bg-surface-container-high transition-colors duration-100" href="#">
+<span class="material-symbols-outlined">traffic</span>
+<span class="font-label-md text-label-md">Signaling</span>
+</a>
+</div>
+<div class="mt-auto px-2 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded text-secondary hover:bg-surface-container-high transition-colors duration-100" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-secondary hover:bg-surface-container-high transition-colors duration-100" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-md text-label-md">Logs</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+<!-- TopNavBar (Shared Component) -->
+<header class="flex justify-between items-center px-margin-desktop w-full h-touch-target-min bg-surface-container-highest border-b border-outline flat no shadows shrink-0">
+<div class="flex items-center gap-4">
+<span class="font-headline-lg text-headline-lg font-bold text-primary">Redline Command</span>
+<!-- Search on left (RTL adjusts this visual flow, but keeping semantic structure) -->
+<div class="hidden md:flex items-center bg-surface rounded-full px-4 py-1 border border-outline-variant focus-within:border-primary">
+<span class="material-symbols-outlined text-secondary mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-on-surface font-body-md w-64 placeholder:text-tertiary" placeholder="جستجوی پرسنل یا شناسه..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<!-- Trailing Icons -->
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-primary hover:bg-primary-container hover:text-on-primary-container transition-colors duration-150">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-primary hover:bg-primary-container hover:text-on-primary-container transition-colors duration-150">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-primary hover:bg-primary-container hover:text-on-primary-container transition-colors duration-150">
+<span class="material-symbols-outlined">wifi_tethering</span>
+</button>
+<!-- Primary Action / Profile -->
+<button class="flex items-center gap-2 pr-4 pl-2 py-1 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors duration-150 border border-outline-variant">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="Administrator profile picture for Tehran Metro system. A professional headshot of a middle-eastern man in a sharp corporate uniform. High contrast, clean lighting, authoritative look. 64x64 resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9mAXvsrl2Y9wLfk9y5oJAEfOXZKwcoIkkp36gBqtoV4mB4lHWLctKLQYGyttvnI0ljdEZQ5CT6bSLgG0sVPdDEtyXKLSM2PH4j5Sb12QDMKN3eUX7hlibVpSaFsqAki-DVDf2DKDIRTWfNkRRNkgZsRDxyZOHpQN4fPUodwdYBzKz9H7Wo42ot5aG_N3d5CzK2AMKCMDkZZ_Qm0WE7KCiuce6I4jb7_ZCifmQN-zipYl5ofJYNfafIM1LgUmO30ejlGuLjVNlHC6X"/>
+<span class="font-label-md text-label-md text-primary font-bold">Profile</span>
+</button>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 overflow-y-auto p-margin-mobile md:p-margin-desktop grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Header Section -->
+<div class="col-span-full mb-4">
+<h2 class="font-headline-lg text-headline-lg font-bold text-on-surface">مدیریت دسترسی و امنیت سیستم</h2>
+<p class="font-body-md text-body-md text-secondary">کنترل مجوزهای پرسنل، نظارت بر نشست‌های فعال و ثبت رویدادهای امنیتی خط ۱.</p>
+</div>
+<!-- Bento Grid Layout -->
+<!-- Column 1: Main User Management (Spans 8 columns) -->
+<div class="col-span-full lg:col-span-8 flex flex-col gap-gutter">
+<!-- Users & Roles Table Card -->
+<div class="glass-card rounded-xl p-4 flex flex-col h-[500px]">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline-md text-headline-md text-on-surface">پرسنل و نقش‌ها</h3>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-4 py-2 rounded shadow-sm hover:opacity-90 active:shadow-inner flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+                            افزودن کاربر جدید
+                        </button>
+</div>
+<div class="overflow-x-auto flex-1">
+<table class="w-full text-right border-collapse">
+<thead class="bg-[#2D2D2D] text-on-primary sticky top-0 z-10">
+<tr>
+<th class="p-3 font-label-md text-label-md">نام پرسنل</th>
+<th class="p-3 font-label-md text-label-md">شناسه (ID)</th>
+<th class="p-3 font-label-md text-label-md">واحد</th>
+<th class="p-3 font-label-md text-label-md">نقش فعلی</th>
+<th class="p-3 font-label-md text-label-md">وضعیت</th>
+<th class="p-3 font-label-md text-label-md text-center">عملیات</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface border-b border-outline">
+<tr class="zebra-row border-b border-outline-variant">
+<td class="p-3 flex items-center gap-3">
+<img class="w-8 h-8 rounded-full" data-alt="Headshot of a male metro operator in uniform, professional lighting, industrial setting background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8HTenexPyZl0_AN04TSofazNYQg8XJNeEteRXJ3D74sZO93NuHFG-7NuuPUqyM9Bx8tIQ9XHOkkFViKvko1Jof91ZwVtPZ0z1xY3strmaTIuKslGj8fJRmAdBckTcMeJ4aj5QBXK1rZhjcfKB9mtZ1wAesKm6i_2UuLn1kpSf7BqaHnbMQN5uGb3QHXqEhBPU5rccsPLvP7i-vvyrYASxoMCH9jpdIa4yi7so5_L29CGsXvFZrKXlQ7x1Cd9w5_54IH7W-Q9xg71j"/>
+                                        علی رضایی
+                                    </td>
+<td class="p-3 font-data-mono text-data-mono">OP-8821</td>
+<td class="p-3">عملیات قطار</td>
+<td class="p-3">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-secondary-container text-on-secondary-container text-sm">
+                                            Senior Operator
+                                        </span>
+</td>
+<td class="p-3 text-emerald-600 font-bold">فعال</td>
+<td class="p-3 text-center">
+<button class="text-primary hover:text-surface-tint p-1" title="ویرایش دسترسی">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</td>
+</tr>
+<tr class="zebra-row border-b border-outline-variant bg-[#F1F1F1]">
+<td class="p-3 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center font-bold text-sm">م‌ت</div>
+                                        مریم تقوی
+                                    </td>
+<td class="p-3 font-data-mono text-data-mono">MT-4099</td>
+<td class="p-3">تاسیسات</td>
+<td class="p-3">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-secondary-container text-on-secondary-container text-sm">
+                                            Maintenance Lead
+                                        </span>
+</td>
+<td class="p-3 text-emerald-600 font-bold">فعال</td>
+<td class="p-3 text-center">
+<button class="text-primary hover:text-surface-tint p-1" title="ویرایش دسترسی">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</td>
+</tr>
+<tr class="zebra-row border-b border-outline-variant">
+<td class="p-3 flex items-center gap-3">
+<img class="w-8 h-8 rounded-full" data-alt="Headshot of a serious metro security officer in dark uniform, flat lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9dxFt2jIr6FvDqg8VJkJMTfePE0-z2f5tRf4ScsG3xRPiXJhliqNXgvFIaoSceYo4dy1GYuQUemWBQuhzADLfRVCPVDyrYWpHoJrB-ySL1zy62qJr49sYLyZd2ub3O9dIzps6Q196SIcjsP_f4NLevth4hr6WjPwTb0S4T4Yp7Lb4cT_t9aC6-6BBsC6cl54Bhy9lkLy-2KfJtkLWXz-KzpM5Fra-yZb1dv5UyJFtvor8eYQbSOomAKJh_Dwt7_lsltQIEEar3Iuo"/>
+                                        سهراب سپهری
+                                    </td>
+<td class="p-3 font-data-mono text-data-mono">SC-1002</td>
+<td class="p-3">حراست</td>
+<td class="p-3">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-error-container text-on-error-container text-sm border border-primary font-bold">
+<span class="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+                                            Security Chief
+                                        </span>
+</td>
+<td class="p-3 text-emerald-600 font-bold">فعال</td>
+<td class="p-3 text-center">
+<button class="text-primary hover:text-surface-tint p-1" title="ویرایش دسترسی">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</td>
+</tr>
+<tr class="zebra-row border-b border-outline-variant bg-[#F1F1F1]">
+<td class="p-3 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center font-bold text-sm">ک‌ن</div>
+                                        کامران نوری
+                                    </td>
+<td class="p-3 font-data-mono text-data-mono">EN-3320</td>
+<td class="p-3">برق و سیگنالینگ</td>
+<td class="p-3">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-secondary-container text-on-secondary-container text-sm">
+                                            Grid Engineer
+                                        </span>
+</td>
+<td class="p-3 text-tertiary">معلق</td>
+<td class="p-3 text-center">
+<button class="text-primary hover:text-surface-tint p-1" title="ویرایش دسترسی">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Permission Matrices (Toggles) -->
+<div class="glass-card rounded-xl p-4">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4">ماتریس دسترسی سریع (نقش‌های کلیدی)</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Role Card: Senior Operator -->
+<div class="border border-outline-variant rounded-lg p-3 bg-surface">
+<div class="flex items-center gap-2 border-b border-outline-variant pb-2 mb-3">
+<span class="material-symbols-outlined text-secondary">train</span>
+<h4 class="font-label-md text-label-md text-on-surface font-bold">Senior Operator</h4>
+</div>
+<div class="flex flex-col gap-2">
+<label class="flex items-center justify-between cursor-pointer">
+<span class="font-body-md text-body-md text-secondary text-sm">سیستم پیجینگ (PA)</span>
+<input checked="" class="form-checkbox text-primary rounded focus:ring-primary h-4 w-4" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between cursor-pointer">
+<span class="font-body-md text-body-md text-secondary text-sm">گزارش حوادث</span>
+<input checked="" class="form-checkbox text-primary rounded focus:ring-primary h-4 w-4" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between cursor-pointer opacity-50">
+<span class="font-body-md text-body-md text-secondary text-sm">کنترل شبکه برق</span>
+<input class="form-checkbox text-tertiary rounded h-4 w-4" disabled="" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- Role Card: Grid Engineer -->
+<div class="border border-outline-variant rounded-lg p-3 bg-surface">
+<div class="flex items-center gap-2 border-b border-outline-variant pb-2 mb-3">
+<span class="material-symbols-outlined text-secondary">bolt</span>
+<h4 class="font-label-md text-label-md text-on-surface font-bold">Grid Engineer</h4>
+</div>
+<div class="flex flex-col gap-2">
+<label class="flex items-center justify-between cursor-pointer">
+<span class="font-body-md text-body-md text-secondary text-sm">سیستم پیجینگ (PA)</span>
+<input class="form-checkbox text-primary rounded focus:ring-primary h-4 w-4" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between cursor-pointer">
+<span class="font-body-md text-body-md text-secondary text-sm">گزارش حوادث</span>
+<input checked="" class="form-checkbox text-primary rounded focus:ring-primary h-4 w-4" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between cursor-pointer">
+<span class="font-body-md text-body-md text-on-surface font-bold text-sm">کنترل شبکه برق</span>
+<input checked="" class="form-checkbox text-primary rounded focus:ring-primary h-4 w-4" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- Role Card: Security Chief -->
+<div class="border border-primary rounded-lg p-3 bg-error-container">
+<div class="flex items-center gap-2 border-b border-outline-variant pb-2 mb-3 text-on-error-container">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+<h4 class="font-label-md text-label-md font-bold">Security Chief</h4>
+</div>
+<div class="flex flex-col gap-2">
+<label class="flex items-center justify-between cursor-pointer">
+<span class="font-body-md text-body-md text-on-error-container text-sm">دسترسی کامل دوربین‌ها</span>
+<input checked="" class="form-checkbox text-primary rounded focus:ring-primary h-4 w-4 border-primary" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between cursor-pointer">
+<span class="font-body-md text-body-md text-on-error-container text-sm">لغو دسترسی پرسنل</span>
+<input checked="" class="form-checkbox text-primary rounded focus:ring-primary h-4 w-4 border-primary" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between cursor-pointer">
+<span class="font-body-md text-body-md text-on-error-container text-sm">خاموشی اضطراری</span>
+<input class="form-checkbox text-primary rounded focus:ring-primary h-4 w-4 border-primary" type="checkbox"/>
+</label>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Column 2: Audit Logs & Security Status (Spans 4 columns) -->
+<div class="col-span-full lg:col-span-4 flex flex-col gap-gutter">
+<!-- System Health / Security Status Mini-Panel -->
+<div class="glass-card rounded-xl p-4 border-l-4 border-l-primary">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-3">وضعیت امنیتی شبکه</h3>
+<div class="flex flex-col gap-3">
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-secondary">فایروال مرکز کنترل</span>
+<span class="flex items-center gap-1 text-emerald-600 font-data-mono text-data-mono">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span> ACTIVE
+                            </span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-secondary">ترافیک مشکوک (۲۴ ساعت)</span>
+<span class="font-data-mono text-data-mono text-on-surface font-bold">0 رویداد</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden mt-1">
+<div class="bg-emerald-500 w-full h-full"></div>
+</div>
+</div>
+</div>
+<!-- Security Controls -->
+<div class="glass-card rounded-xl p-4">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4">تنظیمات امنیتی سراسری</h3>
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">الزام احراز هویت دو مرحله‌ای (MFA)</h4>
+<p class="font-body-md text-sm text-secondary">برای تمامی پرسنل رده بالا اعمال شود.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="border-t border-outline-variant pt-4">
+<label class="block font-label-md text-label-md text-on-surface mb-1">زمان انقضای نشست (دقیقه)</label>
+<select class="w-full bg-surface border border-outline-variant text-on-surface text-sm rounded focus:ring-primary focus:border-primary block p-2">
+<option>۱۵ دقیقه (استاندارد)</option>
+<option selected="">۳۰ دقیقه</option>
+<option>۶۰ دقیقه</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Security Audit Log -->
+<div class="glass-card rounded-xl p-4 flex-1 flex flex-col h-[300px]">
+<div class="flex justify-between items-center mb-3 border-b border-outline-variant pb-2">
+<h3 class="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">history</span>
+                            لاگ امنیتی زنده
+                        </h3>
+<span class="w-2 h-2 rounded-full bg-primary pulse-animation"></span>
+</div>
+<div class="flex-1 overflow-y-auto pr-2 space-y-3 font-data-mono text-data-mono text-sm">
+<!-- Event 1: Critical -->
+<div class="p-2 bg-error-container border-r-2 border-primary rounded">
+<div class="flex justify-between text-on-error-container mb-1">
+<span class="font-bold">FAILED LOGIN</span>
+<span class="opacity-75">14:02:11</span>
+</div>
+<p class="text-on-error-container opacity-90 text-xs">تلاش ناموفق برای ورود به حساب SC-1002 از IP: 192.168.1.45</p>
+</div>
+<!-- Event 2: Info -->
+<div class="p-2 border border-outline-variant rounded bg-surface">
+<div class="flex justify-between text-on-surface mb-1">
+<span class="text-secondary">PERMISSION MODIFIED</span>
+<span class="text-secondary opacity-75">13:45:00</span>
+</div>
+<p class="text-on-surface text-xs">ادمین Z دسترسی 'تاسیسات' را برای MT-4099 بروزرسانی کرد.</p>
+</div>
+<!-- Event 3: Success -->
+<div class="p-2 border border-outline-variant rounded bg-surface">
+<div class="flex justify-between text-on-surface mb-1">
+<span class="text-emerald-700">USER LOGIN</span>
+<span class="text-secondary opacity-75">13:10:05</span>
+</div>
+<p class="text-on-surface text-xs">ورود موفق علی رضایی (OP-8821) از ترمینال ایستگاه تجریش.</p>
+</div>
+<!-- Event 4: Info -->
+<div class="p-2 border border-outline-variant rounded bg-surface">
+<div class="flex justify-between text-on-surface mb-1">
+<span class="text-secondary">SESSION TIMEOUT</span>
+<span class="text-secondary opacity-75">12:30:00</span>
+</div>
+<p class="text-on-surface text-xs">پایان خودکار نشست برای کاربر EN-3320.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

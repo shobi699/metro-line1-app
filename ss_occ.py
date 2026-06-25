@@ -1,0 +1,11 @@
+from playwright.sync_api import sync_playwright
+pw = sync_playwright().start()
+browser = pw.chromium.launch(headless=True)
+page = browser.new_page(viewport={"width": 1280, "height": 900})
+page.set_default_timeout(60000)
+page.goto('http://localhost:3000/occ', wait_until='domcontentloaded')
+page.wait_for_timeout(3000)
+page.screenshot(path='/tmp/occ.png', full_page=True)
+print("OCC done")
+browser.close()
+pw.stop()

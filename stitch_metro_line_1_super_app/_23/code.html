@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html class="light" dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Metro Ops - Immediate Troubleshooting Video</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#e1e3e4",
+                        "secondary-container": "#e4e2e1",
+                        "inverse-primary": "#ffb4a9",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "on-tertiary-container": "#f7feff",
+                        "on-tertiary": "#ffffff",
+                        "inverse-on-surface": "#f0f1f2",
+                        "error": "#ba1a1a",
+                        "surface-bright": "#f8f9fa",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#e5e2e1",
+                        "tertiary": "#5d5c5b",
+                        "on-surface": "#191c1d",
+                        "on-primary-fixed": "#410000",
+                        "outline-variant": "#e7bdb7",
+                        "primary-fixed": "#ffdad5",
+                        "on-primary-container": "#fffbff",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "error-container": "#ffdad6",
+                        "on-background": "#191c1d",
+                        "surface-container-low": "#f3f4f5",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "on-secondary-fixed-variant": "#474747",
+                        "surface-container-highest": "#e1e3e4",
+                        "surface": "#f8f9fa",
+                        "secondary": "#5f5e5e",
+                        "primary": "#bc0004",
+                        "background": "#f8f9fa",
+                        "primary-container": "#e1271c",
+                        "on-surface-variant": "#5d3f3b",
+                        "on-primary-fixed-variant": "#930002",
+                        "on-error": "#ffffff",
+                        "secondary-fixed-dim": "#c8c6c6",
+                        "surface-tint": "#c00205",
+                        "tertiary-container": "#767474",
+                        "surface-dim": "#d9dadb",
+                        "surface-container": "#edeeef",
+                        "surface-container-high": "#e7e8e9",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "surface-container-lowest": "#ffffff",
+                        "outline": "#926f6a",
+                        "on-secondary-container": "#656464",
+                        "secondary-fixed": "#e4e2e1",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#2e3132"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "unit": "4px",
+                        "touch-target-min": "48px",
+                        "gutter": "16px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Vazirmatn"],
+                        "label-md": ["Vazirmatn"],
+                        "headline-lg-mobile": ["Vazirmatn"],
+                        "headline-lg": ["Vazirmatn"],
+                        "body-lg": ["Vazirmatn"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-md": ["Vazirmatn"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "48px", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "36px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex md:flex-row flex-col">
+<!-- TopNavBar for Mobile / Top Header -->
+<nav class="md:hidden flex justify-between items-center w-full px-margin-mobile sticky top-0 z-50 h-16 bg-surface-container-highest border-b border-outline-variant">
+<div class="text-headline-md font-headline-md font-bold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined">train</span>
+            Line 1 Redline Command
+        </div>
+<div class="flex gap-4 text-primary">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</div>
+</nav>
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex flex-col h-screen w-64 fixed right-0 top-0 py-6 px-4 gap-4 bg-surface border-l border-outline-variant z-40">
+<div class="mb-8">
+<h1 class="font-headline-lg text-headline-lg text-primary">Metro Ops</h1>
+<p class="font-label-md text-label-md text-secondary">Tehran Line 1</p>
+</div>
+<div class="flex flex-col gap-2 flex-grow">
+<a class="flex items-center gap-3 p-3 rounded-lg text-secondary hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-secondary hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span class="font-label-md text-label-md">Technical Manuals</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg bg-primary-container text-on-primary-container font-bold transition-all active:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="collections">collections</span>
+<span class="font-label-md text-label-md">Training Gallery</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-secondary hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="quiz">quiz</span>
+<span class="font-label-md text-label-md">Exams</span>
+</a>
+</div>
+<div class="flex flex-col gap-2 mt-auto border-t border-outline-variant pt-4">
+<a class="flex items-center gap-3 p-3 rounded-lg text-secondary hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-secondary hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-md text-label-md">Logout</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:mr-64 p-margin-mobile md:p-margin-desktop bg-background flex flex-col xl:flex-row gap-gutter overflow-y-auto">
+<!-- Video Player Section -->
+<section class="flex-1 flex flex-col gap-4 max-w-5xl">
+<!-- Breadcrumb / Back -->
+<div class="flex items-center gap-2 text-secondary mb-2">
+<a class="hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-sm">arrow_forward</span> بازگشت به گالری</a>
+<span class="text-surface-variant">/</span>
+<span class="font-label-md text-label-md">عیب‌یابی فوری: سیستم ترمز</span>
+</div>
+<!-- Player Container -->
+<div class="relative w-full aspect-video bg-black rounded-lg overflow-hidden group shadow-lg border border-outline-variant">
+<!-- Video Mock (Image Placeholder) -->
+<img class="w-full h-full object-cover opacity-80" data-alt="A highly detailed 4k screenshot of a cinematic industrial training video showing a complex subway train braking system mechanism. The lighting is dramatic and clinical, highlighting metallic textures and technical components. A focused engineer in an orange safety vest is partially visible. High contrast, precise, corporate industrial style, light mode aesthetic, sharp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxqdixdDddV1ZAi2JWR7E2HvEJccISQ5aohR0296XYtWHY5Qnm-SMTUTFH3kQY_j-ZK5IHpVA1x4uPDrKMGgLFWaicbVUPu3LhQkDoIKEH--CgFWbRw7BZ8-7BLC0tiRHX1fyiLhI3BjjmlXaaUm887tICfEmzlY8dpMf4MQUOBX30GGLds8UyMt9KwzPbvxm26jDA3ywwiwBijf6Gy_B8BhwYfqy1TR7rI1xh_apTj5P-zgNQpHxeId9jCmRXPxeZBg6ehaQwThne"/>
+<!-- Overlay Gradient -->
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+<!-- Center Play Button (Mock) -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+<button class="bg-primary/90 text-on-primary rounded-full p-4 hover:bg-primary transition-transform hover:scale-110 pointer-events-auto shadow-lg">
+<span class="material-symbols-outlined filled text-4xl">play_arrow</span>
+</button>
+</div>
+<!-- Controls Bar -->
+<div class="absolute bottom-0 left-0 right-0 p-4 flex flex-col gap-2 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/90 to-transparent">
+<!-- Progress Bar -->
+<div class="w-full h-1.5 bg-surface-variant/50 rounded-full cursor-pointer relative overflow-hidden">
+<div class="absolute top-0 left-0 h-full w-1/3 bg-primary rounded-full"></div>
+<!-- Chapter Markers -->
+<div class="absolute top-0 left-1/4 h-full w-0.5 bg-white/80"></div>
+<div class="absolute top-0 left-1/2 h-full w-0.5 bg-white/80"></div>
+<div class="absolute top-0 left-3/4 h-full w-0.5 bg-white/80"></div>
+</div>
+<!-- Lower Controls -->
+<div class="flex items-center justify-between text-white mt-1">
+<div class="flex items-center gap-4">
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined filled">pause</span></button>
+<button class="hover:text-primary transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined filled">volume_up</span>
+</button>
+<span class="font-data-mono text-data-mono text-sm opacity-80 ml-2">12:04 / 34:15</span>
+</div>
+<div class="flex items-center gap-4">
+<!-- Quality Selector -->
+<div class="relative inline-block text-left">
+<button class="hover:text-primary transition-colors flex items-center gap-1 font-data-mono text-data-mono text-sm">
+<span class="material-symbols-outlined">settings</span>
+                                    1080p
+                                </button>
+<!-- Mock Dropdown (Hidden by default, shown for design representation) -->
+<!-- <div class="absolute bottom-full right-0 mb-2 w-24 bg-surface text-on-surface rounded shadow-lg border border-outline-variant overflow-hidden">
+                                    <button class="w-full text-right px-3 py-2 text-sm hover:bg-surface-variant font-data-mono">4K</button>
+                                    <button class="w-full text-right px-3 py-2 text-sm bg-primary/10 text-primary font-bold font-data-mono border-l-2 border-primary">1080p</button>
+                                    <button class="w-full text-right px-3 py-2 text-sm hover:bg-surface-variant font-data-mono">720p</button>
+                                    <button class="w-full text-right px-3 py-2 text-sm hover:bg-surface-variant font-data-mono">Auto</button>
+                                </div> -->
+</div>
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined">closed_caption</span></button>
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined">fullscreen</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Video Info & Actions -->
+<div class="bg-surface p-6 rounded-lg border border-outline-variant flex flex-col gap-4">
+<div class="flex justify-between items-start flex-wrap gap-4">
+<div>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-1">عیب‌یابی فوری: سیستم ترمز هیدرولیک پنوماتیک</h2>
+<p class="font-body-md text-body-md text-secondary">ماژول فنی خط ۱ | مدرس: مهندس رضایی | تاریخ به‌روزرسانی: ۱۴۰۳/۰۸/۱۵</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 border-2 border-primary text-primary font-label-md text-label-md rounded hover:bg-primary-container/20 transition-colors active:scale-95">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+                            دانلود آفلاین
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-high text-on-surface font-label-md text-label-md rounded hover:bg-surface-variant transition-colors active:scale-95">
+<span class="material-symbols-outlined" data-icon="share">share</span>
+                            اشتراک‌گذاری
+                        </button>
+</div>
+</div>
+<div class="border-t border-outline-variant pt-4 mt-2">
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                        این ویدیو آموزشی مراحل گام‌به‌گام شناسایی و رفع نقص در سیستم‌های ترمز ترکیبی قطارهای سری A خط ۱ را پوشش می‌دهد. رعایت پروتکل‌های ایمنی ذکر شده در دقیقه ۰۵:۳۰ الزامی است. دسترسی به این محتوا نیازمند مجوز سطح ۲ تکنسین می‌باشد.
+                    </p>
+<div class="flex items-center gap-2 mt-4 text-sm font-label-md text-label-md text-secondary">
+<span class="material-symbols-outlined text-base">verified_user</span>
+                        مجوز دسترسی معتبر: تکنسین ارشد نگهداری
+                    </div>
+</div>
+</div>
+</section>
+<!-- Up Next / Playlist Sidebar -->
+<aside class="w-full xl:w-80 flex flex-col gap-4">
+<div class="bg-surface border border-outline-variant rounded-lg p-4 sticky top-6">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4 border-b border-outline-variant pb-2">ویدیوهای مرتبط (ماژول ترمز)</h3>
+<div class="flex flex-col gap-3">
+<!-- Current Video Item -->
+<div class="flex gap-3 p-2 bg-primary-container/10 border-r-4 border-primary rounded-l hover:bg-surface-variant transition-colors cursor-pointer">
+<div class="w-24 h-16 bg-surface-container-highest rounded overflow-hidden flex-shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="A highly detailed thumbnail image showing a close up of a glowing train brake pad in an industrial depot setting. Dramatic rim lighting, metallic textures, high contrast corporate industrial style, pristine visual quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmeDqzCvvWzKDOU1KdGQeoehLEGgr3NfRZcBrhXuBQTVWuhlrf4oUXEuvzmP6dUAs5xPRLWDtyXNM7DMJV0ySX8VzHX37mSrq7MkQNRx1XRrTRVPAWhx0ClLlXO3Q9cdPDI-LheO1osTGvFrZRg3m0lemVZjAedJY40UgmT6GbvpRkmLQEwLLjuKYSqrAEUoh3wTyU71KV77EKBdh7oVeS_sOZOxDZScZzxJpT1cJRSJIUHPCv_wRyKSH6wHrTqXX7eUZ3TVb4lobw"/>
+<div class="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 rounded font-data-mono">34:15</div>
+<div class="absolute inset-0 bg-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-white">play_circle</span>
+</div>
+</div>
+<div class="flex flex-col justify-center">
+<h4 class="font-label-md text-label-md text-on-surface line-clamp-2">۱. عیب‌یابی فوری: سیستم ترمز</h4>
+<span class="text-xs text-primary mt-1 font-bold">در حال پخش</span>
+</div>
+</div>
+<!-- Next Video Item -->
+<div class="flex gap-3 p-2 hover:bg-surface-variant rounded transition-colors cursor-pointer group">
+<div class="w-24 h-16 bg-surface-container-highest rounded overflow-hidden flex-shrink-0 relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" data-alt="A highly detailed thumbnail image showing an engineer's hand interacting with a complex digital diagnostic panel on a modern subway train. Industrial corporate style, bright clear lighting, focused and precise composition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPb2kc4ZnKtLr_l_y_8ymQXKQHZR459BspAh141D9djJonQb8qVZjPe2WSRe-aXFY_OaoYH0KblWiFBaOg_M9u0GJ34gewTtRcQC1cOwhCtnL-fpu0F3xsPUCbS7VQrGPOmyLsoDF6xyyd1ewMlFU6k6eU5OziV-2qTWWq0GZnenCJygjuDRIeB3zfjFeVw6UuUzVnkIgHWb3g9_koaMaXFHa3WPJ_MTlxbuv25Bad5YZ0qY8qdC9K3e2R-CqSMK4iven3-3NwPEHE"/>
+<div class="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 rounded font-data-mono">18:40</div>
+</div>
+<div class="flex flex-col justify-center">
+<h4 class="font-label-md text-label-md text-on-surface line-clamp-2 text-opacity-80 group-hover:text-opacity-100 transition-opacity">۲. کالیبراسیون سنسورهای فشار</h4>
+<span class="text-xs text-secondary mt-1">تکنسین برق</span>
+</div>
+</div>
+<!-- Next Video Item -->
+<div class="flex gap-3 p-2 hover:bg-surface-variant rounded transition-colors cursor-pointer group">
+<div class="w-24 h-16 bg-surface-container-highest rounded overflow-hidden flex-shrink-0 relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" data-alt="A highly detailed thumbnail image showing a schematic technical drawing of a train bogey overlaid on a physical metallic part. Blueprint aesthetic mixed with industrial reality. Clean, professional, well-lit." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6Iy7lMAeNrX19SfMhcSWQCATPb_D79OkfBGhxocxZtVNmQpD36lmeIHNf9vSKwK7wbozI8_mhVi0g5zQJj85YFjvABa5GiDt5zFWvwqA1aJKCP1j6NINxKgnEcNomFpbIpLV4U4nqto15tSsjiVDczP_g4gdMrx-Ai06ht0Zpd1utQScPzjT1K-dJlcpsXi1_K59Q0fdrkYjJJzH8vauKxCjACRXlUfUpTKwLQo50BQndnjyIx8AfWmiFGHmmVb5jRfjBf0k2KeaP"/>
+<div class="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 rounded font-data-mono">45:12</div>
+</div>
+<div class="flex flex-col justify-center">
+<h4 class="font-label-md text-label-md text-on-surface line-clamp-2 text-opacity-80 group-hover:text-opacity-100 transition-opacity">۳. تعویض دوره‌ای لنت‌های کامپوزیت</h4>
+<span class="text-xs text-secondary mt-1">نگهداری مکانیک</span>
+</div>
+</div>
+</div>
+<button class="w-full mt-4 py-2 text-center text-primary font-label-md text-label-md border border-outline-variant rounded hover:bg-surface-variant transition-colors">
+                    مشاهده کل دوره
+                </button>
+</div>
+</aside>
+</main>
+</body></html>

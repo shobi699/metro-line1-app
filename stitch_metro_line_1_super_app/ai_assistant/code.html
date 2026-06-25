@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Operational Assistant - Tehran Metro Line 1</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed-variant": "#474646",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "outline": "#926f6a",
+                      "surface-dim": "#d9dadb",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-fixed-dim": "#ffb4a9",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "primary": "#bc0004",
+                      "on-primary": "#ffffff",
+                      "primary-container": "#e1271c",
+                      "tertiary-fixed": "#e5e2e1",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "secondary": "#5f5e5e",
+                      "surface-container-low": "#f3f4f5",
+                      "primary-fixed": "#ffdad5",
+                      "background": "#f8f9fa",
+                      "inverse-on-surface": "#f0f1f2",
+                      "tertiary-container": "#767474",
+                      "surface": "#f8f9fa",
+                      "on-primary-container": "#fffbff",
+                      "surface-variant": "#e1e3e4",
+                      "surface-container": "#edeeef",
+                      "surface-bright": "#f8f9fa",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "on-background": "#191c1d",
+                      "on-error": "#ffffff",
+                      "on-primary-fixed-variant": "#930002",
+                      "surface-tint": "#c00205",
+                      "secondary-fixed": "#e4e2e1",
+                      "on-secondary": "#ffffff",
+                      "outline-variant": "#e7bdb7",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed": "#410000",
+                      "inverse-primary": "#ffb4a9",
+                      "surface-container-highest": "#e1e3e4",
+                      "error": "#ba1a1a",
+                      "on-surface": "#191c1d",
+                      "tertiary": "#5d5c5b",
+                      "surface-container-high": "#e7e8e9",
+                      "on-tertiary-container": "#f7feff",
+                      "on-surface-variant": "#5d3f3b",
+                      "on-secondary-container": "#656464",
+                      "error-container": "#ffdad6",
+                      "secondary-container": "#e4e2e1",
+                      "on-secondary-fixed-variant": "#474747",
+                      "inverse-surface": "#2e3132"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "touch-target-min": "48px",
+                      "margin-desktop": "32px",
+                      "unit": "4px",
+                      "gutter": "16px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "headline-lg": [
+                              "Vazirmatn"
+                      ],
+                      "body-md": [
+                              "Vazirmatn"
+                      ],
+                      "body-lg": [
+                              "Vazirmatn"
+                      ],
+                      "headline-md": [
+                              "Vazirmatn"
+                      ],
+                      "label-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg-mobile": [
+                              "Vazirmatn"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "48px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "data-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .pulse-animation {
+            animation: pulse-border 2s infinite;
+        }
+        @keyframes pulse-border {
+            0% { border-color: transparent; box-shadow: 0 0 0 0 rgba(238, 49, 36, 0.4); }
+            50% { border-color: #EE3124; box-shadow: 0 0 0 4px rgba(238, 49, 36, 0); }
+            100% { border-color: transparent; box-shadow: 0 0 0 0 rgba(238, 49, 36, 0); }
+        }
+        
+        /* High Contrast Dark Mode Adjustments */
+        .dark .bg-surface-container-highest { background-color: #2e3132; }
+        .dark .text-primary { color: #ffb4a9; }
+        .dark .bg-background { background-color: #191c1d; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex selection:bg-primary selection:text-on-primary">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex flex-row-reverse justify-between items-center px-margin-desktop h-touch-target-min bg-background dark:bg-inverse-surface border-b border-outline-variant dark:border-outline text-primary dark:text-inverse-primary pr-64">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary">Command Center AI</span>
+<span class="text-on-surface-variant dark:text-surface-variant font-label-md text-label-md mr-4">AI Assistant - Line 1</span>
+</div>
+<!-- System Health Pips -->
+<div class="flex items-center gap-4 mr-auto ml-8">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+<span class="font-data-mono text-data-mono text-on-surface-variant">RAD</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+<span class="font-data-mono text-data-mono text-on-surface-variant">NET</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-[#EE3124] pulse-animation"></span>
+<span class="font-data-mono text-data-mono text-on-surface-variant">SRV</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant dark:hover:bg-on-surface-variant/10 rounded-full scale-95 duration-75">
+<span class="material-symbols-outlined" data-weight="regular">settings</span>
+</button>
+<button class="p-2 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant dark:hover:bg-on-surface-variant/10 rounded-full scale-95 duration-75 relative">
+<span class="absolute top-1 right-1 w-2 h-2 bg-[#EE3124] rounded-full"></span>
+<span class="material-symbols-outlined" data-weight="regular">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant dark:hover:bg-on-surface-variant/10 rounded-full scale-95 duration-75">
+<span class="material-symbols-outlined" data-weight="regular">account_circle</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="fixed right-0 top-0 h-full flex flex-col pt-touch-target-min w-64 bg-surface-container-highest dark:bg-inverse-surface border-l border-outline-variant dark:border-outline z-40">
+<div class="p-4 border-b border-outline-variant dark:border-outline flex items-center gap-4">
+<img alt="Personnel Profile" class="w-12 h-12 rounded-full border-2 border-primary object-cover" data-alt="A highly detailed, professional headshot of a metro operator in a dark blue uniform, neutral expression, industrial lighting, high contrast, clean modern aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAu1VY_sDc4I-4QZkMxR-cC9Ag9SGFcx8mAbU5oC-uw89eCJdz0PZu7qQdltjxxBQ9y1Nft9zBeD5oXa7BG3irMzAkzN4LirqXcsRWk3VTEovh8RyFnCy0qP6JnNKbvrJYiJG5m-E3XquBcMqKeIWr-Ps2v9EGHtdld2N8BqOJL2JYsASPosAhXwbRPrpAhXXd0v1BEB-BOv6VU_EbfTzay10DuMsXuYnbwUTx65tdCCCePDhCyKminW609HaPePVZU3DhCdUPibpc7"/>
+<div>
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary text-sm leading-tight">Personnel 102</div>
+<div class="font-label-md text-label-md text-on-surface-variant dark:text-surface-variant text-xs">Line 1 Operator</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto py-4 px-2 space-y-1">
+<a class="text-on-surface dark:text-inverse-on-surface flex flex-row-reverse items-center gap-unit px-4 py-3 hover:bg-surface-variant dark:hover:bg-surface-container-low transition-colors rounded-lg font-label-md text-label-md active:inner-shadow duration-100" href="#">
+<span class="material-symbols-outlined ml-3" data-weight="regular">dashboard</span>
+                Dashboard
+            </a>
+<a class="bg-primary text-on-primary rounded-lg flex flex-row-reverse items-center gap-unit px-4 py-3 font-label-md text-label-md active:inner-shadow duration-100 shadow-[inset_0_-2px_0_rgba(0,0,0,0.2)]" href="#">
+<span class="material-symbols-outlined ml-3" data-weight="fill" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+                Technical Knowledge Base
+            </a>
+<a class="text-on-surface dark:text-inverse-on-surface flex flex-row-reverse items-center gap-unit px-4 py-3 hover:bg-surface-variant dark:hover:bg-surface-container-low transition-colors rounded-lg font-label-md text-label-md active:inner-shadow duration-100" href="#">
+<span class="material-symbols-outlined ml-3" data-weight="regular">history</span>
+                Recent Queries
+            </a>
+<a class="text-on-surface dark:text-inverse-on-surface flex flex-row-reverse items-center gap-unit px-4 py-3 hover:bg-surface-variant dark:hover:bg-surface-container-low transition-colors rounded-lg font-label-md text-label-md active:inner-shadow duration-100" href="#">
+<span class="material-symbols-outlined ml-3" data-weight="regular">emergency_home</span>
+                Incident Protocols
+            </a>
+</div>
+<div class="p-4 border-t border-outline-variant dark:border-outline space-y-2">
+<div class="text-xs font-label-md text-on-surface-variant mb-2">QUICK REFERENCE</div>
+<a class="text-on-surface dark:text-inverse-on-surface flex flex-row-reverse items-center gap-unit px-4 py-2 hover:bg-surface-variant dark:hover:bg-surface-container-low transition-colors rounded-lg font-label-md text-label-md text-sm" href="#">
+<span class="material-symbols-outlined ml-3 text-[20px]" data-weight="regular">fact_check</span>
+                Safety Checklists
+            </a>
+<a class="text-on-surface dark:text-inverse-on-surface flex flex-row-reverse items-center gap-unit px-4 py-2 hover:bg-surface-variant dark:hover:bg-surface-container-low transition-colors rounded-lg font-label-md text-label-md text-sm" href="#">
+<span class="material-symbols-outlined ml-3 text-[20px]" data-weight="regular">error</span>
+                Common Error Codes
+            </a>
+<button class="w-full mt-4 bg-[#EE3124] text-white font-label-md text-label-md py-3 rounded shadow-[0_4px_12px_rgba(238,49,36,0.3)] hover:bg-primary-container transition-colors flex items-center justify-center gap-2 active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+                Report Incident
+            </button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 mr-64 mt-touch-target-min flex h-[calc(100vh-48px)] bg-surface dark:bg-[#1a1b1e]">
+<!-- Live Manual Feed (Left Side) -->
+<aside class="w-1/3 border-r border-outline-variant dark:border-outline/30 bg-surface-container-lowest dark:bg-[#222426] flex flex-col shadow-inner">
+<div class="p-4 border-b border-outline-variant dark:border-outline/30 bg-surface-container-low dark:bg-[#2a2d2f]">
+<h2 class="font-headline-md text-headline-md text-sm font-bold text-on-surface dark:text-inverse-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">menu_book</span>
+                    Live Manual Feed
+                </h2>
+<div class="text-xs font-data-mono text-on-surface-variant mt-1">Ref: L1-BKS-v4.2 | Page 114</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 bg-[#141516] flex flex-col items-center justify-center relative">
+<!-- Schematic Placeholder -->
+<div class="absolute inset-0 opacity-20" data-alt="A highly complex, detailed engineering schematic blueprint of a train braking system. Dark blue background with precise white technical lines, annotations, and mechanical cross-sections. Industrial, high-tech, and precise aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBAnwrSZT4M2t_ENdpywv6TWIDJ8REb8KdY6q6DX8qN2xr9f0L9qlpS6Z4gt2RJZ3TLT4EOK0Ax_axeJ4PboaApix4KDPW8JITyv0pRwm9PIadijUGY8Wli0hUSe1Rrh4NQw0bQPEL-LauJLMf_QZRk874Zd3xh24NIPaFtqNeT2NXxwUMGVsEBQOFlFtKDWOHw5EgoisyMkaHY2p-1AYFgY3dlgycXlWJ2PjN__4XdyLbefOHj51c0oKntrL-Aztn0h07IcI9kjgeh'); background-size: cover; background-position: center;"></div>
+<div class="relative z-10 w-full max-w-sm bg-[#1e2022] border border-[#333] p-4 rounded shadow-lg backdrop-blur-sm">
+<h3 class="font-data-mono text-primary text-sm mb-2 border-b border-[#333] pb-2">DIAGRAM 4B: Pneumatic Brake Assembly</h3>
+<div class="aspect-video bg-[#0a0a0a] border border-[#444] rounded mb-3 flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover mix-blend-screen opacity-80" data-alt="A detailed, stark 3D CAD rendering of a pneumatic brake valve assembly. High contrast, technical lighting, metallic textures, grey and red tones. Professional engineering visualization." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2UiAqUzVF-MAiaPdN0N_uMyNKrv1OzXLYCcpTR8bKN2qjdO9rDHcLL4NuUdA3XHJxmVwFQk2x3n7lemfroT_IdJS2RnMqUg49TU-p3I0KxKPrIZAtwl2yvEWY6EBqNl882_xIUBnL5K-7giTuII-dHzfQQmQ_JSAxmJIuNK8zSwund-Y5UBAj-vkM-nLdS3x35gqCVj81ONnyCoWnJ2lpF2tOvGy0jxC6_aa1N6tYU1f8kTzUN8l9mTJzc1txzL-kceTGlauC9Zla"/>
+</div>
+<ul class="text-xs font-data-mono text-gray-400 space-y-1">
+<li class="flex items-start gap-2"><span class="text-primary mt-1">›</span> Valve C-12 pressure tolerance: 4.5 bar</li>
+<li class="flex items-start gap-2"><span class="text-primary mt-1">›</span> Actuator arm requires manual reset</li>
+<li class="flex items-start gap-2"><span class="text-primary mt-1">›</span> Check seal integrity on Port A</li>
+</ul>
+</div>
+</div>
+</aside>
+<!-- AI Assistant Chat Interface (Right Side / Center) -->
+<section class="flex-1 flex flex-col relative bg-background dark:bg-[#121314]">
+<!-- Quick Actions Header -->
+<div class="p-3 border-b border-outline-variant dark:border-outline/20 bg-surface dark:bg-[#1a1b1e] flex justify-between items-center z-10 shadow-sm">
+<div class="text-sm font-label-md text-on-surface-variant">Session ID: <span class="font-data-mono">OP-8821-A</span></div>
+<div class="flex gap-2">
+<button class="border border-outline dark:border-[#444] text-on-surface dark:text-gray-300 font-label-md text-xs px-3 py-1.5 rounded hover:bg-surface-variant dark:hover:bg-[#2a2d2f] transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">history</span> History
+                    </button>
+<button class="bg-[#EE3124]/10 text-[#EE3124] border border-[#EE3124]/30 font-label-md text-xs px-3 py-1.5 rounded hover:bg-[#EE3124]/20 transition-colors flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-[16px]">warning</span> Emergency Protocols
+                    </button>
+</div>
+</div>
+<!-- Chat Area -->
+<div class="flex-1 overflow-y-auto p-gutter space-y-6 scroll-smooth pb-24">
+<!-- Central Command Message (Left aligned visually, but RTL means it's conceptually opposite. For RTL, Central Command is usually left, User right) -->
+<div class="flex items-start gap-4 max-w-3xl ml-auto dir-rtl w-full justify-start">
+<div class="w-8 h-8 rounded bg-[#2e3132] border border-[#444] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-[18px]">smart_toy</span>
+</div>
+<div class="bg-[#222426] border border-[#333] rounded-lg rounded-tr-none p-4 shadow-sm text-sm text-gray-200">
+<p class="font-body-md mb-2">سیستم آماده است. لطفا کد خطا یا درخواست بررسی دستی را وارد کنید.</p>
+<p class="text-xs font-data-mono text-gray-500 mt-2">System initialized. Awaiting input...</p>
+</div>
+</div>
+<!-- User Message (Right aligned in RTL) -->
+<div class="flex items-start gap-4 max-w-2xl mr-auto dir-rtl w-full justify-end">
+<div class="bg-[#1e293b] border border-[#334155] rounded-lg rounded-tl-none p-4 shadow-sm text-sm text-white">
+<p class="font-data-mono font-bold tracking-wider">Error 402 - Brake System</p>
+</div>
+<div class="w-8 h-8 rounded-full bg-[#334155] flex items-center justify-center shrink-0 border border-[#475569]">
+<span class="material-symbols-outlined text-white text-[18px]">person</span>
+</div>
+</div>
+<!-- AI Response Message (Complex Bento-style) -->
+<div class="flex items-start gap-4 max-w-4xl ml-auto dir-rtl w-full justify-start">
+<div class="w-8 h-8 rounded bg-[#2e3132] border border-[#444] flex items-center justify-center shrink-0 mt-1">
+<span class="material-symbols-outlined text-primary text-[18px]">smart_toy</span>
+</div>
+<div class="bg-[#222426] border border-primary/40 shadow-[0_0_15px_rgba(188,0,4,0.1)] rounded-lg rounded-tr-none p-0 overflow-hidden w-full">
+<!-- Header -->
+<div class="bg-[#2a2d2f] border-b border-[#444] px-4 py-2 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#EE3124] pulse-animation"></span>
+<span class="font-label-md text-primary font-bold text-sm tracking-wide">CRITICAL ANALYSIS</span>
+<span class="font-data-mono text-xs text-gray-500 mr-auto">Processing Time: 0.4s</span>
+</div>
+<div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Identified Issue -->
+<div class="col-span-1 md:col-span-2 bg-[#1a1c1e] border border-[#333] rounded p-3">
+<h4 class="font-label-md text-gray-400 text-xs mb-1 uppercase tracking-widest">Identified Issue</h4>
+<p class="font-body-md text-white text-sm">خطای ۴۰۲ نشان دهنده افت فشار پنوماتیک در مجموعه ترمز واگن دوم است. احتمال نشتی در شیر C-12 یا خرابی سنسور فشار.</p>
+<p class="font-data-mono text-gray-500 text-xs mt-1">Error 402 indicates pneumatic pressure drop in Car 2 brake assembly. Possible C-12 valve leak or sensor failure.</p>
+</div>
+<!-- Immediate Action -->
+<div class="bg-[#2d1b1a] border border-[#EE3124]/30 rounded p-3 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-1 h-full bg-[#EE3124]"></div>
+<h4 class="font-label-md text-[#ffb4a9] text-xs mb-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">warning</span> Immediate Action
+                                </h4>
+<ol class="list-decimal list-inside text-sm text-gray-200 font-body-md space-y-1 marker:text-[#EE3124]">
+<li>کاهش سرعت قطار به زیر ۲۰ کیلومتر بر ساعت.</li>
+<li>فعال‌سازی سیستم ترمز اضطراری ثانویه.</li>
+<li>اطلاع به مرکز کنترل (OCC).</li>
+</ol>
+</div>
+<!-- Safety Protocol & Ref -->
+<div class="space-y-4">
+<div class="bg-[#1a1c1e] border border-[#333] rounded p-3">
+<h4 class="font-label-md text-emerald-400 text-xs mb-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">shield</span> Safety Protocol
+                                    </h4>
+<p class="font-body-md text-sm text-gray-300">مسافران را در واگن دوم مطلع کنید. تا زمان بررسی تکنسین، در نزدیک‌ترین ایستگاه توقف کامل انجام دهید.</p>
+</div>
+<div class="bg-[#1a1c1e] border border-[#333] rounded p-3 flex items-center justify-between">
+<div>
+<h4 class="font-label-md text-gray-400 text-xs mb-1">Reference Section</h4>
+<p class="font-data-mono text-primary text-sm font-bold">L1-BKS-v4.2, Section 8.1</p>
+</div>
+<button class="text-xs bg-[#333] hover:bg-[#444] text-white px-2 py-1 rounded transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">visibility</span> View
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-[#121314] via-[#121314] to-transparent pt-10">
+<div class="max-w-4xl mx-auto relative group">
+<div class="absolute -inset-0.5 bg-gradient-to-r from-[#444] to-[#222] rounded-lg blur opacity-30 group-focus-within:opacity-100 transition duration-200"></div>
+<div class="relative bg-[#1e2022] rounded-lg border border-[#333] flex items-center p-2 focus-within:border-primary transition-colors shadow-lg">
+<button class="p-2 text-gray-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined">mic</span>
+</button>
+<input class="flex-1 bg-transparent border-none text-white font-body-md text-sm px-4 focus:ring-0 placeholder:text-gray-500 dir-rtl text-right" placeholder="کد خطا یا سوال فنی خود را وارد کنید..." type="text"/>
+<button class="bg-[#EE3124] hover:bg-primary-container text-white p-2 rounded flex items-center justify-center transition-colors w-10 h-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]">
+<span class="material-symbols-outlined text-[20px] rotate-180">send</span>
+</button>
+</div>
+<div class="text-center mt-2">
+<span class="text-[10px] font-data-mono text-gray-600">Secure Network: Active | E2E Encryption</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+</body></html>

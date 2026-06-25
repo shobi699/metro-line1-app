@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>وضعیت سیگنالینگ و مخابرات - مرکز فرماندهی خط ۱ مترو تهران</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-dim": "#d9dadb",
+                      "surface-variant": "#e1e3e4",
+                      "outline-variant": "#e7bdb7",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-container": "#f7feff",
+                      "on-secondary-container": "#656464",
+                      "on-surface-variant": "#5d3f3b",
+                      "on-secondary-fixed-variant": "#474747",
+                      "on-primary-container": "#fffbff",
+                      "on-error-container": "#93000a",
+                      "on-background": "#191c1d",
+                      "error-container": "#ffdad6",
+                      "background": "#f8f9fa",
+                      "tertiary": "#5d5c5b",
+                      "surface-bright": "#f8f9fa",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "inverse-surface": "#2e3132",
+                      "secondary": "#5f5e5e",
+                      "outline": "#926f6a",
+                      "secondary-fixed": "#e4e2e1",
+                      "surface-container-high": "#e7e8e9",
+                      "tertiary-container": "#767474",
+                      "secondary-container": "#e4e2e1",
+                      "inverse-primary": "#ffb4a9",
+                      "on-tertiary": "#ffffff",
+                      "primary": "#bc0004",
+                      "on-primary": "#ffffff",
+                      "on-surface": "#191c1d",
+                      "on-error": "#ffffff",
+                      "surface-container-highest": "#e1e3e4",
+                      "error": "#ba1a1a",
+                      "surface-tint": "#c00205",
+                      "primary-container": "#e1271c",
+                      "on-primary-fixed": "#410000",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed-variant": "#930002",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "surface": "#f8f9fa",
+                      "surface-container": "#edeeef",
+                      "surface-container-low": "#f3f4f5",
+                      "tertiary-fixed": "#e5e2e1",
+                      "primary-fixed": "#ffdad5",
+                      "inverse-on-surface": "#f0f1f2",
+                      "primary-fixed-dim": "#ffb4a9"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "unit": "4px",
+                      "touch-target-min": "48px",
+                      "margin-desktop": "32px",
+                      "gutter": "16px"
+              },
+              "fontFamily": {
+                      "body-lg": ["Vazirmatn"],
+                      "headline-lg-mobile": ["Vazirmatn"],
+                      "body-md": ["Vazirmatn"],
+                      "data-mono": ["JetBrains Mono"],
+                      "label-md": ["Vazirmatn"],
+                      "headline-md": ["Vazirmatn"],
+                      "headline-lg": ["Vazirmatn"]
+              },
+              "fontSize": {
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "36px", "fontWeight": "700"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "36px", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "48px", "fontWeight": "700"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .pulse-orange {
+            animation: pulse-orange 2s infinite;
+        }
+        @keyframes pulse-orange {
+            0% { background-color: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.5); }
+            50% { background-color: rgba(245, 158, 11, 0.5); border-color: rgba(245, 158, 11, 1); }
+            100% { background-color: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.5); }
+        }
+        .pulse-red {
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0% { background-color: rgba(239, 68, 68, 0.2); }
+            50% { background-color: rgba(239, 68, 68, 0.8); }
+            100% { background-color: rgba(239, 68, 68, 0.2); }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="docked h-screen w-64 left-0 border-r border-outline dark:border-outline-variant bg-surface-container dark:bg-inverse-surface flex flex-col h-full py-4 gap-2 shrink-0 hidden md:flex">
+<div class="px-gutter mb-6">
+<h1 class="font-headline-lg text-headline-lg text-primary">Control Center</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Station 01 - Tajrish</p>
+</div>
+<div class="flex-1 flex flex-col gap-2 px-2">
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant font-label-md text-label-md hover:bg-secondary-container dark:hover:bg-secondary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span>Live Map</span>
+</a>
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant font-label-md text-label-md hover:bg-secondary-container dark:hover:bg-secondary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="electrical_services">electrical_services</span>
+<span>Power Grid</span>
+</a>
+<!-- Active -->
+<a class="flex items-center gap-3 px-4 py-3 rounded bg-primary-container text-on-primary-container font-bold border-l-4 border-primary font-label-md text-label-md Active: translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings_input_component" data-weight="fill" style="font-variation-settings: 'FILL' 1;">settings_input_component</span>
+<span>Signaling Status</span>
+</a>
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant font-label-md text-label-md hover:bg-secondary-container dark:hover:bg-secondary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="history_edu">history_edu</span>
+<span>Incident Log</span>
+</a>
+</div>
+<div class="mt-auto px-2 flex flex-col gap-2 border-t border-outline-variant pt-4">
+<a class="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant font-label-md text-label-md hover:bg-secondary-container dark:hover:bg-secondary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="monitor_heart">monitor_heart</span>
+<span>System Health</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant font-label-md text-label-md hover:bg-secondary-container dark:hover:bg-secondary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span>Support</span>
+</a>
+<div class="px-4 py-3 mt-2 flex items-center gap-3 border-t border-outline-variant pt-4">
+<img alt="OCC Operator Profile" class="w-8 h-8 rounded-full object-cover border border-outline" data-alt="A small, circular avatar portrait of a confident Middle Eastern control room operator wearing a headset, in a high-tech corporate setting, professional lighting, industrial UI aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1BV7xblP0Jta6-9xRG6kOUNLhX8d4e-w-Wipr6iTfCaoWdyJPGNC9uGhHYA5ow8vmulefb_2sMNw-Toti8PWMY3R8JGxow67vKVXmco3J7GgOmpIjvsDh4s01sxygZfD09gXbU4neOsC-yZBrEFLvW8V89KBqc4QK1g9ATEFWfX9pgsgBEOngs-XHEa6qw_QvDYUui30a-O4jK7BORdGP9K02i4VVBtNjU3diQsqnKunHo-AhqwVgpk7LTkW6YBQzC2AVAnULXO9P"/>
+<span class="font-label-md text-label-md">Operator 01</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<div class="flex-1 flex flex-col min-w-0">
+<!-- TopAppBar -->
+<header class="bg-surface-container-highest dark:bg-inverse-surface flex justify-between items-center w-full px-margin-desktop h-touch-target-min border-b border-outline dark:border-outline-variant shrink-0">
+<div class="flex items-center gap-4">
+<span class="text-headline-md font-headline-md font-bold text-primary dark:text-inverse-primary">OCC Command: Line 1</span>
+<!-- Search Bar Placeholder -->
+<div class="hidden md:flex items-center bg-surface-container border border-outline rounded px-3 py-1">
+<span class="material-symbols-outlined text-on-surface-variant text-sm mr-2" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-48 text-on-surface" placeholder="جستجو..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant dark:hover:bg-secondary-fixed-dim transition-colors Active: scale-[0.98] duration-150">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant dark:hover:bg-secondary-fixed-dim transition-colors Active: scale-[0.98] duration-150">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant dark:hover:bg-secondary-fixed-dim transition-colors Active: scale-[0.98] duration-150">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Dashboard Content -->
+<main class="flex-1 p-margin-desktop overflow-y-auto overflow-x-hidden flex flex-col gap-margin-desktop">
+<!-- Page Header -->
+<div class="flex justify-between items-end border-b border-outline-variant pb-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-background mb-1">وضعیت سیگنالینگ و مخابرات</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">نظارت بلادرنگ - خط ۱ (تجریش - کهریزک)</p>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-green-500"></span>
+<span class="font-data-mono text-data-mono text-on-surface-variant">ATC Active</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-blue-500"></span>
+<span class="font-data-mono text-data-mono text-on-surface-variant">TETRA Ops</span>
+</div>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Signaling Block Status (Spans Full Width) -->
+<div class="lg:col-span-12 bg-surface-container-lowest border border-outline rounded-xl p-gutter shadow-sm">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md text-on-background flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="linear_scale">linear_scale</span>
+                            شماتیک بلوک‌های سیگنالینگ
+                        </h3>
+<div class="flex gap-4 text-sm font-label-md text-label-md">
+<div class="flex items-center gap-1"><span class="w-4 h-4 bg-green-100 border border-green-400 rounded"></span> آزاد</div>
+<div class="flex items-center gap-1"><span class="w-4 h-4 bg-red-500 border border-red-700 rounded pulse-red"></span> اشغال</div>
+<div class="flex items-center gap-1"><span class="w-4 h-4 pulse-orange border border-orange-500 rounded"></span> تداخل</div>
+</div>
+</div>
+<!-- Track Schematic -->
+<div class="relative w-full h-32 bg-surface-dim rounded border border-outline-variant p-4 flex flex-col justify-center overflow-x-auto">
+<!-- Up Line -->
+<div class="flex items-center gap-1 mb-4 min-w-[800px]">
+<span class="font-label-md text-label-md w-16 text-left text-on-surface-variant">Up Line</span>
+<div class="flex-1 flex gap-1 h-8">
+<div class="flex-1 bg-green-100 border border-green-400 rounded relative group">
+<span class="absolute inset-0 flex items-center justify-center font-data-mono text-data-mono text-green-800 text-xs">B101</span>
+</div>
+<div class="flex-1 bg-red-500 border border-red-700 rounded relative group pulse-red">
+<span class="absolute inset-0 flex items-center justify-center font-data-mono text-data-mono text-white text-xs">B102 (TRN 45)</span>
+</div>
+<div class="flex-1 bg-green-100 border border-green-400 rounded relative group">
+<span class="absolute inset-0 flex items-center justify-center font-data-mono text-data-mono text-green-800 text-xs">B103</span>
+</div>
+<div class="flex-1 bg-green-100 border border-green-400 rounded relative group">
+<span class="absolute inset-0 flex items-center justify-center font-data-mono text-data-mono text-green-800 text-xs">B104</span>
+</div>
+<div class="flex-1 pulse-orange border border-orange-500 rounded relative group">
+<span class="absolute inset-0 flex items-center justify-center font-data-mono text-data-mono text-orange-900 text-xs">B105 (WARN)</span>
+</div>
+<div class="flex-1 bg-green-100 border border-green-400 rounded relative group">
+<span class="absolute inset-0 flex items-center justify-center font-data-mono text-data-mono text-green-800 text-xs">B106</span>
+</div>
+</div>
+</div>
+<!-- Down Line -->
+<div class="flex items-center gap-1 min-w-[800px]">
+<span class="font-label-md text-label-md w-16 text-left text-on-surface-variant">Dn Line</span>
+<div class="flex-1 flex gap-1 h-8">
+<div class="flex-1 bg-green-100 border border-green-400 rounded relative group">
+<span class="absolute inset-0 flex items-center justify-center font-data-mono text-data-mono text-green-800 text-xs">B201</span>
+</div>
+<div class="flex-1 bg-green-100 border border-green-400 rounded relative group">
+<span class="absolute inset-0 flex items-center justify-center font-data-mono text-data-mono text-green-800 text-xs">B202</span>
+</div>
+<div class="flex-1 bg-red-500 border border-red-700 rounded relative group pulse-red">
+<span class="absolute inset-0 flex items-center justify-center font-data-mono text-data-mono text-white text-xs">B203 (TRN 12)</span>
+</div>
+<div class="flex-1 bg-green-100 border border-green-400 rounded relative group">
+<span class="absolute inset-0 flex items-center justify-center font-data-mono text-data-mono text-green-800 text-xs">B204</span>
+</div>
+<div class="flex-1 bg-green-100 border border-green-400 rounded relative group">
+<span class="absolute inset-0 flex items-center justify-center font-data-mono text-data-mono text-green-800 text-xs">B205</span>
+</div>
+<div class="flex-1 bg-green-100 border border-green-400 rounded relative group">
+<span class="absolute inset-0 flex items-center justify-center font-data-mono text-data-mono text-green-800 text-xs">B206</span>
+</div>
+</div>
+</div>
+<!-- Station Markers -->
+<div class="absolute bottom-0 w-full flex justify-between px-20 text-xs text-on-surface-variant font-label-md text-label-md mt-2">
+<span>Tajrish</span>
+<span>Mirdamad</span>
+<span>Imam Khomeini</span>
+<span>Kahrizak</span>
+</div>
+</div>
+</div>
+<!-- Train Separation Monitoring (Col 1-8) -->
+<div class="lg:col-span-8 bg-surface-container-lowest border border-outline rounded-xl p-gutter shadow-sm">
+<h3 class="font-headline-md text-headline-md text-on-background flex items-center gap-2 mb-4 border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-primary" data-icon="compare_arrows">compare_arrows</span>
+                        نظارت بر فاصله قطارها (Headway)
+                    </h3>
+<div class="overflow-x-auto">
+<table class="w-full text-right">
+<thead class="bg-surface-container font-label-md text-label-md text-on-surface-variant border-b border-outline">
+<tr>
+<th class="p-2">قطار پیشرو</th>
+<th class="p-2">قطار پیرو</th>
+<th class="p-2">فاصله مکانی (متر)</th>
+<th class="p-2">فاصله زمانی (ثانیه)</th>
+<th class="p-2">وضعیت</th>
+</tr>
+</thead>
+<tbody class="font-data-mono text-data-mono text-sm">
+<tr class="border-b border-outline-variant bg-surface-container-lowest">
+<td class="p-2">TRN-45 (B102)</td>
+<td class="p-2">TRN-48 (B104)</td>
+<td class="p-2">1250</td>
+<td class="p-2">180</td>
+<td class="p-2"><span class="px-2 py-1 bg-green-100 text-green-800 rounded font-label-md text-label-md">ایمن</span></td>
+</tr>
+<tr class="border-b border-outline-variant bg-surface-bright">
+<td class="p-2">TRN-12 (B203)</td>
+<td class="p-2">TRN-15 (B205)</td>
+<td class="p-2 text-orange-600 font-bold">450</td>
+<td class="p-2 text-orange-600 font-bold">90</td>
+<td class="p-2"><span class="px-2 py-1 bg-orange-100 text-orange-800 rounded font-label-md text-label-md">هشدار: نزدیک</span></td>
+</tr>
+<tr class="border-b border-outline-variant bg-surface-container-lowest">
+<td class="p-2">TRN-08 (B106)</td>
+<td class="p-2">TRN-11 (B108)</td>
+<td class="p-2">2100</td>
+<td class="p-2">240</td>
+<td class="p-2"><span class="px-2 py-1 bg-green-100 text-green-800 rounded font-label-md text-label-md">ایمن</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Active Signal Faults (Col 9-12) -->
+<div class="lg:col-span-4 bg-error-container border border-error rounded-xl p-gutter shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 w-16 h-16 bg-error opacity-10 rounded-bl-full"></div>
+<h3 class="font-headline-md text-headline-md text-on-error-container flex items-center gap-2 mb-4 border-b border-error/30 pb-2">
+<span class="material-symbols-outlined" data-icon="warning">warning</span>
+                        خطاهای فعال سیگنالینگ
+                    </h3>
+<div class="flex flex-col gap-3">
+<div class="bg-surface-container-lowest p-3 rounded border border-error/50 flex gap-3 items-start">
+<span class="material-symbols-outlined text-error mt-1" data-icon="error">error</span>
+<div>
+<h4 class="font-label-md text-label-md text-on-background font-bold">خرابی مدار راه (Track Circuit)</h4>
+<p class="font-data-mono text-data-mono text-sm text-on-surface-variant mt-1">Block B105 - Mirdamad Area</p>
+<span class="text-xs text-error mt-2 block">10 mins ago - Code: TC-404</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-3 rounded border border-orange-300 flex gap-3 items-start">
+<span class="material-symbols-outlined text-orange-500 mt-1" data-icon="visibility_off">visibility_off</span>
+<div>
+<h4 class="font-label-md text-label-md text-on-background font-bold">تاریکی سیگنال (Signal Dark)</h4>
+<p class="font-data-mono text-data-mono text-sm text-on-surface-variant mt-1">Signal S-22 - Haft-e-Tir</p>
+<span class="text-xs text-orange-600 mt-2 block">2 mins ago - Code: SD-102</span>
+</div>
+</div>
+<button class="w-full mt-2 py-2 bg-primary text-on-primary font-label-md text-label-md rounded hover:bg-surface-tint transition-colors">
+                            تایید و ارجاع به تعمیرات
+                        </button>
+</div>
+</div>
+<!-- Telecom Infrastructure Health (Col 1-6) -->
+<div class="lg:col-span-6 bg-surface-container-lowest border border-outline rounded-xl p-gutter shadow-sm">
+<h3 class="font-headline-md text-headline-md text-on-background flex items-center gap-2 mb-4 border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-primary" data-icon="router">router</span>
+                        سلامت زیرساخت مخابرات
+                    </h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<!-- TETRA -->
+<div class="p-3 border border-outline-variant rounded flex items-center justify-between bg-surface-bright">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-blue-600" data-icon="cell_tower">cell_tower</span>
+<div>
+<p class="font-label-md text-label-md text-on-background">TETRA Radio</p>
+<p class="font-data-mono text-data-mono text-xs text-on-surface-variant">Coverage: 98%</p>
+</div>
+</div>
+<span class="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
+</div>
+<!-- Fiber Optic -->
+<div class="p-3 border border-outline-variant rounded flex items-center justify-between bg-surface-bright">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-purple-600" data-icon="cable">cable</span>
+<div>
+<p class="font-label-md text-label-md text-on-background">Fiber Backbone</p>
+<p class="font-data-mono text-data-mono text-xs text-on-surface-variant">Link: 10Gbps</p>
+</div>
+</div>
+<span class="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
+</div>
+<!-- Station Wi-Fi -->
+<div class="p-3 border border-outline-variant rounded flex items-center justify-between bg-surface-bright">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-teal-600" data-icon="wifi">wifi</span>
+<div>
+<p class="font-label-md text-label-md text-on-background">Station Wi-Fi</p>
+<p class="font-data-mono text-data-mono text-xs text-on-surface-variant">Nodes Active: 42/45</p>
+</div>
+</div>
+<span class="w-3 h-3 rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.6)]"></span>
+</div>
+<!-- PA System -->
+<div class="p-3 border border-outline-variant rounded flex items-center justify-between bg-surface-bright">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-indigo-600" data-icon="campaign">campaign</span>
+<div>
+<p class="font-label-md text-label-md text-on-background">PA System</p>
+<p class="font-data-mono text-data-mono text-xs text-on-surface-variant">Audio: Clear</p>
+</div>
+</div>
+<span class="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
+</div>
+</div>
+</div>
+<!-- Interlocking & Points Status (Col 7-12) -->
+<div class="lg:col-span-6 bg-surface-container-lowest border border-outline rounded-xl p-gutter shadow-sm">
+<h3 class="font-headline-md text-headline-md text-on-background flex items-center gap-2 mb-4 border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-primary" data-icon="alt_route">alt_route</span>
+                        وضعیت اینترلاکینگ و سوزن‌ها
+                    </h3>
+<div class="flex flex-col gap-4">
+<!-- Point 1 -->
+<div class="flex items-center justify-between p-3 border border-outline-variant rounded bg-surface-container">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-variant flex items-center justify-center border border-outline">
+<span class="font-data-mono text-data-mono font-bold">P-01</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-background">Tajrish Crossover</p>
+<p class="font-data-mono text-data-mono text-xs text-on-surface-variant">Route: Normal</p>
+</div>
+</div>
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-secondary text-on-secondary rounded text-xs font-label-md text-label-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="lock">lock</span>
+                                    Locked
+                                </span>
+</div>
+</div>
+<!-- Point 2 -->
+<div class="flex items-center justify-between p-3 border border-outline-variant rounded bg-surface-container">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-variant flex items-center justify-center border border-outline">
+<span class="font-data-mono text-data-mono font-bold">P-04</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-background">Imam Khomeini Junction</p>
+<p class="font-data-mono text-data-mono text-xs text-on-surface-variant">Route: Reverse</p>
+</div>
+</div>
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-primary text-on-primary rounded text-xs font-label-md text-label-md flex items-center gap-1 pulse-red">
+<span class="material-symbols-outlined text-[16px]" data-icon="lock_open">lock_open</span>
+                                    Unlocked
+                                </span>
+</div>
+</div>
+<div class="mt-2 text-center">
+<button class="px-4 py-2 border border-outline text-on-surface-variant font-label-md text-label-md rounded hover:bg-surface-variant transition-colors text-sm">
+                                مشاهده تمام سوزن‌ها
+                            </button>
+</div>
+</div>
+</div>
+</div> <!-- End Grid -->
+</main>
+</div>
+</body></html>

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Live Operational Status &amp; Dispatching (OCC) - Tehran Metro Line 1</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed": "#ffdad5",
+                      "surface-bright": "#f8f9fa",
+                      "inverse-surface": "#2e3132",
+                      "inverse-primary": "#ffb4a9",
+                      "on-secondary-container": "#656464",
+                      "on-error": "#ffffff",
+                      "background": "#f8f9fa",
+                      "secondary-fixed": "#e4e2e1",
+                      "on-surface-variant": "#5d3f3b",
+                      "on-primary-fixed-variant": "#930002",
+                      "surface": "#f8f9fa",
+                      "outline": "#926f6a",
+                      "tertiary": "#5d5c5b",
+                      "surface-tint": "#c00205",
+                      "surface-container": "#edeeef",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "surface-variant": "#e1e3e4",
+                      "on-tertiary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "primary": "#bc0004",
+                      "on-primary": "#ffffff",
+                      "on-secondary-fixed-variant": "#474747",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container-high": "#e7e8e9",
+                      "error": "#ba1a1a",
+                      "on-primary-container": "#fffbff",
+                      "inverse-on-surface": "#f0f1f2",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-container": "#f7feff",
+                      "secondary-container": "#e4e2e1",
+                      "surface-dim": "#d9dadb",
+                      "on-secondary": "#ffffff",
+                      "primary-container": "#e1271c",
+                      "primary-fixed-dim": "#ffb4a9",
+                      "surface-container-low": "#f3f4f5",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "on-background": "#191c1d",
+                      "on-primary-fixed": "#410000",
+                      "outline-variant": "#e7bdb7",
+                      "on-surface": "#191c1d",
+                      "tertiary-fixed": "#e5e2e1",
+                      "tertiary-container": "#767474",
+                      "secondary": "#5f5e5e"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-desktop": "32px",
+                      "unit": "4px",
+                      "gutter": "16px",
+                      "touch-target-min": "48px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Vazirmatn"
+                      ],
+                      "body-lg": [
+                              "Vazirmatn"
+                      ],
+                      "label-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-md": [
+                              "Vazirmatn"
+                      ],
+                      "body-md": [
+                              "Vazirmatn"
+                      ],
+                      "headline-lg": [
+                              "Vazirmatn"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "48px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "data-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .data-cell {
+            background: linear-gradient(180deg, rgba(238,238,238,0.5) 0%, rgba(221,221,221,0.5) 100%);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        /* Overriding theme to dark for this specific UI requirement, despite config being light mode primarily */
+        body {
+            background-color: #1a1c1e;
+            color: #e2e2e6;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex font-body-md overflow-hidden bg-inverse-surface text-inverse-on-surface">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-screen w-64 left-0 border-r border-outline-variant bg-inverse-surface py-4 gap-2 z-10 sticky top-0 shrink-0">
+<div class="px-gutter mb-6">
+<h1 class="font-headline-lg text-headline-lg text-inverse-primary mb-1">Control Center</h1>
+<p class="font-label-md text-label-md text-surface-variant">Station 01 - Tajrish</p>
+</div>
+<div class="flex-1 flex flex-col gap-1 px-2">
+<!-- Active Tab -->
+<a class="flex items-center gap-3 px-4 py-3 rounded bg-primary-container text-on-primary-container font-label-md text-label-md font-bold border-l-4 border-primary transition-transform duration-200 translate-x-1" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">map</span>
+                Live Map
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-surface-variant hover:bg-secondary-fixed-dim transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">electrical_services</span>
+                Power Grid
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-surface-variant hover:bg-secondary-fixed-dim transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings_input_component</span>
+                Signaling Status
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-surface-variant hover:bg-secondary-fixed-dim transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">history_edu</span>
+                Incident Log
+            </a>
+</div>
+<div class="mt-auto px-2 flex flex-col gap-1 border-t border-outline-variant pt-4">
+<a class="flex items-center gap-3 px-4 py-3 rounded text-surface-variant hover:bg-secondary-fixed-dim transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">monitor_heart</span>
+                System Health
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-surface-variant hover:bg-secondary-fixed-dim transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">help</span>
+                Support
+            </a>
+<div class="mt-4 px-4 flex items-center gap-3">
+<img alt="OCC Operator Profile" class="w-8 h-8 rounded-full border border-outline-variant object-cover" data-alt="A small circular avatar placeholder image showing a generic user icon suitable for a dark mode industrial control panel interface. The aesthetic is clean and professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfdpSN9SvXxl5z6gpk7Rb4LwNtIUsL4B82YvqWKwEtxtm6TalWjekze5_MrVtJPrY_6kG97h36tUmAhH5kbWDyad0s-r2UpHnTx5sfd5biHTQmL9H1FQydWG9QaZVnf0eoniEpHZGUt6RrmQtEptEfirqXH37s7T54ecPybZpwb2eK-yUKh-J_LEYe6czfxfI8XcryO5w4EdDkIz2KONew29LuCezqmmX7a1bWCc9SlKM4US2aYb2NLKIqrr3GvHYS_YnWibSGU_D1"/>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 border-b border-outline-variant bg-inverse-surface flex justify-between items-center w-full px-margin-desktop h-touch-target-min z-10 shrink-0">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-bold text-inverse-primary">OCC Command: Line 1</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-surface-variant hover:bg-secondary-fixed-dim transition-colors rounded-full">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-surface-variant hover:bg-secondary-fixed-dim transition-colors rounded-full">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="p-2 text-surface-variant hover:bg-secondary-fixed-dim transition-colors rounded-full">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Canvas -->
+<div class="flex-1 overflow-auto p-gutter grid grid-cols-12 gap-gutter">
+<!-- Center Map Area -->
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-gutter">
+<!-- System Health Widgets -->
+<div class="grid grid-cols-3 gap-gutter h-24">
+<div class="bg-surface-container-highest border border-outline-variant rounded p-3 flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-surface-variant">Power Grid</span>
+<span class="material-symbols-outlined text-green-400 text-sm">check_circle</span>
+</div>
+<div class="flex items-end gap-2">
+<span class="font-headline-md text-headline-md font-bold text-inverse-on-surface">99.8%</span>
+<span class="text-xs text-green-400 mb-1">Stable</span>
+</div>
+</div>
+<div class="bg-surface-container-highest border border-outline-variant rounded p-3 flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-surface-variant">Signal Latency</span>
+<span class="material-symbols-outlined text-yellow-400 text-sm">warning</span>
+</div>
+<div class="flex items-end gap-2">
+<span class="font-headline-md text-headline-md font-bold text-inverse-on-surface">42ms</span>
+<span class="text-xs text-yellow-400 mb-1">+12ms</span>
+</div>
+</div>
+<div class="bg-surface-container-highest border border-outline-variant rounded p-3 flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-surface-variant">Active SOS</span>
+<span class="material-symbols-outlined text-red-500 text-sm pulse">e911_emergency</span>
+</div>
+<div class="flex items-end gap-2">
+<span class="font-headline-md text-headline-md font-bold text-red-500">1</span>
+<span class="text-xs text-red-500 mb-1">Station 04</span>
+</div>
+</div>
+</div>
+<!-- Schematic Network Map -->
+<div class="flex-1 bg-[#121315] border border-outline-variant rounded relative overflow-hidden flex items-center justify-center min-h-[400px]">
+<div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 20px 20px;"></div>
+<!-- Simulated Map Line -->
+<div class="relative w-full max-w-3xl h-32 flex items-center px-8">
+<div class="h-2 w-full bg-red-600 rounded-full relative">
+<!-- Stations -->
+<div class="absolute -top-3 left-[5%] flex flex-col items-center">
+<div class="w-6 h-6 rounded-full bg-inverse-surface border-4 border-red-600 z-10 cursor-pointer hover:scale-110 transition-transform"></div>
+<span class="mt-2 font-label-md text-label-md text-inverse-on-surface">تجریش</span>
+</div>
+<div class="absolute -top-3 left-[30%] flex flex-col items-center">
+<div class="w-6 h-6 rounded-full bg-inverse-surface border-4 border-red-600 z-10 cursor-pointer hover:scale-110 transition-transform"></div>
+<span class="mt-2 font-label-md text-label-md text-inverse-on-surface">قیطریه</span>
+</div>
+<div class="absolute -top-3 left-[55%] flex flex-col items-center">
+<div class="w-6 h-6 rounded-full bg-yellow-400 border-4 border-red-600 z-10 cursor-pointer hover:scale-110 transition-transform pulse"></div>
+<span class="mt-2 font-label-md text-label-md text-yellow-400">شهید حقانی</span>
+</div>
+<div class="absolute -top-3 left-[80%] flex flex-col items-center">
+<div class="w-6 h-6 rounded-full bg-inverse-surface border-4 border-red-600 z-10 cursor-pointer hover:scale-110 transition-transform"></div>
+<span class="mt-2 font-label-md text-label-md text-inverse-on-surface">میرداماد</span>
+</div>
+<!-- Trains -->
+<div class="absolute -top-1 left-[15%] w-4 h-4 bg-white rounded shadow-[0_0_10px_#fff] flex items-center justify-center pulse">
+<span class="material-symbols-outlined text-black" style="font-size: 12px;">train</span>
+</div>
+<div class="absolute -top-1 left-[65%] w-4 h-4 bg-white rounded shadow-[0_0_10px_#fff] flex items-center justify-center">
+<span class="material-symbols-outlined text-black" style="font-size: 12px;">train</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Live Incident Feed -->
+<div class="h-48 bg-surface-container-highest border border-outline-variant rounded flex flex-col">
+<div class="p-2 border-b border-outline-variant bg-inverse-surface flex justify-between items-center">
+<span class="font-label-md text-label-md text-inverse-on-surface">Live Incident Feed</span>
+<span class="material-symbols-outlined text-surface-variant text-sm">filter_list</span>
+</div>
+<div class="flex-1 overflow-y-auto p-2 space-y-1">
+<div class="flex gap-4 items-center p-2 rounded hover:bg-secondary-fixed-dim transition-colors text-sm">
+<span class="font-data-mono text-data-mono text-surface-variant w-16">14:05:22</span>
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="flex-1 font-body-md text-body-md">Train T-102 departed Tajrish (Normal)</span>
+</div>
+<div class="flex gap-4 items-center p-2 rounded bg-yellow-900/30 text-sm border-l-2 border-yellow-500">
+<span class="font-data-mono text-data-mono text-yellow-500 w-16">14:03:10</span>
+<span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+<span class="flex-1 font-body-md text-body-md text-yellow-100">Signal interference detected at Station 04 (Haghani)</span>
+</div>
+<div class="flex gap-4 items-center p-2 rounded hover:bg-secondary-fixed-dim transition-colors text-sm">
+<span class="font-data-mono text-data-mono text-surface-variant w-16">14:01:45</span>
+<span class="w-2 h-2 rounded-full bg-blue-500"></span>
+<span class="flex-1 font-body-md text-body-md">Maintenance crew dispatched to Sector 7</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Panel -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-gutter">
+<!-- Train Telemetry -->
+<div class="bg-surface-container-highest border border-outline-variant rounded flex-1 flex flex-col">
+<div class="p-4 border-b border-outline-variant bg-inverse-surface">
+<div class="flex justify-between items-center mb-2">
+<span class="font-headline-md text-headline-md text-inverse-primary">T-104</span>
+<span class="px-2 py-1 bg-green-900/50 text-green-400 text-xs rounded border border-green-800">EN ROUTE</span>
+</div>
+<span class="font-label-md text-label-md text-surface-variant">Mirdamad → Haghani</span>
+</div>
+<div class="p-4 flex-1 flex flex-col gap-4">
+<div class="grid grid-cols-2 gap-4">
+<div class="data-cell p-3 rounded">
+<span class="block font-label-md text-label-md text-surface-variant mb-1">Speed</span>
+<span class="font-data-mono text-data-mono text-lg text-inverse-on-surface">65 km/h</span>
+</div>
+<div class="data-cell p-3 rounded">
+<span class="block font-label-md text-label-md text-surface-variant mb-1">Load</span>
+<span class="font-data-mono text-data-mono text-lg text-inverse-on-surface">82%</span>
+</div>
+</div>
+<div class="space-y-3 mt-2 border-t border-outline-variant pt-4">
+<span class="font-label-md text-label-md text-surface-variant block">Subsystem Health</span>
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md">Brakes</span>
+<div class="flex items-center gap-2">
+<span class="text-green-400 text-sm">Nominal</span>
+<div class="w-16 h-1.5 bg-secondary-fixed rounded overflow-hidden"><div class="h-full bg-green-500 w-full"></div></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md">AC System</span>
+<div class="flex items-center gap-2">
+<span class="text-yellow-400 text-sm">Warning</span>
+<div class="w-16 h-1.5 bg-secondary-fixed rounded overflow-hidden"><div class="h-full bg-yellow-500 w-3/4"></div></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md">Doors</span>
+<div class="flex items-center gap-2">
+<span class="text-green-400 text-sm">Locked</span>
+<div class="w-16 h-1.5 bg-secondary-fixed rounded overflow-hidden"><div class="h-full bg-green-500 w-full"></div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Interactive Controls -->
+<div class="bg-surface-container-highest border border-outline-variant rounded p-4 flex flex-col gap-3">
+<span class="font-label-md text-label-md text-surface-variant mb-1">Quick Actions</span>
+<button class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-label-md text-label-md font-bold rounded flex items-center justify-center gap-2 shadow-[inset_0_-2px_0_rgba(0,0,0,0.3)] transition-colors active:scale-[0.98]">
+<span class="material-symbols-outlined" style="font-size: 20px;">stop_circle</span>
+                        EMERGENCY STOP (GLOBAL)
+                    </button>
+<div class="grid grid-cols-2 gap-3">
+<button class="py-2 border border-outline-variant hover:bg-secondary-fixed-dim text-inverse-on-surface font-label-md text-label-md rounded flex flex-col items-center justify-center gap-1 transition-colors">
+<span class="material-symbols-outlined">campaign</span>
+<span class="text-xs">Broadcast</span>
+</button>
+<button class="py-2 border border-outline-variant hover:bg-secondary-fixed-dim text-inverse-on-surface font-label-md text-label-md rounded flex flex-col items-center justify-center gap-1 transition-colors">
+<span class="material-symbols-outlined">train</span>
+<span class="text-xs">Dispatch Backup</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

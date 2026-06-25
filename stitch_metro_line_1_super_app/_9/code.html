@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="fa"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>تأییدیه آپدیت فنی - Tehran Metro Line 1</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-dim": "#d9dadb",
+                    "on-tertiary-container": "#f7feff",
+                    "surface-container": "#edeeef",
+                    "on-primary-fixed": "#410000",
+                    "tertiary": "#5d5c5b",
+                    "surface-tint": "#c00205",
+                    "primary-fixed-dim": "#ffb4a9",
+                    "on-tertiary-fixed-variant": "#474646",
+                    "secondary-fixed": "#e4e2e1",
+                    "on-error-container": "#93000a",
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "secondary-fixed-dim": "#c8c6c6",
+                    "primary": "#bc0004",
+                    "on-secondary-fixed": "#1b1c1c",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-container": "#e4e2e1",
+                    "error-container": "#ffdad6",
+                    "primary-fixed": "#ffdad5",
+                    "background": "#f8f9fa",
+                    "tertiary-container": "#767474",
+                    "surface-container-low": "#f3f4f5",
+                    "on-primary": "#ffffff",
+                    "on-tertiary-fixed": "#1c1b1b",
+                    "on-surface": "#191c1d",
+                    "inverse-surface": "#2e3132",
+                    "outline": "#926f6a",
+                    "on-primary-fixed-variant": "#930002",
+                    "inverse-primary": "#ffb4a9",
+                    "surface-container-high": "#e7e8e9",
+                    "on-surface-variant": "#5d3f3b",
+                    "on-error": "#ffffff",
+                    "primary-container": "#e1271c",
+                    "tertiary-fixed": "#e5e2e1",
+                    "on-secondary-fixed-variant": "#474747",
+                    "secondary": "#5f5e5e",
+                    "inverse-on-surface": "#f0f1f2",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-secondary-container": "#656464",
+                    "surface-bright": "#f8f9fa",
+                    "on-primary-container": "#fffbff",
+                    "on-background": "#191c1d",
+                    "surface-variant": "#e1e3e4",
+                    "surface": "#f8f9fa",
+                    "outline-variant": "#e7bdb7",
+                    "error": "#ba1a1a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "margin-desktop": "32px",
+                    "gutter": "16px",
+                    "touch-target-min": "48px",
+                    "margin-mobile": "16px",
+                    "unit": "4px"
+            },
+            "fontFamily": {
+                    "label-md": [
+                            "Vazirmatn"
+                    ],
+                    "headline-md": [
+                            "Vazirmatn"
+                    ],
+                    "body-lg": [
+                            "Vazirmatn"
+                    ],
+                    "headline-lg": [
+                            "Vazirmatn"
+                    ],
+                    "data-mono": [
+                            "JetBrains Mono"
+                    ],
+                    "body-md": [
+                            "Vazirmatn"
+                    ],
+                    "headline-lg-mobile": [
+                            "Vazirmatn"
+                    ]
+            },
+            "fontSize": {
+                    "label-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "letterSpacing": "0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "48px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "data-mono": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "24px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "700"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Vazirmatn', sans-serif; }
+        .data-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom Scrollbar for inner elements */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: theme('colors.surface-container');
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: theme('colors.outline-variant');
+            border-radius: 4px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col pb-safe">
+<!-- TopAppBar -->
+<header class="flex flex-row-reverse justify-between items-center px-margin-mobile w-full h-touch-target-min bg-surface border-b border-outline-variant font-headline-md text-headline-md-mobile docked full-width top-0 z-40">
+<button class="w-touch-target-min h-touch-target-min flex items-center justify-center text-primary active:scale-95 transition-transform duration-100 hover:bg-surface-container-high rounded-full">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md-mobile font-bold text-primary">تأییدیه آپدیت فنی</h1>
+<button class="w-touch-target-min h-touch-target-min flex items-center justify-center text-primary active:scale-95 transition-transform duration-100 hover:bg-surface-container-high rounded-full relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-3 w-2 h-2 bg-error rounded-full"></span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 overflow-y-auto px-margin-mobile py-gutter pb-32">
+<!-- Alert Card -->
+<section class="bg-surface rounded-xl border border-outline-variant p-gutter mb-gutter shadow-sm relative overflow-hidden">
+<!-- Decorative accent line -->
+<div class="absolute right-0 top-0 bottom-0 w-1 bg-error"></div>
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-2">
+<span class="bg-error-container text-on-error-container font-label-md text-label-md px-2 py-1 rounded-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+                        بحرانی
+                    </span>
+<span class="text-on-surface-variant font-data-mono text-data-mono text-sm" dir="ltr">#TR-42-89</span>
+</div>
+<span class="text-on-surface-variant font-body-md text-body-md text-sm">امروز، ۰۸:۴۵</span>
+</div>
+<h2 class="font-headline-md text-headline-md-mobile text-on-surface mb-2">پروتکل ترمز اضطراری - نسخه ۴.۲</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">
+                به‌روزرسانی الزامی در سیستم ترمز الکتروپنوماتیک. تغییرات شامل کاهش زمان پاسخ‌دهی شیرهای ترمز و دستورالعمل جدید تست ترمز پیش از حرکت است.
+            </p>
+<!-- Detailed View Area -->
+<div class="bg-surface-container-low rounded-lg p-3 border border-outline-variant mb-4 custom-scrollbar overflow-y-auto max-h-48">
+<h3 class="font-label-md text-label-md text-on-surface mb-2">تغییرات کلیدی (Changelog):</h3>
+<ul class="list-disc list-inside space-y-2 font-body-md text-body-md text-on-surface-variant text-sm">
+<li>کاهش تأخیر سیگنال ترمز از ۱.۲ ثانیه به ۰.۸ ثانیه در حالت اضطرار.</li>
+<li>اضافه شدن مرحله تست فشار خط لوله اصلی (Main Reservoir Pipe) قبل از خروج از دپو.</li>
+<li>الزام به ثبت دستی فشار در لاگ‌بوک کابین در صورت هشدار سیستم.</li>
+<li>بازنگری در پروتکل تخلیه کامل باد ترمز در ایستگاه‌های شیب‌دار (بخش شمالی خط ۱).</li>
+</ul>
+</div>
+<button class="w-full border-2 border-outline text-on-surface font-label-md text-label-md py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors mb-6">
+<span class="material-symbols-outlined">description</span>
+                دانلود کامل مستندات فنی (PDF)
+            </button>
+<!-- Acknowledgment Section -->
+<div class="bg-surface-container rounded-lg p-gutter border border-outline-variant">
+<label class="flex items-start gap-3 cursor-pointer mb-6 group">
+<div class="relative flex items-center justify-center">
+<input class="peer appearance-none w-6 h-6 border-2 border-outline rounded-sm checked:bg-primary checked:border-primary transition-colors cursor-pointer" id="ack-checkbox" type="checkbox"/>
+<span class="material-symbols-outlined text-on-primary absolute pointer-events-none opacity-0 peer-checked:opacity-100 text-[20px]">check</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface leading-tight group-hover:text-primary transition-colors">
+                        من این دستورالعمل را به‌دقت مطالعه کرده‌ام و متعهد به اجرای دقیق آن در عملیات راهبری هستم.
+                    </span>
+</label>
+<button class="w-full bg-surface-variant text-on-surface-variant font-label-md text-label-md py-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 relative overflow-hidden" disabled="" id="ack-submit">
+<span class="relative z-10 flex items-center gap-2">
+<span class="material-symbols-outlined">fact_check</span>
+                        تأیید و ثبت دریافت
+                    </span>
+</button>
+</div>
+</section>
+<!-- Pending Updates List -->
+<section class="mt-8">
+<h3 class="font-headline-md text-body-lg font-bold text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">history</span>
+                سایر آپدیت‌های در انتظار
+            </h3>
+<div class="space-y-3">
+<!-- List Item 1 -->
+<div class="bg-surface rounded-lg border border-outline-variant p-3 flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-tertiary"></div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">دستورالعمل تهویه تونل (بخش جنوبی)</h4>
+<span class="font-body-md text-body-md text-xs text-on-surface-variant">۱۴ اردیبهشت ۱۴۰۳</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">chevron_left</span>
+</div>
+<!-- List Item 2 -->
+<div class="bg-surface rounded-lg border border-outline-variant p-3 flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-tertiary"></div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">به‌روزرسانی فرم‌های شیفت‌بندی تابستانه</h4>
+<span class="font-body-md text-body-md text-xs text-on-surface-variant">۱۰ اردیبهشت ۱۴۰۳</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">chevron_left</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex flex-row-reverse justify-around items-center h-touch-target-min bg-surface border-t border-outline-variant pb-safe docked full-width rounded-t-xl font-label-md text-label-md">
+<!-- Dashboard (Active) -->
+<button class="flex flex-col items-center justify-center text-primary bg-primary-fixed rounded-full px-4 py-1 active:inner-shadow transition-all duration-75">
+<span class="material-symbols-outlined" data-icon="dashboard" data-weight="fill">dashboard</span>
+<span class="text-xs mt-1">داشبورد</span>
+</button>
+<!-- Schedule (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-low active:inner-shadow transition-all duration-75 px-2 py-1 rounded-lg">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="text-xs mt-1">برنامه</span>
+</button>
+<!-- Chat (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-low active:inner-shadow transition-all duration-75 px-2 py-1 rounded-lg relative">
+<span class="material-symbols-outlined" data-icon="chat">chat</span>
+<span class="text-xs mt-1">گفتگو</span>
+</button>
+<!-- Manuals (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-low active:inner-shadow transition-all duration-75 px-2 py-1 rounded-lg">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span class="text-xs mt-1">دفترچه</span>
+</button>
+<!-- Profile (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-low active:inner-shadow transition-all duration-75 px-2 py-1 rounded-lg">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-xs mt-1">پروفایل</span>
+</button>
+</nav>
+<script>
+        // Simple interaction for the acknowledgment button
+        document.addEventListener('DOMContentLoaded', () => {
+            const checkbox = document.getElementById('ack-checkbox');
+            const submitBtn = document.getElementById('ack-submit');
+            
+            checkbox.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('bg-surface-variant', 'text-on-surface-variant');
+                    submitBtn.classList.add('bg-primary', 'text-on-primary', 'shadow-md', 'active:scale-[0.98]');
+                } else {
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('bg-surface-variant', 'text-on-surface-variant');
+                    submitBtn.classList.remove('bg-primary', 'text-on-primary', 'shadow-md', 'active:scale-[0.98]');
+                }
+            });
+
+            submitBtn.addEventListener('click', function() {
+                if(!this.disabled) {
+                    this.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> در حال ثبت...`;
+                    setTimeout(() => {
+                        this.innerHTML = `<span class="material-symbols-outlined">check_circle</span> با موفقیت ثبت شد`;
+                        this.classList.replace('bg-primary', 'bg-[#1b5e20]'); // Using a standard green for success state briefly
+                        setTimeout(() => {
+                            // Reset or navigate away
+                        }, 1500);
+                    }, 1000);
+                }
+            });
+        });
+    </script>
+</body></html>
