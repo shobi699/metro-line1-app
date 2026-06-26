@@ -5,7 +5,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 <!-- END:nextjs-agent-rules -->
 AGENTS.md — metro-line1-app (سیر و حرکت خط ۱)
 Read this file + DESIGN.md fully before writing any code.
-
+0
 Project
 Personnel + operations platform for Tehran Metro Line 1 (سیر و حرکت خط یک مترو تهران).
 Language: Persian (Farsi), RTL. Theme: dark-first. Line 1 brand color is red.
