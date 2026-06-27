@@ -44,6 +44,60 @@ const updateProfileSchema = z.object({
     .max(50)
     .optional()
     .or(z.literal('')),
+  phone2: z
+    .string()
+    .regex(/^09\d{9}$/, 'شماره موبایل ۲ نامعتبر است')
+    .optional()
+    .or(z.literal('')),
+  carPlateNum1: z.string().optional().or(z.literal('')),
+  carPlateLetter: z.string().optional().or(z.literal('')),
+  carPlateNum2: z.string().optional().or(z.literal('')),
+  carPlateCity: z.string().optional().or(z.literal('')),
+  carType: z.string().optional().or(z.literal('')),
+  carColor: z.string().optional().or(z.literal('')),
+  carLicenseExpiry: z.string().optional().or(z.literal('')),
+  
+  // Custom personal fields editable by user
+  fatherName: z.string().optional().or(z.literal('')),
+  idNumber: z.string().optional().or(z.literal('')),
+  birthDate: z.string().optional().or(z.literal('')),
+  age: z.string().optional().or(z.literal('')),
+  birthPlace: z.string().optional().or(z.literal('')),
+  maritalStatus: z.string().optional().or(z.literal('')),
+  insuranceNo: z.string().optional().or(z.literal('')),
+  education: z.string().optional().or(z.literal('')),
+  post: z.string().optional().or(z.literal('')),
+  shift: z.string().optional().or(z.literal('')),
+  shiftType: z.string().optional().or(z.literal('')),
+  startLocation: z.string().optional().or(z.literal('')),
+  hireDate: z.string().optional().or(z.literal('')),
+  drivingStatus: z.string().optional().or(z.literal('')),
+  licenseClass1Date: z.string().optional().or(z.literal('')),
+  licenseClass2Date: z.string().optional().or(z.literal('')),
+  medicalExamValidity: z.string().optional().or(z.literal('')),
+  driverPercent: z.string().optional().or(z.literal('')),
+  coDriverPercent: z.string().optional().or(z.literal('')),
+  traineeDriverPercent: z.string().optional().or(z.literal('')),
+  address: z.string().optional().or(z.literal('')),
+  phone3: z.string().optional().or(z.literal('')),
+  phone4: z.string().optional().or(z.literal('')),
+  
+  // Custom multi-phone number registration
+  additionalPhones: z.array(z.string()).optional(),
+
+  // Custom multi-vehicles registration (User requested any number of vehicles)
+  vehicles: z.array(z.object({
+    id: z.string(),
+    plateNum1: z.string(),
+    plateLetter: z.string(),
+    plateNum2: z.string(),
+    plateCity: z.string(),
+    carPlate: z.string(),
+    carType: z.string(),
+    carColor: z.string(),
+    carLicenseExpiry: z.string(),
+    status: z.enum(['pending', 'approved', 'rejected']).default('pending'),
+  })).optional(),
 })
 
 export async function GET(request: Request) {
@@ -96,7 +150,14 @@ export async function PATCH(request: Request) {
       )
     }
 
-    const { phone, email, availability, themeColor, carPlate, avatar, personnelNo, group } = parsed.data
+    const { 
+      phone, email, availability, themeColor, carPlate, avatar, personnelNo, group, phone2,
+      carPlateNum1, carPlateLetter, carPlateNum2, carPlateCity, carType, carColor, carLicenseExpiry,
+      fatherName, idNumber, birthDate, age, birthPlace, maritalStatus, insuranceNo, education,
+      post, shift, shiftType, startLocation, hireDate, drivingStatus, licenseClass1Date, licenseClass2Date,
+      medicalExamValidity, driverPercent, coDriverPercent, traineeDriverPercent, address, phone3, phone4,
+      additionalPhones, vehicles
+    } = parsed.data
 
     const currentUser = await prisma.user.findUnique({
       where: { id: user.id },
@@ -109,6 +170,50 @@ export async function PATCH(request: Request) {
 
     const currentCustomFields = (currentUser.customFields as Record<string, unknown>) || {}
 
+    // Check if the caller is the user themselves (to toggle pending status)
+    // When a normal user edits fields, their status is set to 'pending'.
+    const getNewValAndStatus = (fieldName: string, newValue: string | undefined) => {
+      const currentVal = currentCustomFields[fieldName] ?? ''
+      const currentStatus = currentCustomFields[`${fieldName}_status`] ?? 'approved'
+      
+      if (newValue === undefined) {
+        return { val: currentVal, status: currentStatus }
+      }
+      
+      // If the field actually changed, set status to pending. Otherwise keep current status.
+      if (newValue !== currentVal) {
+        return { val: newValue, status: 'pending' }
+      }
+      
+      return { val: currentVal, status: currentStatus }
+    }
+
+    const fn = getNewValAndStatus('fatherName', fatherName)
+    const idn = getNewValAndStatus('idNumber', idNumber)
+    const bd = getNewValAndStatus('birthDate', birthDate)
+    const ag = getNewValAndStatus('age', age)
+    const bp = getNewValAndStatus('birthPlace', birthPlace)
+    const ms = getNewValAndStatus('maritalStatus', maritalStatus)
+    const ins = getNewValAndStatus('insuranceNo', insuranceNo)
+    const edu = getNewValAndStatus('education', education)
+    const pst = getNewValAndStatus('post', post)
+    const shf = getNewValAndStatus('shift', shift)
+    const sht = getNewValAndStatus('shiftType', shiftType)
+    const sl = getNewValAndStatus('startLocation', startLocation)
+    const hd = getNewValAndStatus('hireDate', hireDate)
+    const ds = getNewValAndStatus('drivingStatus', drivingStatus)
+    const c1 = getNewValAndStatus('licenseClass1Date', licenseClass1Date)
+    const c2 = getNewValAndStatus('licenseClass2Date', licenseClass2Date)
+    const mev = getNewValAndStatus('medicalExamValidity', medicalExamValidity)
+    const dp = getNewValAndStatus('driverPercent', driverPercent)
+    const cdp = getNewValAndStatus('coDriverPercent', coDriverPercent)
+    const tdp = getNewValAndStatus('traineeDriverPercent', traineeDriverPercent)
+    const adr = getNewValAndStatus('address', address)
+    const p3 = getNewValAndStatus('phone3', phone3)
+    const p4 = getNewValAndStatus('phone4', phone4)
+    const pNo = getNewValAndStatus('personnelNo', personnelNo)
+    const gp = getNewValAndStatus('group', group)
+
     // Merge custom field modifications
     const updatedCustomFields = {
       ...currentCustomFields,
@@ -116,8 +221,71 @@ export async function PATCH(request: Request) {
       themeColor: themeColor ?? currentCustomFields.themeColor ?? '',
       carPlate: carPlate ?? currentCustomFields.carPlate ?? '',
       avatar: avatar !== undefined ? (avatar === '' ? '' : avatar) : currentCustomFields.avatar ?? '',
-      personnelNo: personnelNo !== undefined ? (personnelNo === '' ? '' : personnelNo) : currentCustomFields.personnelNo ?? '',
-      group: group !== undefined ? (group === '' ? '' : group) : currentCustomFields.group ?? '',
+      phone2: phone2 !== undefined ? (phone2 === '' ? '' : phone2) : currentCustomFields.phone2 ?? '',
+      carPlateNum1: carPlateNum1 !== undefined ? (carPlateNum1 === '' ? '' : carPlateNum1) : currentCustomFields.carPlateNum1 ?? '',
+      carPlateLetter: carPlateLetter !== undefined ? (carPlateLetter === '' ? '' : carPlateLetter) : currentCustomFields.carPlateLetter ?? '',
+      carPlateNum2: carPlateNum2 !== undefined ? (carPlateNum2 === '' ? '' : carPlateNum2) : currentCustomFields.carPlateNum2 ?? '',
+      carPlateCity: carPlateCity !== undefined ? (carPlateCity === '' ? '' : carPlateCity) : currentCustomFields.carPlateCity ?? '',
+      carType: carType !== undefined ? (carType === '' ? '' : carType) : currentCustomFields.carType ?? '',
+      carColor: carColor !== undefined ? (carColor === '' ? '' : carColor) : currentCustomFields.carColor ?? '',
+      carLicenseExpiry: carLicenseExpiry !== undefined ? (carLicenseExpiry === '' ? '' : carLicenseExpiry) : currentCustomFields.carLicenseExpiry ?? '',
+      
+      // Personal fields and their status
+      fatherName: fn.val,
+      fatherName_status: fn.status,
+      idNumber: idn.val,
+      idNumber_status: idn.status,
+      birthDate: bd.val,
+      birthDate_status: bd.status,
+      age: ag.val,
+      age_status: ag.status,
+      birthPlace: bp.val,
+      birthPlace_status: bp.status,
+      maritalStatus: ms.val,
+      maritalStatus_status: ms.status,
+      insuranceNo: ins.val,
+      insuranceNo_status: ins.status,
+      education: edu.val,
+      education_status: edu.status,
+      post: pst.val,
+      post_status: pst.status,
+      shift: shf.val,
+      shift_status: shf.status,
+      shiftType: sht.val,
+      shiftType_status: sht.status,
+      startLocation: sl.val,
+      startLocation_status: sl.status,
+      hireDate: hd.val,
+      hireDate_status: hd.status,
+      drivingStatus: ds.val,
+      drivingStatus_status: ds.status,
+      licenseClass1Date: c1.val,
+      licenseClass1Date_status: c1.status,
+      licenseClass2Date: c2.val,
+      licenseClass2Date_status: c2.status,
+      medicalExamValidity: mev.val,
+      medicalExamValidity_status: mev.status,
+      driverPercent: dp.val,
+      driverPercent_status: dp.status,
+      coDriverPercent: cdp.val,
+      coDriverPercent_status: cdp.status,
+      traineeDriverPercent: tdp.val,
+      traineeDriverPercent_status: tdp.status,
+      address: adr.val,
+      address_status: adr.status,
+      phone3: p3.val,
+      phone3_status: p3.status,
+      phone4: p4.val,
+      phone4_status: p4.status,
+      personnelNo: pNo.val,
+      personnelNo_status: pNo.status,
+      group: gp.val,
+      group_status: gp.status,
+      
+      additionalPhones: additionalPhones !== undefined ? additionalPhones : currentCustomFields.additionalPhones ?? [],
+      
+      // Vehicles (if passed, set any added/edited ones status to pending)
+      vehicles: vehicles !== undefined ? vehicles : currentCustomFields.vehicles ?? [],
     }
 
     const updatedUser = await prisma.user.update({
@@ -166,7 +334,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'پروفایل شما با موفقیت بروزرسانی شد.',
+      message: 'پروفایل شما با موفقیت بروزرسانی شد و جهت تایید به مراجع مربوطه ارسال گردید.',
       data: updatedUser,
     })
   } catch (error: unknown) {

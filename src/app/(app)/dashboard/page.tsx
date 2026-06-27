@@ -304,6 +304,24 @@ export default function DashboardPage() {
 
   const isAdmin = user?.roleKey === 'admin' || user?.roleKey === 'super_admin'
 
+  // Fetch real dashboard data from API
+  useEffect(() => {
+    if (!accessToken) return
+    fetch('/api/dashboard', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        const d = json?.data
+        if (!d) return
+        if (d.stations?.length) setStations(d.stations)
+        if (d.trains?.length) setTrains(d.trains)
+        if (d.scadaSystems?.length) setScadaSystems(d.scadaSystems)
+        if (d.recentAuditLogs?.length) setOperationLogs(d.recentAuditLogs)
+      })
+      .catch(() => {})
+  }, [accessToken])
+
   // Sync Station Status with Emergency Mode
   useEffect(() => {
     setStations((prev) =>

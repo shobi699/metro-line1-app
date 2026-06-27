@@ -121,6 +121,7 @@ export async function validateUserRules(
       id: 'proposed',
       date: proposedShift.date,
       code: proposedShift.code,
+      source: 'manual',
       note: null,
       userId,
       createdAt: new Date(),

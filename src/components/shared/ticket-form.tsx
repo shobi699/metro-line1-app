@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuthStore } from '@/features/auth'
+import { usePrivateConfig } from '@/features/auth/use-private-config'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -126,16 +127,13 @@ export function TicketForm({ onCreated }: TicketFormProps) {
     return () => clearTimeout(timer)
   }, [title, description, accessToken])
 
+  const privateConfig = usePrivateConfig()
+
   useEffect(() => {
-    fetch('/api/config')
-      .then((res) => res.json())
-      .then((payload) => {
-        if (payload?.data && payload.data.allowNoWagon !== undefined) {
-          setAllowNoWagon(payload.data.allowNoWagon)
-        }
-      })
-      .catch(() => { })
-  }, [])
+    if (privateConfig?.allowNoWagon !== undefined) {
+      setAllowNoWagon(privateConfig.allowNoWagon)
+    }
+  }, [privateConfig])
 
   const handlePhoto = useCallback((file: File) => {
     setPhoto(file)

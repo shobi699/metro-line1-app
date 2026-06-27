@@ -6,7 +6,7 @@ import { z } from 'zod'
 const createActionTypeSchema = z.object({
   competencyId: z.string().min(1, 'انتخاب محور شایستگی الزامی است'),
   title: z.string().min(1, 'عنوان عملکرد الزامی است'),
-  defaultScore: z.number({ invalid_type_error: 'امتیاز باید عدد باشد' }),
+  defaultScore: z.number(),
   maxSeverity: z.enum(['L1', 'L2', 'L3']).default('L1'),
 })
 

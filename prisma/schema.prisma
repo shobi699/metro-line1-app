@@ -20,6 +20,7 @@ enum ShiftCode {
   evening
   night
   off
+  office
 }
 
 enum ImportJobStatus {
@@ -137,6 +138,8 @@ model User {
   performanceAppealsReviewed PerformanceAppeal[] @relation("PerformanceAppealReviewer")
   scoreSnapshots            ScoreSnapshot[]
   nominations               Nomination[]
+  shiftNotes                ShiftNote[]
+  shiftTasks                ShiftTask[]
 
   @@index([roleId])
   @@index([status])
@@ -209,6 +212,7 @@ model Shift {
   id          String     @id @default(cuid())
   date        DateTime
   code        ShiftCode
+  source      String     @default("manual") // "cycle" | "roster" | "manual"
   note        String?
   userId      String
   createdAt   DateTime   @default(now())
@@ -221,6 +225,75 @@ model Shift {
   @@unique([userId, date])
   @@index([date])
   @@index([code])
+  @@index([source])
+}
+
+// ── Shift Cycle Templates (server-side source of truth) ──
+
+model ShiftTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // "rotational" | "staff"
+  length      Int      // cycle length in days
+  shifts      Json     // CycleShiftDetail[] { day, code, label, hours, startTime, endTime }
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assignments ShiftAssignment[]
+
+  @@index([isActive])
+}
+
+model ShiftAssignment {
+  id          String   @id @default(cuid())
+  templateId  String
+  targetType  String   // "user" | "group"
+  targetId    String   // user ID or group key ("A","B","C","Staff")
+  anchorDate  DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  template ShiftTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([targetType, targetId])
+  @@index([templateId])
+}
+
+// ── Shift Notes & Tasks (server-side persisted) ──
+
+model ShiftNote {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([date])
+}
+
+model ShiftTask {
+  id         String   @id @default(cuid())
+  userId     String
+  date       DateTime
+  title      String
+  time       String
+  priority   String   @default("medium") // "low" | "medium" | "high"
+  status     String   @default("todo")   // "todo" | "in_progress" | "done"
+  type       String   @default("personal") // "personal" | "system"
+  overtime   Float?
+  extraData  Json?    // kahrizakCount and other custom numeric fields
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([status])
 }
 
 model SwapRequest {
@@ -242,6 +315,8 @@ model SwapRequest {
 
   @@index([requesterId])
   @@index([targetId])
+  @@index([sourceShiftId])
+  @@index([targetShiftId])
   @@index([status])
 }
 
@@ -396,6 +471,7 @@ model Post {
   comments  Comment[]
 
   @@index([type, published])
+  @@index([authorId])
   @@index([createdAt])
 }
 
@@ -513,6 +589,7 @@ model Feedback {
 
   user User? @relation(fields: [userId], references: [id])
 
+  @@index([userId])
   @@index([status])
   @@index([createdAt])
 }
@@ -689,6 +766,7 @@ model CrisisEvent {
 
   activator User @relation("CrisisActivator", fields: [activatedBy], references: [id])
 
+  @@index([activatedBy])
   @@index([level])
   @@index([activatedAt])
 }
@@ -808,4 +886,5 @@ model Nomination {
 
   @@unique([periodId, employeeId])
   @@index([periodId])
+  @@index([employeeId])
 }

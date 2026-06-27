@@ -9,6 +9,13 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -34,6 +41,8 @@ import {
   UserPlus,
   Edit2,
   Trash2,
+  Check,
+  Car,
   CheckCircle,
   AlertTriangle,
   Loader2,
@@ -72,6 +81,25 @@ import { cn } from '@/lib/utils'
 import { PERMISSION_CATALOG } from '@/server/rbac/permissions'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
+function normalizeText(str: string | null | undefined): string {
+  if (!str) return ''
+  return String(str)
+    .replace(/[\u064A\u0649]/g, '\u06CC') // Normalize Arabic Ya to Persian Ye
+    .replace(/[\u0643]/g, '\u06A9')     // Normalize Arabic Kaf to Persian Ke
+    .replace(/[۰]/g, '0')
+    .replace(/[۱]/g, '1')
+    .replace(/[۲]/g, '2')
+    .replace(/[۳]/g, '3')
+    .replace(/[۴]/g, '4')
+    .replace(/[۵]/g, '5')
+    .replace(/[۶]/g, '6')
+    .replace(/[۷]/g, '7')
+    .replace(/[۸]/g, '8')
+    .replace(/[۹]/g, '9')
+    .toLowerCase()
+    .trim()
+}
+
 interface ColumnHeaderFilterProps {
   columnKey: string
   columnLabel: string
@@ -99,8 +127,9 @@ function ColumnHeaderFilter({
   const isSorted = currentSort !== null
 
   // Filter unique values based on search term
+  const normalizedSearch = normalizeText(searchTerm)
   const filteredValues = uniqueValues.filter(({ value }) =>
-    value.toLowerCase().includes(searchTerm.toLowerCase())
+    normalizeText(value).includes(normalizedSearch)
   )
 
   return (
@@ -270,6 +299,19 @@ interface Role {
   }
 }
 
+interface Vehicle {
+  id: string
+  plateNum1: string
+  plateLetter: string
+  plateNum2: string
+  plateCity: string
+  carPlate: string
+  carType: string
+  carColor: string
+  carLicenseExpiry: string
+  status: 'pending' | 'approved' | 'rejected'
+}
+
 interface User {
   id: string
   nationalId: string
@@ -422,6 +464,16 @@ export default function AdminUsersPage() {
   const [fieldRequired, setFieldRequired] = useState(false)
   const [fieldDefaultValue, setFieldDefaultValue] = useState('')
 
+  // Form Fields - Edit CustomFieldDef
+  const [fieldEditModalOpen, setFieldEditModalOpen] = useState(false)
+  const [editingField, setEditingField] = useState<CustomFieldDef | null>(null)
+  const [editFieldName, setEditFieldName] = useState('')
+  const [editFieldLabel, setEditFieldLabel] = useState('')
+  const [editFieldType, setEditFieldType] = useState<'text' | 'number' | 'select' | 'date' | 'boolean'>('text')
+  const [editFieldOptionsRaw, setEditFieldOptionsRaw] = useState('')
+  const [editFieldRequired, setEditFieldRequired] = useState(false)
+  const [editFieldDefaultValue, setEditFieldDefaultValue] = useState('')
+
   function getUserFieldValue(user: User, fieldName: string) {
     const val = user.customFields?.[fieldName]
     if (val !== undefined && val !== null && val !== '') {
@@ -436,7 +488,7 @@ export default function AdminUsersPage() {
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
   const [userAuditLogs, setUserAuditLogs] = useState<any[]>([])
   const [loadingUserAuditLogs, setLoadingUserAuditLogs] = useState(false)
-  const [detailTab, setDetailTab] = useState<'profile' | 'logs'>('profile')
+  const [detailTab, setDetailTab] = useState<'profile' | 'vehicles' | 'logs'>('profile')
 
   // Global Audit Logs States
   const [globalAuditLogs, setGlobalAuditLogs] = useState<any[]>([])
@@ -582,17 +634,16 @@ export default function AdminUsersPage() {
 
     // 1. Apply Global Search Term (search name, national ID, phone, email, and dynamic fields)
     if (searchTerm.trim() !== '') {
-      const s = toEn(searchTerm.trim().toLowerCase())
+      const s = normalizeText(searchTerm)
       result = result.filter((user) => {
-        if (user.name?.toLowerCase().includes(s)) return true
-        if (user.nationalId?.includes(s)) return true
-        if (user.phone?.includes(s)) return true
-        if (user.email?.toLowerCase().includes(s)) return true
+        if (normalizeText(user.name).includes(s)) return true
+        if (normalizeText(user.nationalId).includes(s)) return true
+        if (normalizeText(user.phone).includes(s)) return true
+        if (normalizeText(user.email).includes(s)) return true
         if (user.customFields) {
           const matched = Object.values(user.customFields).some((val) => {
             if (val === null || val === undefined) return false
-            const valStr = toEn(String(val).toLowerCase())
-            return valStr.includes(s)
+            return normalizeText(String(val)).includes(s)
           })
           if (matched) return true
         }
@@ -1153,6 +1204,163 @@ export default function AdminUsersPage() {
     }
   }
 
+  async function handleUpdateFieldStatus(userId: string, fieldName: string, status: 'approved' | 'rejected') {
+    if (!accessToken) return
+    setActionLoading(true)
+    try {
+      const userToUpdate = users.find((u) => u.id === userId) || selectedUserForDetail
+      if (!userToUpdate) return
+
+      const currentCustomFields = (userToUpdate.customFields as Record<string, any>) || {}
+      const updatedCustomFields = {
+        ...currentCustomFields,
+        [`${fieldName}_status`]: status,
+      }
+
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ customFields: updatedCustomFields }),
+      })
+      const json = await res.json()
+      if (res.ok) {
+        setNotification({
+          type: 'success',
+          text: `وضعیت فیلد با موفقیت تغییر یافت.`,
+        })
+        const updatedUser = json.data || { ...userToUpdate, customFields: updatedCustomFields }
+        setUsers((prev) => prev.map((u) => (u.id === userId ? updatedUser : u)))
+        if (selectedUserForDetail?.id === userId) {
+          setSelectedUserForDetail(updatedUser)
+        }
+        void loadUserAuditLogs(userId)
+      } else {
+        setNotification({ type: 'error', text: json.error || 'خطا در بروزرسانی وضعیت فیلد' })
+      }
+    } catch {
+      setNotification({ type: 'error', text: 'خطا در ارتباط با سرور' })
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  async function handleUpdateVehicleStatus(userId: string, vehicleId: string, status: 'approved' | 'rejected') {
+    if (!accessToken) return
+    setActionLoading(true)
+    try {
+      const userToUpdate = users.find((u) => u.id === userId) || selectedUserForDetail
+      if (!userToUpdate) return
+
+      const currentCustomFields = (userToUpdate.customFields as Record<string, any>) || {}
+      const currentVehicles = (currentCustomFields.vehicles as any[]) || []
+      const updatedVehicles = currentVehicles.map((v: any) =>
+        v.id === vehicleId ? { ...v, status } : v
+      )
+
+      const updatedCustomFields = {
+        ...currentCustomFields,
+        vehicles: updatedVehicles,
+      }
+
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ customFields: updatedCustomFields }),
+      })
+      const json = await res.json()
+      if (res.ok) {
+        setNotification({
+          type: 'success',
+          text: `وضعیت مجوز خودرو با موفقیت تغییر یافت.`,
+        })
+        const updatedUser = json.data || { ...userToUpdate, customFields: updatedCustomFields }
+        setUsers((prev) => prev.map((u) => (u.id === userId ? updatedUser : u)))
+        if (selectedUserForDetail?.id === userId) {
+          setSelectedUserForDetail(updatedUser)
+        }
+        void loadUserAuditLogs(userId)
+      } else {
+        setNotification({ type: 'error', text: json.error || 'خطا در بروزرسانی وضعیت خودرو' })
+      }
+    } catch {
+      setNotification({ type: 'error', text: 'خطا در ارتباط با سرور' })
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const renderDetailFieldRow = (label: string, fieldName: string, icon: React.ReactNode) => {
+    if (!selectedUserForDetail) return null
+    const value = String((selectedUserForDetail.customFields as any)?.[fieldName] || '—')
+    const status = (selectedUserForDetail.customFields as any)?.[`${fieldName}_status`] || 'approved'
+
+    return (
+      <div className="flex flex-col border-b border-border/20 py-2 last:border-0">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-foreground-muted">
+            {icon}
+            <span className="text-[10px] font-semibold">{label}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {status === 'pending' && (
+              <Badge variant="outline" className="text-[8px] px-1.5 py-0.2 bg-yellow-500/10 text-yellow-300 border-yellow-500/20 flex items-center gap-0.5 font-bold">
+                <AlertTriangle className="size-2 shrink-0" />
+                <span>در انتظار تایید</span>
+              </Badge>
+            )}
+            {status === 'rejected' && (
+              <Badge variant="outline" className="text-[8px] px-1.5 py-0.2 bg-red-500/10 text-red-400 border-red-500/20 flex items-center gap-0.5 font-bold">
+                <X className="size-2 shrink-0" />
+                <span>غیرفعال</span>
+              </Badge>
+            )}
+            {status === 'approved' && (
+              <Badge variant="outline" className="text-[8px] px-1.5 py-0.2 bg-green-500/10 text-green-400 border-green-500/20 flex items-center gap-0.5 font-bold">
+                <Check className="size-2 shrink-0" />
+                <span>فعال</span>
+              </Badge>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-between mt-1 ps-6">
+          <span className="text-xs font-bold text-foreground font-mono">{toFa(value)}</span>
+          
+          <div className="flex items-center gap-1">
+            {status !== 'approved' && (
+              <Button
+                size="xs"
+                variant="ghost"
+                onClick={() => handleUpdateFieldStatus(selectedUserForDetail.id, fieldName, 'approved')}
+                className="h-5 px-1.5 text-[9px] text-green-400 hover:bg-green-500/10 font-bold cursor-pointer"
+                disabled={actionLoading}
+              >
+                تایید و فعال‌سازی
+              </Button>
+            )}
+            {status !== 'rejected' && (
+              <Button
+                size="xs"
+                variant="ghost"
+                onClick={() => handleUpdateFieldStatus(selectedUserForDetail.id, fieldName, 'rejected')}
+                className="h-5 px-1.5 text-[9px] text-red-400 hover:bg-red-500/10 font-bold cursor-pointer"
+                disabled={actionLoading}
+              >
+                غیرفعال‌سازی / رد
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Save Role Permissions Matrix
   async function handleSavePermissions() {
     if (!selectedRole || !accessToken) return
@@ -1293,6 +1501,64 @@ export default function AdminUsersPage() {
         loadCustomFieldDefs()
       } else {
         setNotification({ type: 'error', text: json.error || 'خطا در ایجاد فیلد پویا' })
+      }
+    } catch {
+      setNotification({ type: 'error', text: 'خطا در ارتباط با سرور' })
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  function openEditFieldModal(field: CustomFieldDef) {
+    setEditingField(field)
+    setEditFieldName(field.name)
+    setEditFieldLabel(field.label)
+    setEditFieldType(field.type)
+    
+    let opts = ''
+    if (field.options) {
+      const parsed = typeof field.options === 'string' ? JSON.parse(field.options) : field.options
+      opts = Array.isArray(parsed) ? parsed.join('، ') : String(parsed)
+    }
+    setEditFieldOptionsRaw(opts)
+    setEditFieldRequired(field.required)
+    setEditFieldDefaultValue(field.defaultValue || '')
+    setFieldEditModalOpen(true)
+  }
+
+  async function handleEditField(e: React.FormEvent) {
+    e.preventDefault()
+    if (!accessToken || !editingField) return
+    setActionLoading(true)
+
+    const parsedOptions = editFieldOptionsRaw
+      ? editFieldOptionsRaw.split(/[،,]/).map((o) => o.trim()).filter((o) => o.length > 0)
+      : []
+
+    try {
+      const res = await fetch(`/api/custom-fields/${editingField.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          entityType: 'User',
+          name: editFieldName,
+          label: editFieldLabel,
+          type: editFieldType,
+          options: parsedOptions,
+          required: editFieldRequired,
+          defaultValue: editFieldDefaultValue || null,
+        }),
+      })
+      const json = await res.json()
+      if (res.ok) {
+        setNotification({ type: 'success', text: 'فیلد پویا با موفقیت بروزرسانی شد.' })
+        setFieldEditModalOpen(false)
+        loadCustomFieldDefs()
+      } else {
+        setNotification({ type: 'error', text: json.error || 'خطا در بروزرسانی فیلد پویا' })
       }
     } catch {
       setNotification({ type: 'error', text: 'خطا در ارتباط با سرور' })
@@ -1651,30 +1917,38 @@ export default function AdminUsersPage() {
               />
             </div>
             <div>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full h-10 rounded-lg border border-border bg-background/50 px-3 text-sm text-foreground outline-none focus-visible:border-accent cursor-pointer animate-none"
+              <Select
+                value={statusFilter || 'ALL'}
+                onValueChange={(val) => setStatusFilter(!val || val === 'ALL' ? '' : val)}
               >
-                <option value="">همه وضعیت‌ها</option>
-                <option value="pending">در حال بررسی</option>
-                <option value="active">فعال</option>
-                <option value="suspended">معلق</option>
-              </select>
+                <SelectTrigger className="w-full h-10 bg-background/50 border-border text-sm text-foreground focus-visible:ring-accent">
+                  <SelectValue placeholder="همه وضعیت‌ها" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover text-popover-foreground border border-border">
+                  <SelectItem value="ALL">همه وضعیت‌ها</SelectItem>
+                  <SelectItem value="pending">در حال بررسی</SelectItem>
+                  <SelectItem value="active">فعال</SelectItem>
+                  <SelectItem value="suspended">معلق</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
-              <select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="w-full h-10 rounded-lg border border-border bg-background/50 px-3 text-sm text-foreground outline-none focus-visible:border-accent cursor-pointer animate-none"
+              <Select
+                value={roleFilter || 'ALL'}
+                onValueChange={(val) => setRoleFilter(!val || val === 'ALL' ? '' : val)}
               >
-                <option value="">همه نقش‌ها</option>
-                {roles.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full h-10 bg-background/50 border-border text-sm text-foreground focus-visible:ring-accent">
+                  <SelectValue placeholder="همه نقش‌ها" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover text-popover-foreground border border-border">
+                  <SelectItem value="ALL">همه نقش‌ها</SelectItem>
+                  {roles.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -1757,11 +2031,10 @@ export default function AdminUsersPage() {
                   <span className="text-sm text-foreground-muted">هیچ کاربری یافت نشد.</span>
                 </div>
               ) : (
-                <div className="w-full overflow-x-auto scrollbar-thin">
-                  <Table className="min-w-[1500px]">
+                  <Table className="min-w-[1500px] bg-surface border-separate border-spacing-0">
                     <TableHeader className="bg-surface/30">
                       <TableRow className="border-b border-border/60 hover:bg-transparent">
-                        <TableHead className="sticky right-0 z-30 bg-[#161618] text-start pr-6 whitespace-nowrap w-[160px] min-w-[160px] max-w-[160px] border-l border-border/40">
+                        <TableHead className="sticky right-0 z-30 bg-surface text-start pr-6 whitespace-nowrap w-[160px] min-w-[160px] max-w-[160px] border-l border-border/40">
                           <div className="flex items-center gap-1">
                             <span>نام پرسنل</span>
                             <ColumnHeaderFilter
@@ -1777,7 +2050,7 @@ export default function AdminUsersPage() {
                             />
                           </div>
                         </TableHead>
-                        <TableHead className="sticky right-[160px] z-30 bg-[#161618] text-start whitespace-nowrap w-[120px] min-w-[120px] max-w-[120px] border-l border-border/40">
+                        <TableHead className="sticky right-[160px] z-30 bg-surface text-start whitespace-nowrap w-[120px] min-w-[120px] max-w-[120px] border-l border-border/40">
                           <div className="flex items-center gap-1">
                             <span>کد پرسنلی</span>
                             <ColumnHeaderFilter
@@ -2011,8 +2284,8 @@ export default function AdminUsersPage() {
                           onClick={() => openUserDetail(user)}
                           className="group border-b border-border/40 hover:bg-surface-hover/35 transition-colors cursor-pointer"
                         >
-                          <TableCell className="sticky right-0 z-10 bg-[#0c0c0e] border-l border-border/40 group-hover:bg-[#1c1c1e] transition-colors font-semibold pr-6 text-foreground whitespace-nowrap w-[160px] min-w-[160px] max-w-[160px]">{user.name}</TableCell>
-                          <TableCell className="sticky right-[160px] z-10 bg-[#0c0c0e] border-l border-border/40 group-hover:bg-[#1c1c1e] transition-colors font-mono text-xs text-foreground/80 whitespace-nowrap w-[120px] min-w-[120px] max-w-[120px]">
+                          <TableCell className="sticky right-0 z-10 bg-surface border-l border-border/40 group-hover:bg-surface-hover transition-colors font-semibold pr-6 text-foreground whitespace-nowrap w-[160px] min-w-[160px] max-w-[160px]">{user.name}</TableCell>
+                          <TableCell className="sticky right-[160px] z-10 bg-surface border-l border-border/40 group-hover:bg-surface-hover transition-colors font-mono text-xs text-foreground/80 whitespace-nowrap w-[120px] min-w-[120px] max-w-[120px]">
                             {(() => {
                               const pNo = getUserFieldValue(user, 'personnelNo')
                               return pNo ? toFa(String(pNo)) : '—'
@@ -2160,7 +2433,6 @@ export default function AdminUsersPage() {
                       ))}
                     </TableBody>
                   </Table>
-                </div>
               )}
             </CardContent>
           </Card>
@@ -2569,6 +2841,16 @@ export default function AdminUsersPage() {
                             <Button
                               size="icon-sm"
                               variant="ghost"
+                              onClick={() => openEditFieldModal(field)}
+                              title="ویرایش فیلد"
+                              disabled={actionLoading}
+                              className="text-foreground-muted hover:text-accent hover:bg-accent/5 rounded-md cursor-pointer me-1"
+                            >
+                              <Edit2 className="size-3.5" />
+                            </Button>
+                            <Button
+                              size="icon-sm"
+                              variant="ghost"
                               onClick={() => handleDeleteField(field.id)}
                               title="حذف فیلد"
                               disabled={actionLoading}
@@ -2764,7 +3046,19 @@ export default function AdminUsersPage() {
                       : "text-foreground-muted hover:text-foreground hover:bg-surface/50 border border-transparent"
                   )}
                 >
-                  پرونده پرسنلی و اطلاعات شغلی
+                  پرونده پرسنلی
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDetailTab('vehicles')}
+                  className={cn(
+                    "flex-1 py-2 text-[11px] font-bold rounded-lg transition-all cursor-pointer text-center",
+                    detailTab === 'vehicles'
+                      ? "bg-accent/15 text-accent border border-accent/20"
+                      : "text-foreground-muted hover:text-foreground hover:bg-surface/50 border border-transparent"
+                  )}
+                >
+                  خودروها ({toFa(((selectedUserForDetail.customFields as any)?.vehicles || []).length)})
                 </button>
                 <button
                   type="button"
@@ -2776,13 +3070,13 @@ export default function AdminUsersPage() {
                       : "text-foreground-muted hover:text-foreground hover:bg-surface/50 border border-transparent"
                   )}
                 >
-                  تاریخچه فعالیت‌ها ({toFa(userAuditLogs.length)})
+                  تاریخچه ({toFa(userAuditLogs.length)})
                 </button>
               </div>
 
               {/* Drawer Content */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {detailTab === 'profile' ? (
+                {detailTab === 'profile' && (
                   <div className="space-y-5 animate-in fade-in duration-200">
                     {/* Card 1: Personal & Contact Info */}
                     <div className="border border-border/50 bg-surface/20 rounded-xl p-4 space-y-3.5 shadow-sm">
@@ -2819,72 +3113,222 @@ export default function AdminUsersPage() {
                             </span>
                           </div>
                         </div>
-
-                        <div className="flex items-center gap-2.5 col-span-2 border-t border-border/20 pt-2.5">
-                          <Calendar className="size-4 text-foreground-muted shrink-0" />
-                          <div className="flex flex-col">
-                            <span className="text-[9px] text-foreground-muted">تاریخ تولد و سن</span>
-                            <span className="text-xs font-bold text-foreground">
-                              {(() => {
-                                const bDate = getUserFieldValue(selectedUserForDetail, 'birthDate')
-                                if (!bDate) return 'ثبت نشده'
-                                const age = calculateAge(String(bDate))
-                                return `${toFa(String(bDate))} (${toFa(age)} ساله)`
-                              })()}
-                            </span>
-                          </div>
-                        </div>
                       </div>
                     </div>
 
-                    {/* Card 2: Roster & Job Fields */}
-                    <div className="border border-border/50 bg-surface/20 rounded-xl p-4 space-y-3.5 shadow-sm">
+                    {/* Group 1: مشخصات شناسنامه‌ای و فردی */}
+                    <div className="border border-border/50 bg-surface/20 rounded-xl p-4 space-y-3 shadow-sm">
+                      <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5 border-b border-border/30 pb-2">
+                        <User className="size-4 text-accent" />
+                        <span>مشخصات شناسنامه‌ای و فردی</span>
+                      </h3>
+                      <div className="space-y-1">
+                        {renderDetailFieldRow('نام پدر', 'fatherName', <User className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('شماره شناسنامه', 'idNumber', <CreditCard className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('تاریخ تولد', 'birthDate', <Calendar className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('سن', 'age', <Calendar className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('محل تولد', 'birthPlace', <MapPin className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('وضعیت تاهل / فرزندان', 'maritalStatus', <User className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('گروه خونی / شماره بیمه', 'insuranceNo', <Shield className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('تحصیلات', 'education', <Award className="size-3.5 text-accent" />)}
+                      </div>
+                    </div>
+
+                    {/* Group 2: اطلاعات شغلی و سازمانی */}
+                    <div className="border border-border/50 bg-surface/20 rounded-xl p-4 space-y-3 shadow-sm">
                       <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5 border-b border-border/30 pb-2">
                         <Briefcase className="size-4 text-accent" />
-                        <span>اطلاعات شغلی، شیفت و لوحه</span>
+                        <span>اطلاعات شغلی و سازمانی</span>
                       </h3>
+                      <div className="space-y-1">
+                        {renderDetailFieldRow('کد پرسنلی', 'personnelNo', <CreditCard className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('عنوان پست سازمانی', 'post', <Briefcase className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('کد گروه راهبری', 'group', <Activity className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('نام شیفت کاری', 'shift', <Calendar className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('نوع شیفت کاری', 'shiftType', <Clock className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('ایستگاه شروع به کار', 'startLocation', <MapPin className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('تاریخ استخدام', 'hireDate', <Calendar className="size-3.5 text-accent" />)}
+                      </div>
+                    </div>
 
-                      {customFieldDefs.length === 0 ? (
-                        <p className="text-xs text-foreground-muted text-center py-2">هیچ فیلد مشخصات شغلی تعریف نشده است.</p>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-4">
-                          {customFieldDefs.map((field) => {
-                            const val = getUserFieldValue(selectedUserForDetail, field.name)
-                            let displayVal = '—'
-                            if (val !== undefined && val !== null && val !== '') {
-                              if (field.type === 'boolean') {
-                                displayVal = val === true || val === 'true' ? 'بله' : 'خیر'
-                              } else {
-                                displayVal = String(val)
-                              }
-                            }
+                    {/* Group 3: صلاحیت‌ها، گواهینامه‌ها و درصدها */}
+                    <div className="border border-border/50 bg-surface/20 rounded-xl p-4 space-y-3 shadow-sm">
+                      <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5 border-b border-border/30 pb-2">
+                        <Award className="size-4 text-accent" />
+                        <span>صلاحیت‌ها، گواهینامه‌ها و درصدها</span>
+                      </h3>
+                      <div className="space-y-1">
+                        {renderDetailFieldRow('وضعیت راهبری قطار', 'drivingStatus', <Award className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('تاریخ اخذ گواهینامه پایه ۱', 'licenseClass1Date', <Award className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('تاریخ اخذ گواهینامه پایه ۲', 'licenseClass2Date', <Award className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('اعتبار معاینه پزشکی', 'medicalExamValidity', <Shield className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('درصد سهم راهبر قطار', 'driverPercent', <Activity className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('درصد سهم کمک راهبری', 'coDriverPercent', <Activity className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('درصد سهم راهبر آموزشی', 'traineeDriverPercent', <Activity className="size-3.5 text-accent" />)}
+                      </div>
+                    </div>
 
-                            // If it's age or birthDate, we already show it in Card 1, so we can skip or show here too.
-                            if (field.name === 'age' || field.name === 'birthDate') return null
+                    {/* Group 4: نشانی و تماس‌های اضطراری */}
+                    <div className="border border-border/50 bg-surface/20 rounded-xl p-4 space-y-3 shadow-sm">
+                      <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5 border-b border-border/30 pb-2">
+                        <MapPin className="size-4 text-accent" />
+                        <span>نشانی و تماس‌های اضطراری</span>
+                      </h3>
+                      <div className="space-y-1">
+                        {renderDetailFieldRow('آدرس پستی سکونت', 'address', <MapPin className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('تلفن ۳ پرسنلی', 'phone3', <Phone className="size-3.5 text-accent" />)}
+                        {renderDetailFieldRow('تلفن ۴ پرسنلی', 'phone4', <Phone className="size-3.5 text-accent" />)}
+                        
+                        {/* Additional phones display if any */}
+                        {(((selectedUserForDetail.customFields as any)?.additionalPhones || []) as string[]).map((ph: string, idx: number) => {
+                          return (
+                            <div key={idx} className="flex flex-col border-b border-border/20 py-2.5 last:border-0">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-semibold text-foreground-muted">تلفن همراه اضطراری {toFa(idx + 2)}</span>
+                                <Badge variant="outline" className="text-[8px] px-1.5 py-0.2 bg-green-500/10 text-green-400 border-green-500/20 font-bold">فعال</Badge>
+                              </div>
+                              <span className="text-xs font-bold text-foreground font-mono mt-1">{toFa(ph)}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-                            // Format value if it is personnel number, group or dates
-                            let formattedVal = displayVal
-                            if (field.name === 'personnelNo' || field.name === 'hireDate') {
-                              formattedVal = toFa(displayVal)
-                            } else if (field.name === 'group') {
-                              formattedVal = displayVal === 'Staff' ? 'ستادی' : `گروه ${toFa(displayVal)}`
-                            }
+                {detailTab === 'vehicles' && (
+                  <div className="space-y-4 animate-in fade-in duration-200">
+                    <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5 border-b border-border/40 pb-2">
+                      <Car className="size-4 text-accent" />
+                      <span>وسایل نقلیه و مجوزهای تردد</span>
+                    </h3>
+
+                    {(() => {
+                      const userVehicles = ((selectedUserForDetail.customFields as any)?.vehicles || []) as Vehicle[]
+                      if (userVehicles.length === 0) {
+                        return (
+                          <div className="flex flex-col items-center justify-center p-12 text-foreground-muted gap-2 border border-dashed border-border/60 rounded-xl">
+                            <Car className="size-8 opacity-30" />
+                            <span className="text-xs font-semibold">هیچ خودرویی برای این کاربر ثبت نشده است.</span>
+                          </div>
+                        )
+                      }
+                      
+                      return (
+                        <div className="space-y-4">
+                          {userVehicles.map((v) => {
+                            const isPending = v.status === 'pending'
+                            const isRejected = v.status === 'rejected'
+                            const isApproved = v.status === 'approved' || !v.status
 
                             return (
-                              <div key={field.id} className="flex items-start gap-2.5">
-                                <div className="shrink-0 mt-0.5">{getFieldIcon(field.name)}</div>
-                                <div className="flex flex-col">
-                                  <span className="text-[9px] text-foreground-muted">{field.label}</span>
-                                  <span className="text-xs font-bold text-foreground">{formattedVal}</span>
-                                </div>
-                              </div>
+                              <Card key={v.id} className="border-border/60 shadow-sm relative overflow-hidden bg-surface/40">
+                                <CardContent className="p-4 flex flex-col gap-4">
+                                  
+                                  {/* Visual Plate Renderer */}
+                                  <div className="flex justify-center">
+                                    <div className="relative w-56 h-11 bg-white border border-neutral-300 rounded shadow flex items-center justify-between font-sans overflow-hidden select-none" dir="ltr">
+                                      {/* Blue section (left) */}
+                                      <div className="w-7 h-full bg-[#003399] flex flex-col items-center justify-between py-1 text-white text-[6px] font-bold">
+                                        <div className="flex flex-col gap-0.5 items-center">
+                                          <div className="w-2.5 h-0.5 bg-[#FF0000]" />
+                                          <div className="w-2.5 h-0.5 bg-[#FFFFFF]" />
+                                          <div className="w-2.5 h-0.5 bg-[#009933]" />
+                                        </div>
+                                        <div className="flex flex-col items-center text-[5px]">
+                                          <span>I.R.</span>
+                                          <span>IRAN</span>
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Left Plate Numbers */}
+                                      <div className="flex-1 flex items-center justify-center gap-1.5 text-lg font-bold text-neutral-800 tracking-tight">
+                                        <span>{toFa(v.plateNum1)}</span>
+                                        <span className="text-sm font-normal">{v.plateLetter}</span>
+                                        <span>{toFa(v.plateNum2)}</span>
+                                      </div>
+                                      
+                                      {/* Right Box (City Code) */}
+                                      <div className="w-9 h-full border-l border-neutral-300 flex flex-col items-center justify-center bg-white text-neutral-800">
+                                        <span className="text-[6px] text-neutral-500 font-semibold -mb-0.5">ایران</span>
+                                        <span className="text-sm font-bold tracking-tight">{toFa(v.plateCity)}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Vehicle Meta Details */}
+                                  <div className="grid grid-cols-2 gap-2 text-[11px] text-right border-t border-b border-border/20 py-2">
+                                    <div>
+                                      <span className="text-foreground-muted">نوع خودرو: </span>
+                                      <strong className="text-foreground">{v.carType}</strong>
+                                    </div>
+                                    <div>
+                                      <span className="text-foreground-muted">رنگ خودرو: </span>
+                                      <strong className="text-foreground">{v.carColor || '—'}</strong>
+                                    </div>
+                                    <div className="col-span-2 mt-1">
+                                      <span className="text-foreground-muted">تاریخ انقضای مجوز: </span>
+                                      <strong className="text-foreground font-mono">{toFa(v.carLicenseExpiry || '—')}</strong>
+                                    </div>
+                                  </div>
+
+                                  {/* Status and Action Buttons */}
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-[10px] text-foreground-muted">وضعیت مجوز:</span>
+                                      {isPending && (
+                                        <Badge className="bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 px-2 py-0.5 font-bold text-[9px] rounded-full">
+                                          در انتظار تایید
+                                        </Badge>
+                                      )}
+                                      {isApproved && (
+                                        <Badge className="bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-0.5 font-bold text-[9px] rounded-full">
+                                          مجوز فعال
+                                        </Badge>
+                                      )}
+                                      {isRejected && (
+                                        <Badge className="bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 font-bold text-[9px] rounded-full">
+                                          غیرفعال / فاقد مجوز
+                                        </Badge>
+                                      )}
+                                    </div>
+
+                                    <div className="flex items-center gap-1">
+                                      {v.status !== 'approved' && (
+                                        <Button
+                                          size="xs"
+                                          className="bg-green-500 hover:bg-green-600 text-white font-bold text-[10px] h-7 px-2.5 rounded cursor-pointer"
+                                          onClick={() => handleUpdateVehicleStatus(selectedUserForDetail.id, v.id, 'approved')}
+                                          disabled={actionLoading}
+                                        >
+                                          تایید و فعال‌سازی
+                                        </Button>
+                                      )}
+                                      {v.status !== 'rejected' && (
+                                        <Button
+                                          size="xs"
+                                          variant="outline"
+                                          className="border-red-500/30 hover:bg-red-500/10 text-red-400 font-bold text-[10px] h-7 px-2.5 rounded cursor-pointer"
+                                          onClick={() => handleUpdateVehicleStatus(selectedUserForDetail.id, v.id, 'rejected')}
+                                          disabled={actionLoading}
+                                        >
+                                          غیرفعال‌سازی
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                </CardContent>
+                              </Card>
                             )
                           })}
                         </div>
-                      )}
-                    </div>
+                      )
+                    })()}
                   </div>
-                ) : (
+                )}
+
+                {detailTab === 'logs' && (
                   <div className="space-y-4 animate-in fade-in duration-200">
                     <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5 border-b border-border/40 pb-2">
                       <Activity className="size-4 text-accent" />
@@ -3478,6 +3922,162 @@ export default function AdminUsersPage() {
                 className="bg-accent hover:bg-accent-hover text-accent-foreground font-semibold px-6 cursor-pointer"
               >
                 {actionLoading ? <Loader2 className="size-4 animate-spin" /> : 'ثبت رمز جدید'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Custom Field Modal Dialog */}
+      <Dialog open={fieldEditModalOpen} onOpenChange={setFieldEditModalOpen}>
+        <DialogContent className="max-w-md w-full" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-foreground text-start">ویرایش فیلد پویا</DialogTitle>
+            <DialogDescription className="text-xs text-foreground-muted text-start">
+              مشخصات فیلد پویای انتخاب شده را تغییر دهید.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditField} className="space-y-4 py-2 text-start">
+            <div className="space-y-1.5">
+              <Label htmlFor="editFieldName" className="text-xs font-semibold text-foreground">
+                شناسه سیستمی فیلد (نام انگلیسی)
+              </Label>
+              <Input
+                id="editFieldName"
+                required
+                placeholder="مثلا: station_name"
+                value={editFieldName}
+                onChange={(e) => setEditFieldName(e.target.value)}
+                className="h-10 text-sm focus-visible:ring-accent border-border font-mono text-start"
+              />
+              <span className="text-[10px] text-foreground-muted">
+                توجه: تغییر شناسه سیستمی ممکن است باعث شود مقادیر قبلی ثبت شده برای کاربران خوانده نشوند.
+              </span>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="editFieldLabel" className="text-xs font-semibold text-foreground">
+                عنوان فارسی فیلد (برچسب)
+              </Label>
+              <Input
+                id="editFieldLabel"
+                required
+                placeholder="مثلا: ایستگاه محل خدمت"
+                value={editFieldLabel}
+                onChange={(e) => setEditFieldLabel(e.target.value)}
+                className="h-10 text-sm focus-visible:ring-accent border-border"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="editFieldType" className="text-xs font-semibold text-foreground">
+                نوع فیلد
+              </Label>
+              <select
+                id="editFieldType"
+                value={editFieldType}
+                onChange={(e) => setEditFieldType(e.target.value as any)}
+                className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-accent cursor-pointer"
+              >
+                <option value="text">متن (یک خطی)</option>
+                <option value="number">عدد</option>
+                <option value="select">منوی کشویی (انتخابی)</option>
+                <option value="date">تاریخ شمسی</option>
+                <option value="boolean">تیک‌باکس (بله/خیر)</option>
+              </select>
+            </div>
+
+            {editFieldType === 'select' && (
+              <div className="space-y-1.5">
+                <Label htmlFor="editFieldOptionsRaw" className="text-xs font-semibold text-foreground">
+                  گزینه‌های منو (با کاما جدا کنید)
+                </Label>
+                <Input
+                  id="editFieldOptionsRaw"
+                  required
+                  placeholder="مثلا: تجریش، کهریزک، امام خمینی"
+                  value={editFieldOptionsRaw}
+                  onChange={(e) => setEditFieldOptionsRaw(e.target.value)}
+                  className="h-10 text-sm focus-visible:ring-accent border-border"
+                />
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <Label htmlFor="editFieldDefaultValue" className="text-xs font-semibold text-foreground flex justify-start">
+                مقدار پیش‌فرض (اختیاری)
+              </Label>
+              {editFieldType === 'boolean' ? (
+                <select
+                  id="editFieldDefaultValue"
+                  value={editFieldDefaultValue}
+                  onChange={(e) => setEditFieldDefaultValue(e.target.value)}
+                  className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-accent cursor-pointer"
+                >
+                  <option value="">بدون مقدار پیش‌فرض</option>
+                  <option value="true">بله (True)</option>
+                  <option value="false">خیر (False)</option>
+                </select>
+              ) : editFieldType === 'select' ? (
+                <select
+                  id="editFieldDefaultValue"
+                  value={editFieldDefaultValue}
+                  onChange={(e) => setEditFieldDefaultValue(e.target.value)}
+                  className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-accent cursor-pointer"
+                >
+                  <option value="">بدون مقدار پیش‌فرض</option>
+                  {editFieldOptionsRaw.split(/[،,]/).map((o) => o.trim()).filter((o) => o.length > 0).map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              ) : editFieldType === 'date' ? (
+                <Input
+                  id="editFieldDefaultValue"
+                  placeholder="مثلا: ۱۴۰۵/۰۱/۰۱"
+                  value={editFieldDefaultValue}
+                  onChange={(e) => setEditFieldDefaultValue(e.target.value)}
+                  className="h-10 text-sm focus-visible:ring-accent border-border font-mono text-start"
+                />
+              ) : (
+                <Input
+                  id="editFieldDefaultValue"
+                  type={editFieldType === 'number' ? 'number' : 'text'}
+                  placeholder="مقدار پیش‌فرض فیلد..."
+                  value={editFieldDefaultValue}
+                  onChange={(e) => setEditFieldDefaultValue(e.target.value)}
+                  className="h-10 text-sm focus-visible:ring-accent border-border text-start"
+                />
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="editFieldRequired"
+                checked={editFieldRequired}
+                onChange={(e) => setEditFieldRequired(e.target.checked)}
+                className="accent-accent size-4 rounded"
+              />
+              <Label htmlFor="editFieldRequired" className="text-xs font-semibold text-foreground cursor-pointer select-none">
+                پر کردن این فیلد اجباری است
+              </Label>
+            </div>
+
+            <DialogFooter className="pt-4 flex justify-end gap-2 border-t border-border/40">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setFieldEditModalOpen(false)}
+                className="cursor-pointer"
+              >
+                انصراف
+              </Button>
+              <Button
+                type="submit"
+                disabled={actionLoading}
+                className="bg-accent hover:bg-accent-hover text-accent-foreground font-semibold px-6 cursor-pointer"
+              >
+                {actionLoading ? <Loader2 className="size-4 animate-spin" /> : 'بروزرسانی فیلد'}
               </Button>
             </DialogFooter>
           </form>

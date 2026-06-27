@@ -8,10 +8,8 @@ import {
   Calendar as CalendarIcon,
   Plus,
   Trash,
-  Check,
   CheckSquare,
   Square,
-  User,
   Clock,
   Briefcase,
   FileText,
@@ -20,8 +18,6 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
-  Shield,
-  Info,
   Loader2,
   ArrowLeftRight,
   Send,
@@ -53,12 +49,21 @@ interface UserProfile {
   [key: string]: unknown
 }
 
+interface DbShift {
+  id: string
+  date: string
+  code: string
+  note: string | null
+  source?: string
+  userId: string
+}
+
 const SHIFT_COLORS: Record<string, string> = {
-  morning: 'bg-amber-500/10 text-amber-400 border-amber-500/30 ring-1 ring-amber-500/10',
-  evening: 'bg-sky-500/10 text-sky-400 border-sky-500/30 ring-1 ring-sky-500/10',
-  night: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30 ring-1 ring-indigo-500/10',
-  off: 'bg-neutral-800/40 text-neutral-400 border-neutral-800',
-  office: 'bg-purple-500/10 text-purple-400 border-purple-500/30 ring-1 ring-purple-500/10',
+  morning: 'bg-success/10 text-success border-success/30 ring-1 ring-success/10',
+  evening: 'bg-info/10 text-info border-info/30 ring-1 ring-info/10',
+  night: 'bg-neutral-700/40 text-foreground-muted border-neutral-700',
+  off: 'bg-background-subtle text-foreground-muted border-border-subtle',
+  office: 'bg-accent/10 text-accent border-accent/30 ring-1 ring-accent/10',
 }
 
 const SHIFT_LABELS: Record<string, string> = {
@@ -72,7 +77,9 @@ const SHIFT_LABELS: Record<string, string> = {
 function playAlertSound(type: 'info' | 'warning' | 'success') {
   if (typeof window === 'undefined') return
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const AudioCtor = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (!AudioCtor) return
+    const ctx = new AudioCtor()
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
 
@@ -105,8 +112,8 @@ function playAlertSound(type: 'info' | 'warning' | 'success') {
       osc.start(ctx.currentTime)
       osc.stop(ctx.currentTime + 0.2)
     }
-  } catch (e) {
-    console.warn('Audio Context blocked or unsupported:', e)
+  } catch {
+    // Audio Context blocked or unsupported — silent
   }
 }
 
@@ -145,7 +152,7 @@ export default function ShiftsPage() {
   const [personalPriority, setPersonalPriority] = useState<'low' | 'medium' | 'high'>('medium')
 
   // Database Overrides
-  const [dbShifts, setDbShifts] = useState<any[]>([])
+  const [dbShifts, setDbShifts] = useState<DbShift[]>([])
   const [dbShiftsLoading, setDbShiftsLoading] = useState(false)
 
   // Colleagues & Swap Requests states
@@ -200,8 +207,8 @@ export default function ShiftsPage() {
           const json = await res.json()
           setDbShifts(json.data || [])
         }
-      } catch (err) {
-        console.error('Error fetching shifts overrides:', err)
+      } catch {
+        // silent — failed to fetch shifts overrides
       } finally {
         setDbShiftsLoading(false)
       }
@@ -221,8 +228,8 @@ export default function ShiftsPage() {
           const json = await res.json()
           setColleagues(json.data?.users || [])
         }
-      } catch (err) {
-        console.error('Error loading colleagues:', err)
+      } catch {
+        // silent — failed to load colleagues
       }
     }
     void loadColleagues()
@@ -272,8 +279,8 @@ export default function ShiftsPage() {
         resolved = {
           shift: {
             day: dateObj.day() + 1,
-            code: override.code,
-            label: SHIFT_LABELS[override.code] || override.code,
+            code: override.code as 'morning' | 'evening' | 'night' | 'off' | 'office',
+            label: SHIFT_LABELS[override.code as keyof typeof SHIFT_LABELS] || override.code,
             hours: override.code === 'morning' || override.code === 'evening' ? 9 : override.code === 'night' ? 12 : 0,
             startTime: override.code === 'morning' ? '07:00' : override.code === 'evening' ? '16:00' : override.code === 'night' ? '19:00' : '',
             endTime: override.code === 'morning' ? '16:00' : override.code === 'evening' ? '01:00' : override.code === 'night' ? '07:00' : '',
@@ -400,7 +407,7 @@ export default function ShiftsPage() {
       } else {
         playAlertSound('warning')
         if (json.violations && json.violations.length > 0) {
-          setSwapError(`مغایرت با قوانین مترو: ${json.violations.map((v: any) => v.message).join(' - ')}`)
+          setSwapError(`مغایرت با قوانین مترو: ${json.violations.map((v: { message: string }) => v.message).join(' - ')}`)
         } else {
           setSwapError(json.error || 'خطا در ثبت درخواست تعویض شیفت.')
         }
@@ -442,8 +449,8 @@ export default function ShiftsPage() {
         shiftRes = {
           shift: {
             day: dateObj.day() + 1,
-            code: override.code,
-            label: SHIFT_LABELS[override.code] || override.code,
+            code: override.code as 'morning' | 'evening' | 'night' | 'off' | 'office',
+            label: SHIFT_LABELS[override.code as keyof typeof SHIFT_LABELS] || override.code,
             hours: override.code === 'morning' || override.code === 'evening' ? 9 : override.code === 'night' ? 12 : 0,
             startTime: '',
             endTime: '',
@@ -551,7 +558,7 @@ export default function ShiftsPage() {
                 x={startX + 15}
                 y={y + 15}
                 fill="var(--color-foreground-muted)"
-                className="text-[10px] font-black"
+                className="text-[10px] font-semibold"
                 textAnchor="start"
               >
                 {item.label}
@@ -601,7 +608,7 @@ export default function ShiftsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-border-subtle pb-4 gap-4 print:hidden">
         <div>
-          <h1 className="text-lg font-black text-foreground flex items-center gap-2">
+          <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <CalendarIcon className="size-6 text-accent" />
             تقویم و برنامه شیفت‌های کاری پرسنل
           </h1>
@@ -618,7 +625,7 @@ export default function ShiftsPage() {
           className={cn(
             "pb-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer",
             activeTab === 'calendar'
-              ? "border-accent text-accent font-black"
+              ? "border-accent text-accent font-semibold"
               : "border-transparent text-foreground-muted hover:text-foreground"
           )}
         >
@@ -630,7 +637,7 @@ export default function ShiftsPage() {
           className={cn(
             "pb-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer",
             activeTab === 'reports'
-              ? "border-accent text-accent font-black"
+              ? "border-accent text-accent font-semibold"
               : "border-transparent text-foreground-muted hover:text-foreground"
           )}
         >
@@ -678,7 +685,7 @@ export default function ShiftsPage() {
               <CardContent className="space-y-4 pt-4">
                 {/* Month Controller */}
                 <div className="flex items-center justify-between border-b border-border-subtle/40 pb-3 print:hidden">
-                  <h2 className="text-sm font-black text-accent flex items-center gap-1.5">
+                  <h2 className="text-sm font-semibold text-accent flex items-center gap-1.5">
                     {firstDay.format('jMMMM jYYYY')}
                     {dbShiftsLoading && <Loader2 className="size-4 animate-spin text-accent" />}
                   </h2>
@@ -770,18 +777,18 @@ export default function ShiftsPage() {
                 </div>
               </CardContent>
               <CardFooter className="text-xs text-foreground-muted border-t border-border-subtle/20 pt-4 flex flex-wrap gap-4 print:hidden">
-                <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-amber-500/10 border border-amber-500/30" /> نوبت صبح</span>
-                <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-sky-500/10 border border-sky-500/30" /> نوبت عصر</span>
-                <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-indigo-500/10 border border-indigo-500/30" /> نوبت شب</span>
-                <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-purple-500/10 border border-purple-500/30" /> اداری ستادی</span>
-                <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-neutral-800/40 border border-neutral-800" /> استراحت (Off)</span>
+                <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-success/10 border border-success/30" /> نوبت صبح</span>
+                <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-info/10 border border-info/30" /> نوبت عصر</span>
+                <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-neutral-700/40 border border-neutral-700" /> نوبت شب</span>
+                <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-accent/10 border border-accent/30" /> اداری ستادی</span>
+                <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-background-subtle border border-border-subtle" /> استراحت (Off)</span>
               </CardFooter>
             </Card>
 
             {/* ── VISUAL SHIFT SWAP FORM ── */}
             <Card className="border border-border-subtle bg-surface-container-low/40 backdrop-blur shadow-sm">
               <CardHeader className="border-b border-border/20 pb-3">
-                <CardTitle className="text-xs font-black text-foreground flex items-center gap-1.5">
+                <CardTitle className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                   <ArrowLeftRight className="size-4 text-accent" />
                   <span>ثبت درخواست تعویض شیفت کاری با همکاران (کارتابل هوشمند)</span>
                 </CardTitle>
@@ -885,7 +892,7 @@ export default function ShiftsPage() {
                     <Button
                       type="submit"
                       disabled={submittingSwap}
-                      className="px-6 h-9 text-xs font-black bg-accent hover:bg-accent-hover text-accent-foreground cursor-pointer flex items-center gap-1.5"
+                      className="px-6 h-9 text-xs font-semibold bg-accent hover:bg-accent-hover text-accent-foreground cursor-pointer flex items-center gap-1.5"
                     >
                       {submittingSwap ? (
                         <>
@@ -925,11 +932,11 @@ export default function ShiftsPage() {
                     {selectedDayInfo.data?.resolvedShift ? (
                       <Badge className={cn(
                         "text-[11px] px-2 py-0.5",
-                        selectedDayInfo.data.resolvedShift.shift?.code === 'morning' && "bg-amber-500/20 text-amber-300 border-amber-500/30",
-                        selectedDayInfo.data.resolvedShift.shift?.code === 'evening' && "bg-sky-500/20 text-sky-300 border-sky-500/30",
-                        selectedDayInfo.data.resolvedShift.shift?.code === 'night' && "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
-                        selectedDayInfo.data.resolvedShift.shift?.code === 'office' && "bg-purple-500/20 text-purple-300 border-purple-500/30",
-                        selectedDayInfo.data.resolvedShift.shift?.code === 'off' && "bg-neutral-800 text-neutral-400 border-neutral-700"
+                        selectedDayInfo.data.resolvedShift.shift?.code === 'morning' && "bg-success/20 text-success border-success/30",
+                        selectedDayInfo.data.resolvedShift.shift?.code === 'evening' && "bg-info/20 text-info border-info/30",
+                        selectedDayInfo.data.resolvedShift.shift?.code === 'night' && "bg-neutral-700/40 text-foreground-muted border-neutral-700",
+                        selectedDayInfo.data.resolvedShift.shift?.code === 'office' && "bg-accent/20 text-accent border-accent/30",
+                        selectedDayInfo.data.resolvedShift.shift?.code === 'off' && "bg-background-subtle text-foreground-muted border-border-subtle"
                       )}>
                         {selectedDayInfo.data.resolvedShift.shift?.label}
                       </Badge>
@@ -1083,7 +1090,7 @@ export default function ShiftsPage() {
                         <Label className="text-[9px] text-foreground-muted font-bold shrink-0">اولویت:</Label>
                         <select
                           value={personalPriority}
-                          onChange={(e) => setPersonalPriority(e.target.value as any)}
+                          onChange={(e) => setPersonalPriority(e.target.value as 'low' | 'medium' | 'high')}
                           className="h-7 text-[10px] bg-background border border-border rounded px-1 outline-none text-foreground flex-1 cursor-pointer"
                         >
                           <option value="low">عادی</option>
@@ -1122,7 +1129,7 @@ export default function ShiftsPage() {
                 <CardTitle className="text-xs text-foreground-muted font-bold">کل شیفت‌های موظفی فعال</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-foreground font-data-mono">{toFa(reportData.workedShiftsCount)}</div>
+                <div className="text-3xl font-semibold text-foreground font-data-mono">{toFa(reportData.workedShiftsCount)}</div>
                 <p className="text-[10px] text-foreground-muted mt-1">نوبت کاری موظف ثبت شده در ماه</p>
               </CardContent>
             </Card>
@@ -1132,7 +1139,7 @@ export default function ShiftsPage() {
                 <CardTitle className="text-xs text-foreground-muted font-bold">مجموع ساعات حضور حضوری</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-accent font-data-mono">{toFa(reportData.totalShiftHours)}</div>
+                <div className="text-3xl font-semibold text-accent font-data-mono">{toFa(reportData.totalShiftHours)}</div>
                 <p className="text-[10px] text-foreground-muted mt-1">ساعت حضور فیزیکی محاسبه شده</p>
               </CardContent>
             </Card>
@@ -1142,7 +1149,7 @@ export default function ShiftsPage() {
                 <CardTitle className="text-xs text-foreground-muted font-bold">ساعات اضافه‌کار تأیید شده</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-success font-data-mono">{toFa(reportData.totalOvertimeHours)}</div>
+                <div className="text-3xl font-semibold text-success font-data-mono">{toFa(reportData.totalOvertimeHours)}</div>
                 <p className="text-[10px] text-foreground-muted mt-1">ساعت اضافه کاری از تسک‌های سیستمی</p>
               </CardContent>
             </Card>
@@ -1152,7 +1159,7 @@ export default function ShiftsPage() {
                 <CardTitle className="text-xs text-foreground-muted font-bold">درصد انجام کارهای محوله</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-warning font-data-mono">{toFa(Math.round(reportData.taskCompletionRate))}٪</div>
+                <div className="text-3xl font-semibold text-warning font-data-mono">{toFa(Math.round(reportData.taskCompletionRate))}٪</div>
                 <p className="text-[10px] text-foreground-muted mt-1">تسک‌های شخصی و سیستمی تکمیل شده</p>
               </CardContent>
             </Card>

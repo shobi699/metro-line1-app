@@ -18,6 +18,7 @@ import {
   Minus,
   AlertCircle,
   CheckCircle2,
+  Settings,
 } from 'lucide-react'
 
 interface ActionType {

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Paperclip, SendHorizontal, X, Loader2, Mic } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { usePrivateConfig } from '@/features/auth/use-private-config'
 
 interface Attachment {
   url: string
@@ -76,28 +77,56 @@ export function MessageComposer({
     stopRecording()
     setIsRecording(false)
     setSending(true)
-    const mockVoiceUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
-    const ok = await onSend('', { url: mockVoiceUrl, type: 'audio/mpeg' })
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+      const chunks: BlobPart[] = []
+      recorder.ondataavailable = (e) => chunks.push(e.data)
+
+      await new Promise<void>((resolve) => {
+        recorder.onstop = () => resolve()
+        recorder.stop()
+        stream.getTracks().forEach((t) => t.stop())
+      })
+
+      if (chunks.length === 0) {
+        setSending(false)
+        return
+      }
+
+      const blob = new Blob(chunks, { type: 'audio/webm' })
+      const form = new FormData()
+      form.append('file', blob, 'voice.webm')
+      const res = await fetch('/api/uploads', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      })
+      if (res.ok) {
+        const json = await res.json()
+        const url = json?.data?.url
+        if (url) {
+          await onSend('', { url, type: 'audio/webm' })
+        }
+      }
+    } catch {}
     setSending(false)
     setRecordingTime(0)
   }
 
+  const privateConfig = usePrivateConfig()
+
   useEffect(() => {
-    fetch('/api/config')
-      .then((res) => res.json())
-      .then((payload) => {
-        if (payload?.data?.chatMaxMessageLength) {
-          setConfigMaxLength(payload.data.chatMaxMessageLength)
-        }
-        if (payload?.data?.enableFileSharing !== undefined) {
-          setConfigEnableFileSharing(payload.data.enableFileSharing)
-        }
-        if (payload?.data?.comms?.audioBitrate) {
-          setConfigAudioBitrate(payload.data.comms.audioBitrate)
-        }
-      })
-      .catch(() => {})
-  }, [])
+    if (privateConfig?.chatMaxMessageLength) {
+      setConfigMaxLength(privateConfig.chatMaxMessageLength)
+    }
+    if (privateConfig?.enableFileSharing !== undefined) {
+      setConfigEnableFileSharing(privateConfig.enableFileSharing)
+    }
+    if (privateConfig?.comms?.audioBitrate) {
+      setConfigAudioBitrate(privateConfig.comms.audioBitrate)
+    }
+  }, [privateConfig])
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]

@@ -68,14 +68,14 @@ export async function POST(request: Request) {
     )
     const refreshToken = await issueRefreshToken(user.id, 0)
 
-    await prisma.auditLog.create({
+    prisma.auditLog.create({
       data: {
         actorId: user.id,
         entity: 'User',
         entityId: user.id,
         action: 'login',
       },
-    })
+    }).catch(() => {})
 
     return NextResponse.json({
       accessToken,

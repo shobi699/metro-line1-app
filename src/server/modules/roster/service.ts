@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx'
 import { prisma } from '@/server/db'
 import type { ShiftCode } from '@/generated/prisma/client'
+import { jalaliToDate } from '@/lib/fa'
 
 export interface RosterRow {
   nationalId: string
@@ -25,6 +26,9 @@ const CODE_MAP: Record<string, ShiftCode> = {
   off: 'off',
   rest: 'off',
   'OFF': 'off',
+  اداری: 'office',
+  office: 'office',
+  staff: 'office',
 }
 
 function normalizeCode(raw: string): ShiftCode | null {
@@ -206,7 +210,7 @@ export async function commitRosterFile(
       }
 
       const [jy, jm, jd] = dateParts.map(Number)
-      const gregorianDate = jalaliToGregorian(jy, jm, jd)
+      const gregorianDate = jalaliToDate(jy, jm, jd)
 
       await tx.shift.upsert({
         where: { userId_date: { userId, date: gregorianDate } },
@@ -237,20 +241,4 @@ export async function commitRosterFile(
   })
 
   return { successCount, errorCount }
-}
-
-function jalaliToGregorian(jy: number, jm: number, jd: number): Date {
-  const jalaliDays =
-    365 * (jy - 1) +
-    Math.floor((jy - 1) / 33) * 8 +
-    Math.floor(((jy - 1) % 33 + 1) / 4) +
-    (jm - 1) * 31 +
-    Math.floor((jm - 1 > 6 ? jm - 1 - 6 : jm - 1) / 2) +
-    jd
-
-  const gregorianEpoch = new Date(1970, 0, 1).getTime()
-  const gregorianMs =
-    gregorianEpoch + (jalaliDays - 25568 + 1) * 86400000
-
-  return new Date(gregorianMs)
 }

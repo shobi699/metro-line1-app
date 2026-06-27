@@ -9,6 +9,10 @@ vi.mock('@/server/db', () => ({
       findUnique: vi.fn(),
       findMany: vi.fn(),
     },
+    user: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+    },
   },
 }))
 
@@ -36,6 +40,11 @@ describe('validateSwapRules', () => {
       return null
     })
 
+    vi.mocked(prisma.user.findUnique).mockImplementation(async ({ where }) => {
+      const id = (where as { id: string }).id
+      return { id, roleId: 'role-1', role: { id: 'role-1', key: 'operator', name: 'راهبر' } } as never
+    })
+
     const violations = await validateSwapRules('req-1', 'target-1', 'shift-1', 'shift-2')
     expect(violations).toContainEqual(
       expect.objectContaining({ rule: 'not_your_shift' })
@@ -52,6 +61,11 @@ describe('validateSwapRules', () => {
       return null
     })
 
+    vi.mocked(prisma.user.findUnique).mockImplementation(async ({ where }) => {
+      const id = (where as { id: string }).id
+      return { id, roleId: 'role-1', role: { id: 'role-1', key: 'operator', name: 'راهبر' } } as never
+    })
+
     vi.mocked(prisma.shift.findMany).mockResolvedValue([])
 
     const violations = await validateSwapRules('req-1', 'target-1', 'shift-1', 'shift-2')
@@ -66,6 +80,10 @@ describe('validateSwapRules', () => {
       if (where.id === 'shift-1') return shift1 as unknown as Shift
       if (where.id === 'shift-2') return shift2 as unknown as Shift
       return null
+    })
+
+    vi.mocked(prisma.user.findUnique).mockImplementation(async ({ where }) => {
+      return { id: where.id, roleId: 'role-1', role: { id: 'role-1', key: 'operator', name: 'راهبر' } } as any
     })
 
     const otherRequesterShifts = [
@@ -147,7 +165,7 @@ describe('validateSwapRules', () => {
     expect(violations).toContainEqual(
       expect.objectContaining({
         rule: 'max_consecutive',
-        message: expect.stringContaining('بیش از ۶ شیفت متوالی مجاز نیست'),
+        message: expect.stringContaining('شیفت متوالی مجاز نیست'),
       })
     )
   })

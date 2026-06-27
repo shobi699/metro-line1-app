@@ -1,19 +1,33 @@
-// Trigger reload: ensure personnel custom fields are populated
 import { PrismaClient } from '@/generated/prisma/client'
 import { PrismaLibSql } from '@prisma/adapter-libsql'
 import path from 'node:path'
-import { seedDatabase } from './db-seed'
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
 const dbPath = path.resolve(process.cwd(), 'prisma', 'dev.db')
 const adapter = new PrismaLibSql({ url: `file:${dbPath}` })
 
-export const prisma = globalForPrisma.prisma || new PrismaClient({ adapter })
+export const prisma = globalForPrisma.prisma || new PrismaClient({
+  adapter,
+  transactionOptions: {
+    timeout: 30000,
+    maxWait: 30000,
+  },
+})
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
-// Automatically trigger self-seeding if running in server-side node context
-if (typeof window === 'undefined') {
-  seedDatabase(prisma).catch(() => {})
+let seedStarted = false
+async function runSeed() {
+  if (seedStarted) return
+  seedStarted = true
+  try {
+    const { seedDatabase } = await import('./db-seed')
+    await seedDatabase(prisma)
+  } catch {}
+}
+
+if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
+  // Fire and forget — don't block server startup or requests
+  setTimeout(() => runSeed(), 0)
 }

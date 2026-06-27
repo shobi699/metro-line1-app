@@ -1,0 +1,739 @@
+openapi: 3.1.0
+info:
+  title: سیستم مدیریت پرسنل خط ۱ مترو تهران
+  description: |
+    REST API برای سیستم مدیریت پرسنل خط ۱ مترو تهران.
+    شامل احراز هویت، دفتر تلفن، مدیریت شیفت، بخشنامه ایمنی، تیکتینگ و مدیریت کاربران.
+  version: 1.0.0
+  contact:
+    name: تیم توسعه مترو خط ۱
+
+servers:
+  - url: /api
+    description: سرور توسعه
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        nationalId:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [active, pending, suspended]
+        customFields:
+          type: object
+          nullable: true
+        role:
+          type: object
+          properties:
+            id:
+              type: string
+            key:
+              type: string
+            name:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Shift:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        date:
+          type: string
+          format: date
+        code:
+          type: string
+          enum: [morning, evening, night, off]
+
+    SafetyBulletin:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        status:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+        imageUrl:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    ReadReceipt:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        safetyBulletinId:
+          type: string
+        readAt:
+          type: string
+          format: date-time
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+        actorId:
+          type: string
+        entity:
+          type: string
+        entityId:
+          type: string
+        action:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    SwapRequest:
+      type: object
+      properties:
+        id:
+          type: string
+        requesterId:
+          type: string
+        targetId:
+          type: string
+        sourceShiftId:
+          type: string
+        targetShiftId:
+          type: string
+        status:
+          type: string
+          enum: [pending, accepted, approved, rejected]
+        note:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    CustomFieldDef:
+      type: object
+      properties:
+        id:
+          type: string
+        entityType:
+          type: string
+        name:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          enum: [text, number, select, date, boolean]
+        options:
+          type: string
+          nullable: true
+        required:
+          type: boolean
+        sortOrder:
+          type: integer
+
+paths:
+  # ── Auth ────────────────────────────────────────────
+  /auth/login:
+    post:
+      tags: [احراز هویت]
+      summary: ورود کاربر
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nationalId, password]
+              properties:
+                nationalId:
+                  type: string
+                  example: "0000000000"
+                password:
+                  type: string
+                  example: "admin123"
+      responses:
+        '200':
+          description: موفق
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      accessToken:
+                        type: string
+                      refreshToken:
+                        type: string
+
+  /auth/register:
+    post:
+      tags: [احراز هویت]
+      summary: ثبت‌نام کاربر جدید
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nationalId, name, phone, password]
+              properties:
+                nationalId:
+                  type: string
+                name:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: ثبت‌نام موفق (در انتظار تایید)
+
+  /auth/refresh:
+    post:
+      tags: [احراز هویت]
+      summary: تازه‌سازی توکن
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: توکن جدید
+
+  /auth/logout:
+    post:
+      tags: [احراز هویت]
+      summary: خروج کاربر
+      responses:
+        '200':
+          description: خروج موفق
+
+  # ── Directory ───────────────────────────────────────
+  /users:
+    get:
+      tags: [دفتر تلفن]
+      summary: لیست کاربران با جستجو و فیلتر
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: جستجو بر اساس نام، کدملی، تلفن، ایمیل
+        - name: plate
+          in: query
+          schema:
+            type: string
+          description: جستجو بر اساس پلاک خودرو
+        - name: role
+          in: query
+          schema:
+            type: string
+          description: فیلتر بر اساس نقش
+        - name: status
+          in: query
+          schema:
+            type: string
+          description: فیلتر بر اساس وضعیت
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: لیست کاربران
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      users:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      pageSize:
+                        type: integer
+                      totalPages:
+                        type: integer
+
+  # ── Profile ─────────────────────────────────────────
+  /profile:
+    get:
+      tags: [پروفایل]
+      summary: دریافت پروفایل کاربر جاری
+      responses:
+        '200':
+          description: پروفایل کاربر
+    patch:
+      tags: [پروفایل]
+      summary: بروزرسانی پروفایل
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                vehicles:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      plateNum1:
+                        type: string
+                      plateLetter:
+                        type: string
+                      plateNum2:
+                        type: string
+                      plateCity:
+                        type: string
+                      carType:
+                        type: string
+                      carColor:
+                        type: string
+      responses:
+        '200':
+          description: بروزرسانی موفق
+
+  # ── Shifts ──────────────────────────────────────────
+  /shifts:
+    get:
+      tags: [شیفت]
+      summary: لیست شیفت‌ها
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: string
+        - name: month
+          in: query
+          schema:
+            type: string
+          description: ماه جلالی (YYYY-MM)
+      responses:
+        '200':
+          description: لیست شیفت‌ها
+
+  /shifts/me:
+    get:
+      tags: [شیفت]
+      summary: شیفت‌های کاربر جاری
+      responses:
+        '200':
+          description: شیفت‌های کاربر
+
+  # ── Swap Requests ───────────────────────────────────
+  /swap-requests:
+    post:
+      tags: [جابجایی شیفت]
+      summary: ایجاد درخواست جابجایی
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetUserId, sourceShiftId, targetShiftId]
+              properties:
+                targetUserId:
+                  type: string
+                sourceShiftId:
+                  type: string
+                targetShiftId:
+                  type: string
+                note:
+                  type: string
+      responses:
+        '201':
+          description: درخواست ایجاد شد
+        '400':
+          description: نقض قوانین
+
+  /swap-requests/inbox:
+    get:
+      tags: [جابجایی شیفت]
+      summary: درخواست‌های جابجایی دریافتی
+      responses:
+        '200':
+          description: لیست درخواست‌ها
+
+  /swap-requests/accept:
+    post:
+      tags: [جابجایی شیفت]
+      summary: قبول درخواست جابجایی
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [swapRequestId]
+              properties:
+                swapRequestId:
+                  type: string
+      responses:
+        '200':
+          description: قبول شد
+
+  /swap-requests/approve:
+    post:
+      tags: [جابجایی شیفت]
+      summary: تایید مدیر درخواست جابجایی
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [swapRequestId]
+              properties:
+                swapRequestId:
+                  type: string
+      responses:
+        '200':
+          description: تایید شد
+
+  # ── Safety Bulletins ────────────────────────────────
+  /bulletins:
+    get:
+      tags: [بخشنامه ایمنی]
+      summary: لیست بخشنامه‌ها
+      responses:
+        '200':
+          description: لیست بخشنامه‌ها
+
+  /bulletins/pending:
+    get:
+      tags: [بخشنامه ایمنی]
+      summary: بخشنامه‌های خوانده‌نشده
+      responses:
+        '200':
+          description: بخشنامه‌های در انتظار
+
+  /bulletins/{id}/acknowledge:
+    post:
+      tags: [بخشنامه ایمنی]
+      summary: تایید دریافت بخشنامه
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: تایید شد
+        '404':
+          description: بخشنامه یافت نشد
+
+  /bulletins/{id}/receipts:
+    get:
+      tags: [بخشنامه ایمنی]
+      summary: آمار خواندن بخشنامه
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: آمار و درصد خواندن
+
+  # ── Tickets ─────────────────────────────────────────
+  /tickets:
+    get:
+      tags: [تیکتینگ]
+      summary: لیست تیکت‌ها
+      responses:
+        '200':
+          description: لیست تیکت‌ها
+    post:
+      tags: [تیکتینگ]
+      summary: ایجاد تیکت جدید
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [title, description, priority]
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                priority:
+                  type: string
+                  enum: [low, medium, high, critical]
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: تیکت ایجاد شد
+
+  /tickets/{id}/status:
+    patch:
+      tags: [تیکتینگ]
+      summary: بروزرسانی وضعیت تیکت
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [open, in_progress, resolved, closed]
+                note:
+                  type: string
+      responses:
+        '200':
+          description: وضعیت بروزرسانی شد
+
+  # ── Custom Fields ───────────────────────────────────
+  /custom-fields:
+    get:
+      tags: [فیلدهای پویا]
+      summary: لیست تعاریف فیلدها
+      parameters:
+        - name: entityType
+          in: query
+          schema:
+            type: string
+            default: User
+      responses:
+        '200':
+          description: لیست فیلدها
+
+  # ── Config ──────────────────────────────────────────
+  /config:
+    get:
+      tags: [سیستم]
+      summary: دریافت تنظیمات عمومی
+      security: []
+      responses:
+        '200':
+          description: تنظیمات سیستم
+
+  # ── Notifications ───────────────────────────────────
+  /notifications:
+    get:
+      tags: [اعلانات]
+      summary: لیست اعلانات
+      responses:
+        '200':
+          description: لیست اعلانات
+
+  # ── Feedback ────────────────────────────────────────
+  /feedback:
+    post:
+      tags: [بازخورد]
+      summary: ارسال بازخورد
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, subject, body]
+              properties:
+                type:
+                  type: string
+                  enum: [criticism, suggestion, complaint, appreciation]
+                subject:
+                  type: string
+                body:
+                  type: string
+      responses:
+        '201':
+          description: بازخورد ارسال شد
+
+  # ── Chat ────────────────────────────────────────────
+  /chat/rooms:
+    get:
+      tags: [چت]
+      summary: لیست اتاق‌های چت
+      responses:
+        '200':
+          description: لیست اتاق‌ها
+
+  /chat/rooms/{id}/messages:
+    get:
+      tags: [چت]
+      summary: پیام‌های یک اتاق
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: لیست پیام‌ها
+
+  # ── Admin ───────────────────────────────────────────
+  /admin/users:
+    get:
+      tags: [مدیریت]
+      summary: لیست کاربران (مدیر)
+      responses:
+        '200':
+          description: لیست کاربران
+
+  /admin/users/{id}:
+    get:
+      tags: [مدیریت]
+      summary: جزئیات کاربر
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: جزئیات کاربر
+
+  /admin/users/{id}/approve:
+    post:
+      tags: [مدیریت]
+      summary: تایید کاربر
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: کاربر تایید شد
+
+  /admin/settings:
+    get:
+      tags: [مدیریت]
+      summary: دریافت تنظیمات سیستم
+      responses:
+        '200':
+          description: تنظیمات
+
+  /admin/roles:
+    get:
+      tags: [مدیریت]
+      summary: لیست نقش‌ها
+      responses:
+        '200':
+          description: لیست نقش‌ها
