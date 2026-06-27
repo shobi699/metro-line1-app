@@ -426,6 +426,15 @@ const DEFAULT_SETTINGS = [
     defaultValue: true,
     category: 'performance',
   },
+  {
+    key: 'directory.visible_fields',
+    label: 'فیلدهای نمایشی دفتر تلفن برای پرسنل عادی',
+    description: 'لیست کلید فیلدهایی که پرسنل عادی (غیرمدیر) در دفتر تلفن مجاز به دیدن آن‌ها هستند (جدا شده با کاما)',
+    type: 'text',
+    value: 'phone,email,personnelNo,post,shift,shiftType,group,startLocation,vehicles',
+    defaultValue: 'phone,email,personnelNo,post,shift,shiftType,group,startLocation,vehicles',
+    category: 'general',
+  },
 ]
 
 export async function ensureDefaultSettingsExist() {
@@ -450,6 +459,15 @@ export async function ensureDefaultSettingsExist() {
             isEnabled: true,
           },
         })
+      } else {
+        // Keep defaultValue in sync with code-level defaults
+        const codeDefault = JSON.stringify(d.defaultValue)
+        if (existing.defaultValue !== codeDefault) {
+          await prisma.setting.update({
+            where: { key: d.key },
+            data: { defaultValue: codeDefault },
+          })
+        }
       }
     }
   } catch (err) {

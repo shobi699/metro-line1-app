@@ -34,7 +34,9 @@ import {
   AlertTriangle,
   Clock,
   Shield,
+  Car,
 } from 'lucide-react'
+import { VehiclePlateFromData } from '@/components/shared/iran-plate'
 import { cn } from '@/lib/utils'
 
 interface UserRow {
@@ -88,9 +90,13 @@ export default function DirectoryPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [q, setQ] = useState('')
+  const [plateSearch, setPlateSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [loading, setLoading] = useState(true)
+  const [visibleFields, setVisibleFields] = useState<string[] | null>(null)
+  const [tempVisibleFields, setTempVisibleFields] = useState<string[]>([])
+  const [savingPrivacy, setSavingPrivacy] = useState(false)
   
   // Custom Fields definitions state
   const [fieldDefs, setFieldDefs] = useState<CustomFieldDef[]>([])
@@ -132,9 +138,15 @@ export default function DirectoryPage() {
         if (payload?.data?.occPhone) {
           setOccPhone(payload.data.occPhone)
         }
+        // Always parse visibleFields — even if empty string (means "show nothing")
+        if (payload?.data?.directory && typeof payload.data.directory.visibleFields === 'string') {
+          const fieldsStr = payload.data.directory.visibleFields as string
+          const parsed = fieldsStr.split(',').map((f: string) => f.trim()).filter(Boolean)
+          setVisibleFields(parsed)
+        }
       })
       .catch(() => {})
-  }, [])
+  }, [refreshKey])
 
   // Load Personnel List
   useEffect(() => {
@@ -149,6 +161,7 @@ export default function DirectoryPage() {
       try {
         const params = new URLSearchParams()
         if (q) params.set('q', q)
+        if (plateSearch) params.set('plate', plateSearch)
         if (roleFilter) params.set('role', roleFilter)
         if (statusFilter) params.set('status', statusFilter)
         params.set('page', String(page))
@@ -191,7 +204,7 @@ export default function DirectoryPage() {
     return () => {
       cancelled = true
     }
-  }, [isAuthenticated, q, roleFilter, statusFilter, page, logout, router, refreshKey])
+  }, [isAuthenticated, q, plateSearch, roleFilter, statusFilter, page, logout, router, refreshKey])
 
   // Load Custom Field Definitions
   const loadFieldDefs = async () => {
@@ -283,6 +296,51 @@ export default function DirectoryPage() {
     } catch {}
   }
 
+  useEffect(() => {
+    setTempVisibleFields(visibleFields ?? [])
+  }, [visibleFields])
+
+  const handleToggleVisibleField = (key: string) => {
+    setTempVisibleFields((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    )
+  }
+
+  const handleSavePrivacySettings = async () => {
+    setSavingPrivacy(true)
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
+        },
+        body: JSON.stringify({
+          updates: [
+            {
+              key: 'directory.visible_fields',
+              value: tempVisibleFields.join(','),
+            },
+          ],
+        }),
+      })
+
+      if (res.ok) {
+        // Immediately apply changes locally so cards update without waiting for refetch
+        setVisibleFields([...tempVisibleFields])
+        setRefreshKey((k) => k + 1)
+        alert('تنظیمات حریم خصوصی دفتر تلفن با موفقیت بروزرسانی شد.')
+      } else {
+        const data = await res.json()
+        alert(data.error || 'خطا در ذخیره تنظیمات')
+      }
+    } catch {
+      alert('خطا در ارتباط با سرور')
+    } finally {
+      setSavingPrivacy(false)
+    }
+  }
+
   // Excel Import
   async function handleImport(file: File) {
     setImportLoading(true)
@@ -362,18 +420,46 @@ export default function DirectoryPage() {
           )}
 
           {activeTab === 'directory' && (
-            <div className="w-full md:w-80 relative">
-              <Search className="absolute end-3 top-1/2 -translate-y-1/2 text-foreground-muted size-4" />
-              <input
-                type="text"
-                placeholder="جستجو نام، کد پرسنلی، تلفن..."
-                value={q}
-                onChange={(e) => {
-                  setQ(e.target.value)
-                  setPage(1)
-                }}
-                className="w-full ps-4 end-0 pe-10 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none text-xs text-white placeholder:text-neutral-500"
-              />
+            <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+              {/* General Search */}
+              <div className="w-full sm:w-72 relative">
+                <Search className="absolute end-3 top-1/2 -translate-y-1/2 text-foreground-muted size-4" />
+                <input
+                  type="text"
+                  placeholder="جستجو نام، کد پرسنلی، تلفن..."
+                  value={q}
+                  onChange={(e) => {
+                    setQ(e.target.value)
+                    setPage(1)
+                  }}
+                  className="w-full ps-4 end-0 pe-10 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none text-xs text-white placeholder:text-neutral-500"
+                />
+              </div>
+
+              {/* Plate Search — graphical */}
+              <div className="w-full sm:w-64 relative">
+                <div className="absolute end-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                  {/* Mini plate icon */}
+                  <div dir="ltr" className="inline-flex items-stretch rounded-[3px] border border-neutral-600 bg-white overflow-hidden h-5 opacity-60">
+                    <div className="flex items-center justify-center bg-[#003DA5] w-4">
+                      <span className="text-white text-[5px] font-bold leading-none">IR</span>
+                    </div>
+                    <div className="flex items-center px-1">
+                      <Car className="size-2.5 text-neutral-400" />
+                    </div>
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  placeholder="جستجو با پلاک خودرو..."
+                  value={plateSearch}
+                  onChange={(e) => {
+                    setPlateSearch(e.target.value)
+                    setPage(1)
+                  }}
+                  className="w-full ps-4 end-0 pe-12 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none text-xs text-white placeholder:text-neutral-500"
+                />
+              </div>
             </div>
           )}
         </div>
@@ -464,6 +550,8 @@ export default function DirectoryPage() {
                     )
                   })}
                 </ul>
+
+
 
                 <h3 className="text-xs font-bold text-white mt-6 mb-4 border-b border-neutral-800 pb-2">
                   وضعیت فعالیت
@@ -617,38 +705,39 @@ export default function DirectoryPage() {
                         key={u.id}
                         user={u}
                         currentUserId={user?.id}
-                        onMessage={(id) => router.push(`/chat?dm=${id}`)}
-                        onProfile={(userObj) => setSelectedDetailUser(userObj)}
+                        visibleFields={visibleFields ?? undefined}
+                        onMessage={(userId) => router.push(`/chat?dm=${userId}`)}
+                        onProfile={(usr) => setSelectedDetailUser(usr)}
                       />
                     ))}
                   </div>
-                  
+
                   {/* Pagination */}
-                  <div className="flex items-center justify-between text-xs text-foreground-muted mt-6">
-                    <span>
-                      کل پرسنل یافت شده: {toFa(total)} نفر · صفحه {toFa(page)} از {toFa(totalPages)}
-                    </span>
-                    <div className="flex gap-2">
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-6">
                       <Button
                         variant="outline"
                         size="sm"
-                        disabled={page <= 1}
-                        onClick={() => setPage((p) => p - 1)}
-                        className="border-neutral-800 hover:bg-neutral-900 h-8"
+                        disabled={page === 1}
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        className="text-xs font-bold"
                       >
-                        صفحه قبلی
+                        قبلی
                       </Button>
+                      <span className="text-xs text-foreground-muted">
+                        صفحه {toFa(page)} از {toFa(totalPages)}
+                      </span>
                       <Button
                         variant="outline"
                         size="sm"
-                        disabled={page >= totalPages}
-                        onClick={() => setPage((p) => p + 1)}
-                        className="border-neutral-800 hover:bg-neutral-900 h-8"
+                        disabled={page === totalPages}
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        className="text-xs font-bold"
                       >
-                        صفحه بعدی
+                        بعدی
                       </Button>
                     </div>
-                  </div>
+                  )}
                 </>
               )}
             </div>
@@ -656,72 +745,70 @@ export default function DirectoryPage() {
         </>
       ) : (
         // ────────────────────────────────────────────────────────
-        // CUSTOM FIELDS MANAGER (ADMIN ONLY)
+        // CUSTOM FIELDS & PRIVACY MANAGER (ADMIN ONLY)
         // ────────────────────────────────────────────────────────
         <div className="p-6 md:p-8 max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 w-full flex-1">
-          {/* New Custom Field Form */}
-          <div className="w-full lg:w-96 bg-[#1c1e24] border border-[#262930] rounded-2xl p-6 h-fit">
-            <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-1.5">
-              <Plus className="size-4 text-red-500" />
-              افزودن فیلد شخصی جدید
-            </h2>
+          <div className="w-full lg:w-96 shrink-0 space-y-6">
+            {/* Form for Creating Dynamic Fields */}
+            <form onSubmit={handleCreateField} className="bg-[#1c1e24] border border-[#262930] rounded-2xl p-6 space-y-4">
+              <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-1.5">
+                <Plus className="size-4 text-red-500" />
+                تعریف فیلد پویای جدید برای پرسنل
+              </h2>
 
-            <form onSubmit={handleCreateField} className="space-y-4 text-right">
-              {fieldError ? (
-                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl font-semibold">
+              {fieldError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl">
                   {fieldError}
                 </div>
-              ) : null}
+              )}
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-neutral-400 block">نام انگلیسی فیلد (یکتا):</label>
+                <label className="text-[10px] font-bold text-neutral-400 block">نام فیلد (انگلیسی - یکتا):</label>
                 <input
                   type="text"
-                  required
-                  placeholder="مثال: personnelNo"
+                  placeholder="مثال: fatherName"
                   value={newFieldName}
                   onChange={(e) => setNewFieldName(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-neutral-600 focus:border-red-500 outline-none"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:border-red-500 outline-none font-mono"
+                  dir="ltr"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-neutral-400 block">برچسب فارسی (نمایش در کارت):</label>
+                <label className="text-[10px] font-bold text-neutral-400 block">عنوان فارسی فیلد (برچسب):</label>
                 <input
                   type="text"
-                  required
-                  placeholder="مثال: شماره پرسنلی"
+                  placeholder="مثال: نام پدر"
                   value={newFieldLabel}
                   onChange={(e) => setNewFieldLabel(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-neutral-600 focus:border-red-500 outline-none"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:border-red-500 outline-none"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-neutral-400 block">نوع فیلد ورودی:</label>
+                <label className="text-[10px] font-bold text-neutral-400 block">نوع فیلد:</label>
                 <select
                   value={newFieldType}
                   onChange={(e) => setNewFieldType(e.target.value as any)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-2 py-2 text-xs text-white focus:border-red-500 outline-none"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:border-red-500 outline-none"
                 >
-                  <option value="text">متن ساده (Text)</option>
+                  <option value="text">متن (Text)</option>
                   <option value="number">عدد (Number)</option>
-                  <option value="boolean">دو حالتی (بله/خیر)</option>
                   <option value="date">تاریخ (Date)</option>
-                  <option value="select">کشویی انتخابی (Select)</option>
+                  <option value="boolean">بله/خیر (Boolean)</option>
+                  <option value="select">انتخابی (Select)</option>
                 </select>
               </div>
 
               {newFieldType === 'select' && (
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-neutral-400 block">گزینه‌های کشویی (با کاما جدا کنید):</label>
+                  <label className="text-[10px] font-bold text-neutral-400 block">گزینه‌ها (جدا شده با کاما):</label>
                   <input
                     type="text"
-                    required
-                    placeholder="گزینه ۱, گزینه ۲, گزینه ۳"
+                    placeholder="مثال: گزینه۱, گزینه۲"
                     value={newFieldOptions}
                     onChange={(e) => setNewFieldOptions(e.target.value)}
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-neutral-600 focus:border-red-500 outline-none"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:border-red-500 outline-none"
                   />
                 </div>
               )}
@@ -753,6 +840,90 @@ export default function DirectoryPage() {
                 ایجاد فیلد پویا در دیتابیس
               </Button>
             </form>
+
+            {/* Privacy Settings Panel */}
+            <div className="bg-[#1c1e24] border border-[#262930] rounded-2xl p-6 space-y-4">
+              <h2 className="text-sm font-bold text-white mb-2 flex items-center gap-1.5">
+                <Shield className="size-4 text-red-500" />
+                تنظیمات حریم خصوصی دفتر تلفن
+              </h2>
+              <p className="text-[10px] text-foreground-muted leading-relaxed">
+                مشخص کنید چه اطلاعاتی در کارت دفتر تلفن برای پرسنل عادی (غیر مدیر) نمایش داده شود. مدیران سیستم همواره به تمام اطلاعات دسترسی دارند.
+              </p>
+
+              <div className="space-y-2.5 pt-2 max-h-60 overflow-y-auto">
+                <h3 className="text-[10px] font-bold text-neutral-400 border-b border-neutral-850 pb-1">اطلاعات پایه سیستم:</h3>
+                
+                <label className="flex items-center justify-between p-2 rounded-xl bg-neutral-950/20 border border-neutral-800 cursor-pointer select-none">
+                  <span className="text-xs text-white">کد ملی</span>
+                  <input
+                    type="checkbox"
+                    checked={tempVisibleFields.includes('nationalId')}
+                    onChange={() => handleToggleVisibleField('nationalId')}
+                    className="accent-red-600 size-4 cursor-pointer"
+                  />
+                </label>
+
+                <label className="flex items-center justify-between p-2 rounded-xl bg-neutral-950/20 border border-neutral-800 cursor-pointer select-none">
+                  <span className="text-xs text-white">شماره تلفن همراه</span>
+                  <input
+                    type="checkbox"
+                    checked={tempVisibleFields.includes('phone')}
+                    onChange={() => handleToggleVisibleField('phone')}
+                    className="accent-red-600 size-4 cursor-pointer"
+                  />
+                </label>
+
+                <label className="flex items-center justify-between p-2 rounded-xl bg-neutral-950/20 border border-neutral-800 cursor-pointer select-none">
+                  <span className="text-xs text-white">نشانی ایمیل</span>
+                  <input
+                    type="checkbox"
+                    checked={tempVisibleFields.includes('email')}
+                    onChange={() => handleToggleVisibleField('email')}
+                    className="accent-red-600 size-4 cursor-pointer"
+                  />
+                </label>
+
+                <label className="flex items-center justify-between p-2 rounded-xl bg-neutral-950/20 border border-neutral-800 cursor-pointer select-none">
+                  <span className="text-xs text-white">شماره خودرو</span>
+                  <input
+                    type="checkbox"
+                    checked={tempVisibleFields.includes('vehicles')}
+                    onChange={() => handleToggleVisibleField('vehicles')}
+                    className="accent-red-600 size-4 cursor-pointer"
+                  />
+                </label>
+
+                <h3 className="text-[10px] font-bold text-neutral-400 border-b border-neutral-850 pb-1 pt-2">ویژگی‌ها و فیلدهای پویا:</h3>
+                
+                {fieldDefs.length === 0 ? (
+                  <p className="text-[10px] text-neutral-500 italic">هیچ فیلد پویایی تعریف نشده است.</p>
+                ) : (
+                  fieldDefs.map((def) => {
+                    const isChecked = tempVisibleFields.includes(def.name)
+                    return (
+                      <label key={def.id} className="flex items-center justify-between p-2 rounded-xl bg-neutral-950/20 border border-neutral-800 cursor-pointer select-none">
+                        <span className="text-xs text-white">{def.label}</span>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleToggleVisibleField(def.name)}
+                          className="accent-red-600 size-4 cursor-pointer"
+                        />
+                      </label>
+                    )
+                  })
+                )}
+              </div>
+
+              <Button
+                onClick={handleSavePrivacySettings}
+                disabled={savingPrivacy}
+                className="w-full bg-red-600 hover:bg-red-700 text-xs font-bold h-10 rounded-xl text-white active:scale-95 transition-all mt-2"
+              >
+                {savingPrivacy ? 'در حال ذخیره...' : 'ذخیره تنظیمات حریم خصوصی'}
+              </Button>
+            </div>
           </div>
 
           {/* Field Definitions List */}
@@ -848,51 +1019,116 @@ export default function DirectoryPage() {
               </div>
 
               {/* Personal Info Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-neutral-950/20 p-3 rounded-xl border border-neutral-850">
-                  <span className="text-[10px] text-foreground-muted block mb-1">کد ملی راهبر:</span>
-                  <span className="font-mono text-white font-semibold">{toFa(selectedDetailUser.nationalId)}</span>
-                </div>
-                <div className="bg-neutral-950/20 p-3 rounded-xl border border-neutral-850">
-                  <span className="text-[10px] text-foreground-muted block mb-1">تلفن همراه:</span>
-                  <span className="font-mono text-white font-semibold">{selectedDetailUser.phone ? toFa(selectedDetailUser.phone) : '—'}</span>
-                </div>
-                <div className="bg-neutral-950/20 p-3 rounded-xl border border-neutral-850 col-span-2">
-                  <span className="text-[10px] text-foreground-muted block mb-1">نشانی ایمیل:</span>
-                  <span className="font-mono text-white font-semibold">{selectedDetailUser.email || '—'}</span>
-                </div>
-              </div>
-
-              {/* Dynamic Custom Fields Row */}
-              <div className="space-y-2 border-t border-neutral-800 pt-4">
-                <h4 className="text-[10px] font-bold text-red-500 flex items-center gap-1">
-                  <Layers className="size-3.5" />
-                  اطلاعات و ویژگی‌های سازمانی پرسنل
-                </h4>
+              {(() => {
+                const isAdmin = user?.roleKey === 'admin' || user?.roleKey === 'super_admin'
+                const isOwnProfile = selectedDetailUser.id === user?.id
+                const showSensitive = isAdmin || isOwnProfile
+                // Safe fallback when visibleFields hasn't loaded from config yet
+                const allowedModalFields = visibleFields ?? ['phone', 'email', 'personnelNo', 'post', 'shift', 'shiftType', 'group', 'startLocation', 'vehicles']
                 
-                {fieldDefs.filter(def => selectedDetailUser.customFields?.[def.name] !== undefined && selectedDetailUser.customFields?.[def.name] !== null && selectedDetailUser.customFields?.[def.name] !== '').length === 0 ? (
-                  <p className="text-[10px] text-neutral-500 italic">هیچ فیلد شخصی و ویژگی سازمانی برای این کاربر ثبت نشده است.</p>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3 mt-2">
-                    {fieldDefs.map((def) => {
-                      const value = selectedDetailUser.customFields?.[def.name]
-                      if (value === undefined || value === null || value === '') return null
-                      
-                      let displayVal = String(value)
-                      if (def.type === 'boolean') {
-                        displayVal = value ? 'بله' : 'خیر'
-                      }
-
-                      return (
-                        <div key={def.name} className="p-2.5 bg-neutral-950/30 rounded-xl border border-neutral-850 flex justify-between items-center">
-                          <span className="text-[10px] text-foreground-muted">{def.label}:</span>
-                          <span className="font-bold text-white">{toFa(displayVal)}</span>
+                return (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      {(showSensitive || allowedModalFields.includes('nationalId')) && (
+                        <div className="bg-neutral-950/20 p-3 rounded-xl border border-neutral-850">
+                          <span className="text-[10px] text-foreground-muted block mb-1">کد ملی راهبر:</span>
+                          <span className="font-mono text-white font-semibold">{toFa(selectedDetailUser.nationalId)}</span>
                         </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
+                      )}
+                      {(showSensitive || allowedModalFields.includes('phone')) && selectedDetailUser.phone && (
+                        <a
+                          href={`tel:${selectedDetailUser.phone}`}
+                          className="p-3 rounded-xl border border-green-500/25 bg-gradient-to-l from-green-500/10 to-emerald-600/5 hover:border-green-400/50 transition-all group/ph cursor-pointer block"
+                        >
+                          <span className="text-[10px] text-green-500/70 block mb-1 flex items-center gap-1">
+                            <Phone className="size-3" />
+                            تلفن همراه:
+                          </span>
+                          <span dir="ltr" className="font-mono text-green-400 font-bold tracking-wide group-hover/ph:text-green-300 transition-colors">
+                            {toFa(selectedDetailUser.phone.replace(/(\d{4})(\d{3})(\d{4})/, '$1-$2-$3'))}
+                          </span>
+                        </a>
+                      )}
+                      {(showSensitive || allowedModalFields.includes('email')) && selectedDetailUser.email && (
+                        <a
+                          href={`mailto:${selectedDetailUser.email}`}
+                          className="p-3 rounded-xl border border-blue-500/20 bg-gradient-to-l from-blue-500/8 to-sky-600/5 hover:border-blue-400/40 transition-all col-span-2 cursor-pointer block"
+                        >
+                          <span className="text-[10px] text-blue-400/70 block mb-1 flex items-center gap-1">
+                            <Mail className="size-3" />
+                            نشانی ایمیل:
+                          </span>
+                          <span dir="ltr" className="font-mono text-blue-300/90 font-semibold">{selectedDetailUser.email}</span>
+                        </a>
+                      )}
+                    </div>
+
+                    {/* Dynamic Custom Fields Row */}
+                    <div className="space-y-2 border-t border-neutral-800 pt-4">
+                      <h4 className="text-[10px] font-bold text-red-500 flex items-center gap-1">
+                        <Layers className="size-3.5" />
+                        اطلاعات و ویژگی‌های سازمانی پرسنل
+                      </h4>
+                      
+                      {(() => {
+                        const allowedDetailFields = fieldDefs.filter((def) => {
+                          if (def.name === 'vehicles') return false // rendered separately
+                          const value = selectedDetailUser.customFields?.[def.name]
+                          if (value === undefined || value === null || value === '') return false
+                          return showSensitive || allowedModalFields.includes(def.name)
+                        })
+
+                        if (allowedDetailFields.length === 0) {
+                          return (
+                            <p className="text-[10px] text-neutral-500 italic">
+                              هیچ فیلد شخصی و ویژگی سازمانی برای نمایش وجود ندارد.
+                            </p>
+                          )
+                        }
+
+                        return (
+                          <div className="grid grid-cols-2 gap-3 mt-2">
+                            {allowedDetailFields.map((def) => {
+                              const value = selectedDetailUser.customFields?.[def.name]
+                              let displayVal = String(value)
+                              if (def.type === 'boolean') {
+                                displayVal = value ? 'بله' : 'خیر'
+                              }
+
+                              return (
+                                <div key={def.name} className="p-2.5 bg-neutral-950/30 rounded-xl border border-neutral-850 flex justify-between items-center">
+                                  <span className="text-[10px] text-foreground-muted">{def.label}:</span>
+                                  <span className="font-bold text-white">{toFa(displayVal)}</span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )
+                      })()}
+
+                      {/* Vehicle Plates (graphical) */}
+                      {(() => {
+                        const canShowVehiclesDetail = true
+                        const detailVehicles = (selectedDetailUser.customFields?.vehicles as any[]) || []
+                        if (!canShowVehiclesDetail || detailVehicles.length === 0) return null
+                        return (
+                          <div className="mt-3 space-y-2">
+                            <h5 className="text-[10px] font-bold text-neutral-400 flex items-center gap-1">
+                              <Car className="size-3" />
+                              خودروهای ثبت‌شده
+                            </h5>
+                            <div className="flex flex-wrap gap-2">
+                              {detailVehicles.map((v: Record<string, unknown>, idx: number) => (
+                                <VehiclePlateFromData key={idx} vehicle={v} size="md" />
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  </>
+                )
+              })()}
 
               {/* Actions Footer */}
               <div className="flex gap-2 pt-4 border-t border-neutral-850 justify-end">

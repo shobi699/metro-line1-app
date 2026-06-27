@@ -23,8 +23,11 @@ import { BulletinsScreen } from './src/screens/BulletinsScreen'
 import { ChecklistsScreen } from './src/screens/ChecklistsScreen'
 import { VoiceConferenceScreen } from './src/screens/VoiceConferenceScreen'
 import { RadioSimulatorScreen } from './src/screens/RadioSimulatorScreen'
+import { PerformanceScreen } from './src/screens/PerformanceScreen'
+import { ContentScreen } from './src/screens/ContentScreen'
 import { OfflineBanner } from './src/shared/OfflineBanner'
 import { BulletinGuard } from './src/shared/BulletinGuard'
+import { Theme } from './src/shared/theme'
 import {
   LayoutDashboard,
   MessageSquare,
@@ -45,6 +48,8 @@ export type RootStackParamList = {
   'چک‌لیست‌ها': undefined
   'کنفرانس صوتی': undefined
   'بی‌سیم راهبری': undefined
+  'عملکرد': undefined
+  'محتوا': undefined
 }
 
 const Tab = createBottomTabNavigator()
@@ -54,11 +59,11 @@ const MetroTheme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
-    background: '#13151a',
-    card: '#1c1e24',
-    border: '#262930',
-    primary: '#e53935',
-    text: '#f2f2f7',
+    background: Theme.colors.background,
+    card: Theme.colors.surface,
+    border: Theme.colors.border,
+    primary: Theme.colors.accent,
+    text: Theme.colors.text,
   },
 }
 
@@ -66,12 +71,12 @@ function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#e53935',
-        tabBarInactiveTintColor: '#8e8e93',
+        tabBarActiveTintColor: Theme.colors.accent,
+        tabBarInactiveTintColor: Theme.colors.textMuted,
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#1c1e24',
-          borderTopColor: '#262930',
+          backgroundColor: Theme.colors.surface,
+          borderTopColor: Theme.colors.border,
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
@@ -127,7 +132,7 @@ export function AppContent() {
 
   return (
     <NavigationContainer theme={MetroTheme}>
-      <View style={{ flex: 1, backgroundColor: '#13151a' }}>
+      <View style={{ flex: 1, backgroundColor: Theme.colors.background }}>
         <OfflineBanner />
         <BulletinGuard>
           <Stack.Navigator
@@ -147,6 +152,8 @@ export function AppContent() {
             <Stack.Screen name="چک‌لیست‌ها" component={ChecklistsScreen} />
             <Stack.Screen name="کنفرانس صوتی" component={VoiceConferenceScreen} />
             <Stack.Screen name="بی‌سیم راهبری" component={RadioSimulatorScreen} />
+            <Stack.Screen name="عملکرد" component={PerformanceScreen} />
+            <Stack.Screen name="محتوا" component={ContentScreen} />
           </Stack.Navigator>
         </BulletinGuard>
       </View>

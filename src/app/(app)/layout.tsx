@@ -13,7 +13,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user)
   const router = useRouter()
 
-  const [config, setConfig] = useState<any>(null)
+  const [config, setConfig] = useState<{
+    maintenanceMode?: boolean
+    systemNotice?: string
+  } | null>(null)
   const [showNotice, setShowNotice] = useState(true)
 
   useEffect(() => {
@@ -29,9 +32,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           const data = await res.json()
           setConfig(data.data)
         }
-      } catch (err) {
-        console.error(err)
-      }
+      } catch {}
     }
     void fetchConfig()
   }, [isAuthenticated, router])

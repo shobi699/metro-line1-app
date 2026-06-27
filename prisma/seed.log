@@ -8077,3 +8077,1267 @@ An operation failed because it depends on one or more records that were required
 [2026-06-25T16:20:15.790Z] Current role count in database: 3
 [2026-06-25T16:20:15.790Z] Database already populated. Ensuring custom fields and settings...
 [2026-06-25T16:20:15.951Z] Settings already exist, skipping.
+[2026-06-26T13:53:05.769Z] seedDatabase call initiated
+[2026-06-26T13:53:05.776Z] Current role count in database: 3
+[2026-06-26T13:53:05.777Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T13:53:05.934Z] Settings already exist, skipping.
+[2026-06-26T14:32:43.358Z] seedDatabase call initiated
+[2026-06-26T14:32:43.374Z] Current role count in database: 3
+[2026-06-26T14:32:43.374Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:32:43.502Z] Settings already exist, skipping.
+[2026-06-26T14:32:44.053Z] seedDatabase call initiated
+[2026-06-26T14:32:44.125Z] Current role count in database: 3
+[2026-06-26T14:32:44.125Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:32:44.272Z] Settings already exist, skipping.
+[2026-06-26T14:32:54.098Z] seedDatabase call initiated
+[2026-06-26T14:32:54.166Z] Current role count in database: 3
+[2026-06-26T14:32:54.166Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:32:54.342Z] Settings already exist, skipping.
+[2026-06-26T14:36:27.906Z] seedDatabase call initiated
+[2026-06-26T14:36:27.916Z] Current role count in database: 3
+[2026-06-26T14:36:27.917Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:36:28.181Z] Settings already exist, skipping.
+[2026-06-26T14:36:29.733Z] seedDatabase call initiated
+[2026-06-26T14:36:29.758Z] Current role count in database: 3
+[2026-06-26T14:36:29.758Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:36:30.016Z] Settings already exist, skipping.
+[2026-06-26T14:40:44.728Z] seedDatabase call initiated
+[2026-06-26T14:40:44.739Z] Current role count in database: 3
+[2026-06-26T14:40:44.739Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:40:44.873Z] Settings already exist, skipping.
+[2026-06-26T14:40:58.403Z] seedDatabase call initiated
+[2026-06-26T14:40:58.412Z] Current role count in database: 3
+[2026-06-26T14:40:58.412Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:40:58.545Z] Settings already exist, skipping.
+[2026-06-26T14:43:05.829Z] seedDatabase call initiated
+[2026-06-26T14:43:05.851Z] Current role count in database: 3
+[2026-06-26T14:43:05.851Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:43:06.054Z] Settings already exist, skipping.
+[2026-06-26T14:43:18.954Z] seedDatabase call initiated
+[2026-06-26T14:43:19.001Z] Current role count in database: 3
+[2026-06-26T14:43:19.002Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:43:19.222Z] Settings already exist, skipping.
+[2026-06-26T14:44:16.127Z] seedDatabase call initiated
+[2026-06-26T14:44:16.132Z] Current role count in database: 3
+[2026-06-26T14:44:16.132Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:44:16.257Z] Settings already exist, skipping.
+[2026-06-26T14:44:46.097Z] seedDatabase call initiated
+[2026-06-26T14:44:46.105Z] Current role count in database: 3
+[2026-06-26T14:44:46.105Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:44:46.257Z] Settings already exist, skipping.
+[2026-06-26T14:48:39.116Z] seedDatabase call initiated
+[2026-06-26T14:48:39.172Z] Current role count in database: 3
+[2026-06-26T14:48:39.172Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:48:39.445Z] Settings already exist, skipping.
+[2026-06-26T14:51:09.214Z] seedDatabase call initiated
+[2026-06-26T14:51:09.291Z] Current role count in database: 3
+[2026-06-26T14:51:09.291Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:51:09.466Z] Settings already exist, skipping.
+[2026-06-26T14:51:09.973Z] seedDatabase call initiated
+[2026-06-26T14:51:10.042Z] Current role count in database: 3
+[2026-06-26T14:51:10.042Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:51:10.226Z] Settings already exist, skipping.
+[2026-06-26T14:51:11.746Z] seedDatabase call initiated
+[2026-06-26T14:51:11.822Z] Current role count in database: 3
+[2026-06-26T14:51:11.822Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:51:12.023Z] Settings already exist, skipping.
+[2026-06-26T14:51:56.577Z] seedDatabase call initiated
+[2026-06-26T14:51:56.648Z] Current role count in database: 3
+[2026-06-26T14:51:56.648Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:51:56.826Z] Settings already exist, skipping.
+[2026-06-26T14:52:00.413Z] seedDatabase call initiated
+[2026-06-26T14:52:00.424Z] Current role count in database: 3
+[2026-06-26T14:52:00.424Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:52:00.661Z] Settings already exist, skipping.
+[2026-06-26T14:52:14.560Z] seedDatabase call initiated
+[2026-06-26T14:52:14.639Z] Current role count in database: 3
+[2026-06-26T14:52:14.640Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:52:14.870Z] Settings already exist, skipping.
+[2026-06-26T14:52:51.917Z] seedDatabase call initiated
+[2026-06-26T14:52:51.936Z] Current role count in database: 3
+[2026-06-26T14:52:51.937Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:52:52.156Z] Settings already exist, skipping.
+[2026-06-26T14:53:19.338Z] seedDatabase call initiated
+[2026-06-26T14:53:19.346Z] Current role count in database: 3
+[2026-06-26T14:53:19.347Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:53:19.525Z] Settings already exist, skipping.
+[2026-06-26T14:53:20.340Z] seedDatabase call initiated
+[2026-06-26T14:53:20.408Z] Current role count in database: 3
+[2026-06-26T14:53:20.408Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:53:20.565Z] Settings already exist, skipping.
+[2026-06-26T14:53:23.026Z] seedDatabase call initiated
+[2026-06-26T14:53:23.053Z] seedDatabase call initiated
+[2026-06-26T14:53:23.100Z] Current role count in database: 3
+[2026-06-26T14:53:23.100Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:53:23.151Z] Error during seedDatabase: 
+Invalid `prisma.role.count()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__1j2lv75._.js:1544:41
+
+  1541 async function seedDatabase(prisma, force = false) {
+  1542     logSeed('seedDatabase call initiated');
+  1543     try {
+→ 1544         const count = await prisma.role.count(
+Operation has timed out
+[2026-06-26T14:53:23.292Z] Settings already exist, skipping.
+[2026-06-26T14:56:43.962Z] seedDatabase call initiated
+[2026-06-26T14:56:44.029Z] Current role count in database: 3
+[2026-06-26T14:56:44.029Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:56:44.194Z] Settings already exist, skipping.
+[2026-06-26T14:56:58.834Z] seedDatabase call initiated
+[2026-06-26T14:56:58.901Z] Current role count in database: 3
+[2026-06-26T14:56:58.902Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:56:59.068Z] Settings already exist, skipping.
+[2026-06-26T14:57:13.557Z] seedDatabase call initiated
+[2026-06-26T14:57:13.627Z] Current role count in database: 3
+[2026-06-26T14:57:13.627Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:57:13.800Z] Settings already exist, skipping.
+[2026-06-26T14:59:38.366Z] seedDatabase call initiated
+[2026-06-26T14:59:38.381Z] Current role count in database: 3
+[2026-06-26T14:59:38.381Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:59:38.569Z] Settings already exist, skipping.
+[2026-06-26T14:59:39.359Z] seedDatabase call initiated
+[2026-06-26T14:59:39.364Z] Current role count in database: 3
+[2026-06-26T14:59:39.365Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T14:59:39.601Z] Settings already exist, skipping.
+[2026-06-26T15:00:14.502Z] seedDatabase call initiated
+[2026-06-26T15:00:14.510Z] Current role count in database: 3
+[2026-06-26T15:00:14.510Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:00:14.741Z] Settings already exist, skipping.
+[2026-06-26T15:00:25.284Z] seedDatabase call initiated
+[2026-06-26T15:00:25.355Z] Current role count in database: 3
+[2026-06-26T15:00:25.355Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:00:25.549Z] Settings already exist, skipping.
+[2026-06-26T15:00:34.382Z] seedDatabase call initiated
+[2026-06-26T15:00:34.450Z] Current role count in database: 3
+[2026-06-26T15:00:34.450Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:00:34.637Z] Settings already exist, skipping.
+[2026-06-26T15:00:47.607Z] seedDatabase call initiated
+[2026-06-26T15:00:47.680Z] Current role count in database: 3
+[2026-06-26T15:00:47.680Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:00:47.848Z] Settings already exist, skipping.
+[2026-06-26T15:01:00.065Z] seedDatabase call initiated
+[2026-06-26T15:01:00.140Z] Current role count in database: 3
+[2026-06-26T15:01:00.140Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:01:00.317Z] Settings already exist, skipping.
+[2026-06-26T15:01:39.736Z] seedDatabase call initiated
+[2026-06-26T15:01:39.804Z] Current role count in database: 3
+[2026-06-26T15:01:39.804Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:01:40.105Z] Settings already exist, skipping.
+[2026-06-26T15:02:22.214Z] seedDatabase call initiated
+[2026-06-26T15:02:22.281Z] Current role count in database: 3
+[2026-06-26T15:02:22.281Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:02:22.709Z] Settings already exist, skipping.
+[2026-06-26T15:03:00.670Z] seedDatabase call initiated
+[2026-06-26T15:03:00.737Z] Current role count in database: 3
+[2026-06-26T15:03:00.737Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:03:01.164Z] Settings already exist, skipping.
+[2026-06-26T15:03:29.967Z] seedDatabase call initiated
+[2026-06-26T15:03:30.038Z] Current role count in database: 3
+[2026-06-26T15:03:30.038Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:03:30.457Z] Settings already exist, skipping.
+[2026-06-26T15:08:33.050Z] seedDatabase call initiated
+[2026-06-26T15:08:33.056Z] Current role count in database: 3
+[2026-06-26T15:08:33.057Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:08:33.202Z] Settings already exist, skipping.
+[2026-06-26T15:08:33.994Z] seedDatabase call initiated
+[2026-06-26T15:08:34.000Z] Current role count in database: 3
+[2026-06-26T15:08:34.000Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:08:34.148Z] Settings already exist, skipping.
+[2026-06-26T15:08:34.238Z] seedDatabase call initiated
+[2026-06-26T15:08:34.244Z] Current role count in database: 3
+[2026-06-26T15:08:34.244Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:08:34.391Z] Settings already exist, skipping.
+[2026-06-26T15:08:42.417Z] seedDatabase call initiated
+[2026-06-26T15:08:42.426Z] Current role count in database: 3
+[2026-06-26T15:08:42.426Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:08:42.869Z] Settings already exist, skipping.
+[2026-06-26T15:08:50.938Z] seedDatabase call initiated
+[2026-06-26T15:08:50.946Z] Current role count in database: 3
+[2026-06-26T15:08:50.947Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:08:51.190Z] Settings already exist, skipping.
+[2026-06-26T15:09:00.521Z] seedDatabase call initiated
+[2026-06-26T15:09:00.530Z] Current role count in database: 3
+[2026-06-26T15:09:00.530Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:09:00.749Z] Settings already exist, skipping.
+[2026-06-26T15:09:10.399Z] seedDatabase call initiated
+[2026-06-26T15:09:10.407Z] Current role count in database: 3
+[2026-06-26T15:09:10.408Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:09:10.626Z] Settings already exist, skipping.
+[2026-06-26T15:09:18.726Z] seedDatabase call initiated
+[2026-06-26T15:09:18.739Z] Current role count in database: 3
+[2026-06-26T15:09:18.740Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:09:19.179Z] Settings already exist, skipping.
+[2026-06-26T15:12:59.214Z] seedDatabase call initiated
+[2026-06-26T15:12:59.221Z] Current role count in database: 3
+[2026-06-26T15:12:59.221Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:12:59.397Z] Settings already exist, skipping.
+[2026-06-26T15:14:06.681Z] seedDatabase call initiated
+[2026-06-26T15:14:06.686Z] Current role count in database: 3
+[2026-06-26T15:14:06.686Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:14:06.842Z] Settings already exist, skipping.
+[2026-06-26T15:14:06.951Z] seedDatabase call initiated
+[2026-06-26T15:14:06.959Z] Current role count in database: 3
+[2026-06-26T15:14:06.959Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:14:07.122Z] Settings already exist, skipping.
+[2026-06-26T15:18:41.097Z] seedDatabase call initiated
+[2026-06-26T15:18:41.170Z] Current role count in database: 3
+[2026-06-26T15:18:41.170Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:18:41.333Z] Settings already exist, skipping.
+[2026-06-26T15:18:41.834Z] seedDatabase call initiated
+[2026-06-26T15:18:41.868Z] seedDatabase call initiated
+[2026-06-26T15:18:41.917Z] Current role count in database: 3
+[2026-06-26T15:18:41.917Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:18:41.942Z] seedDatabase call initiated
+[2026-06-26T15:18:41.985Z] Error during seedDatabase: 
+Invalid `prisma.role.count()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0jq1ykt._.js:1550:41
+
+  1547 async function seedDatabase(prisma, force = false) {
+  1548     logSeed('seedDatabase call initiated');
+  1549     try {
+→ 1550         const count = await prisma.role.count(
+Operation has timed out
+[2026-06-26T15:18:42.062Z] Error during seedDatabase: 
+Invalid `prisma.role.count()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__1no59rr._.js:1587:41
+
+  1584 async function seedDatabase(prisma, force = false) {
+  1585     logSeed('seedDatabase call initiated');
+  1586     try {
+→ 1587         const count = await prisma.role.count(
+Operation has timed out
+[2026-06-26T15:18:42.094Z] Settings already exist, skipping.
+[2026-06-26T15:19:40.680Z] seedDatabase call initiated
+[2026-06-26T15:19:40.687Z] Current role count in database: 3
+[2026-06-26T15:19:40.687Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:19:40.830Z] Settings already exist, skipping.
+[2026-06-26T15:22:05.604Z] seedDatabase call initiated
+[2026-06-26T15:22:05.617Z] Current role count in database: 3
+[2026-06-26T15:22:05.618Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:22:05.881Z] Settings already exist, skipping.
+[2026-06-26T15:28:40.400Z] seedDatabase call initiated
+[2026-06-26T15:28:40.483Z] Current role count in database: 3
+[2026-06-26T15:28:40.483Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:28:40.504Z] seedDatabase call initiated
+[2026-06-26T15:28:40.581Z] Current role count in database: 3
+[2026-06-26T15:28:40.581Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:28:40.582Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__1_9jrql._.js:1486:162
+
+  1483         }
+  1484     });
+  1485 } else {
+→ 1486     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T15:28:40.583Z] Settings already exist, skipping.
+[2026-06-26T15:28:40.590Z] seedDatabase call initiated
+[2026-06-26T15:28:40.663Z] Current role count in database: 3
+[2026-06-26T15:28:40.663Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:28:40.719Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0jq1ykt._.js:1486:162
+
+  1483         }
+  1484     });
+  1485 } else {
+→ 1486     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T15:28:40.748Z] Failed to seed settings on boot: 
+Invalid `prisma.setting.count()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0jq1ykt._.js:1560:60
+
+  1557     logSeed(`Failed to ensure personnel custom fields on boot: ${err.message}`);
+  1558 }
+  1559 try {
+→ 1560     const settingsCount = await prisma.setting.count(
+Operation has timed out
+[2026-06-26T15:28:40.779Z] Failed to seed performance tables on boot: 
+Invalid `prisma.competency.count()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0jq1ykt._.js:1574:65
+
+  1571 }
+  1572 // Also check if performance tables need seeding (added after initial DB creation)
+  1573 try {
+→ 1574     const competencyCount = await prisma.competency.count(
+Operation has timed out
+[2026-06-26T15:28:53.675Z] seedDatabase call initiated
+[2026-06-26T15:28:53.745Z] Current role count in database: 3
+[2026-06-26T15:28:53.745Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:28:53.918Z] Settings already exist, skipping.
+[2026-06-26T15:28:54.405Z] seedDatabase call initiated
+[2026-06-26T15:28:54.471Z] Current role count in database: 3
+[2026-06-26T15:28:54.471Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:28:54.619Z] Settings already exist, skipping.
+[2026-06-26T15:29:48.575Z] seedDatabase call initiated
+[2026-06-26T15:29:48.592Z] Current role count in database: 3
+[2026-06-26T15:29:48.592Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:29:48.834Z] Settings already exist, skipping.
+[2026-06-26T15:29:49.256Z] seedDatabase call initiated
+[2026-06-26T15:29:49.320Z] Current role count in database: 3
+[2026-06-26T15:29:49.320Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:29:49.475Z] Settings already exist, skipping.
+[2026-06-26T15:30:38.384Z] seedDatabase call initiated
+[2026-06-26T15:30:38.397Z] Current role count in database: 3
+[2026-06-26T15:30:38.397Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:30:38.643Z] Settings already exist, skipping.
+[2026-06-26T15:30:39.108Z] seedDatabase call initiated
+[2026-06-26T15:30:39.176Z] Current role count in database: 3
+[2026-06-26T15:30:39.176Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:30:39.360Z] Settings already exist, skipping.
+[2026-06-26T15:30:51.009Z] seedDatabase call initiated
+[2026-06-26T15:30:51.017Z] Current role count in database: 3
+[2026-06-26T15:30:51.017Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:30:51.240Z] Settings already exist, skipping.
+[2026-06-26T15:37:12.251Z] seedDatabase call initiated
+[2026-06-26T15:37:12.322Z] Current role count in database: 3
+[2026-06-26T15:37:12.322Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:37:12.486Z] Settings already exist, skipping.
+[2026-06-26T15:37:29.097Z] seedDatabase call initiated
+[2026-06-26T15:37:29.161Z] Current role count in database: 3
+[2026-06-26T15:37:29.162Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:37:29.309Z] Settings already exist, skipping.
+[2026-06-26T15:37:42.792Z] seedDatabase call initiated
+[2026-06-26T15:37:42.810Z] Current role count in database: 3
+[2026-06-26T15:37:42.811Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:37:43.026Z] Settings already exist, skipping.
+[2026-06-26T15:37:43.488Z] seedDatabase call initiated
+[2026-06-26T15:37:43.553Z] Current role count in database: 3
+[2026-06-26T15:37:43.553Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:37:43.701Z] Settings already exist, skipping.
+[2026-06-26T15:37:43.835Z] seedDatabase call initiated
+[2026-06-26T15:37:43.908Z] Current role count in database: 3
+[2026-06-26T15:37:43.908Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:37:43.987Z] seedDatabase call initiated
+[2026-06-26T15:37:44.082Z] Error during seedDatabase: 
+Invalid `prisma.role.count()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__1no59rr._.js:1587:41
+
+  1584 async function seedDatabase(prisma, force = false) {
+  1585     logSeed('seedDatabase call initiated');
+  1586     try {
+→ 1587         const count = await prisma.role.count(
+Operation has timed out
+[2026-06-26T15:37:44.098Z] Settings already exist, skipping.
+[2026-06-26T15:39:59.831Z] seedDatabase call initiated
+[2026-06-26T15:39:59.840Z] Current role count in database: 3
+[2026-06-26T15:39:59.840Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:40:00.368Z] Settings already exist, skipping.
+[2026-06-26T15:40:22.516Z] seedDatabase call initiated
+[2026-06-26T15:40:22.533Z] Current role count in database: 3
+[2026-06-26T15:40:22.534Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:40:23.045Z] Settings already exist, skipping.
+[2026-06-26T15:40:23.208Z] seedDatabase call initiated
+[2026-06-26T15:40:23.276Z] Current role count in database: 3
+[2026-06-26T15:40:23.277Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:40:23.686Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__20hjtx3._.js:2984:162
+
+  2981         }
+  2982     });
+  2983 } else {
+→ 2984     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T15:40:23.687Z] Settings already exist, skipping.
+[2026-06-26T15:40:46.481Z] seedDatabase call initiated
+[2026-06-26T15:40:46.548Z] Current role count in database: 3
+[2026-06-26T15:40:46.548Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:40:46.692Z] Settings already exist, skipping.
+[2026-06-26T15:41:10.142Z] seedDatabase call initiated
+[2026-06-26T15:41:10.212Z] Current role count in database: 3
+[2026-06-26T15:41:10.212Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:41:10.380Z] Settings already exist, skipping.
+[2026-06-26T15:41:18.424Z] seedDatabase call initiated
+[2026-06-26T15:41:18.497Z] Current role count in database: 3
+[2026-06-26T15:41:18.497Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:41:18.538Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0ffj1x9._.js:1092:162
+
+  1089         }
+  1090     });
+  1091 } else {
+→ 1092     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T15:41:18.539Z] Settings already exist, skipping.
+[2026-06-26T15:41:19.177Z] seedDatabase call initiated
+[2026-06-26T15:41:19.244Z] Current role count in database: 3
+[2026-06-26T15:41:19.244Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:41:19.386Z] Settings already exist, skipping.
+[2026-06-26T15:41:32.131Z] seedDatabase call initiated
+[2026-06-26T15:41:32.203Z] Current role count in database: 3
+[2026-06-26T15:41:32.203Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:41:32.368Z] Settings already exist, skipping.
+[2026-06-26T15:41:32.425Z] seedDatabase call initiated
+[2026-06-26T15:41:32.495Z] Current role count in database: 3
+[2026-06-26T15:41:32.496Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:41:32.668Z] Settings already exist, skipping.
+[2026-06-26T15:41:59.493Z] seedDatabase call initiated
+[2026-06-26T15:41:59.562Z] Current role count in database: 3
+[2026-06-26T15:41:59.562Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:41:59.722Z] Settings already exist, skipping.
+[2026-06-26T15:51:21.904Z] seedDatabase call initiated
+[2026-06-26T15:51:21.914Z] Current role count in database: 3
+[2026-06-26T15:51:21.914Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:51:22.147Z] Settings already exist, skipping.
+[2026-06-26T15:51:43.872Z] seedDatabase call initiated
+[2026-06-26T15:51:43.881Z] Current role count in database: 3
+[2026-06-26T15:51:43.881Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:51:44.113Z] Settings already exist, skipping.
+[2026-06-26T15:51:53.307Z] seedDatabase call initiated
+[2026-06-26T15:51:53.316Z] Current role count in database: 3
+[2026-06-26T15:51:53.317Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:51:53.446Z] Settings already exist, skipping.
+[2026-06-26T15:55:09.335Z] seedDatabase call initiated
+[2026-06-26T15:55:09.341Z] Current role count in database: 3
+[2026-06-26T15:55:09.341Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:55:09.490Z] Settings already exist, skipping.
+[2026-06-26T15:55:09.966Z] seedDatabase call initiated
+[2026-06-26T15:55:09.973Z] Current role count in database: 3
+[2026-06-26T15:55:09.973Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:55:10.108Z] Settings already exist, skipping.
+[2026-06-26T15:55:10.171Z] seedDatabase call initiated
+[2026-06-26T15:55:10.176Z] Current role count in database: 3
+[2026-06-26T15:55:10.176Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:55:10.323Z] Settings already exist, skipping.
+[2026-06-26T15:55:10.452Z] seedDatabase call initiated
+[2026-06-26T15:55:10.459Z] Current role count in database: 3
+[2026-06-26T15:55:10.459Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:55:10.596Z] Settings already exist, skipping.
+[2026-06-26T15:55:53.678Z] seedDatabase call initiated
+[2026-06-26T15:55:53.750Z] Current role count in database: 3
+[2026-06-26T15:55:53.751Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:55:53.783Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__1lth1lw._.js:1522:162
+
+  1519         }
+  1520     });
+  1521 } else {
+→ 1522     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T15:55:53.784Z] Settings already exist, skipping.
+[2026-06-26T15:55:54.889Z] seedDatabase call initiated
+[2026-06-26T15:55:54.957Z] Current role count in database: 3
+[2026-06-26T15:55:54.957Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T15:55:55.118Z] Settings already exist, skipping.
+[2026-06-26T16:44:16.577Z] seedDatabase call initiated
+[2026-06-26T16:44:16.678Z] Current role count in database: 3
+[2026-06-26T16:44:16.678Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T16:44:16.853Z] Settings already exist, skipping.
+[2026-06-26T17:19:20.519Z] seedDatabase call initiated
+[2026-06-26T17:19:20.526Z] Current role count in database: 3
+[2026-06-26T17:19:20.527Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T17:19:20.768Z] Settings already exist, skipping.
+[2026-06-26T17:20:06.361Z] seedDatabase call initiated
+[2026-06-26T17:20:06.366Z] Current role count in database: 3
+[2026-06-26T17:20:06.367Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T17:20:06.593Z] Settings already exist, skipping.
+[2026-06-26T17:37:33.539Z] seedDatabase call initiated
+[2026-06-26T17:37:33.545Z] Current role count in database: 3
+[2026-06-26T17:37:33.545Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T17:37:33.689Z] Settings already exist, skipping.
+[2026-06-26T17:44:22.547Z] seedDatabase call initiated
+[2026-06-26T17:44:22.552Z] Current role count in database: 3
+[2026-06-26T17:44:22.552Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T17:44:22.985Z] Settings already exist, skipping.
+[2026-06-26T17:44:33.473Z] seedDatabase call initiated
+[2026-06-26T17:44:33.545Z] Current role count in database: 3
+[2026-06-26T17:44:33.545Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T17:44:33.746Z] Settings already exist, skipping.
+[2026-06-26T17:44:34.174Z] seedDatabase call initiated
+[2026-06-26T17:44:34.245Z] Current role count in database: 3
+[2026-06-26T17:44:34.245Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T17:44:34.261Z] seedDatabase call initiated
+[2026-06-26T17:44:34.300Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__1_9jrql._.js:1486:162
+
+  1483         }
+  1484     });
+  1485 } else {
+→ 1486     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T17:44:34.302Z] Settings already exist, skipping.
+[2026-06-26T17:44:34.319Z] seedDatabase call initiated
+[2026-06-26T17:44:34.337Z] Current role count in database: 3
+[2026-06-26T17:44:34.337Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T17:44:34.434Z] Error during seedDatabase: 
+Invalid `prisma.role.count()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__1no59rr._.js:1587:41
+
+  1584 async function seedDatabase(prisma, force = false) {
+  1585     logSeed('seedDatabase call initiated');
+  1586     try {
+→ 1587         const count = await prisma.role.count(
+Operation has timed out
+[2026-06-26T17:44:34.493Z] Settings already exist, skipping.
+[2026-06-26T17:56:18.617Z] seedDatabase call initiated
+[2026-06-26T17:56:18.639Z] Current role count in database: 3
+[2026-06-26T17:56:18.639Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T17:56:18.837Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.152Z] seedDatabase call initiated
+[2026-06-26T18:10:09.228Z] seedDatabase call initiated
+[2026-06-26T18:10:09.246Z] seedDatabase call initiated
+[2026-06-26T18:10:09.263Z] seedDatabase call initiated
+[2026-06-26T18:10:09.265Z] seedDatabase call initiated
+[2026-06-26T18:10:09.264Z] seedDatabase call initiated
+[2026-06-26T18:10:09.276Z] seedDatabase call initiated
+[2026-06-26T18:10:09.277Z] seedDatabase call initiated
+[2026-06-26T18:10:09.278Z] seedDatabase call initiated
+[2026-06-26T18:10:09.295Z] seedDatabase call initiated
+[2026-06-26T18:10:09.304Z] seedDatabase call initiated
+[2026-06-26T18:10:09.306Z] seedDatabase call initiated
+[2026-06-26T18:10:09.308Z] seedDatabase call initiated
+[2026-06-26T18:10:09.312Z] seedDatabase call initiated
+[2026-06-26T18:10:09.320Z] seedDatabase call initiated
+[2026-06-26T18:10:09.322Z] seedDatabase call initiated
+[2026-06-26T18:10:09.336Z] Current role count in database: 3
+[2026-06-26T18:10:09.337Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.342Z] seedDatabase call initiated
+[2026-06-26T18:10:09.353Z] seedDatabase call initiated
+[2026-06-26T18:10:09.371Z] seedDatabase call initiated
+[2026-06-26T18:10:09.411Z] Current role count in database: 3
+[2026-06-26T18:10:09.412Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.458Z] Error during seedDatabase: 
+Invalid `prisma.role.count()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.482Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.484Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.488Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.488Z] Current role count in database: 3
+[2026-06-26T18:10:09.489Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.490Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.501Z] Current role count in database: 3
+[2026-06-26T18:10:09.502Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.504Z] Current role count in database: 3
+[2026-06-26T18:10:09.504Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.529Z] Current role count in database: 3
+[2026-06-26T18:10:09.530Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.534Z] Current role count in database: 3
+[2026-06-26T18:10:09.535Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.546Z] Current role count in database: 3
+[2026-06-26T18:10:09.546Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.546Z] Current role count in database: 3
+[2026-06-26T18:10:09.547Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.599Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.599Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.601Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.601Z] Current role count in database: 3
+[2026-06-26T18:10:09.601Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.602Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.604Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.606Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.608Z] Current role count in database: 3
+[2026-06-26T18:10:09.608Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.619Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.621Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.641Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.642Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.652Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.654Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.658Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.666Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.668Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.673Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.701Z] Current role count in database: 3
+[2026-06-26T18:10:09.701Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.738Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.740Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.770Z] Current role count in database: 3
+[2026-06-26T18:10:09.771Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.784Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.786Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.820Z] Current role count in database: 3
+[2026-06-26T18:10:09.820Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.834Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.835Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.855Z] Current role count in database: 3
+[2026-06-26T18:10:09.855Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.861Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.863Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.883Z] Current role count in database: 3
+[2026-06-26T18:10:09.884Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.897Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.898Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.915Z] Current role count in database: 3
+[2026-06-26T18:10:09.915Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.918Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.920Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.923Z] Current role count in database: 3
+[2026-06-26T18:10:09.924Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:10:09.952Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.953Z] Settings already exist, skipping.
+[2026-06-26T18:10:09.960Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:10:09.961Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.325Z] seedDatabase call initiated
+[2026-06-26T18:22:31.378Z] seedDatabase call initiated
+[2026-06-26T18:22:31.378Z] seedDatabase call initiated
+[2026-06-26T18:22:31.394Z] seedDatabase call initiated
+[2026-06-26T18:22:31.396Z] seedDatabase call initiated
+[2026-06-26T18:22:31.418Z] seedDatabase call initiated
+[2026-06-26T18:22:31.427Z] seedDatabase call initiated
+[2026-06-26T18:22:31.444Z] seedDatabase call initiated
+[2026-06-26T18:22:31.438Z] seedDatabase call initiated
+[2026-06-26T18:22:31.453Z] seedDatabase call initiated
+[2026-06-26T18:22:31.455Z] seedDatabase call initiated
+[2026-06-26T18:22:31.462Z] seedDatabase call initiated
+[2026-06-26T18:22:31.460Z] seedDatabase call initiated
+[2026-06-26T18:22:31.471Z] seedDatabase call initiated
+[2026-06-26T18:22:31.499Z] seedDatabase call initiated
+[2026-06-26T18:22:31.499Z] seedDatabase call initiated
+[2026-06-26T18:22:31.504Z] Current role count in database: 3
+[2026-06-26T18:22:31.504Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:31.503Z] seedDatabase call initiated
+[2026-06-26T18:22:31.506Z] seedDatabase call initiated
+[2026-06-26T18:22:31.558Z] seedDatabase call initiated
+[2026-06-26T18:22:31.583Z] Current role count in database: 3
+[2026-06-26T18:22:31.584Z] Current role count in database: 3
+[2026-06-26T18:22:31.584Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:31.584Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:31.583Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:31.585Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.608Z] Current role count in database: 3
+[2026-06-26T18:22:31.608Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:31.625Z] Current role count in database: 3
+[2026-06-26T18:22:31.625Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:31.632Z] Current role count in database: 3
+[2026-06-26T18:22:31.633Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:31.637Z] Current role count in database: 3
+[2026-06-26T18:22:31.638Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:31.662Z] Current role count in database: 3
+[2026-06-26T18:22:31.662Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:31.675Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:31.676Z] Current role count in database: 3
+[2026-06-26T18:22:31.676Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:31.676Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:31.676Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:31.677Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.678Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.678Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:31.679Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.689Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.708Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:31.708Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:31.709Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.710Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.718Z] Current role count in database: 3
+[2026-06-26T18:22:31.719Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:31.729Z] Current role count in database: 3
+[2026-06-26T18:22:31.729Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:31.747Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:31.748Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.751Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:31.753Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.756Z] Current role count in database: 3
+[2026-06-26T18:22:31.756Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:31.791Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:31.792Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.808Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:31.809Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.853Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:31.855Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.864Z] Current role count in database: 3
+[2026-06-26T18:22:31.865Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:31.909Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:31.911Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.943Z] Current role count in database: 3
+[2026-06-26T18:22:31.943Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:31.957Z] Current role count in database: 3
+[2026-06-26T18:22:31.957Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:31.991Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:31.992Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:31.992Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.993Z] Settings already exist, skipping.
+[2026-06-26T18:22:31.998Z] Current role count in database: 3
+[2026-06-26T18:22:31.999Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:32.017Z] Current role count in database: 3
+[2026-06-26T18:22:32.017Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:32.034Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:32.035Z] Current role count in database: 3
+[2026-06-26T18:22:32.036Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:32.035Z] Settings already exist, skipping.
+[2026-06-26T18:22:32.036Z] Current role count in database: 3
+[2026-06-26T18:22:32.036Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:32.063Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:32.065Z] Settings already exist, skipping.
+[2026-06-26T18:22:32.070Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:32.071Z] Settings already exist, skipping.
+[2026-06-26T18:22:32.076Z] Failed to ensure personnel custom fields on boot: 
+Invalid `prisma.customFieldDef.update()` invocation:
+
+
+Operation has timed out
+[2026-06-26T18:22:32.077Z] Settings already exist, skipping.
+[2026-06-26T18:22:38.112Z] seedDatabase call initiated
+[2026-06-26T18:22:38.117Z] Current role count in database: 3
+[2026-06-26T18:22:38.118Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:38.246Z] Settings already exist, skipping.
+[2026-06-26T18:22:38.659Z] seedDatabase call initiated
+[2026-06-26T18:22:38.664Z] Current role count in database: 3
+[2026-06-26T18:22:38.664Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:38.799Z] Settings already exist, skipping.
+[2026-06-26T18:22:38.864Z] seedDatabase call initiated
+[2026-06-26T18:22:38.870Z] Current role count in database: 3
+[2026-06-26T18:22:38.870Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:38.992Z] Settings already exist, skipping.
+[2026-06-26T18:22:39.040Z] seedDatabase call initiated
+[2026-06-26T18:22:39.046Z] Current role count in database: 3
+[2026-06-26T18:22:39.047Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:39.170Z] Settings already exist, skipping.
+[2026-06-26T18:22:39.244Z] seedDatabase call initiated
+[2026-06-26T18:22:39.250Z] Current role count in database: 3
+[2026-06-26T18:22:39.250Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:39.372Z] Settings already exist, skipping.
+[2026-06-26T18:22:39.410Z] seedDatabase call initiated
+[2026-06-26T18:22:39.415Z] Current role count in database: 3
+[2026-06-26T18:22:39.416Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:39.553Z] Settings already exist, skipping.
+[2026-06-26T18:22:39.589Z] seedDatabase call initiated
+[2026-06-26T18:22:39.595Z] Current role count in database: 3
+[2026-06-26T18:22:39.595Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:39.717Z] Settings already exist, skipping.
+[2026-06-26T18:22:44.220Z] seedDatabase call initiated
+[2026-06-26T18:22:44.237Z] Current role count in database: 3
+[2026-06-26T18:22:44.237Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:44.459Z] Settings already exist, skipping.
+[2026-06-26T18:22:45.182Z] seedDatabase call initiated
+[2026-06-26T18:22:45.197Z] Current role count in database: 3
+[2026-06-26T18:22:45.197Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:45.418Z] Settings already exist, skipping.
+[2026-06-26T18:22:45.561Z] seedDatabase call initiated
+[2026-06-26T18:22:45.577Z] Current role count in database: 3
+[2026-06-26T18:22:45.577Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:45.732Z] Settings already exist, skipping.
+[2026-06-26T18:22:45.813Z] seedDatabase call initiated
+[2026-06-26T18:22:45.835Z] seedDatabase call initiated
+[2026-06-26T18:22:45.852Z] Current role count in database: 3
+[2026-06-26T18:22:45.852Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:45.887Z] Current role count in database: 3
+[2026-06-26T18:22:45.887Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:45.960Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__1_9jrql._.js:1486:162
+
+  1483         }
+  1484     });
+  1485 } else {
+→ 1486     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T18:22:45.961Z] Settings already exist, skipping.
+[2026-06-26T18:22:45.964Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__1no59rr._.js:1523:162
+
+  1520         }
+  1521     });
+  1522 } else {
+→ 1523     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T18:22:45.966Z] Settings already exist, skipping.
+[2026-06-26T18:22:46.183Z] seedDatabase call initiated
+[2026-06-26T18:22:46.270Z] Current role count in database: 3
+[2026-06-26T18:22:46.270Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:46.298Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0jq1ykt._.js:1486:162
+
+  1483         }
+  1484     });
+  1485 } else {
+→ 1486     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T18:22:46.299Z] Settings already exist, skipping.
+[2026-06-26T18:22:46.507Z] seedDatabase call initiated
+[2026-06-26T18:22:46.576Z] Current role count in database: 3
+[2026-06-26T18:22:46.577Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:46.601Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__1no59rr._.js:1523:162
+
+  1520         }
+  1521     });
+  1522 } else {
+→ 1523     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T18:22:46.602Z] Settings already exist, skipping.
+[2026-06-26T18:22:49.005Z] seedDatabase call initiated
+[2026-06-26T18:22:49.023Z] Current role count in database: 3
+[2026-06-26T18:22:49.023Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:22:49.032Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0sy0hty._.js:1092:162
+
+  1089         }
+  1090     });
+  1091 } else {
+→ 1092     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T18:22:49.033Z] Settings already exist, skipping.
+[2026-06-26T18:23:04.919Z] seedDatabase call initiated
+[2026-06-26T18:23:04.925Z] Current role count in database: 3
+[2026-06-26T18:23:04.925Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T18:23:04.931Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0096cl3._.js:1092:162
+
+  1089         }
+  1090     });
+  1091 } else {
+→ 1092     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T18:23:04.931Z] Settings already exist, skipping.
+[2026-06-26T19:08:47.527Z] seedDatabase call initiated
+[2026-06-26T19:08:47.537Z] Current role count in database: 3
+[2026-06-26T19:08:47.538Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:08:47.546Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0dfeape._.js:1092:162
+
+  1089         }
+  1090     });
+  1091 } else {
+→ 1092     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:08:47.547Z] Settings already exist, skipping.
+[2026-06-26T19:11:18.222Z] seedDatabase call initiated
+[2026-06-26T19:11:18.228Z] Current role count in database: 3
+[2026-06-26T19:11:18.228Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:11:18.234Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0dfeape._.js:1092:162
+
+  1089         }
+  1090     });
+  1091 } else {
+→ 1092     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:11:18.235Z] Settings already exist, skipping.
+[2026-06-26T19:19:04.706Z] seedDatabase call initiated
+[2026-06-26T19:19:04.711Z] Current role count in database: 3
+[2026-06-26T19:19:04.711Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:19:04.716Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0dfeape._.js:1092:162
+
+  1089         }
+  1090     });
+  1091 } else {
+→ 1092     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:19:04.716Z] Settings already exist, skipping.
+[2026-06-26T19:19:06.026Z] seedDatabase call initiated
+[2026-06-26T19:19:06.032Z] Current role count in database: 3
+[2026-06-26T19:19:06.032Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:19:06.036Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__1o7rfem._.js:1092:162
+
+  1089         }
+  1090     });
+  1091 } else {
+→ 1092     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:19:06.037Z] Settings already exist, skipping.
+[2026-06-26T19:21:03.725Z] seedDatabase call initiated
+[2026-06-26T19:21:03.730Z] Current role count in database: 3
+[2026-06-26T19:21:03.730Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:21:03.732Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:21:03.733Z] Settings already exist, skipping.
+[2026-06-26T19:21:11.096Z] seedDatabase call initiated
+[2026-06-26T19:21:11.102Z] Current role count in database: 3
+[2026-06-26T19:21:11.102Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:21:11.105Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__1-ap-5u._.js:314:162
+
+  311         }
+  312     });
+  313 } else {
+→ 314     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:21:11.105Z] Settings already exist, skipping.
+[2026-06-26T19:21:11.612Z] seedDatabase call initiated
+[2026-06-26T19:21:11.618Z] Current role count in database: 3
+[2026-06-26T19:21:11.619Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:21:11.622Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:21:11.622Z] Settings already exist, skipping.
+[2026-06-26T19:21:11.658Z] seedDatabase call initiated
+[2026-06-26T19:21:11.664Z] Current role count in database: 3
+[2026-06-26T19:21:11.664Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:21:11.668Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:21:11.669Z] Settings already exist, skipping.
+[2026-06-26T19:21:11.730Z] seedDatabase call initiated
+[2026-06-26T19:21:11.736Z] Current role count in database: 3
+[2026-06-26T19:21:11.737Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:21:11.740Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__07_9nml._.js:311:162
+
+  308         }
+  309     });
+  310 } else {
+→ 311     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:21:11.740Z] Settings already exist, skipping.
+[2026-06-26T19:21:11.782Z] seedDatabase call initiated
+[2026-06-26T19:21:11.787Z] Current role count in database: 3
+[2026-06-26T19:21:11.787Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:21:11.791Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:21:11.791Z] Settings already exist, skipping.
+[2026-06-26T19:21:11.825Z] seedDatabase call initiated
+[2026-06-26T19:21:11.831Z] Current role count in database: 3
+[2026-06-26T19:21:11.831Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:21:11.835Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:21:11.835Z] Settings already exist, skipping.
+[2026-06-26T19:21:20.205Z] seedDatabase call initiated
+[2026-06-26T19:21:20.219Z] Current role count in database: 3
+[2026-06-26T19:21:20.219Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:21:20.225Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:21:20.227Z] Settings already exist, skipping.
+[2026-06-26T19:21:20.287Z] seedDatabase call initiated
+[2026-06-26T19:21:20.297Z] Current role count in database: 3
+[2026-06-26T19:21:20.298Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:21:20.302Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:21:20.303Z] Settings already exist, skipping.
+[2026-06-26T19:32:39.002Z] seedDatabase call initiated
+[2026-06-26T19:32:39.009Z] Current role count in database: 3
+[2026-06-26T19:32:39.009Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:32:39.013Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:32:39.014Z] Settings already exist, skipping.
+[2026-06-26T19:41:22.442Z] seedDatabase call initiated
+[2026-06-26T19:41:22.443Z] Current role count in database: 3
+[2026-06-26T19:41:22.443Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:41:22.448Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:41:22.448Z] Settings already exist, skipping.
+[2026-06-26T19:41:24.077Z] seedDatabase call initiated
+[2026-06-26T19:41:24.078Z] Current role count in database: 3
+[2026-06-26T19:41:24.078Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:41:24.080Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__1-ap-5u._.js:314:162
+
+  311         }
+  312     });
+  313 } else {
+→ 314     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:41:24.080Z] Settings already exist, skipping.
+[2026-06-26T19:41:24.516Z] seedDatabase call initiated
+[2026-06-26T19:41:24.517Z] Current role count in database: 3
+[2026-06-26T19:41:24.517Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:41:24.520Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:41:24.521Z] Settings already exist, skipping.
+[2026-06-26T19:41:24.522Z] seedDatabase call initiated
+[2026-06-26T19:41:24.523Z] Current role count in database: 3
+[2026-06-26T19:41:24.523Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:41:24.527Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:41:24.528Z] Settings already exist, skipping.
+[2026-06-26T19:41:24.530Z] seedDatabase call initiated
+[2026-06-26T19:41:24.531Z] Current role count in database: 3
+[2026-06-26T19:41:24.531Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:41:24.534Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:41:24.535Z] Settings already exist, skipping.
+[2026-06-26T19:41:24.917Z] seedDatabase call initiated
+[2026-06-26T19:41:24.918Z] Current role count in database: 3
+[2026-06-26T19:41:24.919Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:41:24.922Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:41:24.923Z] Settings already exist, skipping.
+[2026-06-26T19:41:24.933Z] seedDatabase call initiated
+[2026-06-26T19:41:24.934Z] Current role count in database: 3
+[2026-06-26T19:41:24.934Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:41:24.940Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__07_9nml._.js:311:162
+
+  308         }
+  309     });
+  310 } else {
+→ 311     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:41:24.941Z] Settings already exist, skipping.
+[2026-06-26T19:41:24.943Z] seedDatabase call initiated
+[2026-06-26T19:41:24.944Z] Current role count in database: 3
+[2026-06-26T19:41:24.944Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:41:24.947Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:41:24.948Z] Settings already exist, skipping.
+[2026-06-26T19:41:35.529Z] seedDatabase call initiated
+[2026-06-26T19:41:35.530Z] Current role count in database: 3
+[2026-06-26T19:41:35.530Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:41:35.534Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-26T19:41:35.535Z] Settings already exist, skipping.
+[2026-06-26T19:44:40.301Z] seedDatabase call initiated
+[2026-06-26T19:44:40.305Z] Current role count in database: 3
+[2026-06-26T19:44:40.305Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-26T19:44:40.443Z] Settings already exist, skipping.
+[2026-06-27T19:08:19.653Z] seedDatabase call initiated
+[2026-06-27T19:08:19.658Z] Current role count in database: 3
+[2026-06-27T19:08:19.658Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-27T19:08:19.814Z] Settings already exist, skipping.

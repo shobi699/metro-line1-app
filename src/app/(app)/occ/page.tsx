@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useAuthStore } from '@/features/auth'
 import { Card, CardContent } from '@/components/ui/card'
 import { TopAppBar } from '@/components/shared/top-app-bar'
 import { SystemHealthWidget } from '@/components/shared/system-health-widget'
@@ -9,8 +10,18 @@ import { LiveTrackMap } from '@/components/shared/live-track-map'
 import { FaultTicketCard } from '@/components/shared/fault-ticket-card'
 import { Megaphone, Clock } from 'lucide-react'
 
+interface Ticket {
+  id: string
+  title: string
+  description: string
+  priority: string
+  status: string
+}
+
 export default function OCCPage() {
+  const accessToken = useAuthStore((s) => s.accessToken)
   const [currentTime, setCurrentTime] = useState('')
+  const [tickets, setTickets] = useState<Ticket[]>([])
 
   useEffect(() => {
     function updateTime() {
@@ -24,6 +35,21 @@ export default function OCCPage() {
     const interval = setInterval(updateTime, 1000)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    if (!accessToken) return
+    fetch('/api/tickets', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        const data = json?.data
+        if (Array.isArray(data)) {
+          setTickets(data.filter((t: Ticket) => t.status === 'open' || t.status === 'in_progress').slice(0, 4))
+        }
+      })
+      .catch(() => {})
+  }, [accessToken])
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -72,30 +98,21 @@ export default function OCCPage() {
               </button>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FaultTicketCard
-                ticketId="TKT-8842"
-                description="قطار TR-204: نقص درب واگن ۳"
-                priority="high"
-                status="در حال بررسی"
-              />
-              <FaultTicketCard
-                ticketId="TKT-8843"
-                description="سیستم تهویه ایستگاه میرداماد"
-                priority="medium"
-                status="انتظار تعمیر"
-              />
-              <FaultTicketCard
-                ticketId="TKT-8840"
-                description="روشنایی سکوی تجریش"
-                priority="low"
-                status="برنامه‌ریزی شده"
-              />
-              <FaultTicketCard
-                ticketId="TKT-8845"
-                description="سنسور دود واگن ۵ قطار TR-088"
-                priority="high"
-                status="فوری"
-              />
+              {tickets.length > 0 ? (
+                tickets.map((t) => (
+                  <FaultTicketCard
+                    key={t.id}
+                    ticketId={t.id}
+                    description={t.title}
+                    priority={t.priority === 'critical' ? 'high' : (t.priority as 'low' | 'medium' | 'high')}
+                    status={t.status === 'open' ? 'باز' : t.status === 'in_progress' ? 'در حال بررسی' : t.status}
+                  />
+                ))
+              ) : (
+                <div className="col-span-2 text-center text-xs text-foreground-muted py-8">
+                  تیکت فعالی وجود ندارد
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

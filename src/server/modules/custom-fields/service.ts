@@ -98,7 +98,7 @@ export async function ensurePersonnelCustomFields() {
           name: f.name,
           label: f.label,
           type: f.type,
-          options: f.options ? JSON.stringify(f.options) : Prisma.JsonNull,
+          options: Prisma.JsonNull,
           required: false,
           sortOrder: f.sortOrder,
         }
@@ -110,7 +110,7 @@ export async function ensurePersonnelCustomFields() {
           entityType: 'User',
           label: f.label,
           type: f.type,
-          options: f.options ? JSON.stringify(f.options) : Prisma.JsonNull,
+          options: Prisma.JsonNull,
           sortOrder: f.sortOrder,
         }
       })

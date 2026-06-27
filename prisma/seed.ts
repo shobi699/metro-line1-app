@@ -620,6 +620,80 @@ async function main() {
     ]
   })
 
+  // ── Shift Cycle Templates (server-side source of truth) ─────────
+  const tplRotational1 = await prisma.shiftTemplate.create({
+    data: {
+      name: 'سیکل ۶ روزه عملیاتی - تیپ ۱ (نوبتی)',
+      type: 'rotational',
+      length: 6,
+      shifts: [
+        { day: 1, code: 'morning', label: 'صبح‌کار (۹ ساعته)', hours: 9, startTime: '07:00', endTime: '16:00' },
+        { day: 2, code: 'morning', label: 'صبح‌کار (۹ ساعته)', hours: 9, startTime: '07:00', endTime: '16:00' },
+        { day: 3, code: 'evening', label: 'عصرکار (۹ ساعته)', hours: 9, startTime: '16:00', endTime: '01:00' },
+        { day: 4, code: 'evening', label: 'عصرکار (۹ ساعته)', hours: 9, startTime: '16:00', endTime: '01:00' },
+        { day: 5, code: 'off', label: 'استراحت (آف)', hours: 0, startTime: '', endTime: '' },
+        { day: 6, code: 'off', label: 'استراحت (آف)', hours: 0, startTime: '', endTime: '' },
+      ],
+    },
+  })
+
+  const tplRotational2 = await prisma.shiftTemplate.create({
+    data: {
+      name: 'سیکل ۶ روزه عملیاتی - تیپ ۲ (۱۲ ساعته)',
+      type: 'rotational',
+      length: 6,
+      shifts: [
+        { day: 1, code: 'morning', label: 'روزکار (۱۲ ساعته)', hours: 12, startTime: '07:00', endTime: '19:00' },
+        { day: 2, code: 'morning', label: 'روزکار (۱۲ ساعته)', hours: 12, startTime: '07:00', endTime: '19:00' },
+        { day: 3, code: 'night', label: 'شب‌کار (۱۲ ساعته)', hours: 12, startTime: '19:00', endTime: '07:00' },
+        { day: 4, code: 'night', label: 'شب‌کار (۱۲ ساعته)', hours: 12, startTime: '19:00', endTime: '07:00' },
+        { day: 5, code: 'off', label: 'استراحت (آف)', hours: 0, startTime: '', endTime: '' },
+        { day: 6, code: 'off', label: 'استراحت (آف)', hours: 0, startTime: '', endTime: '' },
+      ],
+    },
+  })
+
+  const tplStaff = await prisma.shiftTemplate.create({
+    data: {
+      name: 'سیکل ۷ روزه ثابت ستادی (اداری)',
+      type: 'staff',
+      length: 7,
+      shifts: [
+        { day: 1, code: 'office', label: 'اداری (شنبه)', hours: 8.75, startTime: '07:30', endTime: '16:15' },
+        { day: 2, code: 'office', label: 'اداری (یکشنبه)', hours: 8.75, startTime: '07:30', endTime: '16:15' },
+        { day: 3, code: 'office', label: 'اداری (دوشنبه)', hours: 8.75, startTime: '07:30', endTime: '16:15' },
+        { day: 4, code: 'office', label: 'اداری (سه‌شنبه)', hours: 8.75, startTime: '07:30', endTime: '16:15' },
+        { day: 5, code: 'office', label: 'اداری (چهارشنبه)', hours: 8.75, startTime: '07:30', endTime: '16:15' },
+        { day: 6, code: 'off', label: 'تعطیل (پنجشنبه)', hours: 0, startTime: '', endTime: '' },
+        { day: 7, code: 'off', label: 'تعطیل (جمعه)', hours: 0, startTime: '', endTime: '' },
+      ],
+    },
+  })
+
+  void tplRotational1
+
+  const anchorA = new Date()
+  anchorA.setHours(0, 0, 0, 0)
+  anchorA.setDate(anchorA.getDate() - 2)
+
+  const anchorB = new Date(anchorA)
+  anchorB.setDate(anchorB.getDate() + 2)
+
+  const anchorC = new Date(anchorA)
+  anchorC.setDate(anchorC.getDate() + 4)
+
+  const anchorStaff = new Date(anchorA)
+  anchorStaff.setDate(anchorStaff.getDate() - 2)
+
+  await prisma.shiftAssignment.createMany({
+    data: [
+      { templateId: tplRotational2.id, targetType: 'group', targetId: 'A', anchorDate: anchorA },
+      { templateId: tplRotational2.id, targetType: 'group', targetId: 'B', anchorDate: anchorB },
+      { templateId: tplRotational2.id, targetType: 'group', targetId: 'C', anchorDate: anchorC },
+      { templateId: tplStaff.id, targetType: 'group', targetId: 'Staff', anchorDate: anchorStaff },
+    ],
+  })
+
   console.log('Seed complete:')
   console.log(`  Roles: super_admin, admin, operator`)
   console.log(`  Users: ${allOperators.length} (${superAdmin.nationalId} / admin123)`)
@@ -630,6 +704,7 @@ async function main() {
   console.log(`  Audit logs: ${operators.length}`)
   console.log(`  Chat rooms: 3 (عمومی، راهبران، مرکز فرمان)`)
   console.log(`  Posts: 3 (اخبار، بخش‌نامه، آموزش)`)
+  console.log(`  Shift templates: 3 (نوبتی ۹ ساعت، ۱۲ ساعت، ستادی)`)
 
   await prisma.$disconnect()
 }

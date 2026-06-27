@@ -70,6 +70,24 @@ export default function RadioSimulatorPage() {
     }
   };
 
+  const playSystemTone = (freq: number, duration: number) => {
+    try {
+      initAudio()
+      const ctx = audioCtxRef.current
+      if (!ctx || muted) return
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(freq, ctx.currentTime)
+      gain.gain.setValueAtTime(0.08, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
+      osc.start()
+      osc.stop(ctx.currentTime + duration)
+    } catch {}
+  };
+
   // Play standard TETRA start beep (triple chirp) using Web Audio API
   const playStartBeep = () => {
     initAudio()

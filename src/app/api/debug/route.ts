@@ -1,26 +1,32 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
+import { getSessionUser, requireRole, authErrorResponse } from '@/server/rbac/guard'
 
-export async function GET() {
+export async function GET(request: Request) {
+  const user = await getSessionUser(request)
+  if ('error' in user) return authErrorResponse(user)
+
+  const roleErr = requireRole(user, 'super_admin')
+  if (roleErr) return authErrorResponse(roleErr)
+
   try {
-    const user = await prisma.user.findFirst()
-    
-    // Test performance tables
+    const dbUser = await prisma.user.findFirst()
+
     let competencyCount = 0
     let competencyError = ''
     let actionTypeCount = 0
-    
+
     try {
       competencyCount = await prisma.competency.count()
       actionTypeCount = await prisma.performanceActionType.count()
     } catch (e: unknown) {
       competencyError = e instanceof Error ? e.message : String(e)
     }
-    
+
     return NextResponse.json({
       success: true,
       message: 'Database query successful',
-      user: user?.name,
+      user: dbUser?.name,
       competencyCount,
       actionTypeCount,
       competencyError,
@@ -34,13 +40,18 @@ export async function GET() {
   }
 }
 
-// POST /api/debug - Seed performance tables (dev only)
-export async function POST() {
+export async function POST(request: Request) {
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json({ error: 'Not allowed in production' }, { status: 403 })
   }
+
+  const user = await getSessionUser(request)
+  if ('error' in user) return authErrorResponse(user)
+
+  const roleErr = requireRole(user, 'super_admin')
+  if (roleErr) return authErrorResponse(roleErr)
+
   try {
-    // Seed competencies
     const competencies = [
       { id: 'discipline', name: 'انضباط فردی', weight: 1.0, direction: 'positive' },
       { id: 'productivity', name: 'بهره‌وری', weight: 1.5, direction: 'positive' },
@@ -57,7 +68,6 @@ export async function POST() {
       })
     }
 
-    // Seed action types
     const actionTypes = [
       { id: 'a1', competencyId: 'discipline', title: 'حضور به‌موقع در شیفت', defaultScore: 5, maxSeverity: 'L1' },
       { id: 'a2', competencyId: 'productivity', title: 'تحویل زودتر از ددلاین', defaultScore: 10, maxSeverity: 'L1' },
@@ -72,7 +82,6 @@ export async function POST() {
       { id: 'a11', competencyId: 'quality', title: 'نگهداری و مراقبت عالی از تجهیزات', defaultScore: 10, maxSeverity: 'L1' },
       { id: 'a12', competencyId: 'innovation', title: 'پیشنهاد بهبود ایمنی یا افزایش سرعت', defaultScore: 20, maxSeverity: 'L1' },
       { id: 'a13', competencyId: 'teamwork', title: 'همکاری صمیمانه و روحیه تیمی', defaultScore: 10, maxSeverity: 'L1' },
-      // Negative actions
       { id: 'n1', competencyId: 'discipline', title: 'تأخیر / غیبت غیرموجه', defaultScore: -5, maxSeverity: 'L3' },
       { id: 'n2', competencyId: 'quality', title: 'خطای تکراری / سهل‌انگاری', defaultScore: -10, maxSeverity: 'L3' },
       { id: 'n3', competencyId: 'teamwork', title: 'ایجاد تنش در محیط کار', defaultScore: -10, maxSeverity: 'L2' },

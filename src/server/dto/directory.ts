@@ -4,6 +4,7 @@ export const userSearchSchema = z.object({
   q: z.string().optional().default(''),
   role: z.string().optional().default(''),
   status: z.string().optional().default(''),
+  plate: z.string().optional().default(''),
   page: z.coerce.number().int().positive().optional().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
 })

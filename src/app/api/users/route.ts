@@ -19,6 +19,7 @@ export async function GET(request: Request) {
     q: searchParams.get('q') ?? '',
     role: searchParams.get('role') ?? '',
     status: searchParams.get('status') ?? '',
+    plate: searchParams.get('plate') ?? '',
     page: searchParams.get('page') ?? '1',
     pageSize: searchParams.get('pageSize') ?? '20',
   }

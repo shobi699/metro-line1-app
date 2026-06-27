@@ -129,6 +129,14 @@ interface RoleOption {
   name: string
 }
 
+interface DBStatusData {
+  pendingUsers: PendingUser[]
+  pendingSwapRequests: PendingSwap[]
+  pendingAppeals: PendingAppeal[]
+  recentAuditLogs: AuditLogEntry[]
+  roles: RoleOption[]
+}
+
 // ── Web Audio Synth Alert Sound ────────────────────────────────────
 
 function playAlertSound(type: 'info' | 'warning' | 'success') {
@@ -191,6 +199,8 @@ export default function LiveActionsPage() {
   const [notificationPermission, setNotificationPermission] = useState<'default' | 'granted' | 'denied'>('default')
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [activeTab, setActiveTab] = useState<'all' | 'users' | 'swaps' | 'appeals' | 'logs'>('all')
+
+  const isTab = (tab: string) => activeTab === 'all' || activeTab === tab
 
   // Notification and Action States
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -732,9 +742,9 @@ export default function LiveActionsPage() {
               <RefreshCw className="size-8 text-foreground-muted animate-spin" />
               <div className="text-xs text-foreground-muted mt-3">در حال بارگذاری وضعیت صف‌ها...</div>
             </div>
-          ) : (activeTab === 'all' || activeTab === 'users') && users.length === 0 &&
-              (activeTab === 'all' || activeTab === 'swaps') && swaps.length === 0 &&
-              (activeTab === 'all' || activeTab === 'appeals') && appeals.length === 0 ? (
+          ) : isTab('users') && users.length === 0 &&
+              isTab('swaps') && swaps.length === 0 &&
+              isTab('appeals') && appeals.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 bg-surface-container-low/20 border border-border-subtle/30 rounded-2xl text-center space-y-3">
               <CheckCircle2 className="size-10 text-success" />
               <div className="text-sm font-bold text-foreground">همه صف‌ها خالی است</div>
@@ -745,7 +755,7 @@ export default function LiveActionsPage() {
           ) : null}
 
           {/* 1. Users Approval List */}
-          {(activeTab === 'all' || activeTab === 'users') && users.length > 0 && (
+          {isTab('users') && users.length > 0 && (
             <div className="space-y-3">
               <div className="text-xs font-bold text-foreground flex items-center gap-1.5 px-1.5">
                 <User className="size-4 text-warning" />
@@ -801,7 +811,7 @@ export default function LiveActionsPage() {
           )}
 
           {/* 2. Shift Swaps List */}
-          {(activeTab === 'all' || activeTab === 'swaps') && swaps.length > 0 && (
+          {isTab('swaps') && swaps.length > 0 && (
             <div className="space-y-3 pt-2">
               <div className="text-xs font-bold text-foreground flex items-center gap-1.5 px-1.5">
                 <ArrowLeftRight className="size-4 text-info" />
@@ -875,7 +885,7 @@ export default function LiveActionsPage() {
           )}
 
           {/* 3. Performance Appeals List */}
-          {(activeTab === 'all' || activeTab === 'appeals') && appeals.length > 0 && (
+          {isTab('appeals') && appeals.length > 0 && (
             <div className="space-y-3 pt-2">
               <div className="text-xs font-bold text-foreground flex items-center gap-1.5 px-1.5">
                 <Trophy className="size-4 text-accent" />

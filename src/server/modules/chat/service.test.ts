@@ -16,6 +16,9 @@ vi.mock('@/server/db', () => ({
       create: vi.fn(),
       update: vi.fn(),
     },
+    setting: {
+      findUnique: vi.fn(),
+    },
     $transaction: vi.fn(async (ops: unknown[]) => ops),
   },
 }))

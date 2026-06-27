@@ -40,7 +40,8 @@ export async function GET(request: Request) {
 const assignShiftSchema = z.object({
   userId: z.string().min(1, 'شناسه کاربر الزامی است'),
   date: z.string().min(1, 'تاریخ الزامی است'),
-  code: z.enum(['morning', 'evening', 'night', 'off']),
+  code: z.enum(['morning', 'evening', 'night', 'off', 'office']),
+  source: z.enum(['cycle', 'roster', 'manual']).optional(),
   note: z.string().optional().nullable(),
 })
 
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { userId, date, code, note } = parsed.data
+    const { userId, date, code, source, note } = parsed.data
 
     // Standardize date to midnight local/UTC representation
     const dateObj = new Date(date)
@@ -101,12 +102,14 @@ export async function POST(request: Request) {
         },
         update: {
           code,
+          source: source ?? 'manual',
           note: note || null,
         },
         create: {
           userId,
           date: dateObj,
           code,
+          source: source ?? 'manual',
           note: note || null,
         },
       }),
@@ -124,7 +127,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ data: shift, message: 'شیفت با موفقیت ثبت و به‌روزرسانی شد' })
   } catch (error: unknown) {
-    console.error('Error saving shift:', error)
     const message = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
       { error: `خطا در ثبت شیفت: ${message}` },
