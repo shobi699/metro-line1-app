@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx'
 import { hashPassword } from '@/server/auth/password'
 import { prisma } from '@/server/db'
-import { userImportRowSchema } from '@/server/dto/directory'
+import { userImportRowSchema } from '@/lib/zod/directory'
 import { Prisma } from '@/generated/prisma/client'
 import { toEn } from '@/lib/fa'
 
@@ -71,7 +71,7 @@ export async function importUsersFromExcel(
     roleKey: string
     password: string
     status: 'active' | 'suspended' | 'pending'
-    customFields: Record<string, any>
+    customFields: Record<string, unknown>
   }> = []
 
   for (let i = 0; i < rows.length; i++) {
@@ -169,11 +169,11 @@ export async function importUsersFromExcel(
     }
 
     // Extract custom fields from Excel row
-    const userCustomFields: Record<string, any> = {}
+    const userCustomFields: Record<string, unknown> = {}
     for (const def of customFieldDefs) {
       const rawVal = row[def.label] ?? row[def.name]
       if (rawVal !== undefined && rawVal !== null && String(rawVal).trim() !== '') {
-        let val: any = String(rawVal).trim()
+        let val: string | number | boolean = String(rawVal).trim()
         if (def.type === 'number') {
           const num = Number(val)
           val = isNaN(num) ? val : num
@@ -182,7 +182,7 @@ export async function importUsersFromExcel(
         }
         userCustomFields[def.name] = val
       } else if (def.defaultValue !== undefined && def.defaultValue !== null && def.defaultValue !== '') {
-        let val: any = def.defaultValue
+        let val: string | number | boolean = def.defaultValue
         if (def.type === 'boolean') {
           val = val === 'true' || val === 'بله'
         } else if (def.type === 'number') {
@@ -273,15 +273,16 @@ export async function importUsersFromExcel(
           passwordHash,
           status: row.status,
           roleId: resolvedRoleId,
-          customFields: row.customFields,
+          customFields: row.customFields as Prisma.InputJsonValue,
         },
       })
       successCount++
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
       errors.push({
         row: row.rowNumber,
         nationalId: row.nationalId,
-        reason: `خطا در ایجاد کاربر: ${err.message}`,
+        reason: `خطا در ایجاد کاربر: ${message}`,
       })
     }
   }

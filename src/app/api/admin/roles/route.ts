@@ -1,17 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
 import { getSessionUser, requireRole, authErrorResponse } from '@/server/rbac/guard'
-import { z } from 'zod'
-
-const createRoleSchema = z.object({
-  key: z
-    .string()
-    .min(2, 'شناسه نقش حداقل ۲ کاراکتر باشد')
-    .regex(/^[a-z_]+$/, 'شناسه نقش فقط باید شامل حروف انگلیسی کوچک و خط تیره پایین (underscore) باشد'),
-  name: z.string().min(2, 'نام نقش حداقل ۲ کاراکتر باشد'),
-  permissions: z.array(z.string()),
-  rank: z.number().int().min(0).max(100).default(0),
-})
+import { createRoleSchema } from '@/lib/zod/admin'
 
 // GET /api/admin/roles - دریافت لیست نقش‌ها و تعداد کاربران هر نقش
 export async function GET(request: Request) {

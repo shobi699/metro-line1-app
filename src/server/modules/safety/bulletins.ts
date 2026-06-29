@@ -1,5 +1,5 @@
 import { prisma } from '@/server/db'
-import type { CreateBulletinInput } from '@/server/dto/safety'
+import type { CreateBulletinInput } from '@/lib/zod/safety'
 
 export async function createBulletin(data: CreateBulletinInput, actorId: string) {
   const bulletin = await prisma.safetyBulletin.create({

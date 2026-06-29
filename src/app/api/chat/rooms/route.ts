@@ -4,7 +4,7 @@ import {
   requireRole,
   authErrorResponse,
 } from '@/server/rbac/guard'
-import { createGroupRoomSchema } from '@/server/dto/chat'
+import { createGroupRoomSchema } from '@/lib/zod/chat'
 import { listRoomsForUser, createGroupRoom } from '@/server/modules/chat/service'
 
 export async function GET(request: Request) {

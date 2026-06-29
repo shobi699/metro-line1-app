@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
-import { listTasks, createTask, updateTask, deleteTask, shiftTaskSchema } from '@/server/modules/roster'
-import { z } from 'zod'
+import { listTasks, createTask, updateTask, deleteTask } from '@/server/modules/roster'
+import { shiftTaskSchema } from '@/lib/zod/roster'
+import { updateTaskSchema } from '@/lib/zod/shifts'
 
 export async function GET(request: Request) {
   const user = await getSessionUser(request)
@@ -50,11 +51,6 @@ export async function POST(request: Request) {
     )
   }
 }
-
-const updateTaskSchema = z.object({
-  id: z.string().min(1),
-  updates: z.record(z.string(), z.unknown()),
-})
 
 export async function PUT(request: Request) {
   const user = await getSessionUser(request)

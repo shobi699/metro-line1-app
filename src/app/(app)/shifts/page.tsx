@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import dayjs from 'dayjs'
-import 'dayjs-jalali'
+import { jdate, dayjs, gregStr } from '@/lib/dayjs'
 import * as XLSX from 'xlsx'
 import {
   Calendar as CalendarIcon,
@@ -34,6 +33,7 @@ import { Label } from '@/components/ui/label'
 import { useAuthStore } from '@/features/auth'
 import { useShiftsStore } from '@/features/shifts'
 import { getShiftForUserAndDate, MOCK_USERS_LIST } from '@/lib/cycle-math'
+import { normalizeGroup } from '@/lib/shift-grouping'
 import { toFa, jalali } from '@/lib/fa'
 import { cn } from '@/lib/utils'
 
@@ -43,6 +43,8 @@ interface UserProfile {
   nationalId?: string
   roleId?: string
   customFields?: {
+    shift?: string
+    shiftType?: string
     group?: string
     [key: string]: unknown
   }
@@ -136,7 +138,7 @@ export default function ShiftsPage() {
   const [calendarUser, setCalendarUser] = useState<string>('current')
 
   // Date navigation state (Jalali Month/Year)
-  const now = dayjs().locale('jalali')
+  const now = jdate()
   const [currentMonth, setCurrentMonth] = useState(() => now.month() + 1)
   const [currentYear, setCurrentYear] = useState(() => now.year())
 
@@ -192,8 +194,7 @@ export default function ShiftsPage() {
       if (!accessToken) return
       setDbShiftsLoading(true)
       try {
-        const firstDayOfMonth = dayjs()
-          .locale('jalali')
+        const firstDayOfMonth = jdate()
           .year(currentYear)
           .month(currentMonth - 1)
           .date(1)
@@ -243,8 +244,7 @@ export default function ShiftsPage() {
 
   // Calendar Calculation Helpers
   const firstDay = useMemo(() => {
-    return dayjs()
-      .locale('jalali')
+    return jdate()
       .year(currentYear)
       .month(currentMonth - 1)
       .date(1)
@@ -261,10 +261,10 @@ export default function ShiftsPage() {
     const todayStr = dayjs().format('YYYY-MM-DD')
     for (let d = 1; d <= daysInMonth; d++) {
       const dateObj = firstDay.date(d)
-      const dateStr = dateObj.format('YYYY-MM-DD')
+      const dateStr = gregStr(dateObj)
       
-      const userGroup = (calendarUser === 'current' && currentUserProfile?.customFields?.group)
-        ? currentUserProfile.customFields.group
+      const userGroup = (calendarUser === 'current' && currentUserProfile?.customFields)
+        ? normalizeGroup(currentUserProfile.customFields.shift ?? currentUserProfile.customFields.group)
         : undefined
 
       // 1. Get default shift from template cycles
@@ -433,10 +433,10 @@ export default function ShiftsPage() {
     // Loop through all days of this month
     for (let d = 1; d <= repDaysCount; d++) {
       const dateObj = firstDay.date(d)
-      const dateStr = dateObj.format('YYYY-MM-DD')
+      const dateStr = gregStr(dateObj)
 
-      const userGroup = (calendarUser === 'current' && currentUserProfile?.customFields?.group)
-        ? currentUserProfile.customFields.group
+      const userGroup = (calendarUser === 'current' && currentUserProfile?.customFields)
+        ? normalizeGroup(currentUserProfile.customFields.shift ?? currentUserProfile.customFields.group)
         : undefined
 
       // 1. Resolve shift merging overrides
@@ -512,7 +512,7 @@ export default function ShiftsPage() {
     const userName = MOCK_USERS_LIST.find((u) => u.id === calendarUser)?.name || currentUserProfile?.name || 'پرسنل'
     const dataForSheet = [{
       'نام راهبر': userName,
-      'ماه گزارش': firstDay.format('jMMMM jYYYY'),
+      'ماه گزارش': toFa(firstDay.format('MMMM YYYY')),
       'تعداد شیفت‌های فعال': reportData.workedShiftsCount,
       'ساعات حضور موظفی': reportData.totalShiftHours,
       'اضافه کار تأیید شده (ساعت)': reportData.totalOvertimeHours,
@@ -675,7 +675,7 @@ export default function ShiftsPage() {
                     </option>
                     {MOCK_USERS_LIST.filter(u => u.id !== 'current').map((u) => (
                       <option key={u.id} value={u.id} className="text-xs bg-neutral-900 text-foreground">
-                        {u.name} (گروه {u.group === 'Staff' ? 'ستادی' : u.group})
+                        {u.name} (گروه {normalizeGroup(u.group)})
                       </option>
                     ))}
                   </select>
@@ -686,7 +686,7 @@ export default function ShiftsPage() {
                 {/* Month Controller */}
                 <div className="flex items-center justify-between border-b border-border-subtle/40 pb-3 print:hidden">
                   <h2 className="text-sm font-semibold text-accent flex items-center gap-1.5">
-                    {firstDay.format('jMMMM jYYYY')}
+                    {toFa(firstDay.format('MMMM YYYY'))}
                     {dbShiftsLoading && <Loader2 className="size-4 animate-spin text-accent" />}
                   </h2>
                   <div className="flex gap-2">
@@ -700,7 +700,7 @@ export default function ShiftsPage() {
                 </div>
 
                 <div className="hidden print:block text-center font-bold text-lg mb-4">
-                  برنامه شیفت کاری - {firstDay.format('jMMMM jYYYY')} - پرسنل: {MOCK_USERS_LIST.find((u) => u.id === calendarUser)?.name || currentUserProfile?.name}
+                  برنامه شیفت کاری - {toFa(firstDay.format('MMMM YYYY'))} - پرسنل: {MOCK_USERS_LIST.find((u) => u.id === calendarUser)?.name || currentUserProfile?.name}
                 </div>
 
                 {/* Weekdays headers */}
@@ -919,7 +919,7 @@ export default function ShiftsPage() {
                 <CardTitle className="text-sm font-bold flex items-center justify-between">
                   <span>کارهای روزانه و جزئیات شیفت</span>
                   <Badge variant="outline" className="font-data-mono text-accent bg-accent/5 border-accent/20">
-                    {toFa(selectedDayInfo.data?.dateObj?.locale('jalali')?.format('dddd jD jMMMM') ?? '')}
+                    {toFa(selectedDayInfo.data?.dateObj?.format('dddd D MMMM') ?? '')}
                   </Badge>
                 </CardTitle>
               </CardHeader>

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { refreshSchema } from '@/server/dto/auth'
+import { refreshSchema } from '@/lib/zod/auth'
 import { verifyRefreshToken, issueAccessToken, issueRefreshToken } from '@/server/auth/jwt'
 import { prisma } from '@/server/db'
 import { coercePermissions, rankForRoleKey } from '@/server/rbac/permissions'

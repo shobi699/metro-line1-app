@@ -1,7 +1,6 @@
 import { prisma } from '@/server/db'
-import type { CreateGroupRoomInput, SendMessageInput } from '@/server/dto/chat'
+import type { CreateGroupRoomInput, SendMessageInput } from '@/lib/zod/chat'
 import { publishMessage } from '@/server/realtime/bus'
-import { getSettingValue } from '@/server/modules/settings/service'
 
 export interface RoomSummary {
   id: string

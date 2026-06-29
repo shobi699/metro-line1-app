@@ -4,7 +4,7 @@ import {
   requireRole,
   authErrorResponse,
 } from '@/server/rbac/guard'
-import { updateTicketStatusSchema } from '@/server/dto/safety'
+import { updateTicketStatusSchema } from '@/lib/zod/safety'
 import { updateTicketStatus } from '@/server/modules/tickets/service'
 
 export async function POST(

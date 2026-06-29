@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
-import { approveUserSchema } from '@/server/dto/auth'
+import { approveUserSchema } from '@/lib/zod/auth'
 import {
   getSessionUser,
   requireRole,

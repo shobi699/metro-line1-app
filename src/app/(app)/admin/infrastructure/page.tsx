@@ -89,7 +89,7 @@ export default function InfrastructurePage() {
   const [tripError, setTripError] = useState('')
 
   // وضعیت رادیو
-  const [radioChannels, setRadioChannels] = useState([
+  const [radioChannels, _setRadioChannels] = useState([
     { name: 'کانال اصلی راهبران (CH 1)', frequency: '440.125 MHz', status: 'stable', load: '65%' },
     { name: 'کانال خدمات ایستگاهی (CH 2)', frequency: '442.250 MHz', status: 'stable', load: '32%' },
     { name: 'کانال دپو و مانور (CH 3)', frequency: '445.500 MHz', status: 'stable', load: '18%' },

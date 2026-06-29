@@ -44,8 +44,6 @@ import {
   Wrench,
   CheckCircle2,
 } from 'lucide-react'
-import dayjs from 'dayjs'
-import 'dayjs-jalali'
 
 // ── Types ───────────────────────────────────────────────────────────
 
@@ -168,7 +166,7 @@ function getTrainPosition(train: ActiveTrain) {
 function playAlertSound(type: 'info' | 'warning' | 'success') {
   if (typeof window === 'undefined') return
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const ctx = new (window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)()
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
 
@@ -201,15 +199,15 @@ function playAlertSound(type: 'info' | 'warning' | 'success') {
       osc.start(ctx.currentTime)
       osc.stop(ctx.currentTime + 0.2)
     }
-  } catch (e) {
-    console.warn('Audio Context blocked or unsupported:', e)
+  } catch {
+    // audio context not supported
   }
 }
 
 function playEmergencyAlarm(active: boolean) {
   if (typeof window === 'undefined' || !active) return
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const ctx = new (window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)()
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
 
@@ -226,8 +224,8 @@ function playEmergencyAlarm(active: boolean) {
 
     osc.start(ctx.currentTime)
     osc.stop(ctx.currentTime + 0.45)
-  } catch (e) {
-    console.warn('Audio Context blocked or unsupported:', e)
+  } catch {
+    // audio context not supported
   }
 }
 

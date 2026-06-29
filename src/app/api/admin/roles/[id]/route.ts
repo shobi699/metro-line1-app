@@ -1,13 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
 import { getSessionUser, requireRole, authErrorResponse } from '@/server/rbac/guard'
-import { z } from 'zod'
-
-const updateRoleSchema = z.object({
-  name: z.string().min(2, 'نام نقش حداقل ۲ کاراکتر باشد').optional(),
-  permissions: z.array(z.string()).optional(),
-  rank: z.number().int().min(0).max(100).optional(),
-})
+import { updateRoleSchema } from '@/lib/zod/admin'
 
 // PATCH /api/admin/roles/[id] - ویرایش نقش و دسترسی‌های آن
 export async function PATCH(

@@ -707,7 +707,7 @@ export default function DirectoryPage() {
                         currentUserId={user?.id}
                         visibleFields={visibleFields ?? undefined}
                         onMessage={(userId) => router.push(`/chat?dm=${userId}`)}
-                        onProfile={(usr) => setSelectedDetailUser(usr)}
+                        onProfile={(usr) => setSelectedDetailUser({ ...usr, createdAt: usr.createdAt ?? '' })}
                       />
                     ))}
                   </div>
@@ -789,7 +789,7 @@ export default function DirectoryPage() {
                 <label className="text-[10px] font-bold text-neutral-400 block">نوع فیلد:</label>
                 <select
                   value={newFieldType}
-                  onChange={(e) => setNewFieldType(e.target.value as any)}
+                  onChange={(e) => setNewFieldType(e.target.value as 'text' | 'number' | 'select' | 'date' | 'boolean')}
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:border-red-500 outline-none"
                 >
                   <option value="text">متن (Text)</option>
@@ -1109,7 +1109,7 @@ export default function DirectoryPage() {
                       {/* Vehicle Plates (graphical) */}
                       {(() => {
                         const canShowVehiclesDetail = true
-                        const detailVehicles = (selectedDetailUser.customFields?.vehicles as any[]) || []
+                        const detailVehicles = (selectedDetailUser.customFields?.vehicles as Record<string, unknown>[]) || []
                         if (!canShowVehiclesDetail || detailVehicles.length === 0) return null
                         return (
                           <div className="mt-3 space-y-2">

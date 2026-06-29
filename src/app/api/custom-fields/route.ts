@@ -8,7 +8,7 @@ import {
   listCustomFieldDefs,
   createCustomFieldDef,
 } from '@/server/modules/custom-fields/service'
-import { customFieldDefSchema } from '@/server/dto/directory'
+import { customFieldDefSchema } from '@/lib/zod/directory'
 
 export async function GET(request: Request) {
   const user = await getSessionUser(request)

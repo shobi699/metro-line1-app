@@ -470,8 +470,8 @@ export async function ensureDefaultSettingsExist() {
         }
       }
     }
-  } catch (err) {
-    console.error('Error ensuring default settings exist:', err)
+  } catch {
+    // settings init failed silently
   }
 }
 
@@ -493,8 +493,7 @@ export async function getSettingValue<T = string | number | boolean>(key: string
       return fallback
     }
     return JSON.parse(setting.value) as T
-  } catch (error) {
-    console.error(`Error getting setting value for key ${key}:`, error)
+  } catch {
     return fallback
   }
 }

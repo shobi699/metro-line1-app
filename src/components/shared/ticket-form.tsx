@@ -41,13 +41,13 @@ export function TicketForm({ onCreated }: TicketFormProps) {
   const [allowNoWagon, setAllowNoWagon] = useState(true)
   const [aiPredictedPriority, setAiPredictedPriority] = useState<string>('')
   const [aiReason, setAiReason] = useState<string>('')
-  const [aiMatchedKeywords, setAiMatchedKeywords] = useState<string[]>([])
+  const [_aiMatchedKeywords, setAiMatchedKeywords] = useState<string[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const imgRef = useRef<HTMLImageElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function fetchWithAuth(url: string, init?: RequestInit) {
-    let currentToken = useAuthStore.getState().accessToken
+    const currentToken = useAuthStore.getState().accessToken
     const rToken = useAuthStore.getState().refreshToken
 
     const headers = new Headers(init?.headers)
@@ -78,8 +78,8 @@ export function TicketForm({ onCreated }: TicketFormProps) {
             res = await fetch(url, { ...init, headers })
           }
         }
-      } catch (err) {
-        console.error('Failed to auto-refresh token:', err)
+      } catch {
+        // token refresh failed silently
       }
     }
     return res

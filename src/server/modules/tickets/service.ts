@@ -1,6 +1,6 @@
 import { Prisma } from '@/generated/prisma/client'
 import { prisma } from '@/server/db'
-import type { CreateTicketInput, UpdateTicketStatusInput } from '@/server/dto/safety'
+import type { CreateTicketInput, UpdateTicketStatusInput } from '@/lib/zod/safety'
 import { getSettingValue } from '@/server/modules/settings/service'
 
 export async function predictTicketPriority(title: string, description?: string) {

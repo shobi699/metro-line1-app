@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
-import { verifyOtpSchema } from '@/server/dto/auth'
-import { otps, resetTokens } from '@/server/auth/otp-store'
-import crypto from 'crypto'
+import { verifyOtpSchema } from '@/lib/zod/auth'
+import { otpStore } from '@/server/auth/otp-store'
 
 export async function POST(request: Request) {
   try {
@@ -17,7 +16,7 @@ export async function POST(request: Request) {
 
     const { nationalId, code } = parsed.data
 
-    const otpData = otps.get(nationalId)
+    const otpData = await otpStore.getOtp(nationalId)
 
     if (!otpData) {
       return NextResponse.json(
@@ -27,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     if (otpData.expiresAt < Date.now()) {
-      otps.delete(nationalId)
+      await otpStore.deleteOtp(nationalId)
       return NextResponse.json(
         { error: 'کد تایید منقضی شده است. لطفا مجددا تلاش کنید' },
         { status: 400 },
@@ -41,15 +40,15 @@ export async function POST(request: Request) {
       )
     }
 
-    // OTP is verified. Remove from OTP store
-    otps.delete(nationalId)
+    // OTP is verified. Remove from store
+    await otpStore.deleteOtp(nationalId)
 
     // Generate a temporary secure token for password resetting
     const resetToken = crypto.randomUUID()
     const expiresAt = Date.now() + 5 * 60 * 1000 // 5 minutes validity
 
     // Store the reset token
-    resetTokens.set(resetToken, {
+    await otpStore.setReset(resetToken, {
       nationalId,
       expiresAt,
     })

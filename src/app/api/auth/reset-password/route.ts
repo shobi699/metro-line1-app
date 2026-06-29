@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
-import { resetPasswordSchema } from '@/server/dto/auth'
-import { resetTokens } from '@/server/auth/otp-store'
+import { resetPasswordSchema } from '@/lib/zod/auth'
+import { otpStore } from '@/server/auth/otp-store'
 import { hashPassword } from '@/server/auth/password'
 
 export async function POST(request: Request) {
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
     const { token, password } = parsed.data
 
-    const tokenData = resetTokens.get(token)
+    const tokenData = await otpStore.getReset(token)
 
     if (!tokenData) {
       return NextResponse.json(
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     }
 
     if (tokenData.expiresAt < Date.now()) {
-      resetTokens.delete(token)
+      await otpStore.deleteReset(token)
       return NextResponse.json(
         { error: 'توکن بازنشانی منقضی شده است. لطفا دوباره مراحل بازیابی را آغاز کنید' },
         { status: 400 },
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     })
 
     if (!user) {
-      resetTokens.delete(token)
+      await otpStore.deleteReset(token)
       return NextResponse.json(
         { error: 'کاربر مورد نظر یافت نشد' },
         { status: 404 },
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     })
 
     // Consume the token
-    resetTokens.delete(token)
+    await otpStore.deleteReset(token)
 
     return NextResponse.json({
       success: true,

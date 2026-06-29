@@ -140,6 +140,10 @@ model User {
   nominations               Nomination[]
   shiftNotes                ShiftNote[]
   shiftTasks                ShiftTask[]
+  rosterVersionsUploaded    RosterVersion[]     @relation("RosterVersionUploader")
+  rosterVersionsPublished   RosterVersion[]     @relation("RosterVersionPublisher")
+  tripAssignmentsMatched    TripAssignment[]    @relation("TripAssignmentUser")
+  tripAssignmentsConfirmed  TripAssignment[]    @relation("TripAssignmentConfirmer")
 
   @@index([roleId])
   @@index([status])
@@ -887,4 +891,88 @@ model Nomination {
   @@unique([periodId, employeeId])
   @@index([periodId])
   @@index([employeeId])
+}
+
+model RosterDay {
+  id               String          @id @default(cuid())
+  lineCode         String          @default("LINE_1")
+  jalaliDate       String          @unique
+  gregorianDate    DateTime
+  weekday          String?
+  title            String?
+  schedulingTitle  String?
+  processingNumber Int?
+  issuedByName     String?
+  status           String          @default("DRAFT") // DRAFT | PROCESSING | REVIEW | PUBLISHED | ARCHIVED
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  versions         RosterVersion[]
+}
+
+model RosterVersion {
+  id               String          @id @default(cuid())
+  rosterDayId      String
+  versionNo        Int             @default(1)
+  fileUrl          String?
+  originalFileName String?
+  checksum         String?
+  status           String          @default("UPLOADED") // UPLOADED | PARSED | VALIDATED | PUBLISHED | REJECTED
+  uploadedById     String?
+  uploadedAt       DateTime        @default(now())
+  publishedById    String?
+  publishedAt      DateTime?
+  changeReason     String?
+  changeSummary    String?
+
+  rosterDay        RosterDay       @relation(fields: [rosterDayId], references: [id], onDelete: Cascade)
+  uploadedBy       User?           @relation("RosterVersionUploader", fields: [uploadedById], references: [id])
+  publishedBy      User?           @relation("RosterVersionPublisher", fields: [publishedById], references: [id])
+  trips            Trip[]
+
+  @@index([rosterDayId])
+}
+
+model Trip {
+  id                 String           @id @default(cuid())
+  rosterVersionId    String
+  rowNo              Int
+  trainNumber        String?
+  direction          String           // TAJRISH_TO_SHAHRREY | SHAHRREY_TO_TAJRISH
+  originStation      String?
+  destinationStation String?
+  departureTime      String?          // HH:mm:ss
+  arrivalTime        String?          // HH:mm:ss
+  operationalNote    String?
+  status             String           @default("NORMAL") // NORMAL | EMPTY | CANCELLED | DEPOT | SPECIAL
+
+  rosterVersion      RosterVersion    @relation(fields: [rosterVersionId], references: [id], onDelete: Cascade)
+  assignments        TripAssignment[]
+
+  @@index([rosterVersionId])
+}
+
+model TripAssignment {
+  id             String           @id @default(cuid())
+  tripId         String
+  role           String           // H1 | H2 | T | R
+  rawName        String?
+  matchedUserId  String?
+  personnelNo    String?
+  matchScore     Float?
+  matchStatus    String           @default("UNMATCHED") // AUTO_MATCHED | NEEDS_REVIEW | MANUAL_MATCHED | UNMATCHED
+  confirmedById  String?
+  confirmedAt    DateTime?
+  acknowledgedAt DateTime?        // Confirm Sight
+  readyAt        DateTime?
+  handoverAt     DateTime?
+  disputed       Boolean          @default(false)
+  disputeNote    String?
+
+  trip           Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  matchedUser    User?            @relation("TripAssignmentUser", fields: [matchedUserId], references: [id])
+  confirmedBy    User?            @relation("TripAssignmentConfirmer", fields: [confirmedById], references: [id])
+
+  @@index([tripId])
+  @@index([matchedUserId])
 }

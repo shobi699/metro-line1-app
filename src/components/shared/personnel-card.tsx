@@ -19,10 +19,11 @@ interface PersonnelCardProps {
     status: string
     customFields: Record<string, unknown> | null
     role: { key: string; name: string }
+    createdAt?: string
   }
   currentUserId?: string
   onMessage?: (userId: string) => void
-  onProfile?: (user: any) => void
+  onProfile?: (user: PersonnelCardProps['user']) => void
   /**
    * List of field keys that non-admin users are allowed to see.
    * `undefined` means "not loaded yet" — will hide everything for safety.
@@ -216,8 +217,8 @@ export function PersonnelCard({ user, currentUserId, onMessage, onProfile, visib
   })
 
   // Extract vehicles for graphical plate display
-  const customFields = (user.customFields as Record<string, any>) || {}
-  const vehicles = (customFields.vehicles as any[]) || []
+  const customFields = (user.customFields as Record<string, unknown>) || {}
+  const vehicles = (customFields.vehicles as Record<string, unknown>[]) || []
   const canShowVehicles = true
 
   return (

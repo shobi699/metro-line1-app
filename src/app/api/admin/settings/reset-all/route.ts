@@ -20,7 +20,6 @@ export async function POST(request: Request) {
       data: updated,
     })
   } catch (error: unknown) {
-    console.error('Error resetting all settings:', error)
     const message = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
       { error: message || 'خطا در بازگردانی تنظیمات به پیش‌فرض' },

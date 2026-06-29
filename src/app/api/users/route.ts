@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { userSearchSchema } from '@/server/dto/directory'
+import { userSearchSchema } from '@/lib/zod/directory'
 import { listUsers } from '@/server/modules/directory/service'
 import {
   getSessionUser,

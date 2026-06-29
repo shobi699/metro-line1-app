@@ -52,10 +52,10 @@ describe('content service', () => {
   })
 
   it('generates a unique slug from the title on create', async () => {
-    vi.mocked(prisma.post.create).mockImplementation(async (args: never) => {
+    vi.mocked(prisma.post.create).mockImplementation((async (args: any) => {
       const a = args as { data: { slug: string } }
-      return { id: 'p1', ...a.data } as never
-    })
+      return { id: 'p1', ...a.data }
+    }) as any)
 
     await createPost(
       {

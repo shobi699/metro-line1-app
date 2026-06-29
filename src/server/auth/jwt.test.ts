@@ -13,7 +13,7 @@ beforeAll(() => {
 
 describe('JWT', () => {
   it('issues and verifies access token', async () => {
-    const token = await issueAccessToken('user-1', '0000000000', 'admin')
+    const token = await issueAccessToken('user-1', '0000000000', 'admin', 1, [])
     const payload = await verifyAccessToken(token)
 
     expect(payload.sub).toBe('user-1')

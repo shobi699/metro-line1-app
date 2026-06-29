@@ -11,25 +11,17 @@ import {
   VolumeX,
   Play,
   Pause,
-  Activity,
   UserCheck,
   CheckCircle2,
   XCircle,
   Clock,
   User,
-  Shield,
   ArrowLeftRight,
   Trophy,
   History,
-  Sparkles,
   Zap,
   Check,
-  AlertTriangle,
   RefreshCw,
-  Search,
-  Eye,
-  Radio,
-  FileSpreadsheet,
 } from 'lucide-react'
 
 // ── Types ───────────────────────────────────────────────────────────
@@ -142,7 +134,7 @@ interface DBStatusData {
 function playAlertSound(type: 'info' | 'warning' | 'success') {
   if (typeof window === 'undefined') return
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const ctx = new (window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)()
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
 
@@ -174,8 +166,8 @@ function playAlertSound(type: 'info' | 'warning' | 'success') {
       osc.start(ctx.currentTime)
       osc.stop(ctx.currentTime + 0.25)
     }
-  } catch (e) {
-    console.warn('Audio Context blocked or unsupported:', e)
+  } catch {
+    // audio context not supported
   }
 }
 
@@ -263,7 +255,6 @@ export default function LiveActionsPage() {
         setRoles(data.roles)
 
         // Check for new items to sound notification
-        let hasNew = false
         const currentIds = new Set<string>()
 
         data.pendingUsers.forEach((u) => {
@@ -271,7 +262,6 @@ export default function LiveActionsPage() {
           if (!knownIdsRef.current.has(u.id)) {
             if (initializedRef.current) {
               triggerToast('ثبت‌نام جدید پرسنل', `کاربر جدید «${u.name}» با کدملی ${toFa(u.nationalId)} ثبت‌نام کرده و منتظر تایید است.`, 'warning')
-              hasNew = true
             }
             knownIdsRef.current.add(u.id)
           }
@@ -282,7 +272,6 @@ export default function LiveActionsPage() {
           if (!knownIdsRef.current.has(s.id)) {
             if (initializedRef.current) {
               triggerToast('درخواست جدید جابجایی شیفت', `درخواست جابجایی از طرف «${s.requester.name}» ثبت شد.`, 'info')
-              hasNew = true
             }
             knownIdsRef.current.add(s.id)
           }
@@ -293,7 +282,6 @@ export default function LiveActionsPage() {
           if (!knownIdsRef.current.has(a.id)) {
             if (initializedRef.current) {
               triggerToast('اعتراض جدید به نمره عملکرد', `پرسنل «${a.employee.name}» به ثبت خطا اعتراض کرده است.`, 'info')
-              hasNew = true
             }
             knownIdsRef.current.add(a.id)
           }
@@ -309,8 +297,8 @@ export default function LiveActionsPage() {
         initializedRef.current = true
         setLastUpdated(new Date())
       }
-    } catch (e) {
-      console.error('Error fetching live control data:', e)
+    } catch {
+      // live control data fetch failed silently
     } finally {
       if (!silent) setLoading(false)
     }

@@ -9,7 +9,7 @@ import {
   CardContent,
 } from '@/components/ui/card'
 import { ArrowLeftRight, Clock, User, Calendar, Check, X, Inbox } from 'lucide-react'
-import { toFa, jalali, faTime } from '@/lib/fa'
+import { jalali, faTime } from '@/lib/fa'
 
 interface SwapRequest {
   id: string

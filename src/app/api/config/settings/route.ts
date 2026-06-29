@@ -80,7 +80,7 @@ export async function GET(request: Request) {
         },
       },
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'خطا در دریافت تنظیمات' },
       { status: 500 }

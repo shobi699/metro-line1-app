@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
-import { Award, Trophy, CheckCircle, XCircle, Play, AlertCircle, FileText, HelpCircle, Clock, Printer, Train, ShieldCheck } from 'lucide-react'
+import { Award, Trophy, CheckCircle, Play, FileText, Clock, Printer, Train, ShieldCheck } from 'lucide-react'
 import { toFa } from '@/lib/fa'
 
 interface Certificate {
@@ -46,49 +46,6 @@ interface PendingExam {
   dueDate?: string
 }
 
-const COMPLETED_EXAMS: ExamRecord[] = [
-  {
-    id: 'ex-1',
-    title: 'مقررات عمومی سیر و حرکت خط ۱ (سیگنال‌ها)',
-    slug: 'مقررات-عمومی-سیر-و-حرکت-خط-۱-سیگنال‌ها',
-    totalQuestions: 3,
-    correctAnswers: 3,
-    score: 100,
-    status: 'passed',
-    date: '۱۴۰۵/۰۲/۱۵',
-  },
-  {
-    id: 'ex-2',
-    title: 'عیب‌یابی سیستم مکانیزم درب قطارهای سری ۱۰۰',
-    slug: 'عیب‌یابی-سیستم-مکانیزم-درب-قطارهای-سری-۱۰۰',
-    totalQuestions: 4,
-    correctAnswers: 3,
-    score: 75,
-    status: 'passed',
-    date: '۱۴۰۵/۰۳/۰۱',
-  },
-]
-
-const PENDING_EXAMS: PendingExam[] = [
-  {
-    id: 'ex-p1',
-    title: 'پروتکل ایمنی تخلیه مسافرین در داخل تونل مترو',
-    slug: 'پروتکل-ایمنی-تخلیه-مسافرین-در-داخل-تونل-مترو',
-    category: 'ایمنی و بحران',
-    questionCount: 3,
-    mandatory: true,
-    dueDate: '۱۴۰۵/۰۴/۱۵',
-  },
-  {
-    id: 'ex-p2',
-    title: 'سیستم‌های مکانیکی کلاچ و بوژی قطارهای درون‌شهری',
-    slug: 'سیستم‌های-مکانیکی-کلاچ-و-بوژی',
-    category: 'عیب‌یابی فنی',
-    questionCount: 4,
-    mandatory: false,
-  },
-]
-
 export default function MyExamsPage() {
   const user = useAuthStore((s) => s.user)
   const accessToken = useAuthStore((s) => s.accessToken)
@@ -96,7 +53,7 @@ export default function MyExamsPage() {
   const [completedList, setCompletedList] = useState<ExamRecord[]>([])
   const [pendingList, setPendingList] = useState<PendingExam[]>([])
   const [points, setPoints] = useState(150) // امتیازهای گیمیفیکیشن آموزشی
-  const [rank, setRank] = useState(12) // رتبه در میان پرسنل خط ۱
+  const [rank] = useState(12) // رتبه در میان پرسنل خط ۱
   const [selectedCert, setSelectedCert] = useState<Certificate | null>(null)
 
   // تلاش برای لود از دیتابیس در صورت لزوم
@@ -119,7 +76,7 @@ export default function MyExamsPage() {
         })
         if (postsRes.ok) {
           const data = await postsRes.json()
-          const allPosts = data.data as any[]
+          const allPosts = (data.data ?? []) as { id: string; title: string; slug: string; hasQuiz: boolean; isCompleted: boolean; category?: string; type?: string; mandatory?: boolean; createdAt: string }[]
 
           // فیلتر کردن پست‌هایی که دارای آزمون هستند (آموزشی و چندرسانه‌ای)
           const quizPosts = allPosts.filter((p) => p.hasQuiz === true)
@@ -147,14 +104,14 @@ export default function MyExamsPage() {
               slug: p.slug,
               category: p.category || (p.type === 'gallery' ? 'گالری چندرسانه‌ای' : 'آموزش تخصصی'),
               questionCount: 3,
-              mandatory: p.mandatory,
+              mandatory: p.mandatory ?? false,
             }))
 
           setCompletedList(completed)
           setPendingList(pending)
         }
-      } catch (err) {
-        console.error('Failed to load dynamic exams:', err)
+      } catch {
+        // dynamic exams load failed silently
       }
     }
     loadExams()

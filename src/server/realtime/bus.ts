@@ -1,6 +1,7 @@
-import { EventEmitter } from 'node:events'
+/** Broadcasts chat messages via Durable Objects instead of in-process EventEmitter. */
 
-/** payload رویداد پیام جدید که از طریق SSE به کلاینت‌ها می‌رسد. */
+import type { DurableObjectNamespace } from '../cloudflare-types'
+
 export interface ChatMessageEvent {
   roomId: string
   message: {
@@ -16,37 +17,25 @@ export interface ChatMessageEvent {
   }
 }
 
-const CHANNEL = 'chat:message'
-
-// EventEmitter تک‌نمونه روی globalThis تا در برابر hot-reload در حالت توسعه مقاوم بماند.
-const globalForBus = globalThis as unknown as { __chatBus?: EventEmitter }
-
-function getEmitter(): EventEmitter {
-  if (!globalForBus.__chatBus) {
-    const emitter = new EventEmitter()
-    emitter.setMaxListeners(0) // هر اتصال SSE یک listener است
-    globalForBus.__chatBus = emitter
-  }
-  return globalForBus.__chatBus
-}
-
-export function publishMessage(event: ChatMessageEvent): void {
-  getEmitter().emit(CHANNEL, event)
-}
-
 /**
- * اشتراک در پیام‌های روم‌های مشخص. handler فقط برای رویدادهای روم‌های عضو
- * فراخوانی می‌شود. تابع لغو اشتراک بازگردانده می‌شود.
+ * Publish a message to the Durable Object for the given room.
+ * On Cloudflare, the DO binding is on globalThis. In local dev without a DO,
+ * this is a no-op (messages are still persisted to DB).
  */
-export function subscribeMessages(
-  roomIds: string[],
-  handler: (event: ChatMessageEvent) => void,
-): () => void {
-  const rooms = new Set(roomIds)
-  const listener = (event: ChatMessageEvent) => {
-    if (rooms.has(event.roomId)) handler(event)
-  }
-  const emitter = getEmitter()
-  emitter.on(CHANNEL, listener)
-  return () => emitter.off(CHANNEL, listener)
+export async function publishMessage(event: ChatMessageEvent): Promise<void> {
+  const ns = (globalThis as unknown as { CHAT_DO?: DurableObjectNamespace }).CHAT_DO
+  if (!ns) return
+
+  const id = ns.idFromName(event.roomId)
+  const stub = ns.get(id)
+
+  await stub.fetch('https://chat-do/broadcast', {
+    method: 'POST',
+    body: JSON.stringify({
+      type: 'message',
+      roomId: event.roomId,
+      data: event.message,
+    }),
+  })
 }
+

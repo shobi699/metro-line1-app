@@ -20,7 +20,6 @@ export interface RuleViolation {
   message: string
 }
 
-const MAX_CONSECUTIVE_SHIFTS = 6
 
 function getShiftInterval(date: Date, code: ShiftCode): { start: Date; end: Date } | null {
   if (code === 'off') return null

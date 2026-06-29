@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
-import { directRoomSchema } from '@/server/dto/chat'
+import { directRoomSchema } from '@/lib/zod/chat'
 import { getOrCreateDirectRoom } from '@/server/modules/chat/service'
 
 export async function POST(request: Request) {

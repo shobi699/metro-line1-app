@@ -125,7 +125,12 @@ async function main() {
   })
 
   const operators = []
-  for (const op of operatorNames) {
+  for (let i = 0; i < operatorNames.length; i++) {
+    const op = operatorNames[i]
+    // چرخش گروه و نوع شیفت: A/B/C چرخشی + هر چهارمین نفر ستادی
+    const isStaff = i % 4 === 3
+    const group = isStaff ? 'ستادی' : (['A', 'B', 'C'][i % 3])
+    const shiftType = isStaff ? 'ستادی' : (i % 2 === 0 ? '9-15' : '12-24')
     const user = await prisma.user.upsert({
       where: { nationalId: op.nationalId },
       update: {},
@@ -136,6 +141,7 @@ async function main() {
         passwordHash,
         status: 'active',
         roleId: roles.operator,
+        customFields: { shift: group, shiftType },
       },
     })
     operators.push(user)
@@ -670,8 +676,6 @@ async function main() {
     },
   })
 
-  void tplRotational1
-
   const anchorA = new Date()
   anchorA.setHours(0, 0, 0, 0)
   anchorA.setDate(anchorA.getDate() - 2)
@@ -685,12 +689,20 @@ async function main() {
   const anchorStaff = new Date(anchorA)
   anchorStaff.setDate(anchorStaff.getDate() - 2)
 
+  // انتساب بر اساس کلید ترکیبی «{نوع شیفت}:{گروه}»:
+  // نوع 9-15 → الگوی ۹ ساعته، نوع 12-24 → الگوی ۱۲ ساعته، ستادی → الگوی ستادی.
   await prisma.shiftAssignment.createMany({
     data: [
-      { templateId: tplRotational2.id, targetType: 'group', targetId: 'A', anchorDate: anchorA },
-      { templateId: tplRotational2.id, targetType: 'group', targetId: 'B', anchorDate: anchorB },
-      { templateId: tplRotational2.id, targetType: 'group', targetId: 'C', anchorDate: anchorC },
-      { templateId: tplStaff.id, targetType: 'group', targetId: 'Staff', anchorDate: anchorStaff },
+      // گروه‌های ۹ ساعته
+      { templateId: tplRotational1.id, targetType: 'group', targetId: '9-15:A', anchorDate: anchorA },
+      { templateId: tplRotational1.id, targetType: 'group', targetId: '9-15:B', anchorDate: anchorB },
+      { templateId: tplRotational1.id, targetType: 'group', targetId: '9-15:C', anchorDate: anchorC },
+      // گروه‌های ۱۲ ساعته
+      { templateId: tplRotational2.id, targetType: 'group', targetId: '12-24:A', anchorDate: anchorA },
+      { templateId: tplRotational2.id, targetType: 'group', targetId: '12-24:B', anchorDate: anchorB },
+      { templateId: tplRotational2.id, targetType: 'group', targetId: '12-24:C', anchorDate: anchorC },
+      // ستادی
+      { templateId: tplStaff.id, targetType: 'group', targetId: 'ستادی:ستادی', anchorDate: anchorStaff },
     ],
   })
 

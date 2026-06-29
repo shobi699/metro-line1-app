@@ -1,13 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
-import { z } from 'zod'
-
-const notificationSettingsSchema = z.object({
-  circulars: z.boolean(),
-  chat: z.boolean(),
-  shifts: z.boolean(),
-})
+import { notificationSettingsSchema } from '@/lib/zod/profile'
 
 export async function PATCH(request: Request) {
   const user = await getSessionUser(request)

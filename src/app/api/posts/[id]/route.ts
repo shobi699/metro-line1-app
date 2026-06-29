@@ -5,7 +5,7 @@ import {
   authErrorResponse,
 } from '@/server/rbac/guard'
 import { prisma } from '@/server/db'
-import { updatePostSchema } from '@/server/dto/content'
+import { updatePostSchema } from '@/lib/zod/content'
 import { updatePost, deletePost } from '@/server/modules/content/service'
 
 export async function GET(

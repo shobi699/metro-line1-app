@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
-import { sendMessageSchema } from '@/server/dto/chat'
+import { sendMessageSchema } from '@/lib/zod/chat'
 import { listMessages, sendMessage } from '@/server/modules/chat/service'
 
 export async function GET(

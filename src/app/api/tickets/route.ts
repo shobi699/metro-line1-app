@@ -4,7 +4,7 @@ import {
   requireRole,
   authErrorResponse,
 } from '@/server/rbac/guard'
-import { createTicketSchema } from '@/server/dto/safety'
+import { createTicketSchema } from '@/lib/zod/safety'
 import { createTicket, listTickets, getTicketStats } from '@/server/modules/tickets/service'
 
 export async function GET(request: Request) {

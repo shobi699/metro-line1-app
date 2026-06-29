@@ -5,11 +5,7 @@ import {
   requirePermission,
   authErrorResponse,
 } from '@/server/rbac/guard'
-import { z } from 'zod'
-
-const resetSettingSchema = z.object({
-  key: z.string().min(1, 'کلید تنظیم الزامی است'),
-})
+import { resetSettingSchema } from '@/lib/zod/admin'
 
 export async function POST(request: Request) {
   const user = await getSessionUser(request)
@@ -35,7 +31,6 @@ export async function POST(request: Request) {
       data: updated,
     })
   } catch (error: unknown) {
-    console.error('Error resetting setting:', error)
     const message = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
       { error: message || 'خطا در بازگردانی تنظیم به پیش‌فرض' },

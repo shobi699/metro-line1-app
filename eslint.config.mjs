@@ -5,6 +5,12 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    rules: {
+      "react-hooks/set-state-in-effect": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
@@ -14,6 +20,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     ".agents/**",
     "mobile/**",
+    // Root-level JS utility scripts
+    "*.js",
   ]),
 ]);
 

@@ -17,7 +17,6 @@ import {
   Loader2,
   Newspaper,
   ArrowRight,
-  Eye,
   Settings,
   Globe,
   Sparkles,
@@ -26,7 +25,6 @@ import {
   List,
   Image,
   FileText,
-  CheckCircle,
   AlertCircle,
   Award,
   Link2,
@@ -36,10 +34,8 @@ import {
   Settings2,
   ChevronUp,
   ChevronDown,
-  XCircle,
   Video,
   FileCode,
-  Undo2,
   EyeOff,
 } from 'lucide-react'
 import { toFa } from '@/lib/fa'
@@ -310,8 +306,8 @@ function AdminContentPageContent() {
         setHasRecoverableDraft(false)
         setIsWorkspaceOpen(true)
       }
-    } catch (e) {
-      console.error('Failed to recover draft:', e)
+    } catch {
+      // draft recovery failed silently
     }
   }
 
@@ -372,8 +368,8 @@ function AdminContentPageContent() {
             const parsedQuestions = JSON.parse(match[1].trim())
             setBuiltQuestions(parsedQuestions)
             cleanBody = cleanBody.replace(/\[quiz\]([\s\S]*?)\[\/quiz\]/, '').trim()
-          } catch (e) {
-            console.error('Failed to parse quiz JSON on edit:', e)
+          } catch {
+            // quiz JSON parse failed
           }
         }
 

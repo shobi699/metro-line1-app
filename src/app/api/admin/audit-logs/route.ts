@@ -20,7 +20,10 @@ export async function GET(request: Request) {
     const whereClause: Prisma.AuditLogWhereInput = {}
 
     if (action) {
-      whereClause.action = action as any
+      const validActions = ['create', 'update', 'delete', 'login', 'logout', 'import', 'export'] as const
+      if (validActions.includes(action as (typeof validActions)[number])) {
+        whereClause.action = action as (typeof validActions)[number]
+      }
     }
 
     if (entity) {
@@ -65,7 +68,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ data: logs })
   } catch (error: unknown) {
-    console.error('Error fetching general audit logs:', error)
     const message = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
       { error: `خطا در دریافت لاگ‌های ممیزی سیستم: ${message}` },

@@ -1,10 +1,9 @@
-import { randomUUID } from 'node:crypto'
 import { prisma } from '@/server/db'
 import type { PostType } from '@/generated/prisma/client'
 import type {
   CreatePostInput,
   UpdatePostInput,
-} from '@/server/dto/content'
+} from '@/lib/zod/content'
 
 export interface PostListFilter {
   type?: string
@@ -20,7 +19,7 @@ function makeSlug(title: string): string {
     .replace(/[^\p{L}\p{N}-]/gu, '')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
-  return `${base || 'post'}-${randomUUID().slice(0, 6)}`
+  return `${base || 'post'}-${crypto.randomUUID().slice(0, 6)}`
 }
 
 function emptyToNull(v?: string | null): string | null {

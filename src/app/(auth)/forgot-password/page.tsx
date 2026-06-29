@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Lock,
@@ -17,7 +16,6 @@ import {
 } from 'lucide-react'
 
 export default function ForgotPasswordPage() {
-  const router = useRouter()
   const [step, setStep] = useState(1) // 1: Send OTP, 2: Verify OTP, 3: Reset Password, 4: Success
   const [nationalId, setNationalId] = useState('')
   const [phone, setPhone] = useState('')

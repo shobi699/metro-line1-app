@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
-import { loginSchema } from '@/server/dto/auth'
+import { loginSchema } from '@/lib/zod/auth'
 import { verifyPassword } from '@/server/auth/password'
 import { issueAccessToken, issueRefreshToken } from '@/server/auth/jwt'
 import { coercePermissions, rankForRoleKey } from '@/server/rbac/permissions'

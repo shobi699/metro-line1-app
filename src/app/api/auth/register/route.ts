@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
-import { registerSchema } from '@/server/dto/auth'
+import { registerSchema } from '@/lib/zod/auth'
 import { hashPassword } from '@/server/auth/password'
 import { getSettingValue } from '@/server/modules/settings/service'
 

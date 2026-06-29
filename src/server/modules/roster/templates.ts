@@ -1,29 +1,9 @@
 import { prisma } from '@/server/db'
 import type { Prisma } from '@/generated/prisma/client'
 import { z } from 'zod'
+import { shiftTemplateSchema, shiftAssignmentSchema } from '@/lib/zod/roster'
 
-export const shiftTemplateSchema = z.object({
-  name: z.string().min(1, 'نام قالب الزامی است'),
-  type: z.enum(['rotational', 'staff']),
-  length: z.number().int().min(1, 'طول چرخه باید حداقل ۱ باشد'),
-  shifts: z.array(
-    z.object({
-      day: z.number().int().min(1),
-      code: z.enum(['morning', 'evening', 'night', 'off', 'office']),
-      label: z.string(),
-      hours: z.number(),
-      startTime: z.string(),
-      endTime: z.string(),
-    }),
-  ),
-})
-
-export const shiftAssignmentSchema = z.object({
-  templateId: z.string().min(1),
-  targetType: z.enum(['user', 'group']),
-  targetId: z.string().min(1),
-  anchorDate: z.string().min(1),
-})
+export { shiftTemplateSchema, shiftAssignmentSchema } from '@/lib/zod/roster'
 
 export async function listTemplates() {
   return prisma.shiftTemplate.findMany({

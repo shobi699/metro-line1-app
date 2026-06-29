@@ -27,8 +27,8 @@ export function ConfigLoader() {
             `
           }
         }
-      } catch (err) {
-        console.error('Failed to load system config:', err)
+      } catch {
+        // config load failed silently
       }
     }
     loadConfig()

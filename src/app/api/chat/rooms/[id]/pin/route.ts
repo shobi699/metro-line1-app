@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
-import { pinMessageSchema } from '@/server/dto/chat'
+import { pinMessageSchema } from '@/lib/zod/chat'
 import { pinMessage } from '@/server/modules/chat/service'
 
 export async function POST(

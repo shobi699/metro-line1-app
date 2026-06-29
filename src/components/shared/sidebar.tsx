@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
@@ -38,6 +38,7 @@ import {
   Video,
   Award,
   Mic,
+  Clock,
 } from 'lucide-react'
 
 interface NavItem {
@@ -85,6 +86,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         icon: Calendar,
         items: [
           { label: 'شیفت و تقویم من', href: '/shifts', icon: Calendar },
+          { label: 'لوحه اعزام روزانه خط ۱', href: '/roster', icon: Clock },
           { label: 'درخواست تعویض شیفت', href: '/swap/inbox', icon: ArrowLeftRight },
           { label: 'حضور و غیاب هوشمند', href: '/attendance', icon: UserCheck },
           { label: 'چک‌لیست حرکت قطار', href: '/checklists', icon: ClipboardCheck },

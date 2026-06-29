@@ -120,8 +120,8 @@ export default function ChecklistsPage() {
         const data = await historyRes.json()
         setHistory(data.data ?? [])
       }
-    } catch (err) {
-      console.error('Error loading checklist data:', err)
+    } catch {
+      // checklist data load failed silently
     } finally {
       setLoading(false)
     }
@@ -164,8 +164,8 @@ export default function ChecklistsPage() {
         setActiveTab('history')
         loadData()
       }
-    } catch (err) {
-      console.error(err)
+    } catch {
+      // submit checklist failed silently
     } finally {
       setSubmitting(false)
     }
@@ -202,8 +202,8 @@ export default function ChecklistsPage() {
         setActiveTab('fill')
         loadData()
       }
-    } catch (err) {
-      console.error(err)
+    } catch {
+      // create template failed silently
     } finally {
       setCreatingTemplate(false)
     }

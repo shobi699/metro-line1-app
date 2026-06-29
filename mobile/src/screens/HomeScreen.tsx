@@ -176,6 +176,7 @@ export function HomeScreen({ navigation }: any) {
   ]
 
   const quickActions = [
+    { label: 'لوحه و اعزام روزانه', icon: Calendar, screen: 'لوحه' },
     { label: 'چک‌لیست فنی قطار', icon: ClipboardList, screen: 'چک‌لیست‌ها' },
     { label: 'گفت‌وگو', icon: MessageSquare, screen: 'چت' },
     { label: 'کنفرانس صوتی', icon: Radio, screen: 'کنفرانس صوتی' },

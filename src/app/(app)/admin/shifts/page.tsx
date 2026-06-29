@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import dayjs from 'dayjs'
-import 'dayjs-jalali'
+import { jdate, dayjs } from '@/lib/dayjs'
 import {
   ChevronRight,
   ChevronLeft,
@@ -20,12 +19,8 @@ import {
   Sliders,
   Settings,
   Trash,
-  Download,
-  FileText,
   UserCheck,
-  Eye,
   Shield,
-  CalendarDays
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -36,11 +31,22 @@ import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
 
 import { useAuthStore } from '@/features/auth'
-import { useShiftsStore, CycleTemplate, ShiftAssignment, DEFAULT_TEMPLATES, DEFAULT_ASSIGNMENTS } from '@/features/shifts'
-import { getShiftForUserAndDate, MOCK_USERS_LIST, MOCK_GROUPS_LIST } from '@/lib/cycle-math'
+import { type ShiftCodeValue } from '@/features/shifts'
+import type { ShiftTemplateDto, ShiftAssignmentDto } from '@/features/shifts/api-client'
+import { shiftsApi } from '@/features/shifts/api-client'
+import { getShiftForUserAndDateFromDb } from '@/lib/cycle-math'
+import {
+  GROUPS_LIST,
+  SHIFT_TYPE_LIST,
+  groupKeyFor,
+  normalizeGroup,
+  shiftTypeKey,
+  buildCompositeKey,
+  parseTargetId,
+  targetIdLabel,
+} from '@/lib/shift-grouping'
 import { toFa } from '@/lib/fa'
 import { cn } from '@/lib/utils'
 
@@ -57,8 +63,13 @@ interface User {
   id: string
   name: string
   nationalId: string
-  role: { key: string; name: string }
-  customFields?: any
+  phone: string | null
+  email: string | null
+  status: string
+  roleId: string
+  createdAt: string
+  customFields: Record<string, unknown> | null
+  role: { id: string; key: string; name: string; rank: number }
 }
 
 interface SwapRequest {
@@ -106,15 +117,9 @@ const shiftColors: Record<string, string> = {
 export default function AdminShiftsPage() {
   const accessToken = useAuthStore((s) => s.accessToken)
 
-  // Zustand Store
-  const {
-    templates,
-    assignments,
-    addTemplate,
-    deleteTemplate,
-    assignTemplate,
-    deleteAssignment
-  } = useShiftsStore()
+  // Templates & Assignments from database (server-side source of truth)
+  const [dbTemplates, setDbTemplates] = useState<ShiftTemplateDto[]>([])
+  const [dbAssignments, setDbAssignments] = useState<ShiftAssignmentDto[]>([])
 
   // Tabs state
   const [activeTab, setActiveTab] = useState<'roster' | 'builder' | 'assignments' | 'swaps' | 'settings'>('roster')
@@ -126,7 +131,7 @@ export default function AdminShiftsPage() {
   const [viewType, setViewType] = useState<'weekly' | 'monthly'>('weekly')
 
   // Year and Month states for Monthly View (Jalali Month/Year)
-  const now = dayjs().locale('jalali')
+  const now = jdate()
   const [selectedYear, setSelectedYear] = useState(() => now.year())
   const [selectedMonth, setSelectedMonth] = useState(() => now.month() + 1)
 
@@ -151,14 +156,14 @@ export default function AdminShiftsPage() {
   const [shiftModalOpen, setShiftModalOpen] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState('')
   const [selectedDate, setSelectedDate] = useState('')
-  const [selectedShiftCode, setSelectedShiftCode] = useState<'morning' | 'evening' | 'night' | 'off'>('morning')
+  const [selectedShiftCode, setSelectedShiftCode] = useState<ShiftCodeValue>('morning')
   const [selectedNote, setSelectedNote] = useState('')
   const [isCellEdit, setIsCellEdit] = useState(false)
   const [formSubmitLoading, setFormSubmitLoading] = useState(false)
 
   // Template Builder form states
   const [tplName, setTplName] = useState('')
-  const [tplType, setTplType] = useState<'rotational' | 'staff'>('rotational')
+  const [_tplType, setTplType] = useState<'rotational' | 'staff'>('rotational')
   const [tplRegime, setTplRegime] = useState<'rotational_9h' | 'rotational_12h' | 'staff'>('rotational_9h')
   const [tplLength, setTplLength] = useState<number>(6)
   const [tplShifts, setTplShifts] = useState<Array<{
@@ -174,7 +179,10 @@ export default function AdminShiftsPage() {
   const [assignTplId, setAssignTplId] = useState('')
   const [assignTargetType, setAssignTargetType] = useState<'user' | 'group'>('group')
   const [assignTargetId, setAssignTargetId] = useState('A')
+  const [assignGroupType, setAssignGroupType] = useState<string>('9-15')
   const [assignAnchorDate, setAssignAnchorDate] = useState('2026-06-01')
+  const [assignShiftFilter, setAssignShiftFilter] = useState<string>('all')
+  const [assignShiftTypeFilter, setAssignShiftTypeFilter] = useState<string>('all')
 
   // Notification Banner
   const [notification, setNotification] = useState<{
@@ -198,7 +206,7 @@ export default function AdminShiftsPage() {
         const isWeekend = d === 6 || d === 7
         return {
           day: d,
-          code: (isWeekend ? 'off' : 'office') as any,
+          code: (isWeekend ? 'off' : 'office') as ShiftCodeValue,
           label: isWeekend ? 'تعطیل' : 'اداری',
           hours: isWeekend ? 0 : 8.75,
           startTime: isWeekend ? '' : '07:30',
@@ -209,7 +217,7 @@ export default function AdminShiftsPage() {
         const isNight = d % 4 === 2
         return {
           day: d,
-          code: (isDay ? 'morning' : isNight ? 'night' : 'off') as any,
+          code: (isDay ? 'morning' : isNight ? 'night' : 'off') as ShiftCodeValue,
           label: isDay ? 'روزکار ۱۲ ساعته' : isNight ? 'شب‌کار ۱۲ ساعته' : 'استراحت (آف)',
           hours: isDay ? 12 : isNight ? 12 : 0,
           startTime: isDay ? '07:00' : isNight ? '19:00' : '',
@@ -220,7 +228,7 @@ export default function AdminShiftsPage() {
         const isEvening = d % 6 === 3 || d % 6 === 4
         return {
           day: d,
-          code: (isMorning ? 'morning' : isEvening ? 'evening' : 'off') as any,
+          code: (isMorning ? 'morning' : isEvening ? 'evening' : 'off') as ShiftCodeValue,
           label: isMorning ? 'صبح‌کار ۹ ساعته' : isEvening ? 'عصرکار ۹ ساعته' : 'استراحت (آف)',
           hours: isMorning ? 9 : isEvening ? 9 : 0,
           startTime: isMorning ? '07:00' : isEvening ? '16:00' : '',
@@ -249,13 +257,10 @@ export default function AdminShiftsPage() {
     return days
   }, [weekOffset])
 
-  const saturdayDate = weekDays[0]
-  const fridayDate = weekDays[6]
-
   // Calculate all days in the selected month for Monthly View
   const monthlyDays = useMemo(() => {
-    const start = dayjs().locale('jalali').year(selectedYear).month(selectedMonth - 1).startOf('month')
-    const end = dayjs().locale('jalali').year(selectedYear).month(selectedMonth - 1).endOf('month')
+    const start = jdate().year(selectedYear).month(selectedMonth - 1).startOf('month')
+    const end = jdate().year(selectedYear).month(selectedMonth - 1).endOf('month')
 
     const days = []
     let curr = start
@@ -273,13 +278,13 @@ export default function AdminShiftsPage() {
     if (!accessToken) return
     setLoading(true)
     try {
-      // 1. Fetch Users
-      const usersRes = await fetch('/api/users?pageSize=100', {
+      // 1. Fetch Users from admin API (unlimited, active only) — synced with /admin/users
+      const usersRes = await fetch('/api/admin/users?status=active', {
         headers: { Authorization: `Bearer ${accessToken}` },
       })
       if (usersRes.ok) {
         const usersData = await usersRes.json()
-        setUsers(usersData.data.users || [])
+        setUsers(usersData.data || [])
       }
 
       // 2. Fetch Shift Overrides for active date range
@@ -302,8 +307,16 @@ export default function AdminShiftsPage() {
         const swapsData = await swapsRes.json()
         setSwapRequests(swapsData.data || [])
       }
-    } catch (error) {
-      console.error('Error loading shifts data:', error)
+
+      // 4. Fetch Shift Templates & Assignments from database (not localStorage)
+      const [tplData, assignData] = await Promise.all([
+        shiftsApi.getTemplates(accessToken),
+        shiftsApi.getAssignments(accessToken),
+      ])
+      setDbTemplates(tplData)
+      setDbAssignments(assignData)
+    } catch {
+      // shifts data fetch failed silently
     } finally {
       setLoading(false)
     }
@@ -329,8 +342,8 @@ export default function AdminShiftsPage() {
         if (nightsSetting) setDbMaxConsecutiveNights(JSON.parse(nightsSetting.value))
         if (paritySetting) setDbRoleParity(JSON.parse(paritySetting.value))
       }
-    } catch (err) {
-      console.error('Error loading settings:', err)
+    } catch {
+      // settings fetch failed silently
     } finally {
       setSettingsLoading(false)
     }
@@ -409,22 +422,13 @@ export default function AdminShiftsPage() {
     }
   }
 
-  // Reset templates and assignments to system defaults (stored in Zustand)
-  function handleResetTemplatesAndAssignments() {
-    if (confirm('🚨 آیا مطمئن هستید که می‌خواهید تمام الگوهای شیفت و انتساب‌های فعال را به حالت اولیه سیستم بازنشانی کنید؟ این اقدام تمام الگوها و انتساب‌های شخصی شما را حذف خواهد کرد.')) {
-      useShiftsStore.setState({
-        templates: DEFAULT_TEMPLATES,
-        assignments: DEFAULT_ASSIGNMENTS
-      })
-      setNotification({ type: 'success', text: 'الگوها و انتساب‌های چرخه‌ای به مقادیر پیش‌فرض سیستم بازنشانی شدند.' })
-      void loadData()
-    }
-  }
+  // Reset templates and assignments is now server-side; no local reset available.
+  // (Removed: handleResetTemplatesAndAssignments relied on Zustand localStorage state.)
 
   // ────────────────────────────────────────────────────────
   // SHARED CORE COMPUTATIONAL ENGINE
   // ────────────────────────────────────────────────────────
-  // Combines: 1. Cycle math template shifts (Zustand) + 2. DB manual overrides
+  // Combines: 1. Cycle math template shifts (DB) + 2. DB manual overrides
   const resolvedRosterMap = useMemo(() => {
     const roster: Record<string, Record<string, { code: string; label: string; note: string | null; isOverride: boolean; hours: number; startTime: string; endTime: string }>> = {}
 
@@ -442,9 +446,9 @@ export default function AdminShiftsPage() {
         const dateObj = dayjs(day)
         const dateStr = dateObj.format('YYYY-MM-DD')
 
-        // 1. Get default shift from template cycle
-        const userGroup = user.customFields?.group || 'A'
-        const cycleRes = getShiftForUserAndDate(user.id, dateObj, assignments, templates, undefined, userGroup)
+        // 1. Get default shift from template cycle (database-backed)
+        // گروه از فیلد shift و نوع از shiftType با هم کلید ترکیبی انتساب را می‌سازند
+        const cycleRes = getShiftForUserAndDateFromDb(user.id, dateObj, dbAssignments, dbTemplates, user.customFields)
 
         // Default properties
         let code = cycleRes?.shift?.code || 'off'
@@ -483,7 +487,28 @@ export default function AdminShiftsPage() {
     })
 
     return roster
-  }, [users, activeDays, dbShifts, assignments, templates])
+  }, [users, activeDays, dbShifts, dbAssignments, dbTemplates])
+
+  // Filtered users for assignment based on shift and shiftType filters
+  const filteredUsersForAssignment = useMemo(() => {
+    if (assignTargetType !== 'user') return users
+    
+    return users.filter((u) => {
+      const { group, type } = groupKeyFor(u.customFields as Record<string, unknown> | null)
+
+      // فیلتر گروه شیفتی (نرمال‌شده تا Staff/ستادی یکی شوند)
+      if (assignShiftFilter !== 'all' && group !== normalizeGroup(assignShiftFilter)) {
+        return false
+      }
+
+      // فیلتر نوع شیفت (نرمال‌شده)
+      if (assignShiftTypeFilter !== 'all' && type !== shiftTypeKey(assignShiftTypeFilter)) {
+        return false
+      }
+
+      return true
+    })
+  }, [users, assignTargetType, assignShiftFilter, assignShiftTypeFilter])
 
   // Identify Conflicts based on rest hours and consecutive nights settings
   const conflicts = useMemo<Conflict[]>(() => {
@@ -513,7 +538,7 @@ export default function AdminShiftsPage() {
         const gapHours = (startMs - endMs) / (1000 * 60 * 60)
 
         if (gapHours < dbMinRestHours) {
-          const jalaliDateStr = dayjs(activeDays[i + 1]).format('dddd D MMMM')
+          const jalaliDateStr = toFa(jdate(activeDays[i + 1]).format('dddd D MMMM'))
           list.push({
             userName: user.name,
             userId: user.id,
@@ -532,7 +557,7 @@ export default function AdminShiftsPage() {
         if (s && s.code === 'night') {
           consecutiveNightsCount++
           if (consecutiveNightsCount > dbMaxConsecutiveNights) {
-            const jalaliDateStr = dayjs(activeDays[i]).format('dddd D MMMM')
+            const jalaliDateStr = toFa(jdate(activeDays[i]).format('dddd D MMMM'))
             list.push({
               userName: user.name,
               userId: user.id,
@@ -666,7 +691,7 @@ export default function AdminShiftsPage() {
       }
       setNotification({ type: 'success', text: `هوش مصنوعی با موفقیت ${toFa(conflicts.length)} تعارض ایمنی را رفع و در دیتابیس ثبت کرد.` })
       await loadData()
-    } catch (error) {
+    } catch {
       setNotification({ type: 'error', text: 'خطا در ثبت اصلاحات هوشمند هوش مصنوعی در سرور' })
     } finally {
       setAiRunning(false)
@@ -677,7 +702,7 @@ export default function AdminShiftsPage() {
   function handleCellClick(userId: string, dateStr: string, currentShift?: { code: string; note: string | null }) {
     setSelectedUserId(userId)
     setSelectedDate(dateStr)
-    setSelectedShiftCode((currentShift?.code as any) || 'morning')
+    setSelectedShiftCode((currentShift?.code as ShiftCodeValue) || 'morning')
     setSelectedNote(currentShift?.note || '')
     setIsCellEdit(true)
     setShiftModalOpen(true)
@@ -730,7 +755,7 @@ export default function AdminShiftsPage() {
   }
 
   // Helper function to detect template regime label
-  const getTemplateRegimeLabel = (tpl: CycleTemplate) => {
+  const getTemplateRegimeLabel = (tpl: ShiftTemplateDto) => {
     if (tpl.type === 'staff') return 'ستادی ثابت هفتگی'
     const has12hShift = tpl.shifts.some(s => s.hours === 12)
     if (has12hShift) return 'راهبران ۱۲ ساعته چرخشی'
@@ -738,26 +763,39 @@ export default function AdminShiftsPage() {
   }
 
   // Helper function to calculate average weekly hours for a template
-  const getTemplateAvgWeeklyHours = (tpl: CycleTemplate) => {
+  const getTemplateAvgWeeklyHours = (tpl: ShiftTemplateDto) => {
     const total = tpl.shifts.reduce((acc, s) => acc + s.hours, 0)
     const days = tpl.type === 'staff' ? 7 : tpl.length
     return days > 0 ? ((total / days) * 7).toFixed(1) : '0'
   }
 
-  // Template Builder Save
-  function handleSaveTemplate() {
+  // Template Builder Save (persists to database)
+  async function handleSaveTemplate() {
+    if (!accessToken) return
     if (!tplName.trim()) return
     const finalType = tplRegime === 'staff' ? 'staff' : 'rotational'
     const finalLength = tplRegime === 'staff' ? 7 : tplLength
-    addTemplate({
-      name: tplName,
-      type: finalType,
-      length: finalLength,
-      shifts: tplShifts
-    })
-    setTplName('')
-    setTplLength(6)
-    setNotification({ type: 'success', text: `قالب شیفت "${tplName}" با موفقیت در هسته محاسباتی ذخیره شد.` })
+    setActionLoading((prev) => ({ ...prev, __template: true }))
+    try {
+      await shiftsApi.createTemplate(accessToken, {
+        name: tplName,
+        type: finalType,
+        length: finalLength,
+        shifts: tplShifts,
+      })
+      setTplName('')
+      setTplLength(6)
+      setNotification({ type: 'success', text: `قالب شیفت با موفقیت در دیتابیس ذخیره شد.` })
+      await loadData()
+    } catch {
+      setNotification({ type: 'error', text: 'خطا در ثبت قالب شیفت در سرور' })
+    } finally {
+      setActionLoading((prev) => {
+        const next = { ...prev }
+        delete next.__template
+        return next
+      })
+    }
   }
 
   // Preset Applier for Metro Line 1 Shift Patterns
@@ -828,26 +866,50 @@ export default function AdminShiftsPage() {
     }
   }
 
-  // Shift Assignment Save
-  function handleSaveAssignment() {
+  // Shift Assignment Save (persists to database)
+  async function handleSaveAssignment() {
+    if (!accessToken) return
     if (!assignTplId) return
-    assignTemplate({
-      templateId: assignTplId,
-      targetType: assignTargetType,
-      targetId: assignTargetId,
-      anchorDate: assignAnchorDate
-    })
-    setNotification({ type: 'success', text: 'الگوی شیفت با موفقیت انتساب داده شد و لوحه کاری به‌روزرسانی گردید.' })
-    void loadData()
+    setActionLoading((prev) => ({ ...prev, __assignment: true }))
+    try {
+      // برای هدف گروهی، کلید ترکیبی {نوع}:{گروه} ساخته می‌شود تا گروه و نوع شیفت با هم انتساب را تعیین کنند
+      const finalTargetId =
+        assignTargetType === 'group'
+          ? buildCompositeKey(assignTargetId, assignGroupType)
+          : assignTargetId
+
+      await shiftsApi.createAssignment(accessToken, {
+        templateId: assignTplId,
+        targetType: assignTargetType,
+        targetId: finalTargetId,
+        anchorDate: assignAnchorDate,
+      })
+      setNotification({ type: 'success', text: 'الگوی شیفت با موفقیت در دیتابیس انتساب داده شد و لوحه کاری به‌روزرسانی گردید.' })
+      await loadData()
+    } catch {
+      setNotification({ type: 'error', text: 'خطا در ثبت انتساب شیفت در سرور' })
+    } finally {
+      setActionLoading((prev) => {
+        const next = { ...prev }
+        delete next.__assignment
+        return next
+      })
+    }
   }
 
   // Filtered users for grid
   const filteredUsers = useMemo(() => {
     if (department === 'all') return users
     if (department === 'drivers') {
-      return users.filter((u) => u.role?.key === 'operator')
+      return users.filter((u) => {
+        const post = String((u.customFields as Record<string, unknown> | null)?.post || '')
+        return u.role?.key === 'operator' || u.role?.key === 'driver' || post === 'راهبر'
+      })
     }
-    return users.filter((u) => u.role?.key !== 'operator')
+    return users.filter((u) => {
+      const post = String((u.customFields as Record<string, unknown> | null)?.post || '')
+      return u.role?.key !== 'operator' && u.role?.key !== 'driver' && post !== 'راهبر'
+    })
   }, [users, department])
 
   // Persian Months for selectors
@@ -1134,9 +1196,9 @@ export default function AdminShiftsPage() {
                                   isToday ? 'bg-accent/10 text-accent font-black' : ''
                                 )}
                               >
-                                <div className="text-[11px]">{dayjs(day).format('dddd')}</div>
+                                <div className="text-[11px]">{jdate(day).format('dddd')}</div>
                                 <div className="text-[9px] text-foreground-muted/85 font-data-mono mt-0.5">
-                                  {toFa(dayjs(day).format('MM/DD'))}
+                                  {toFa(jdate(day).format('MM/DD'))}
                                 </div>
                               </th>
                             )
@@ -1157,7 +1219,7 @@ export default function AdminShiftsPage() {
                                   <div className="text-[9px] text-foreground-muted/90 truncate mt-0.5 flex items-center gap-1">
                                     <span>{user.role?.name || 'راهبر'}</span>
                                     <span className="text-[8px] bg-surface-container border border-border rounded px-1">
-                                      گروه {toFa(user.customFields?.group || 'A')}
+                                      گروه {toFa(normalizeGroup((user.customFields as Record<string, unknown> | null)?.shift))}
                                     </span>
                                   </div>
                                 </div>
@@ -1547,7 +1609,7 @@ export default function AdminShiftsPage() {
                                 value={dayShift.code}
                                 onChange={(e) => {
                                   const newShifts = [...tplShifts]
-                                  const code = e.target.value as any
+                                  const code = e.target.value as ShiftCodeValue
                                   newShifts[idx].code = code
 
                                   if (tplRegime === 'rotational_12h') {
@@ -1702,11 +1764,11 @@ export default function AdminShiftsPage() {
                 {/* Right Cards: List of Templates */}
                 <div className="lg:col-span-7 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-black text-foreground">قالب‌های فعال و ثبت شده در سیستم ({toFa(templates.length)})</h2>
+                    <h2 className="text-sm font-black text-foreground">قالب‌های فعال و ثبت شده در سیستم ({toFa(dbTemplates.length)})</h2>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {templates.map((tpl) => (
+                    {dbTemplates.map((tpl) => (
                       <Card key={tpl.id} className="border border-border bg-surface/35 hover:border-border/80 transition-all flex flex-col justify-between rounded-xl">
                         <CardHeader className="pb-2">
                           <div className="flex justify-between items-start">
@@ -1750,8 +1812,17 @@ export default function AdminShiftsPage() {
                         <CardFooter className="border-t border-border/10 pt-2.5 flex justify-end">
                           <Button
                             variant="ghost"
-                            onClick={() => deleteTemplate(tpl.id)}
-                            disabled={tpl.id.startsWith('tpl-rotational') || tpl.id.startsWith('tpl-staff')} // Prevent deleting system defaults
+                            onClick={async () => {
+                              if (!accessToken) return
+                              if (!confirm(`آیا از حذف الگوی "${tpl.name}" اطمینان دارید؟`)) return
+                              try {
+                                await shiftsApi.deleteTemplate(accessToken, tpl.id)
+                                setNotification({ type: 'success', text: `الگوی "${tpl.name}" با موفقیت حذف شد.` })
+                                await loadData()
+                              } catch {
+                                setNotification({ type: 'error', text: 'خطا در حذف الگو از سرور' })
+                              }
+                            }}
                             className="text-critical hover:bg-critical/10 text-[10px] font-bold h-7 cursor-pointer disabled:opacity-30 rounded-md"
                           >
                             <Trash className="size-3.5 me-1" />
@@ -1795,7 +1866,7 @@ export default function AdminShiftsPage() {
                           <SelectValue placeholder="یک الگو انتخاب کنید..." />
                         </SelectTrigger>
                         <SelectContent>
-                          {templates.map((t) => (
+                          {dbTemplates.map((t) => (
                             <SelectItem key={t.id} value={t.id} className="text-xs">
                               {t.name} ({t.type === 'staff' ? 'ستادی' : `${toFa(t.length)} روزه چرخشی`})
                             </SelectItem>
@@ -1803,6 +1874,50 @@ export default function AdminShiftsPage() {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {/* Filters for user assignment */}
+                    {assignTargetType === 'user' && (
+                      <div className="grid grid-cols-2 gap-4 p-3 bg-accent/5 border border-accent/20 rounded-lg">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-bold flex justify-start">فیلتر گروه شیفتی</Label>
+                           <Select value={assignShiftFilter} onValueChange={(v) => setAssignShiftFilter(v ?? 'all')}>
+                            <SelectTrigger className="h-9 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all" className="text-xs">همه گروه‌ها</SelectItem>
+                              <SelectItem value="A" className="text-xs">A (الف)</SelectItem>
+                              <SelectItem value="B" className="text-xs">B (ب)</SelectItem>
+                              <SelectItem value="C" className="text-xs">C (ج)</SelectItem>
+                              <SelectItem value="ستادی" className="text-xs">ستادی</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-bold flex justify-start">فیلتر نوع شیفت</Label>
+                           <Select value={assignShiftTypeFilter} onValueChange={(v) => setAssignShiftTypeFilter(v ?? 'all')}>
+                            <SelectTrigger className="h-9 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all" className="text-xs">همه نوع‌ها</SelectItem>
+                              <SelectItem value="9-15" className="text-xs">9-15 (نه ساعته)</SelectItem>
+                              <SelectItem value="12-24" className="text-xs">12-24 (دوازده ساعته)</SelectItem>
+                              <SelectItem value="9 ساعته" className="text-xs">9 ساعته</SelectItem>
+                              <SelectItem value="12 ساعته" className="text-xs">12 ساعته</SelectItem>
+                              <SelectItem value="ستادی" className="text-xs">ستادی (اداری)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="col-span-2">
+                          <p className="text-[10px] text-foreground-muted leading-relaxed">
+                            💡 با انتخاب فیلترها، لیست پرسنل زیر محدود به کاربران مطابق می‌شود ({toFa(filteredUsersForAssignment.length)} نفر).
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
@@ -1826,7 +1941,7 @@ export default function AdminShiftsPage() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {MOCK_GROUPS_LIST.map((g) => (
+                              {GROUPS_LIST.map((g) => (
                                 <SelectItem key={g.key} value={g.key} className="text-xs">{g.name}</SelectItem>
                               ))}
                             </SelectContent>
@@ -1834,17 +1949,50 @@ export default function AdminShiftsPage() {
                         ) : (
                           <Select value={assignTargetId} onValueChange={(v) => setAssignTargetId(v || '')}>
                             <SelectTrigger className="h-10 text-xs">
-                              <SelectValue />
+                              <SelectValue placeholder="یک پرسنل انتخاب کنید..." />
                             </SelectTrigger>
                             <SelectContent>
-                              {users.map((u) => (
-                                <SelectItem key={u.id} value={u.id} className="text-xs">{u.name}</SelectItem>
-                              ))}
+                              {filteredUsersForAssignment.map((u) => {
+                                const customFields = u.customFields as Record<string, unknown> | null
+                                const shift = String(customFields?.shift || 'نامشخص')
+                                const shiftType = String(customFields?.shiftType || 'نامشخص')
+                                
+                                return (
+                                  <SelectItem key={u.id} value={u.id} className="text-xs">
+                                    {u.name} — شیفت: {shift} | نوع: {shiftType}
+                                  </SelectItem>
+                                )
+                              })}
+                              {filteredUsersForAssignment.length === 0 && (
+                                <div className="p-2 text-center text-xs text-foreground-muted">
+                                  هیچ کاربری با فیلترهای انتخابی یافت نشد
+                                </div>
+                              )}
                             </SelectContent>
                           </Select>
                         )}
                       </div>
                     </div>
+
+                    {/* نوع شیفت برای هدف گروهی: همراه گروه، کلید ترکیبی انتساب را می‌سازد */}
+                    {assignTargetType === 'group' && normalizeGroup(assignTargetId) !== 'ستادی' && (
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold flex justify-start">نوع شیفت گروه (رژیم چرخه)</Label>
+                        <Select value={assignGroupType} onValueChange={(v) => setAssignGroupType(v || '9-15')}>
+                          <SelectTrigger className="h-10 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {SHIFT_TYPE_LIST.filter((t) => t.key !== 'ستادی').map((t) => (
+                              <SelectItem key={t.key} value={t.key} className="text-xs">{t.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[10px] text-foreground-muted mt-1 text-right leading-relaxed pr-1">
+                          ترکیب گروه و نوع شیفت، کلید انتساب را می‌سازد (مثلاً <span className="font-data-mono" dir="ltr">{buildCompositeKey(assignTargetId, assignGroupType)}</span>). فقط پرسنل با همین گروه و نوع، این الگو را دریافت می‌کنند.
+                        </p>
+                      </div>
+                    )}
 
                     <div className="space-y-1.5">
                       <Label htmlFor="anchor-date" className="text-xs font-bold flex justify-start">تاریخ لنگرگاه چرخه (شروع الگو)</Label>
@@ -1871,33 +2019,78 @@ export default function AdminShiftsPage() {
 
               {/* Right Cards: Active Assignments */}
               <div className="lg:col-span-7 space-y-4">
-                <h2 className="text-sm font-black text-foreground">لیست انتساب‌های چرخه‌ای فعال سیستم ({toFa(assignments.length)})</h2>
+                <h2 className="text-sm font-black text-foreground">لیست انتساب‌های چرخه‌ای فعال سیستم ({toFa(dbAssignments.length)})</h2>
 
                 <div className="space-y-3">
-                  {assignments.map((assign) => {
-                    const tpl = templates.find((t) => t.id === assign.templateId)
+                  {dbAssignments.map((assign) => {
+                    const tpl = dbTemplates.find((t) => t.id === assign.templateId)
+                    const targetUser = assign.targetType === 'user' ? users.find((u) => u.id === assign.targetId) : null
+                    const targetUserFields = targetUser?.customFields as Record<string, unknown> | null
+                    const targetUserShift = targetUserFields ? String(targetUserFields.shift || 'نامشخص') : null
+                    const targetUserShiftType = targetUserFields ? String(targetUserFields.shiftType || 'نامشخص') : null
+                    
                     const targetLabel = assign.targetType === 'group'
-                      ? `گروه شیفت ${MOCK_GROUPS_LIST.find((g) => g.key === assign.targetId)?.name || assign.targetId}`
-                      : `پرسنل: ${users.find((u) => u.id === assign.targetId)?.name || assign.targetId}`
+                      ? `گروه شیفت ${targetIdLabel(assign.targetId)}`
+                      : `پرسنل: ${targetUser?.name || assign.targetId}`
+
+                    // شمارش اعضای منطبق: کلید ترکیبی یا (برای انتساب‌های قدیمیِ گروه‌ساده) تطبیق گروه
+                    const assignIsComposite = assign.targetId.includes(':')
+                    const assignGroupOnly = parseTargetId(assign.targetId).group
+                    const groupUsersCount = assign.targetType === 'group'
+                      ? users.filter((u) => {
+                          const cf = u.customFields as Record<string, unknown> | null
+                          const key = groupKeyFor(cf)
+                          return assignIsComposite
+                            ? key.compositeKey === assign.targetId
+                            : key.group === assignGroupOnly
+                        }).length
+                      : 0
 
                     return (
                       <div key={assign.id} className="bg-surface/35 border border-border rounded-xl p-4 flex items-center justify-between hover:border-border/80 transition-all text-xs">
-                        <div className="space-y-1.5 text-right">
+                        <div className="space-y-1.5 text-right flex-1">
                           <div className="font-bold text-foreground text-sm flex items-center gap-2">
                             <Shield className="size-4 text-accent" />
                             {targetLabel}
+                            {assign.targetType === 'group' && (
+                              <span className="text-[10px] font-normal text-foreground-muted">
+                                ({toFa(groupUsersCount)} نفر)
+                              </span>
+                            )}
                           </div>
-                          <div className="text-foreground-muted flex items-center gap-4">
-                            <span>الگو: <strong className="text-foreground">{tpl?.name || 'نامشخص'}</strong></span>
-                            <span>شروع از: <strong className="text-foreground font-data-mono">{toFa(dayjs(assign.anchorDate).format('YYYY/MM/DD'))}</strong></span>
+                          <div className="text-foreground-muted text-[11px]">
+                            الگو: <span className="font-bold text-accent">{tpl?.name || '(حذف شده)'}</span>
+                          </div>
+                          {assign.targetType === 'user' && targetUserShift && targetUserShiftType && (
+                            <div className="flex items-center gap-3 text-[10px]">
+                              <span className="text-foreground-muted">
+                                شیفت: <span className="font-bold text-foreground">{targetUserShift}</span>
+                              </span>
+                              <span className="text-foreground-muted">
+                                نوع: <span className="font-bold text-foreground">{targetUserShiftType}</span>
+                              </span>
+                            </div>
+                          )}
+                          <div className="text-foreground-muted text-[10px] flex items-center gap-1">
+                            <CalendarIcon className="size-3" />
+                            لنگرگاه: {toFa(jdate(assign.anchorDate).format('YYYY/MM/DD'))}
                           </div>
                         </div>
-
                         <Button
                           variant="ghost"
-                          onClick={() => deleteAssignment(assign.id)}
-                          disabled={assign.id.startsWith('assign-group')} // Keep default seeds safe
-                          className="text-critical hover:bg-critical/10 text-[10px] font-bold h-8 cursor-pointer disabled:opacity-30"
+                          size="sm"
+                          onClick={async () => {
+                            if (!accessToken) return
+                            if (!confirm(`آیا از حذف این انتساب اطمینان دارید؟`)) return
+                            try {
+                              await shiftsApi.deleteAssignment(accessToken, assign.id)
+                              setNotification({ type: 'success', text: 'انتساب با موفقیت حذف شد.' })
+                              await loadData()
+                            } catch {
+                              setNotification({ type: 'error', text: 'خطا در حذف انتساب از سرور' })
+                            }
+                          }}
+                          className="text-critical hover:bg-critical/10 text-[10px] font-bold h-8 cursor-pointer"
                         >
                           <Trash className="size-3.5 me-1" />
                           حذف انتساب
@@ -1958,7 +2151,7 @@ export default function AdminShiftsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-12 items-center bg-background/55 border border-border/60 p-3.5 rounded-lg text-xs font-data-mono text-center gap-3">
                         <div className="md:col-span-5 bg-surface border border-border/40 p-2.5 rounded">
                           <div className="font-bold text-foreground">{req.requester.name}</div>
-                          <div className="text-foreground-muted text-[10px] mt-1">{toFa(dayjs(req.sourceShift.date).format('YYYY/MM/DD'))} ({dayjs(req.sourceShift.date).format('dddd')})</div>
+                          <div className="text-foreground-muted text-[10px] mt-1">{toFa(jdate(req.sourceShift.date).format('YYYY/MM/DD'))} ({jdate(req.sourceShift.date).format('dddd')})</div>
                           <Badge className="mt-2 text-[10px] bg-accent/10 text-accent border-accent/30">{shiftLabels[req.sourceShift.code]}</Badge>
                         </div>
 
@@ -1968,7 +2161,7 @@ export default function AdminShiftsPage() {
 
                         <div className="md:col-span-5 bg-surface border border-border/40 p-2.5 rounded">
                           <div className="font-bold text-foreground">{req.target.name}</div>
-                          <div className="text-foreground-muted text-[10px] mt-1">{toFa(dayjs(req.targetShift.date).format('YYYY/MM/DD'))} ({dayjs(req.targetShift.date).format('dddd')})</div>
+                          <div className="text-foreground-muted text-[10px] mt-1">{toFa(jdate(req.targetShift.date).format('YYYY/MM/DD'))} ({jdate(req.targetShift.date).format('dddd')})</div>
                           <Badge className="mt-2 text-[10px] bg-accent/10 text-accent border-accent/30">{shiftLabels[req.targetShift.code]}</Badge>
                         </div>
                       </div>
@@ -2136,13 +2329,7 @@ export default function AdminShiftsPage() {
                   >
                     بازنشانی تنظیمات قوانین
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleResetTemplatesAndAssignments}
-                    className="px-4 h-9.5 text-xs font-bold text-critical hover:bg-critical/10 border-critical/30 cursor-pointer"
-                  >
-                    بازنشانی الگوها و انتساب‌ها به پیش‌فرض
-                  </Button>
+                  {/* Reset templates button removed: templates are now in database, not localStorage */}
                 </div>
                 <Button
                   onClick={handleSaveSettings}
@@ -2179,7 +2366,7 @@ export default function AdminShiftsPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-foreground-muted">تاریخ شیفت:</span>
-                  <strong className="text-foreground font-data-mono">{toFa(dayjs(selectedDate).format('YYYY/MM/DD'))} ({dayjs(selectedDate).format('dddd')})</strong>
+                  <strong className="text-foreground font-data-mono">{toFa(jdate(selectedDate).format('YYYY/MM/DD'))} ({jdate(selectedDate).format('dddd')})</strong>
                 </div>
               </div>
             ) : (
@@ -2228,7 +2415,7 @@ export default function AdminShiftsPage() {
                     <button
                       key={item.code}
                       type="button"
-                      onClick={() => setSelectedShiftCode(item.code as any)}
+                      onClick={() => setSelectedShiftCode(item.code as ShiftCodeValue)}
                       className={cn(
                         "h-9 border rounded-lg text-xs font-bold transition-all cursor-pointer",
                         item.color,

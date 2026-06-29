@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { toFa, jalali } from '@/lib/fa'
 import { Bell, CheckCheck, Info, AlertTriangle, AlertCircle, Search, Settings, ShieldAlert, MessageSquare, Calendar, Loader2 } from 'lucide-react'
 import dayjs from 'dayjs'
-import 'dayjs-jalali'
 import { cn } from '@/lib/utils'
 
 interface Notification {
@@ -35,7 +34,7 @@ function getTimeGroup(dateStr: string): string {
 function playAlertSound(type: 'info' | 'warning' | 'success') {
   if (typeof window === 'undefined') return
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const ctx = new (window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)()
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
 
@@ -68,8 +67,8 @@ function playAlertSound(type: 'info' | 'warning' | 'success') {
       osc.start(ctx.currentTime)
       osc.stop(ctx.currentTime + 0.2)
     }
-  } catch (e) {
-    console.warn('Audio Context blocked or unsupported:', e)
+  } catch {
+    // audio context not supported
   }
 }
 

@@ -4,7 +4,7 @@ import {
   requireRole,
   authErrorResponse,
 } from '@/server/rbac/guard'
-import { createPostSchema } from '@/server/dto/content'
+import { createPostSchema } from '@/lib/zod/content'
 import { listPosts, listPostsAdmin, createPost } from '@/server/modules/content/service'
 
 export async function GET(request: Request) {

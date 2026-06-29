@@ -10,27 +10,37 @@ Project
 Personnel + operations platform for Tehran Metro Line 1 (سیر و حرکت خط یک مترو تهران).
 Language: Persian (Farsi), RTL. Theme: dark-first. Line 1 brand color is red.
 
-Phase 1 scope (six capabilities):
+Phase 1-4 Scope (Full System Capabilities):
+- Two-step auth + RBAC (super_admin / admin / operator / manager)
+- Smart directory + dynamic profile fields (دفتر تلفن) with customizable fields
+- Excel import/export for users (اکسل)
+- Roster upload + shift extraction + personal calendar (لوحه)
+- Safety bulletins with mandatory read-receipts (بخشنامه ایمنی)
+- Image-based fault ticketing (تیکتینگ خرابی)
+- Real-time group & direct messaging (چت بلادرنگ) over Server-Sent Events (SSE)
+- AI-based assistant (دستیار هوشمند) trained on operations handbook
+- Geofencing and location-based attendance checking
+- SOS emergency alerting with geolocation broadcasting
+- Route limits & temporary speed restrictions (TSR panel & live track map)
+- Voice conference and driver radio simulation (بی‌سیم راهبری)
+- Performance logs, KPIs, and Gamification (leaderboard)
+- Dynamic checklists (چک‌لیست قبل از حرکت)
 
-Two-step auth + RBAC (super_admin / admin / operator)
-Smart directory + dynamic profile fields (دفتر تلفن)
-Excel import/export for users (اکسل)
-Roster upload + shift extraction + personal calendar (لوحه)
-Safety bulletins with mandatory read-receipts (بخشنامه ایمنی)
-Image-based fault ticketing (تیکتینگ خرابی)
 Stack (fixed)
-Next.js latest — App Router; Route Handlers under app/api/ for the backend
-TypeScript (strict: true)
-Tailwind CSS v4 — CSS-first config via @theme inline in globals.css. NO tailwind.config.ts.
-shadcn/ui — new-york style, neutral base, CSS variables
-next-themes — class-based dark mode, default: dark
-Zustand + persist middleware (one store per feature)
-Zod — shared validation, used on both client and server
-Prisma + PostgreSQL
-Auth — JWT (access + refresh) with RBAC route guards
-SheetJS (xlsx) for Excel import/export
-i18n — Persian RTL; Vazirmatn font; jalali dates via dayjs-jalali
-Package manager: npm only
+- Next.js latest — App Router; Route Handlers under app/api/ for the backend
+- React Native / Expo — Cross-platform client under mobile/ directory
+- TypeScript (strict: true)
+- Tailwind CSS v4 — CSS-first config via @theme inline in globals.css. NO tailwind.config.ts.
+- shadcn/ui — new-york style, neutral base, CSS variables
+- next-themes — class-based dark mode, default: dark
+- Zustand + persist middleware (one store per feature)
+- Zod — shared validation, used on both client and server
+- Prisma + SQLite (dev) / PostgreSQL (prod)
+- Auth — JWT (access + refresh) with RBAC route guards
+- SheetJS (xlsx) for Excel import/export
+- i18n — Persian RTL; Vazirmatn font; jalali dates via dayjs-jalali
+- Package manager: npm only
+
 Design
 All visual decisions (colors, typography, spacing, radius, shadows, components)
 are defined in DESIGN.md. Do not invent values — read DESIGN.md first.
@@ -45,14 +55,16 @@ src/
 │   └── api/                    # Route Handlers (REST under /api)
 ├── components/
 │   ├── ui/                     # wrapped shadcn ONLY
-│   └── shared/                 # AppShell, Sidebar, ThemeToggle, DataTable, FileDrop, EmptyState
+│   └── shared/                 # AppShell, Sidebar, ThemeToggle, DataTable, FileDrop, EmptyState, LiveTrackMap, etc.
 ├── features/
 │   ├── auth/                   # {components, store, api-client, types, index.ts}
 │   ├── directory/
 │   ├── roster/
 │   ├── swap/
 │   ├── safety/
-│   └── tickets/
+│   ├── tickets/
+│   ├── chat/
+│   └── shifts/
 ├── server/
 │   ├── db.ts                   # Prisma client singleton
 │   ├── auth/                   # jwt, password hashing, session

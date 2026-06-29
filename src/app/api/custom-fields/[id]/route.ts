@@ -9,7 +9,7 @@ import {
   deleteCustomFieldDef,
   getCustomFieldDef,
 } from '@/server/modules/custom-fields/service'
-import { customFieldDefSchema } from '@/server/dto/directory'
+import { customFieldDefSchema } from '@/lib/zod/directory'
 
 export async function PATCH(
   request: Request,

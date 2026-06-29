@@ -66,7 +66,7 @@ export default function RadioSimulatorPage() {
   // Audio helper
   const initAudio = () => {
     if (!audioCtxRef.current) {
-      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+      audioCtxRef.current = new (window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)()
     }
   };
 
@@ -144,6 +144,7 @@ export default function RadioSimulatorPage() {
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
     const data = buffer.getChannelData(0)
     for (let i = 0; i < bufferSize; i++) {
+      // eslint-disable-next-line react-hooks/purity -- Math.random is intentional for white noise generation
       data[i] = Math.random() * 2 - 1 // White noise
     }
 

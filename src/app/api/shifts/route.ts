@@ -6,7 +6,7 @@ import {
 } from '@/server/rbac/guard'
 import { getAllShifts } from '@/server/modules/roster/shifts'
 import { prisma } from '@/server/db'
-import { z } from 'zod'
+import { assignShiftSchema } from '@/lib/zod/shifts'
 
 // GET /api/shifts - دریافت شیفت‌ها در یک بازه زمانی خاص
 export async function GET(request: Request) {
@@ -36,14 +36,6 @@ export async function GET(request: Request) {
   const shifts = await getAllShifts(startDate, endDate, roleFilter ?? undefined)
   return NextResponse.json({ data: shifts })
 }
-
-const assignShiftSchema = z.object({
-  userId: z.string().min(1, 'شناسه کاربر الزامی است'),
-  date: z.string().min(1, 'تاریخ الزامی است'),
-  code: z.enum(['morning', 'evening', 'night', 'off', 'office']),
-  source: z.enum(['cycle', 'roster', 'manual']).optional(),
-  note: z.string().optional().nullable(),
-})
 
 // POST /api/shifts - ایجاد یا به‌روزرسانی دستی شیفت پرسنل توسط مدیر
 export async function POST(request: Request) {

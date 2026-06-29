@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
-import { swapRequestSchema } from '@/server/dto/roster'
+import { swapRequestSchema } from '@/lib/zod/roster'
 import { createSwapRequest } from '@/server/modules/swap/service'
 import { getSettingValue } from '@/server/modules/settings/service'
 

@@ -5,16 +5,7 @@ import {
   requirePermission,
   authErrorResponse,
 } from '@/server/rbac/guard'
-import { z } from 'zod'
-
-const updateSettingsSchema = z.object({
-  updates: z.array(
-    z.object({
-      key: z.string().min(1, 'کلید تنظیم الزامی است'),
-      value: z.any(),
-    })
-  ).min(1, 'لیست تغییرات نمی‌تواند خالی باشد'),
-})
+import { updateSettingsSchema } from '@/lib/zod/admin'
 
 export async function GET(request: Request) {
   const user = await getSessionUser(request)
@@ -27,7 +18,6 @@ export async function GET(request: Request) {
     const settings = await getSettings()
     return NextResponse.json({ data: settings })
   } catch (error: unknown) {
-    console.error('Error fetching settings:', error)
     const message = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
       { error: `خطا در دریافت تنظیمات: ${message}` },
@@ -60,7 +50,6 @@ export async function PATCH(request: Request) {
       data: updated,
     })
   } catch (error: unknown) {
-    console.error('Error updating settings:', error)
     const message = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
       { error: message || 'خطا در بروزرسانی تنظیمات' },

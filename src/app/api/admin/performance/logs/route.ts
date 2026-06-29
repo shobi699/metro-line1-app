@@ -2,15 +2,8 @@ import { NextResponse } from 'next/server'
 import { getSessionUser, requireRole, authErrorResponse } from '@/server/rbac/guard'
 import { prisma } from '@/server/db'
 import { logPerformanceAction } from '@/server/modules/performance/service'
-import { z } from 'zod'
-
-const createLogSchema = z.object({
-  employeeId: z.string().min(1, 'انتخاب کارمند الزامی است'),
-  actionTypeId: z.string().min(1, 'انتخاب نوع عملکرد الزامی است'),
-  severity: z.enum(['L1', 'L2', 'L3']).default('L1'),
-  note: z.string().optional().or(z.literal('')),
-  evidenceUrl: z.string().optional().or(z.literal('')),
-})
+import type { Prisma } from '@/generated/prisma/client'
+import { createLogSchema } from '@/lib/zod/admin'
 
 // GET /api/admin/performance/logs - Fetch all action types and competencies for dropdowns, plus recent logs
 export async function GET(request: Request) {
@@ -40,7 +33,7 @@ export async function GET(request: Request) {
     })
 
     // 3. Fetch recent performance logs with filters if provided
-    const whereClause: any = {}
+    const whereClause: Prisma.PerformanceLogWhereInput = {}
     if (employeeId) whereClause.employeeId = employeeId
     if (periodId) whereClause.periodId = periodId
 

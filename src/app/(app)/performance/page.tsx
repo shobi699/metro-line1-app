@@ -12,14 +12,8 @@ import {
   TrendingUp,
   AlertTriangle,
   CheckCircle2,
-  XCircle,
   Plus,
-  ChevronLeft,
-  User,
-  Users,
-  Calendar,
   Activity,
-  Clock,
   Trophy,
   ThumbsUp,
   Check,
@@ -27,7 +21,6 @@ import {
   ShieldCheck,
   FileSpreadsheet,
   ChevronDown,
-  Search,
   HelpCircle,
   Briefcase,
   AlertCircle,
@@ -580,7 +573,7 @@ export default function PerformancePage() {
     const radar = scorecard.competencyRadar
 
     return radarAxes.map((axis, i) => {
-      const score = (radar as any)[axis.key] || 80 // Default to 80 if missing
+      const score = (radar as unknown as Record<string, number>)[axis.key] || 80 // Default to 80 if missing
       const angle = -Math.PI / 2 + i * (2 * Math.PI / 6) // Hexagon vertices
       const radius = (score / 100) * maxRadius
       return {
@@ -634,7 +627,7 @@ export default function PerformancePage() {
     
     // Group logs by department/post
     managerData.logs.forEach((log) => {
-      const dept = (log.employee?.customFields as any)?.post || 'عملیات'
+      const dept = String((log.employee?.customFields as Record<string, unknown>)?.post || 'عملیات')
       const val = log.scoreValue
       if (!depts[dept]) {
         depts[dept] = { total: 100 + val, count: 1 } // start from base 100
@@ -1384,7 +1377,7 @@ export default function PerformancePage() {
                               <option value="">-- انتخاب پرسنل خط ۱ --</option>
                               {managerData.employees.map((emp) => (
                                 <option key={emp.id} value={emp.id}>
-                                  {emp.name} ({((emp.customFields as any)?.post) || 'پرسنل'})
+                                  {emp.name} ({String((emp.customFields as Record<string, unknown>)?.post) || 'پرسنل'})
                                 </option>
                               ))}
                             </select>
@@ -1432,7 +1425,7 @@ export default function PerformancePage() {
                             <label className="text-xs font-bold text-foreground">سطح شدت رویداد (Severity):</label>
                             <select
                               value={quickLog.severity}
-                              onChange={(e) => setQuickLog({ ...quickLog, severity: e.target.value as any })}
+                              onChange={(e) => setQuickLog({ ...quickLog, severity: e.target.value as 'L1' | 'L2' | 'L3' })}
                               className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:border-accent cursor-pointer"
                             >
                               <option value="L1">{severityLabels.L1}</option>
@@ -1539,7 +1532,7 @@ export default function PerformancePage() {
                             {activeNomination.periodEmployee?.name}
                           </h4>
                           <span className="text-xs text-foreground-muted font-semibold">
-                            سمت: {((activeNomination.periodEmployee?.customFields as any)?.post) || 'راهبر قطار'}
+                             سمت: {String((activeNomination.periodEmployee?.customFields as Record<string, unknown>)?.post) || 'راهبر قطار'}
                           </span>
 
                           <p className="mt-4 text-[11px] text-foreground-muted leading-relaxed bg-yellow-500/5 p-3 rounded-lg border border-yellow-500/25">
@@ -1631,7 +1624,7 @@ export default function PerformancePage() {
                             <label className="text-[11px] font-bold text-foreground">حداکثر شدت مجاز:</label>
                             <select
                               value={customAction.maxSeverity}
-                              onChange={(e) => setCustomAction({ ...customAction, maxSeverity: e.target.value as any })}
+                              onChange={(e) => setCustomAction({ ...customAction, maxSeverity: e.target.value as 'L1' | 'L2' | 'L3' })}
                               className="w-full bg-surface border border-border rounded px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent cursor-pointer"
                             >
                               <option value="L1">L1 - جزئی</option>

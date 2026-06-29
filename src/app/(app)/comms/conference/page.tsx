@@ -176,7 +176,7 @@ export default function AudioConferencePage() {
 
   const initAudio = () => {
     if (!audioCtxRef.current) {
-      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+      audioCtxRef.current = new (window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)()
     }
   }
 
@@ -215,7 +215,7 @@ export default function AudioConferencePage() {
 
     if (room.allowedAccess === 'shift') {
       // user shift metadata checking
-      const userShift = (user.customFields as any)?.workShiftGroup || 'A'
+      const userShift = String((user.customFields as Record<string, unknown>)?.workShiftGroup || 'A')
       return room.allowedShifts?.includes(userShift) ?? false
     }
 
@@ -260,7 +260,7 @@ export default function AudioConferencePage() {
     if (!newRoomName.trim() || !user) return
 
     const newRoom: VoiceRoom = {
-      id: `room-${Date.now()}`,
+      id: `room-${crypto.randomUUID()}`,
       name: newRoomName.trim(),
       allowedAccess: newRoomAccess,
       allowedRoles: newRoomAccess === 'role' ? selectedRoles : undefined,
@@ -677,7 +677,7 @@ export default function AudioConferencePage() {
                 <label className="text-xs font-semibold text-foreground-muted block">سطح دسترسی و امنیت:</label>
                 <select
                   value={newRoomAccess}
-                  onChange={(e) => setNewRoomAccess(e.target.value as any)}
+                  onChange={(e) => setNewRoomAccess(e.target.value as 'public' | 'role' | 'shift' | 'manual')}
                   className="h-9 w-full bg-surface border border-border rounded-lg px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                 >
                   <option value="public">عمومی (پیوستن آزاد برای همه)</option>

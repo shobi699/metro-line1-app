@@ -126,7 +126,7 @@ function ChatView() {
       .then((payload) => {
         setUsersList(payload.data?.users ?? [])
       })
-      .catch((err) => console.error(err))
+      .catch(() => {})
       .finally(() => setLoadingUsers(false))
   }, [isNewChatOpen, accessToken])
 
@@ -163,8 +163,8 @@ function ChatView() {
         const err = await res.json()
         alert(err.error || 'خطا در عملیات سنجاق کردن پیام')
       }
-    } catch (err) {
-      console.error(err)
+    } catch {
+      // pin message failed silently
     }
   }
 
@@ -198,8 +198,8 @@ function ChatView() {
         const err = await res.json()
         alert(err.error || 'خطا در ساخت گروه جدید')
       }
-    } catch (err) {
-      console.error(err)
+    } catch {
+      // create group failed silently
     } finally {
       setCreatingGroup(false)
     }

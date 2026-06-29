@@ -129,8 +129,8 @@ export default function AdminSettingsPage() {
         const data = await res.json()
         setAuditLogs(data.data as AuditLog[])
       }
-    } catch (error) {
-      console.error('Error fetching audit logs:', error)
+    } catch {
+      // audit logs fetch failed silently
     } finally {
       setLoadingAudit(false)
     }

@@ -6,8 +6,6 @@ import {
 } from '@/server/rbac/guard'
 import { getStorage } from '@/server/storage'
 
-export const runtime = 'nodejs'
-
 const MAX_SIZE = 100 * 1024 * 1024 // ۱۰۰ مگابایت
 const ALLOWED_PREFIXES = ['image/', 'video/', 'audio/']
 const ALLOWED_EXACT = ['application/pdf']
@@ -44,7 +42,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer())
+  const buffer = await file.arrayBuffer()
   const stored = await getStorage().saveFile(buffer, file.name, mime)
 
   return NextResponse.json({ data: stored }, { status: 201 })

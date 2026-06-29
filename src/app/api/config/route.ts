@@ -24,7 +24,7 @@ export async function GET() {
         },
       },
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'خطا در دریافت پیکربندی عمومی' },
       { status: 500 }

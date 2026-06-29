@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
-import { sendOtpSchema } from '@/server/dto/auth'
-import { otps } from '@/server/auth/otp-store'
+import { sendOtpSchema } from '@/lib/zod/auth'
+import { otpStore } from '@/server/auth/otp-store'
 
 export async function POST(request: Request) {
   try {
@@ -42,8 +42,8 @@ export async function POST(request: Request) {
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
     const expiresAt = Date.now() + 5 * 60 * 1000 // 5 minutes TTL
 
-    // Store in global memory map
-    otps.set(nationalId, {
+    // Store via adapter (KV on Cloudflare, in-memory locally)
+    await otpStore.setOtp(nationalId, {
       code: otpCode,
       expiresAt,
       phone,

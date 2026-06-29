@@ -1,22 +1,12 @@
-import { PrismaClient, type ShiftCode } from '@/generated/prisma/client'
+import { PrismaClient, Prisma, type ShiftCode } from '@/generated/prisma/client'
 import bcrypt from 'bcryptjs'
-import fs from 'node:fs'
-import path from 'node:path'
-// dayjs is used for Jalali date calculations during database seeding
-import dayjs from 'dayjs'
-import 'dayjs-jalali'
+import { jalaliPeriodId } from '@/lib/dayjs'
 import { ensurePersonnelCustomFields } from './modules/custom-fields/service'
 
 const DEMO_PASSWORD = 'admin123'
 
-function logSeed(message: string) {
-  try {
-    const logPath = path.resolve(process.cwd(), 'prisma', 'seed.log')
-    const logMsg = `[${new Date().toISOString()}] ${message}\n`
-    fs.appendFileSync(logPath, logMsg, 'utf8')
-  } catch (err) {
-    console.error('Failed to write seed log:', err)
-  }
+function logSeed(_message?: string) {
+  // silent in production
 }
 
 export async function seedDatabase(prisma: PrismaClient, force = false) {
@@ -28,8 +18,9 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
       logSeed('Database already populated. Ensuring custom fields and settings...')
       try {
         await ensurePersonnelCustomFields()
-      } catch (err: any) {
-        logSeed(`Failed to ensure personnel custom fields on boot: ${err.message}`)
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        logSeed(`Failed to ensure personnel custom fields on boot: ${msg}`)
       }
       try {
         const settingsCount = await prisma.setting.count()
@@ -406,7 +397,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
         where: { nationalId: op.nationalId },
         update: {
           roleId: matchedRoleId,
-          customFields: op.customFields as any
+          customFields: op.customFields as unknown as Prisma.InputJsonValue
         },
         create: {
           nationalId: op.nationalId,
@@ -415,7 +406,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
           passwordHash,
           status: 'active',
           roleId: matchedRoleId,
-          customFields: op.customFields as any
+          customFields: op.customFields as unknown as Prisma.InputJsonValue
         },
       })
       operators.push(user)
@@ -606,7 +597,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
     logSeed('Performance action types seeded.')
 
     // ── Performance Logs (initial) ───────────────────────
-    const currentPeriodId = dayjs().locale('jalali').format('YYYY-MM')
+    const currentPeriodId = jalaliPeriodId()
     const logCount = await prisma.performanceLog.count()
     if (logCount === 0 && operators.length >= 3) {
       await prisma.performanceLog.createMany({

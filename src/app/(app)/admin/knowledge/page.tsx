@@ -1,34 +1,27 @@
 'use client'
 
-import { useEffect, useRef, useState, Suspense } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { jalali } from '@/lib/fa'
 import {
   Plus,
   Pencil,
   Trash2,
-  Upload,
   Loader2,
-  Newspaper,
   ArrowRight,
-  Eye,
-  Settings,
-  Globe,
   Sparkles,
   Bold,
   Heading,
   List,
   Image,
   FileText,
-  CheckCircle,
   AlertCircle,
-  Award,
   Link2,
   Trash,
   Check,
@@ -36,13 +29,8 @@ import {
   Settings2,
   ChevronUp,
   ChevronDown,
-  XCircle,
-  Video,
   FileCode,
-  Undo2,
-  EyeOff,
   BookOpen,
-  Tag,
 } from 'lucide-react'
 import { toFa } from '@/lib/fa'
 
@@ -255,8 +243,8 @@ function AdminKnowledgePageContent() {
         setHasRecoverableDraft(false)
         setIsWorkspaceOpen(true)
       }
-    } catch (e) {
-      console.error(e)
+    } catch {
+      // draft recovery failed silently
     }
   }
 
@@ -425,7 +413,6 @@ function AdminKnowledgePageContent() {
 
   const getSeoAnalysis = () => {
     const keyword = seoFocusKeyword.trim().toLowerCase()
-    const textStr = editorTab === 'visual' ? blocksToMarkdown(blocks) : form.body
     const titleLower = form.title.toLowerCase()
     const slugLower = form.slug.toLowerCase()
 

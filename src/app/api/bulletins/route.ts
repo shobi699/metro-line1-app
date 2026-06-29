@@ -4,7 +4,7 @@ import {
   requireRole,
   authErrorResponse,
 } from '@/server/rbac/guard'
-import { createBulletinSchema } from '@/server/dto/safety'
+import { createBulletinSchema } from '@/lib/zod/safety'
 import { createBulletin, getAllBulletins } from '@/server/modules/safety/bulletins'
 
 export async function GET(request: Request) {

@@ -26,9 +26,6 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
 } from '@/components/ui/sheet'
 import {
   DropdownMenu,
@@ -74,8 +71,7 @@ import {
   Award,
   MapPin,
 } from 'lucide-react'
-import dayjs from 'dayjs'
-import 'dayjs-jalali'
+import { jdate, dayjs } from '@/lib/dayjs'
 import { toFa, jalali } from '@/lib/fa'
 import { cn } from '@/lib/utils'
 import { PERMISSION_CATALOG } from '@/server/rbac/permissions'
@@ -392,7 +388,7 @@ function calculateAge(birthDateStr: string | null | undefined) {
     const jalaliYearMatch = birthDateStr.match(/^(\d{4})[-/]\d{2}[-/]\d{2}/)
     if (jalaliYearMatch) {
       const jYear = parseInt(jalaliYearMatch[1])
-      const currentJYear = dayjs().locale('jalali').year()
+      const currentJYear = jdate().year()
       return currentJYear - jYear
     }
     const gYear = dayjs(birthDateStr).year()
@@ -786,8 +782,8 @@ export default function AdminUsersPage() {
         const json = await res.json()
         setUserAuditLogs(json.data || [])
       }
-    } catch (error) {
-      console.error('Error loading user audit logs:', error)
+    } catch {
+      // user audit logs fetch failed silently
     } finally {
       setLoadingUserAuditLogs(false)
     }
@@ -810,8 +806,8 @@ export default function AdminUsersPage() {
         const json = await res.json()
         setGlobalAuditLogs(json.data || [])
       }
-    } catch (error) {
-      console.error('Error loading global audit logs:', error)
+    } catch {
+      // global audit logs fetch failed silently
     } finally {
       setLoadingGlobalAuditLogs(false)
     }
@@ -1254,9 +1250,9 @@ export default function AdminUsersPage() {
       const userToUpdate = users.find((u) => u.id === userId) || selectedUserForDetail
       if (!userToUpdate) return
 
-      const currentCustomFields = (userToUpdate.customFields as Record<string, any>) || {}
-      const currentVehicles = (currentCustomFields.vehicles as any[]) || []
-      const updatedVehicles = currentVehicles.map((v: any) =>
+      const currentCustomFields = (userToUpdate.customFields as Record<string, unknown>) || {}
+      const currentVehicles = (currentCustomFields.vehicles as Vehicle[]) || []
+      const updatedVehicles = currentVehicles.map((v: Vehicle) =>
         v.id === vehicleId ? { ...v, status } : v
       )
 
@@ -1297,8 +1293,8 @@ export default function AdminUsersPage() {
 
   const renderDetailFieldRow = (label: string, fieldName: string, icon: React.ReactNode) => {
     if (!selectedUserForDetail) return null
-    const value = String((selectedUserForDetail.customFields as any)?.[fieldName] || '—')
-    const status = (selectedUserForDetail.customFields as any)?.[`${fieldName}_status`] || 'approved'
+    const value = String((selectedUserForDetail.customFields as Record<string, unknown>)?.[fieldName] || '—')
+    const status = (selectedUserForDetail.customFields as Record<string, unknown>)?.[`${fieldName}_status`] || 'approved'
 
     return (
       <div className="flex flex-col border-b border-border/20 py-2 last:border-0">
@@ -2668,7 +2664,7 @@ export default function AdminUsersPage() {
                   <select
                     id="fieldType"
                     value={fieldType}
-                    onChange={(e) => setFieldType(e.target.value as any)}
+                    onChange={(e) => setFieldType(e.target.value as 'text' | 'number' | 'select' | 'date' | 'boolean')}
                     className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-accent cursor-pointer"
                   >
                     <option value="text">متن (یک خطی)</option>
@@ -3058,7 +3054,7 @@ export default function AdminUsersPage() {
                       : "text-foreground-muted hover:text-foreground hover:bg-surface/50 border border-transparent"
                   )}
                 >
-                  خودروها ({toFa(((selectedUserForDetail.customFields as any)?.vehicles || []).length)})
+                  خودروها ({toFa(((selectedUserForDetail.customFields as Record<string, unknown>)?.vehicles as Vehicle[] | undefined || []).length)})
                 </button>
                 <button
                   type="button"
@@ -3180,7 +3176,7 @@ export default function AdminUsersPage() {
                         {renderDetailFieldRow('تلفن ۴ پرسنلی', 'phone4', <Phone className="size-3.5 text-accent" />)}
                         
                         {/* Additional phones display if any */}
-                        {(((selectedUserForDetail.customFields as any)?.additionalPhones || []) as string[]).map((ph: string, idx: number) => {
+                        {(((selectedUserForDetail.customFields as Record<string, unknown>)?.additionalPhones || []) as string[]).map((ph: string, idx: number) => {
                           return (
                             <div key={idx} className="flex flex-col border-b border-border/20 py-2.5 last:border-0">
                               <div className="flex items-center justify-between">
@@ -3204,7 +3200,7 @@ export default function AdminUsersPage() {
                     </h3>
 
                     {(() => {
-                      const userVehicles = ((selectedUserForDetail.customFields as any)?.vehicles || []) as Vehicle[]
+                      const userVehicles = ((selectedUserForDetail.customFields as Record<string, unknown>)?.vehicles || []) as Vehicle[]
                       if (userVehicles.length === 0) {
                         return (
                           <div className="flex flex-col items-center justify-center p-12 text-foreground-muted gap-2 border border-dashed border-border/60 rounded-xl">
@@ -3641,7 +3637,7 @@ export default function AdminUsersPage() {
                       id="status"
                       required
                       value={status}
-                      onChange={(e) => setStatus(e.target.value as any)}
+                      onChange={(e) => setStatus(e.target.value as 'pending' | 'active' | 'suspended')}
                       className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-accent cursor-pointer"
                     >
                       <option value="active">فعال</option>
@@ -3976,7 +3972,7 @@ export default function AdminUsersPage() {
               <select
                 id="editFieldType"
                 value={editFieldType}
-                onChange={(e) => setEditFieldType(e.target.value as any)}
+                onChange={(e) => setEditFieldType(e.target.value as 'text' | 'number' | 'select' | 'date' | 'boolean')}
                 className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-accent cursor-pointer"
               >
                 <option value="text">متن (یک خطی)</option>

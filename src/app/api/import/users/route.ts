@@ -36,7 +36,12 @@ export async function POST(request: Request) {
 
   if (result.errors.length > 0) {
     const errorBuffer = generateErrorReport(result.errors)
-    const errorBase64 = Buffer.from(errorBuffer).toString('base64')
+    const bytes = new Uint8Array(errorBuffer)
+    let binary = ''
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i])
+    }
+    const errorBase64 = btoa(binary)
 
     return NextResponse.json({
       data: {

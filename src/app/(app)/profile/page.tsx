@@ -14,33 +14,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toFa, jalali, faTime } from '@/lib/fa'
 import { cn } from '@/lib/utils'
 import { 
-  User, 
-  Shield, 
-  Phone, 
-  Mail, 
-  Calendar, 
-  KeyRound, 
-  Pencil, 
-  CheckCircle2, 
-  AlertCircle, 
-  Upload, 
-  Loader2, 
-  Contact, 
-  Briefcase, 
-  Award, 
-  Clock, 
-  Activity, 
-  Check, 
-  Camera, 
-  MapPin, 
-  Palette, 
+  User,
+  Shield,
+  Pencil,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Contact,
+  Briefcase,
+  Award,
+  Clock,
+  Activity,
+  Check,
+  Camera,
+  MapPin,
+  Palette,
   ClipboardList,
   Car,
   Trash2,
   AlertTriangle,
-  GraduationCap,
-  Layers,
-  Map,
   X
 } from 'lucide-react'
 
@@ -456,7 +448,7 @@ export default function ProfilePage() {
 
     const combinedPlate = `${plateNum1} ${plateLetter} ${plateNum2} ایران ${plateCity}`
     const newVehicle: Vehicle = {
-      id: 'VEH-' + Date.now(),
+      id: `VEH-${crypto.randomUUID()}`,
       plateNum1,
       plateLetter,
       plateNum2,

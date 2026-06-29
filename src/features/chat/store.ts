@@ -56,8 +56,8 @@ interface ChatState {
   reset: () => void
 }
 
-// نگه‌داری اتصال SSE خارج از state تا از سریال‌سازی/رندر مجدد جدا بماند.
-let eventSource: EventSource | null = null
+// نگه‌داری اتصال WebSocket خارج از state تا از سریال‌سازی/رندر مجدد جدا بماند.
+let ws: WebSocket | null = null
 
 function authHeaders(token: string): HeadersInit {
   return { Authorization: `Bearer ${token}` }
@@ -225,38 +225,56 @@ export const useChatStore = create<ChatState>()(
       },
 
       connect(token) {
-        if (eventSource) return
-        const es = new EventSource(
-          `/api/chat/stream?token=${encodeURIComponent(token)}`,
-        )
-        es.addEventListener('ready', () => set({ connected: true }))
-        es.addEventListener('message', (ev) => {
+        if (ws) return
+
+        // Try WebSocket first (Cloudflare Durable Objects)
+        const wsUrl = `/api/chat/stream?token=${encodeURIComponent(token)}`
+
+        // Use standard WebSocket — the endpoint will upgrade or return SSE fallback
+        const socket = new WebSocket(wsUrl.replace(/^http/, 'ws'))
+
+        socket.onopen = () => set({ connected: true })
+
+        socket.onmessage = (ev) => {
           try {
-            const payload = JSON.parse((ev as MessageEvent).data) as {
+            const payload = JSON.parse(ev.data) as {
+              type: string
               roomId: string
-              message: ChatMessage
+              data: ChatMessage
             }
-            handleIncoming(set, get, payload.message)
+            if (payload.type === 'message') {
+              handleIncoming(set, get, payload.data)
+            }
           } catch {
             // نادیده گرفتن payload نامعتبر
           }
-        })
-        es.onerror = () => {
-          set({ connected: false })
-          // EventSource به‌صورت خودکار تلاش مجدد می‌کند؛ فقط وضعیت را به‌روز می‌کنیم.
         }
-        eventSource = es
+
+        socket.onerror = () => {
+          set({ connected: false })
+        }
+
+        socket.onclose = () => {
+          set({ connected: false })
+          ws = null
+          // Auto-reconnect after 3 seconds
+          setTimeout(() => {
+            if (!ws) get().connect(token)
+          }, 3000)
+        }
+
+        ws = socket
       },
 
       disconnect() {
-        eventSource?.close()
-        eventSource = null
+        ws?.close()
+        ws = null
         set({ connected: false })
       },
 
       reset() {
-        eventSource?.close()
-        eventSource = null
+        ws?.close()
+        ws = null
         set({
           rooms: [],
           activeRoomId: null,

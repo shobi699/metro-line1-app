@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, requireRole, authErrorResponse } from '@/server/rbac/guard'
 import { prisma } from '@/server/db'
-import { z } from 'zod'
-
-const createActionTypeSchema = z.object({
-  competencyId: z.string().min(1, 'انتخاب محور شایستگی الزامی است'),
-  title: z.string().min(1, 'عنوان عملکرد الزامی است'),
-  defaultScore: z.number(),
-  maxSeverity: z.enum(['L1', 'L2', 'L3']).default('L1'),
-})
+import type { Prisma } from '@/generated/prisma/client'
+import { createActionTypeSchema } from '@/lib/zod/admin'
 
 // POST /api/admin/performance/action-types - Create a new action type dynamically
 export async function POST(request: Request) {
@@ -63,7 +57,7 @@ export async function POST(request: Request) {
         entity: 'PerformanceActionType',
         entityId: id,
         action: 'create',
-        after: newActionType as any,
+        after: newActionType as unknown as Prisma.InputJsonValue,
       },
     })
 

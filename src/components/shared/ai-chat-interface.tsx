@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Send, Mic, History, AlertTriangle, Bot, Settings, X, Plus, FileText, Check, HelpCircle, ArrowLeft, Terminal } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Send, Mic, AlertTriangle, Bot, Settings, X, Plus, FileText, HelpCircle, Terminal } from 'lucide-react'
 import { useAuthStore } from '@/features/auth'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

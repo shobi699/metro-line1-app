@@ -25,6 +25,7 @@ import { VoiceConferenceScreen } from './src/screens/VoiceConferenceScreen'
 import { RadioSimulatorScreen } from './src/screens/RadioSimulatorScreen'
 import { PerformanceScreen } from './src/screens/PerformanceScreen'
 import { ContentScreen } from './src/screens/ContentScreen'
+import { RosterScreen } from './src/screens/RosterScreen'
 import { OfflineBanner } from './src/shared/OfflineBanner'
 import { BulletinGuard } from './src/shared/BulletinGuard'
 import { Theme } from './src/shared/theme'
@@ -50,6 +51,7 @@ export type RootStackParamList = {
   'بی‌سیم راهبری': undefined
   'عملکرد': undefined
   'محتوا': undefined
+  'لوحه': undefined
 }
 
 const Tab = createBottomTabNavigator()
@@ -154,6 +156,7 @@ export function AppContent() {
             <Stack.Screen name="بی‌سیم راهبری" component={RadioSimulatorScreen} />
             <Stack.Screen name="عملکرد" component={PerformanceScreen} />
             <Stack.Screen name="محتوا" component={ContentScreen} />
+            <Stack.Screen name="لوحه" component={RosterScreen} />
           </Stack.Navigator>
         </BulletinGuard>
       </View>

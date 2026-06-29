@@ -16,9 +16,6 @@ import {
   Settings,
   RefreshCw,
   AlertTriangle,
-  User,
-  ShieldCheck,
-  Calendar,
   Clock,
 } from 'lucide-react'
 import { toFa } from '@/lib/fa'
@@ -70,6 +67,31 @@ const INITIAL_CAMERA_LOGS: CameraLog[] = [
 ]
 
 const PLATE_LETTERS = ['الف', 'ب', 'ج', 'د', 'س', 'ص', 'ط', 'ع', 'ق', 'ل', 'م', 'ن', 'و', 'ه', 'ی']
+
+interface Plate {
+  num1: string
+  letter: string
+  num2: string
+  city: string
+}
+
+function IranianPlateDisplay({ plate }: { plate: Plate }) {
+  return (
+    <div className="inline-flex items-center border border-slate-700 rounded bg-white text-slate-900 font-bold text-xs h-7 select-none overflow-hidden shrink-0 shadow-sm" dir="ltr">
+      <div className="bg-blue-800 text-white w-4 h-full flex flex-col items-center justify-between py-0.5 px-0.5 border-r border-slate-700">
+        <span className="text-[5px] leading-none">I.R.</span>
+        <span className="text-[5px] leading-none font-sans font-normal">IRAN</span>
+      </div>
+      <div className="px-1.5 font-sans text-sm tracking-tighter">{toFa(plate.num1)}</div>
+      <div className="px-1.5 text-xs font-semibold font-serif text-slate-800">{plate.letter}</div>
+      <div className="px-1.5 font-sans text-sm tracking-tighter">{toFa(plate.num2)}</div>
+      <div className="border-l border-slate-700 h-full flex flex-col items-center justify-center px-1.5 bg-slate-100 text-[8px] leading-none">
+        <span className="text-[6px] text-slate-600 scale-90 mb-0.5">ایران</span>
+        <span className="font-sans font-bold text-xs leading-none">{toFa(plate.city)}</span>
+      </div>
+    </div>
+  )
+}
 
 export default function LicensePlatesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>(INITIAL_VEHICLES)
@@ -200,27 +222,6 @@ export default function LicensePlatesPage() {
       v.plate.num1.includes(searchTerm) ||
       v.plate.num2.includes(searchTerm),
   )
-
-  // کامپوننت رندر پلاک خودرو با طراحی واقعی و شیک ملی (RTL-First / Farsi digits)
-  const IranianPlate = ({ plate }: { plate: Vehicle['plate'] }) => {
-    return (
-      <div className="inline-flex items-center border border-slate-700 rounded bg-white text-slate-900 font-bold text-xs h-7 select-none overflow-hidden shrink-0 shadow-sm" dir="ltr">
-        {/* نوار آبی سمت چپ */}
-        <div className="bg-blue-800 text-white w-4 h-full flex flex-col items-center justify-between py-0.5 px-0.5 border-r border-slate-700">
-          <span className="text-[5px] leading-none">I.R.</span>
-          <span className="text-[5px] leading-none font-sans font-normal">IRAN</span>
-        </div>
-        <div className="px-1.5 font-sans text-sm tracking-tighter">{toFa(plate.num1)}</div>
-        <div className="px-1.5 text-xs font-semibold font-serif text-slate-800">{plate.letter}</div>
-        <div className="px-1.5 font-sans text-sm tracking-tighter">{toFa(plate.num2)}</div>
-        {/* کد شهر سمت راست */}
-        <div className="border-l border-slate-700 h-full flex flex-col items-center justify-center px-1.5 bg-slate-100 text-[8px] leading-none">
-          <span className="text-[6px] text-slate-600 scale-90 mb-0.5">ایران</span>
-          <span className="font-sans font-bold text-xs leading-none">{toFa(plate.city)}</span>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="flex min-h-screen flex-col" dir="rtl">
@@ -406,7 +407,7 @@ export default function LicensePlatesPage() {
                             <div className="text-xs text-foreground-muted mt-0.5 font-mono">کد پرسنلی: {toFa(v.ownerCode)}</div>
                           </td>
                           <td className="p-3">
-                            <IranianPlate plate={v.plate} />
+                            <IranianPlateDisplay plate={v.plate} />
                           </td>
                           <td className="p-3 font-medium text-foreground-muted">
                             {v.type} ({v.color})
@@ -481,7 +482,7 @@ export default function LicensePlatesPage() {
                   {/* License Plate Box */}
                   <div className="border border-success bg-success/5 px-4 py-2.5 rounded-lg text-center backdrop-blur-sm shadow-lg max-w-[200px]">
                     <div className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider mb-1">اسکن موفقیت‌آمیز</div>
-                    <IranianPlate plate={{ num1: '22', letter: 'ب', num2: '567', city: '33' }} />
+                    <IranianPlateDisplay plate={{ num1: '22', letter: 'ب', num2: '567', city: '33' }} />
                   </div>
                 </div>
 
@@ -498,7 +499,7 @@ export default function LicensePlatesPage() {
                     <div key={log.id} className="flex items-center justify-between p-2.5 rounded-lg border border-border-subtle bg-surface/30 hover:border-accent/10 transition-colors">
                       <div className="space-y-1">
                         <div className="flex items-center gap-1.5">
-                          <IranianPlate plate={log.plate} />
+                          <IranianPlateDisplay plate={log.plate} />
                           <Badge
                             className={
                               log.direction === 'in'

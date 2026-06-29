@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
 import { prisma } from '@/server/db'
-import { z } from 'zod'
-
-const aiQuerySchema = z.object({
-  prompt: z.string().min(1, 'متن درخواست نمی‌تواند خالی باشد'),
-})
+import { aiQuerySchema } from '@/lib/zod/ai'
 
 const RULEBOOK_DATABASE = [
   {
