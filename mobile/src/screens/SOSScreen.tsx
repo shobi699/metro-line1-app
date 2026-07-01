@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   StyleSheet,
   View,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Vibration,
 } from 'react-native'
 import { useAuthStore } from '../stores/auth'
 import { useChatStore } from '../stores/chat'
@@ -23,7 +24,9 @@ export function SOSScreen() {
 
   const [loading, setLoading] = useState(false)
   const [activeAlarm, setActiveAlarm] = useState(false)
-  const [countdown, setCountdown] = useState(5)
+  const [holdProgress, setHoldProgress] = useState(0)
+
+  const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     if (accessToken && rooms.length === 0) {
@@ -32,19 +35,54 @@ export function SOSScreen() {
   }, [accessToken])
 
   useEffect(() => {
-    let timer: ReturnType<typeof setInterval>
-    if (activeAlarm && countdown > 0) {
-      timer = setInterval(() => {
-        setCountdown((prev) => prev - 1)
-      }, 1000)
-    } else if (activeAlarm && countdown === 0) {
-      triggerSOS()
+    return () => {
+      if (holdIntervalRef.current) {
+        clearInterval(holdIntervalRef.current)
+      }
     }
-    return () => clearInterval(timer)
-  }, [activeAlarm, countdown])
+  }, [])
+
+  const handlePressIn = () => {
+    if (activeAlarm || loading) return
+
+    Vibration.vibrate(80) // بازخورد لمسی اولیه
+    const startTime = Date.now()
+
+    holdIntervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime
+      const progress = Math.min((elapsed / 3000) * 100, 100) // نگه داشتن به مدت ۳ ثانیه
+
+      setHoldProgress(progress)
+
+      // لرزش‌های کوتاه دوره‌ای در حین نگه داشتن دکمه برای حس فیزیکی دکمه صنعتی
+      if (progress < 100 && Math.floor(elapsed / 300) % 2 === 0) {
+        Vibration.vibrate(20)
+      }
+
+      if (progress >= 100) {
+        if (holdIntervalRef.current) {
+          clearInterval(holdIntervalRef.current)
+          holdIntervalRef.current = null
+        }
+        Vibration.vibrate([0, 500]) // لرزش ممتد و قوی هنگام فعال‌سازی موفقیت‌آمیز
+        void triggerSOS()
+      }
+    }, 50)
+  }
+
+  const handlePressOut = () => {
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current)
+      holdIntervalRef.current = null
+    }
+    if (holdProgress < 100) {
+      setHoldProgress(0)
+    }
+  }
 
   async function triggerSOS() {
     setLoading(true)
+    setActiveAlarm(true)
     
     // پیدا کردن چت‌روم مرکز فرمان (OCC)
     const occRoom = rooms.find((r) => r.kind === 'occ' || r.name.includes('OCC') || r.name.includes('مرکز فرمان'))
@@ -52,7 +90,7 @@ export function SOSScreen() {
     if (!occRoom) {
       Alert.alert('خطا', 'اتاق گفتگوی مرکز فرمان (OCC) جهت ارسال آلارم یافت نشد.')
       setActiveAlarm(false)
-      setCountdown(5)
+      setHoldProgress(0)
       setLoading(false)
       return
     }
@@ -72,7 +110,7 @@ export function SOSScreen() {
         lng = pos.coords.longitude
         locationSource = 'موقعیت واقعی دستگاه'
       } catch (e) {
-        // نادیده گرفتن خطا و استفاده از فرضی
+        // نادیده گرفتن خطا و استفاده از لوکیشن شبیه‌سازی شده پیش‌فرض
       }
     }
 
@@ -90,20 +128,13 @@ export function SOSScreen() {
       }
     }
 
-    setActiveAlarm(false)
-    setCountdown(5)
     setLoading(false)
   }
 
-  function handleButtonPress() {
-    if (activeAlarm) {
-      // لغو آلارم
-      setActiveAlarm(false)
-      setCountdown(5)
-    } else {
-      // شروع شمارش معکوس برای ارسال خودکار جهت جلوگیری از خطای ناخواسته
-      setActiveAlarm(true)
-    }
+  function handleCancelAlarm() {
+    Vibration.vibrate(100)
+    setActiveAlarm(false)
+    setHoldProgress(0)
   }
 
   const isSosEnabled = config?.mobile?.enableSos ?? true
@@ -140,12 +171,18 @@ export function SOSScreen() {
 
       <View style={styles.content}>
         <Text style={styles.infoText}>
-          در صورت بروز سانحه یا نقص فنی بحرانی در تونل یا ایستگاه، دکمه قرمز زیر را بفشارید.
+          در صورت بروز سانحه یا نقص فنی بحرانی در تونل یا ایستگاه، دکمه قرمز زیر را ۳ ثانیه فشرده نگه دارید.
         </Text>
 
         <TouchableOpacity
-          style={[styles.sosButton, activeAlarm ? styles.sosButtonActive : null]}
-          onPress={handleButtonPress}
+          style={[
+            styles.sosButton,
+            activeAlarm ? styles.sosButtonActive : null,
+            holdProgress > 0 && holdProgress < 100 ? { transform: [{ scale: 1 + holdProgress / 300 }] } : null
+          ]}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          onPress={activeAlarm ? handleCancelAlarm : undefined}
           disabled={loading}
           activeOpacity={0.8}
         >
@@ -153,18 +190,31 @@ export function SOSScreen() {
             <ActivityIndicator size="large" color="#ffffff" />
           ) : activeAlarm ? (
             <View style={styles.countdownContainer}>
-              <Text style={styles.countdownNumber}>{countdown}</Text>
-              <Text style={styles.countdownText}>ثانیه تا ارسال (کلیک جهت لغو)</Text>
+              <Text style={styles.countdownNumber}>🚨</Text>
+              <Text style={styles.countdownText}>لغو هشدار (ضربه بزنید)</Text>
+            </View>
+          ) : holdProgress > 0 ? (
+            <View style={styles.countdownContainer}>
+              <Text style={styles.countdownNumber}>{Math.round(holdProgress)}%</Text>
+              <Text style={styles.countdownText}>نگه دارید...</Text>
             </View>
           ) : (
             <AlertOctagon size={64} color="#ffffff" />
           )}
         </TouchableOpacity>
 
+        {holdProgress > 0 && holdProgress < 100 && (
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressBar, { width: `${holdProgress}%` }]} />
+          </View>
+        )}
+
         <Text style={styles.statusText}>
-          {activeAlarm 
-            ? '🚨 در حال ارسال سیگنال اضطراری به مرکز فرمان...'
-            : 'وضعیت: آماده به کار'}
+          {activeAlarm
+            ? '🚨 سیگنال اضطراری به همراه موقعیت به مرکز فرمان ارسال شد!'
+            : holdProgress > 0
+            ? 'در حال فعال‌سازی دکمه اضطراری...'
+            : 'وضعیت: آماده به کار (۳ ثانیه فشرده نگه دارید)'}
         </Text>
       </View>
     </View>
@@ -234,19 +284,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   countdownNumber: {
-    fontSize: 48,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#ffffff',
   },
   countdownText: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#ffffff',
-    marginTop: 4,
+    marginTop: 6,
+    textAlign: 'center',
+    paddingHorizontal: 12,
+  },
+  progressTrack: {
+    width: 200,
+    height: 8,
+    backgroundColor: '#262930',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginTop: -8,
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#ff1744',
   },
   statusText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#a0a3b0',
     fontWeight: '500',
+    textAlign: 'center',
   },
 })
+
 export default SOSScreen
