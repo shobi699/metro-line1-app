@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
-const postTypes = ['news', 'blog', 'training', 'circular', 'gallery'] as const
+const postTypes = ['news', 'blog', 'training', 'circular', 'gallery', 'announcement', 'directive', 'form'] as const
+const postStatuses = ['draft', 'review', 'approved', 'published', 'archived'] as const
 
 export const createPostSchema = z.object({
   type: z.enum(postTypes).optional().default('news'),
@@ -13,6 +14,9 @@ export const createPostSchema = z.object({
   mediaType: z.string().optional().or(z.literal('')),
   published: z.boolean().optional().default(true),
   mandatory: z.boolean().optional().default(false),
+  status: z.enum(postStatuses).optional().default('draft'),
+  publishAt: z.string().optional().or(z.literal('')),
+  nextReviewAt: z.string().optional().or(z.literal('')),
 })
 
 export type CreatePostInput = z.infer<typeof createPostSchema>
@@ -20,6 +24,12 @@ export type CreatePostInput = z.infer<typeof createPostSchema>
 export const updatePostSchema = createPostSchema.partial()
 
 export type UpdatePostInput = z.infer<typeof updatePostSchema>
+
+export const transitionPostStatusSchema = z.object({
+  status: z.enum(postStatuses),
+})
+
+export type TransitionPostStatusInput = z.infer<typeof transitionPostStatusSchema>
 
 export const createCommentSchema = z.object({
   body: z.string().min(1, 'متن نظر الزامی است').max(1000, 'متن نظر طولانی است'),

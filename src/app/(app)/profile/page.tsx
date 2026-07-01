@@ -33,7 +33,9 @@ import {
   Car,
   Trash2,
   AlertTriangle,
-  X
+  X,
+  Smartphone,
+  Laptop
 } from 'lucide-react'
 
 interface FullProfile {
@@ -170,6 +172,18 @@ export default function ProfilePage() {
   const [carColor, setCarColor] = useState('')
   const [carLicenseExpiry, setCarLicenseExpiry] = useState('۱۴۰۶/۱۲/۲۹')
   const [isAddingVehicle, setIsAddingVehicle] = useState(false)
+
+  const [devices, setDevices] = useState([
+    { id: 'dev-1', name: 'تبلت صنعتی کابین راهبر قطار - Hytera', type: 'tablet', location: 'بلاک ۴ جنوبی - قطار ۱۰۸', lastActive: 'آنلاین', isCurrent: true, isSuspicious: false },
+    { id: 'dev-2', name: 'گوشی شخصی پرسنل (Samsung Galaxy S23)', type: 'mobile', location: 'تهران، ایستگاه دروازه دولت', lastActive: '۳ دقیقه قبل', isCurrent: false, isSuspicious: false },
+    { id: 'dev-3', name: 'مرورگر وب دسکتاپ (Windows OCC Terminal)', type: 'desktop', location: 'تبریز، آدرس IP نامعلوم', lastActive: '۱ ساعت قبل', isCurrent: false, isSuspicious: true }
+  ])
+
+  const handleRevokeDevice = (id: string) => {
+    if (confirm('آیا از خروج این دستگاه و ابطال نشست فعال آن اطمینان دارید؟')) {
+      setDevices(devices.filter(d => d.id !== id))
+    }
+  }
 
   // Uploading state
   const [uploading, setUploading] = useState(false)
@@ -913,6 +927,10 @@ export default function ProfilePage() {
               <TabsTrigger value="timeline" className="data-active:shadow-sm gap-2">
                 <Activity className="size-4" />
                 <span>گزارش فعالیت‌ها</span>
+              </TabsTrigger>
+              <TabsTrigger value="devices" className="data-active:shadow-sm gap-2">
+                <Shield className="size-4" />
+                <span>مدیریت دستگاه‌ها</span>
               </TabsTrigger>
             </TabsList>
 
@@ -2013,6 +2031,70 @@ export default function ProfilePage() {
                       })}
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Tab 5: Devices Management */}
+            <TabsContent value="devices" className="animate-in fade-in-50 duration-200">
+              <Card className="border-border/60 shadow-sm">
+                <CardHeader className="p-4 pb-3">
+                  <CardTitle className="text-base font-semibold">دستگاه‌های فعال و نشست‌ها</CardTitle>
+                  <CardDescription className="text-xs text-foreground-muted leading-normal">
+                    لیست تبلت‌های صنعتی، گوشی‌های همراه و پایانه‌های OCC متصل به حساب کاربری شما:
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-4 space-y-4">
+                  {devices.some(d => d.isSuspicious) && (
+                    <div className="p-3.5 rounded-lg bg-critical/10 border border-critical/20 flex items-start gap-3 text-xs text-critical leading-relaxed">
+                      <AlertTriangle className="size-5 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-extrabold block">هشدار امنیتی: شناسایی ورود مشکوک!</span>
+                        <span>یک نشست فعال از مبدا تبریز با آی‌پی نامشخص شناسایی گردید. در صورتی که این ورود توسط شما انجام نشده است، بلافاصله دکمه «خروج و ابطال نشست» را کلیک کنید.</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    {devices.map((dev) => (
+                      <div 
+                        key={dev.id}
+                        className={`flex flex-col sm:flex-row justify-between sm:items-center p-3 rounded-lg border gap-3 ${
+                          dev.isSuspicious 
+                            ? 'bg-critical/5 border-critical/30' 
+                            : 'bg-surface-container-low/30 border-border/40'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`p-2 rounded bg-surface border border-border/60 shrink-0 ${dev.isSuspicious ? 'text-critical' : 'text-accent'}`}>
+                            {dev.type === 'desktop' ? <Laptop className="size-5" /> : <Smartphone className="size-5" />}
+                          </div>
+                          <div className="space-y-1 text-right">
+                            <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                              {dev.name}
+                              {dev.isCurrent && <Badge className="bg-success/15 text-success text-[8px] px-1 py-0 border-transparent">دستگاه فعلی</Badge>}
+                              {dev.isSuspicious && <Badge className="bg-critical/15 text-critical text-[8px] px-1 py-0 border-transparent">مشکوک</Badge>}
+                            </span>
+                            <div className="text-[10px] text-foreground-muted space-y-0.5">
+                              <p>موقعیت: <strong className="text-foreground">{dev.location}</strong></p>
+                              <p>آخرین فعالیت: <strong className="text-foreground">{dev.lastActive}</strong></p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {!dev.isCurrent && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRevokeDevice(dev.id)}
+                            className="h-7 text-[10px] font-bold border-critical/40 text-critical hover:bg-critical/10 cursor-pointer self-end sm:self-center"
+                          >
+                            خروج و ابطال نشست
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

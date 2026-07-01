@@ -34,6 +34,7 @@ function extractPrerequisiteId(body: string): string | null {
 export async function listPosts(filter: PostListFilter, viewerId: string) {
   const posts = await prisma.post.findMany({
     where: {
+      status: 'published',
       published: true,
       ...(filter.type ? { type: filter.type as PostType } : {}),
       ...(filter.category ? { category: filter.category } : {}),
@@ -264,11 +265,86 @@ export async function listPostsAdmin() {
       category: true,
       published: true,
       mandatory: true,
+      status: true,
+      publishAt: true,
+      nextReviewAt: true,
       createdAt: true,
       author: { select: { name: true } },
       _count: { select: { reads: true } },
     },
   })
+}
+
+const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
+  draft: ['review', 'published'],
+  review: ['approved', 'draft'],
+  approved: ['published', 'draft'],
+  published: ['archived'],
+  archived: ['draft'],
+}
+
+export async function transitionPostStatus(
+  id: string,
+  newStatus: string,
+  actorId: string,
+) {
+  const existing = await prisma.post.findUnique({ where: { id } })
+  if (!existing) throw new Error('محتوا یافت نشد')
+
+  const allowed = VALID_STATUS_TRANSITIONS[existing.status] ?? []
+  if (!allowed.includes(newStatus)) {
+    throw new Error(`تغییر وضعیت از ${existing.status} به ${newStatus} مجاز نیست`)
+  }
+
+  const updateData: Record<string, unknown> = { status: newStatus }
+
+  if (newStatus === 'published') {
+    updateData.published = true
+  } else if (newStatus === 'archived') {
+    updateData.published = false
+    updateData.archivedAt = new Date()
+  } else if (newStatus === 'review') {
+    updateData.reviewedById = null
+    updateData.reviewedAt = null
+  } else if (newStatus === 'approved') {
+    updateData.reviewedById = actorId
+    updateData.reviewedAt = new Date()
+  }
+
+  const post = await prisma.post.update({ where: { id }, data: updateData })
+
+  await prisma.auditLog.create({
+    data: {
+      actorId,
+      entity: 'Post',
+      entityId: id,
+      action: 'update',
+      before: { status: existing.status },
+      after: { status: newStatus },
+    },
+  })
+
+  return post
+}
+
+export async function getNonReaders(postId: string) {
+  const post = await prisma.post.findUnique({ where: { id: postId } })
+  if (!post) throw new Error('محتوا یافت نشد')
+
+  const readers = await prisma.postRead.findMany({
+    where: { postId },
+    select: { userId: true },
+  })
+  const readerIds = new Set(readers.map((r) => r.userId))
+
+  const allUsers = await prisma.user.findMany({
+    where: { status: 'active' },
+    select: { id: true, name: true, nationalId: true },
+  })
+
+  return allUsers
+    .filter((u) => !readerIds.has(u.id))
+    .map((u) => ({ id: u.id, name: u.name, nationalId: u.nationalId }))
 }
 
 export async function createPost(data: CreatePostInput, authorId: string) {
@@ -285,6 +361,9 @@ export async function createPost(data: CreatePostInput, authorId: string) {
       mediaType: emptyToNull(data.mediaType),
       published: data.published,
       mandatory: data.mandatory,
+      status: data.status ?? 'draft',
+      publishAt: data.publishAt ? new Date(data.publishAt) : null,
+      nextReviewAt: data.nextReviewAt ? new Date(data.nextReviewAt) : null,
       authorId,
     },
   })
@@ -295,7 +374,7 @@ export async function createPost(data: CreatePostInput, authorId: string) {
       entity: 'Post',
       entityId: post.id,
       action: 'create',
-      after: { title: post.title, type: post.type, published: post.published },
+      after: { title: post.title, type: post.type, status: post.status },
     },
   })
 
@@ -323,6 +402,9 @@ export async function updatePost(
       ...(data.mediaType !== undefined ? { mediaType: emptyToNull(data.mediaType) } : {}),
       ...(data.published !== undefined ? { published: data.published } : {}),
       ...(data.mandatory !== undefined ? { mandatory: data.mandatory } : {}),
+      ...(data.status !== undefined ? { status: data.status } : {}),
+      ...(data.publishAt !== undefined ? { publishAt: data.publishAt ? new Date(data.publishAt) : null } : {}),
+      ...(data.nextReviewAt !== undefined ? { nextReviewAt: data.nextReviewAt ? new Date(data.nextReviewAt) : null } : {}),
     },
   })
 

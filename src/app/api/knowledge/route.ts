@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
-import { listArticles, createArticle } from '@/server/modules/knowledge/service'
+import { listArticles, createArticle, listFAQs, createFAQ } from '@/server/modules/knowledge/service'
 
 export async function GET(request: Request) {
   const user = await getSessionUser(request)
@@ -11,6 +11,12 @@ export async function GET(request: Request) {
   const q = searchParams.get('q') ?? undefined
   const page = Number(searchParams.get('page') ?? '1')
   const pageSize = Number(searchParams.get('pageSize') ?? '20')
+  const scope = searchParams.get('scope')
+
+  if (scope === 'faq') {
+    const faqs = await listFAQs(category)
+    return NextResponse.json({ data: faqs })
+  }
 
   const result = await listArticles({ category, q, page, pageSize })
   return NextResponse.json({ data: result })
@@ -25,7 +31,18 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json()
-  const { title, slug, body: articleBody, category, tags, attachments } = body
+  const scope = body._scope
+
+  if (scope === 'faq') {
+    const { question, answer, category, articleId } = body
+    if (!question || !answer) {
+      return NextResponse.json({ error: 'فیلدهای الزامی را پر کنید' }, { status: 400 })
+    }
+    const faq = await createFAQ({ question, answer, category, articleId })
+    return NextResponse.json({ data: faq }, { status: 201 })
+  }
+
+  const { title, slug, body: articleBody, category, tags, attachments, validFrom, validUntil, ownerId, confidentialityLevel, relatedPostId, relatedQuizPostId } = body
 
   if (!title || !slug || !articleBody) {
     return NextResponse.json(
@@ -41,6 +58,12 @@ export async function POST(request: Request) {
     category,
     tags,
     attachments,
+    validFrom,
+    validUntil,
+    ownerId,
+    confidentialityLevel,
+    relatedPostId,
+    relatedQuizPostId,
     authorId: user.id,
   })
 

@@ -3,6 +3,7 @@ import { prisma } from '@/server/db'
 import type { ShiftCode } from '@/generated/prisma/client'
 import { jalaliToDate, fuzzyMatchScore, normalizeFarsiString } from '@/lib/fa'
 import { jdate, dayjs, gregStr } from '@/lib/dayjs'
+import { getSettingValue } from '@/server/modules/settings'
 
 export interface ColumnMapping {
   block: 'RIGHT' | 'LEFT'
@@ -12,6 +13,8 @@ export interface ColumnMapping {
   tIndex: number
   h1Index: number
   h2Index: number
+  assistantTIndex: number
+  assistantRIndex: number
   departureTimeIndex: number
   arrivalTimeIndex: number
 }
@@ -24,6 +27,8 @@ export const DEFAULT_RIGHT_MAPPING: ColumnMapping = {
   rIndex: 2,
   tIndex: 3,
   h1Index: 4,
+  assistantTIndex: 5,
+  assistantRIndex: 6,
   h2Index: 7,
   departureTimeIndex: 8,
   arrivalTimeIndex: 9,
@@ -36,6 +41,8 @@ export const DEFAULT_LEFT_MAPPING: ColumnMapping = {
   rIndex: 12,
   tIndex: 13,
   h1Index: 14,
+  assistantTIndex: 15,
+  assistantRIndex: 16,
   h2Index: 17,
   departureTimeIndex: 18,
   arrivalTimeIndex: 19,
@@ -79,7 +86,12 @@ function formatExcelTime(val: any): string {
 }
 
 // Fuzzy matches a raw name against active database users
-async function matchDriver(rawName: string, dbUsers: any[]): Promise<{
+async function matchDriver(
+  rawName: string,
+  dbUsers: any[],
+  autoMatchThreshold = 85,
+  reviewMatchThreshold = 70
+): Promise<{
   userId?: string
   personnelNo?: string
   score: number
@@ -101,14 +113,14 @@ async function matchDriver(rawName: string, dbUsers: any[]): Promise<{
     }
   }
 
-  if (bestScore >= 85) {
+  if (bestScore >= autoMatchThreshold) {
     return {
       userId: bestUser.id,
       personnelNo: bestUser.nationalId,
       score: bestScore,
       status: 'AUTO_MATCHED'
     }
-  } else if (bestScore >= 70) {
+  } else if (bestScore >= reviewMatchThreshold) {
     return {
       userId: bestUser.id,
       personnelNo: bestUser.nationalId,
@@ -133,17 +145,31 @@ export async function parseRosterExcelV2(
     title?: string
     schedulingTitle?: string
     processingNumber?: number
+    autoMatchThreshold?: number
+    reviewMatchThreshold?: number
   }
 ) {
   const workbook = XLSX.read(buffer, { type: 'array' })
   const sheetName = workbook.SheetNames[0]
+  if (!sheetName) {
+    throw new Error('فایل اکسل ارسالی هیچ صفحه‌ای (Sheet) ندارد.')
+  }
   const sheet = workbook.Sheets[sheetName]
+  if (!sheet) {
+    throw new Error('صفحه لوحه در فایل اکسل یافت نشد.')
+  }
   
   // Convert to 2D array (header: 1 forces array representation, defval keeps empty cells)
   const rows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1, defval: '' })
+  if (!rows || rows.length < 3) {
+    throw new Error('تعداد ردیف‌های فایل اکسل لوحه بسیار کم است. ردیف‌های فایل باید شامل هدر و حداقل چند رکورد معتبر باشند.')
+  }
   
   const rightMapping = options?.rightMapping || DEFAULT_RIGHT_MAPPING
   const leftMapping = options?.leftMapping || DEFAULT_LEFT_MAPPING
+  
+  const autoMatchThreshold = options?.autoMatchThreshold ?? 85
+  const reviewMatchThreshold = options?.reviewMatchThreshold ?? 70
   
   const dbUsers = await prisma.user.findMany({
     where: { status: 'active' },
@@ -153,6 +179,12 @@ export async function parseRosterExcelV2(
   const extractedTrips: any[] = []
   const extractedAssignments: any[] = []
   
+  const isValidDriverName = (name: string): boolean => {
+    if (!name) return false
+    const cleaned = name.replace(/[\s,،\-.\/\\_()]+/g, '').trim()
+    return cleaned.length >= 2
+  }
+
   // Find rows where data begins
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i]
@@ -164,6 +196,8 @@ export async function parseRosterExcelV2(
       const trainNo = String(row[rightMapping.trainNumberIndex] || '').trim()
       const rawH1 = String(row[rightMapping.h1Index] || '').trim()
       const rawH2 = String(row[rightMapping.h2Index] || '').trim()
+      const rawAssistT = String(row[rightMapping.assistantTIndex] || '').trim()
+      const rawAssistR = String(row[rightMapping.assistantRIndex] || '').trim()
       const rawT = String(row[rightMapping.tIndex] || '').trim()
       const rawR = String(row[rightMapping.rIndex] || '').trim()
       const depTime = formatExcelTime(row[rightMapping.departureTimeIndex])
@@ -175,17 +209,17 @@ export async function parseRosterExcelV2(
           tempId: tripTempId,
           rowNo: rightRowNo,
           trainNumber: trainNo || null,
-          direction: 'SHAHRREY_TO_TAJRISH',
-          originStation: 'SHAHRREY',
-          destinationStation: 'TAJRISH',
+          direction: 'TAJRISH_TO_SHAHRREY',
+          originStation: 'TAJRISH',
+          destinationStation: 'SHAHRREY',
           departureTime: depTime || null,
           arrivalTime: arrTime || null,
           status: 'NORMAL',
           operationalNote: rawT === 'خ' ? 'دیسپچ از دپو' : rawT === 'P' ? 'شانت' : null
         })
         
-        if (rawH1) {
-          const match = await matchDriver(rawH1, dbUsers)
+        if (rawH1 && isValidDriverName(rawH1)) {
+          const match = await matchDriver(rawH1, dbUsers, autoMatchThreshold, reviewMatchThreshold)
           extractedAssignments.push({
             tripTempId,
             role: 'H1',
@@ -197,8 +231,8 @@ export async function parseRosterExcelV2(
           })
         }
         
-        if (rawH2) {
-          const match = await matchDriver(rawH2, dbUsers)
+        if (rawH2 && isValidDriverName(rawH2)) {
+          const match = await matchDriver(rawH2, dbUsers, autoMatchThreshold, reviewMatchThreshold)
           extractedAssignments.push({
             tripTempId,
             role: 'H2',
@@ -209,11 +243,37 @@ export async function parseRosterExcelV2(
             matchStatus: match.status
           })
         }
+
+        if (rawAssistT && isValidDriverName(rawAssistT)) {
+          const match = await matchDriver(rawAssistT, dbUsers, autoMatchThreshold, reviewMatchThreshold)
+          extractedAssignments.push({
+            tripTempId,
+            role: 'T',
+            rawName: rawAssistT,
+            matchedUserId: match.userId || null,
+            personnelNo: match.personnelNo || null,
+            matchScore: match.score,
+            matchStatus: match.status
+          })
+        }
+
+        if (rawAssistR && isValidDriverName(rawAssistR)) {
+          const match = await matchDriver(rawAssistR, dbUsers, autoMatchThreshold, reviewMatchThreshold)
+          extractedAssignments.push({
+            tripTempId,
+            role: 'R',
+            rawName: rawAssistR,
+            matchedUserId: match.userId || null,
+            personnelNo: match.personnelNo || null,
+            matchScore: match.score,
+            matchStatus: match.status
+          })
+        }
         
         if (rawT) {
           extractedAssignments.push({
             tripTempId,
-            role: 'T',
+            role: 'T_TYPE',
             rawName: rawT,
             matchStatus: 'UNMATCHED'
           })
@@ -222,7 +282,7 @@ export async function parseRosterExcelV2(
         if (rawR) {
           extractedAssignments.push({
             tripTempId,
-            role: 'R',
+            role: 'R_CHAR',
             rawName: rawR,
             matchStatus: 'UNMATCHED'
           })
@@ -236,6 +296,8 @@ export async function parseRosterExcelV2(
       const trainNo = String(row[leftMapping.trainNumberIndex] || '').trim()
       const rawH1 = String(row[leftMapping.h1Index] || '').trim()
       const rawH2 = String(row[leftMapping.h2Index] || '').trim()
+      const rawAssistT = String(row[leftMapping.assistantTIndex] || '').trim()
+      const rawAssistR = String(row[leftMapping.assistantRIndex] || '').trim()
       const rawT = String(row[leftMapping.tIndex] || '').trim()
       const rawR = String(row[leftMapping.rIndex] || '').trim()
       const depTime = formatExcelTime(row[leftMapping.departureTimeIndex])
@@ -247,17 +309,17 @@ export async function parseRosterExcelV2(
           tempId: tripTempId,
           rowNo: leftRowNo,
           trainNumber: trainNo || null,
-          direction: 'TAJRISH_TO_SHAHRREY',
-          originStation: 'TAJRISH',
-          destinationStation: 'SHAHRREY',
+          direction: 'SHAHRREY_TO_TAJRISH',
+          originStation: 'SHAHRREY',
+          destinationStation: 'TAJRISH',
           departureTime: depTime || null,
           arrivalTime: arrTime || null,
           status: 'NORMAL',
           operationalNote: rawT === 'خ' ? 'دیسپچ از دپو' : rawT === 'P' ? 'شانت' : null
         })
         
-        if (rawH1) {
-          const match = await matchDriver(rawH1, dbUsers)
+        if (rawH1 && isValidDriverName(rawH1)) {
+          const match = await matchDriver(rawH1, dbUsers, autoMatchThreshold, reviewMatchThreshold)
           extractedAssignments.push({
             tripTempId,
             role: 'H1',
@@ -269,8 +331,8 @@ export async function parseRosterExcelV2(
           })
         }
         
-        if (rawH2) {
-          const match = await matchDriver(rawH2, dbUsers)
+        if (rawH2 && isValidDriverName(rawH2)) {
+          const match = await matchDriver(rawH2, dbUsers, autoMatchThreshold, reviewMatchThreshold)
           extractedAssignments.push({
             tripTempId,
             role: 'H2',
@@ -281,11 +343,37 @@ export async function parseRosterExcelV2(
             matchStatus: match.status
           })
         }
+
+        if (rawAssistT && isValidDriverName(rawAssistT)) {
+          const match = await matchDriver(rawAssistT, dbUsers, autoMatchThreshold, reviewMatchThreshold)
+          extractedAssignments.push({
+            tripTempId,
+            role: 'T',
+            rawName: rawAssistT,
+            matchedUserId: match.userId || null,
+            personnelNo: match.personnelNo || null,
+            matchScore: match.score,
+            matchStatus: match.status
+          })
+        }
+
+        if (rawAssistR && isValidDriverName(rawAssistR)) {
+          const match = await matchDriver(rawAssistR, dbUsers, autoMatchThreshold, reviewMatchThreshold)
+          extractedAssignments.push({
+            tripTempId,
+            role: 'R',
+            rawName: rawAssistR,
+            matchedUserId: match.userId || null,
+            personnelNo: match.personnelNo || null,
+            matchScore: match.score,
+            matchStatus: match.status
+          })
+        }
         
         if (rawT) {
           extractedAssignments.push({
             tripTempId,
-            role: 'T',
+            role: 'T_TYPE',
             rawName: rawT,
             matchStatus: 'UNMATCHED'
           })
@@ -294,7 +382,7 @@ export async function parseRosterExcelV2(
         if (rawR) {
           extractedAssignments.push({
             tripTempId,
-            role: 'R',
+            role: 'R_CHAR',
             rawName: rawR,
             matchStatus: 'UNMATCHED'
           })
@@ -316,31 +404,259 @@ export async function parseRosterExcelV2(
 }
 
 // Checks safety constraints and return warnings/errors
-export function validateRoster(trips: any[], assignments: any[]): ValidationIssue[] {
+function timeToMinutes(value?: string | null): number | null {
+  if (!value) return null
+  const [h, m] = value.split(':').map(Number)
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null
+  return h * 60 + m
+}
+
+export async function validateRoster(trips: any[], assignments: any[]): Promise<ValidationIssue[]> {
   const issues: ValidationIssue[] = []
-  
-  // Group assignments by matchedUserId to run driver validation
+
+  // ۱. تشخیص ساختار لوحه و قالب فایل — بخش ۸.۱ سند tosee.md
+  if (trips.length === 0) {
+    issues.push({
+      severity: 'CRITICAL',
+      type: 'invalid_template',
+      message: 'قالب فایل اکسل نامعتبر است یا ستون‌ها به درستی نگاشت نشده‌اند. هیچ سفری استخراج نگردید.',
+      suggestedAction: 'فایل نمونه لوحه را دانلود کرده و ساختار ستون‌های اکسل را مجدداً بررسی نمایید.'
+    })
+    return issues
+  }
+
+  // ۲. اعتبارسنجی شماره پرسنلی (کد ملی ۱۰ رقمی) — بخش ۸.۱
+  const activeUsers = await prisma.user.findMany({
+    where: { status: 'active' },
+    select: { id: true, name: true, nationalId: true, role: { select: { key: true } } }
+  })
+
+  // تشخیص کدهای پرسنلی نامعتبر کلاینت‌های تخصیص‌یافته
+  for (const assign of assignments) {
+    if (assign.matchedUserId) {
+      const matched = activeUsers.find((u) => u.id === assign.matchedUserId)
+      if (matched) {
+        const personnelNo = matched.nationalId || ''
+        const isValid10Digits = /^\d{10}$/.test(personnelNo)
+        if (!isValid10Digits) {
+          issues.push({
+            severity: 'ERROR',
+            type: 'invalid_personnel_no',
+            message: `شماره ملی/پرسنلی راهبر "${matched.name}" نامعتبر است (${personnelNo || 'خالی'}). کد ملی باید دقیقاً ۱۰ رقم عددی باشد.`,
+            affectedUserId: matched.id,
+            suggestedAction: 'اطلاعات پرسنلی کاربر را در دفتر تلفن ویرایش و تصحیح نمایید.'
+          })
+        }
+      }
+    }
+  }
+
+  // ۳. تشخیص افراد بدون شیفت / راهبران بدون تخصیص — بخش ۸.۱
+  const assignedUserIds = new Set(assignments.map((a) => a.matchedUserId).filter(Boolean))
+  const idleOperators = activeUsers.filter(
+    (u) => (u.role?.key === 'user' || u.role?.key === 'operator') && !assignedUserIds.has(u.id)
+  )
+
+  for (const idle of idleOperators) {
+    issues.push({
+      severity: 'INFO',
+      type: 'idle_driver',
+      message: `راهبر فعال "${idle.name}" در این لوحه به هیچ قطاری تخصیص داده نشده و در حالت آماده‌باش است.`,
+      affectedUserId: idle.id,
+      suggestedAction: 'در صورت نیاز به شانت یا پشتیبانی، این راهبر را به قطارهای کمکی اختصاص دهید.'
+    })
+  }
+
+  const seenRows = new Map<string, string>()
+  const directionBuckets = new Map<string, any[]>()
+
+  for (const trip of trips) {
+    const tripId = trip.tempId || trip.id
+    const rowKey = `${trip.rowNo}:${trip.direction}`
+    if (seenRows.has(rowKey)) {
+      issues.push({
+        severity: 'ERROR',
+        type: 'duplicate_row',
+        message: `ردیف ${trip.rowNo} در جهت ${trip.direction || 'نامشخص'} تکراری است.`,
+        affectedTripId: tripId,
+        suggestedAction: 'ردیف تکراری را در پیش‌نمایش بررسی و اصلاح کنید.'
+      })
+    }
+    seenRows.set(rowKey, tripId)
+
+    if (!trip.direction) {
+      issues.push({
+        severity: 'ERROR',
+        type: 'missing_direction',
+        message: `جهت حرکت برای ردیف ${trip.rowNo} مشخص نشده است.`,
+        affectedTripId: tripId,
+        suggestedAction: 'نگاشت بلوک راست/چپ را بررسی کنید.'
+      })
+    }
+
+    if (!trip.departureTime || !trip.arrivalTime) {
+      issues.push({
+        severity: 'ERROR',
+        type: 'missing_time',
+        message: `زمان حرکت یا رسیدن در ردیف ${trip.rowNo} کامل نیست.`,
+        affectedTripId: tripId,
+        suggestedAction: 'سلول‌های زمان را در فایل لوحه بررسی کنید.'
+      })
+    }
+
+    const dep = timeToMinutes(trip.departureTime)
+    const arr = timeToMinutes(trip.arrivalTime)
+    if (dep !== null && arr !== null && arr < dep) {
+      issues.push({
+        severity: 'WARNING',
+        type: 'arrival_before_departure',
+        message: `زمان رسیدن ردیف ${trip.rowNo} قبل از زمان حرکت ثبت شده است.`,
+        affectedTripId: tripId,
+        suggestedAction: 'در صورت عبور از نیمه‌شب، زمان عملیاتی را دستی بررسی کنید.'
+      })
+    }
+
+    if (!directionBuckets.has(trip.direction || 'UNKNOWN')) {
+      directionBuckets.set(trip.direction || 'UNKNOWN', [])
+    }
+    directionBuckets.get(trip.direction || 'UNKNOWN')!.push(trip)
+  }
+
+  for (const [, bucket] of directionBuckets.entries()) {
+    const sorted = [...bucket].sort((a, b) => a.rowNo - b.rowNo)
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = sorted[i - 1]
+      const current = sorted[i]
+      const prevDep = timeToMinutes(prev.departureTime)
+      const currentDep = timeToMinutes(current.departureTime)
+      if (prevDep !== null && currentDep !== null && currentDep < prevDep) {
+        issues.push({
+          severity: 'WARNING',
+          type: 'non_ascending_time',
+          message: `زمان حرکت در ردیف ${current.rowNo} نسبت به ردیف قبل صعودی نیست.`,
+          affectedTripId: current.tempId || current.id,
+          suggestedAction: 'ترتیب صفحات و ترکیب ردیف‌های لوحه را بررسی کنید.'
+        })
+      }
+    }
+  }
+
+  const enableWarnings = await getSettingValue<boolean>('roster.enableFatigueWarnings', true)
+  if (!enableWarnings) {
+    return issues
+  }
+
+  const minRestTime = await getSettingValue<number>('roster.minRestTimeBetweenTrips', 5)
+  const maxDailyDrivingHours = await getSettingValue<number>('roster.maxDailyDrivingHours', 8)
+  const maxDailyMinutes = maxDailyDrivingHours * 60
+  const maxConsecutiveTrips = await getSettingValue<number>('roster.maxConsecutiveTrips', 4)
+
   const driverMap = new Map<string, any[]>()
-  
   assignments.forEach((assign) => {
     if (!assign.matchedUserId) return
     const trip = trips.find((t) => t.tempId === assign.tripTempId || t.id === assign.tripId)
     if (!trip || !trip.departureTime || !trip.arrivalTime) return
-    
+
     if (!driverMap.has(assign.matchedUserId)) {
       driverMap.set(assign.matchedUserId, [])
     }
     driverMap.get(assign.matchedUserId)!.push({ assign, trip })
   })
-  
+
+  // Validate driver active status (§۷.۲)
+  const driverUserIds = Array.from(driverMap.keys())
+  if (driverUserIds.length > 0) {
+    const users = await prisma.user.findMany({
+      where: { id: { in: driverUserIds } },
+      select: { id: true, name: true, status: true }
+    })
+    for (const u of users) {
+      if (u.status !== 'active') {
+        issues.push({
+          severity: 'ERROR',
+          type: 'inactive_driver',
+          message: `راهبر تخصیص‌یافته "${u.name}" در وضعیت فعال (Active) قرار ندارد.`,
+          affectedUserId: u.id,
+          suggestedAction: 'وضعیت راهبر را در دفتر تلفن بررسی و فعال کنید.'
+        })
+      }
+    }
+  }
+
+  // Validate interday shift transition rest (§۷.۳)
+  let targetDate: Date | null = null
+  const firstTrip = trips[0]
+  if (firstTrip && firstTrip.rosterVersionId) {
+    const version = await prisma.rosterVersion.findUnique({
+      where: { id: firstTrip.rosterVersionId },
+      include: { rosterDay: true }
+    })
+    if (version) targetDate = version.rosterDay.gregorianDate
+  }
+
+  if (targetDate) {
+    const yesterday = new Date(targetDate)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    const yesterdayVersion = await prisma.rosterVersion.findFirst({
+      where: {
+        rosterDay: { gregorianDate: yesterday },
+        status: 'PUBLISHED'
+      },
+      orderBy: { versionNo: 'desc' },
+      include: {
+        trips: {
+          include: { assignments: true }
+        }
+      }
+    })
+
+    if (yesterdayVersion) {
+      const minInterdayRestHours = await getSettingValue<number>('roster.minInterdayRestHours', 11)
+      
+      for (const [userId, todayTrips] of driverMap.entries()) {
+        const yesterdayTrips = yesterdayVersion.trips.filter((t) =>
+          t.assignments.some((a) => a.matchedUserId === userId)
+        )
+        if (yesterdayTrips.length > 0) {
+          yesterdayTrips.sort((a, b) => (a.arrivalTime || '').localeCompare(b.arrivalTime || ''))
+          const lastYesterdayTrip = yesterdayTrips[yesterdayTrips.length - 1]
+          
+          todayTrips.sort((a, b) => (a.trip.departureTime || '').localeCompare(b.trip.departureTime || ''))
+          const firstTodayTrip = todayTrips[0].trip
+
+          if (lastYesterdayTrip.arrivalTime && firstTodayTrip.departureTime) {
+            const lastArrParts = lastYesterdayTrip.arrivalTime.split(':').map(Number)
+            const firstDepParts = firstTodayTrip.departureTime.split(':').map(Number)
+            
+            const lastArrMinutes = lastArrParts[0] * 60 + lastArrParts[1]
+            const firstDepMinutes = firstDepParts[0] * 60 + firstDepParts[1]
+            const restMinutes = (1440 - lastArrMinutes) + firstDepMinutes
+            const restHours = restMinutes / 60
+
+            if (restHours < minInterdayRestHours) {
+              issues.push({
+                severity: 'WARNING',
+                type: 'fatigue_interday_rest',
+                message: `استراحت بین‌روزی بسیار کوتاه (${restHours.toFixed(1)} ساعت) بین آخرین سفر دیروز ساعت ${lastYesterdayTrip.arrivalTime} و اولین سفر امروز ساعت ${firstTodayTrip.departureTime} برای این راهبر. (حداقل مجاز: ${minInterdayRestHours} ساعت)`,
+                affectedUserId: userId,
+                affectedTripId: firstTodayTrip.tempId || firstTodayTrip.id,
+                suggestedAction: 'این راهبر را از اولین سفرها معاف کرده یا شیفت او را ویرایش کنید.'
+              })
+            }
+          }
+        }
+      }
+    }
+  }
+
   for (const [userId, tripsList] of driverMap.entries()) {
-    // Sort by departure time
     tripsList.sort((a, b) => a.trip.departureTime.localeCompare(b.trip.departureTime))
-    
+
+    let consecutiveTrips = 1
     for (let i = 0; i < tripsList.length; i++) {
       const current = tripsList[i]
-      
-      // Check 1: Overlaps
+
       for (let j = i + 1; j < tripsList.length; j++) {
         const next = tripsList[j]
         if (current.trip.arrivalTime > next.trip.departureTime) {
@@ -354,50 +670,63 @@ export function validateRoster(trips: any[], assignments: any[]): ValidationIssu
           })
         }
       }
-      
-      // Check 2: Turnaround / Rest limits between consecutive trips
+
       if (i < tripsList.length - 1) {
         const next = tripsList[i + 1]
-        
-        // Calculate turnaround time in minutes
-        const currArr = current.trip.arrivalTime.split(':').map(Number)
-        const nextDep = next.trip.departureTime.split(':').map(Number)
-        const currMinutes = currArr[0] * 60 + currArr[1]
-        const nextMinutes = nextDep[0] * 60 + nextDep[1]
-        const diff = nextMinutes - currMinutes
-        
-        if (diff >= 0 && diff < 5) {
+        const currMinutes = timeToMinutes(current.trip.arrivalTime)
+        const nextMinutes = timeToMinutes(next.trip.departureTime)
+        const diff = currMinutes !== null && nextMinutes !== null ? nextMinutes - currMinutes : null
+
+        if (diff !== null && diff >= 0 && diff < minRestTime) {
           issues.push({
             severity: 'WARNING',
             type: 'fatigue_turnaround',
-            message: `زمان شانت و استراحت بسیار کوتاه (${diff} دقیقه) بین قطار ${current.trip.trainNumber} و قطار ${next.trip.trainNumber} برای این راهبر.`,
+            message: `زمان شانت و استراحت بسیار کوتاه (${diff} دقیقه) بین قطار ${current.trip.trainNumber} و قطار ${next.trip.trainNumber} برای این راهبر. (حداقل مجاز: ${minRestTime} دقیقه)`,
             affectedTripId: next.trip.tempId || next.trip.id,
             affectedUserId: userId,
             suggestedAction: 'راهبر جایگزین یا زمان شانت طولانی‌تری در نظر بگیرید.'
           })
         }
+
+        if (diff !== null && diff >= minRestTime) {
+          consecutiveTrips = 1
+        } else {
+          consecutiveTrips += 1
+        }
+
+        if (consecutiveTrips > maxConsecutiveTrips) {
+          issues.push({
+            severity: 'WARNING',
+            type: 'fatigue_consecutive_trips',
+            message: `تعداد سفرهای پشت‌سرهم راهبر از ${maxConsecutiveTrips} سفر بیشتر شده است.`,
+            affectedTripId: next.trip.tempId || next.trip.id,
+            affectedUserId: userId,
+            suggestedAction: 'برای کاهش خستگی، یک سفر میانی را به راهبر جایگزین بدهید.'
+          })
+        }
       }
     }
-    
-    // Check 3: Maximum daily driving time (e.g. limit to 8 hours total)
+
     let totalMinutes = 0
     tripsList.forEach((item) => {
-      const dep = item.trip.departureTime.split(':').map(Number)
-      const arr = item.trip.arrivalTime.split(':').map(Number)
-      totalMinutes += (arr[0] * 60 + arr[1]) - (dep[0] * 60 + dep[1])
+      const dep = timeToMinutes(item.trip.departureTime)
+      const arr = timeToMinutes(item.trip.arrivalTime)
+      if (dep !== null && arr !== null && arr >= dep) {
+        totalMinutes += arr - dep
+      }
     })
-    
-    if (totalMinutes > 480) {
+
+    if (totalMinutes > maxDailyMinutes) {
       issues.push({
         severity: 'ERROR',
         type: 'fatigue_limit',
-        message: `مجموع زمان رانندگی روزانه راهبر (${Math.round(totalMinutes / 60)} ساعت) از حد مجاز قانونی (۸ ساعت) فراتر رفته است.`,
+        message: `مجموع زمان رانندگی روزانه راهبر (${Math.round(totalMinutes / 60)} ساعت) از حد مجاز قانونی (${maxDailyDrivingHours} ساعت) فراتر رفته است.`,
         affectedUserId: userId,
         suggestedAction: 'برخی از سفرهای این راهبر را حذف یا جابجا کنید.'
       })
     }
   }
-  
+
   return issues
 }
 
@@ -497,8 +826,9 @@ export async function createRosterDayDraft(
 }
 
 // Finalizes Roster Version, flags as published and updates standard Shifts calendar table
+// With targeted diff-based notifications (§۸.۳, §۱۳.۴)
 export async function publishRosterVersion(rosterVersionId: string, publisherId: string) {
-  return await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     // 1. Get version details
     const version = await tx.rosterVersion.findUnique({
       where: { id: rosterVersionId },
@@ -514,7 +844,18 @@ export async function publishRosterVersion(rosterVersionId: string, publisherId:
     
     if (!version) throw new Error('نسخه لوحه یافت نشد')
     
-    // 2. Set version to Published
+    // 2. Find previous published version for diff
+    const previousPublished = await tx.rosterVersion.findFirst({
+      where: {
+        rosterDayId: version.rosterDayId,
+        status: 'PUBLISHED',
+        id: { not: rosterVersionId },
+      },
+      orderBy: { versionNo: 'desc' },
+      select: { id: true, versionNo: true },
+    })
+    
+    // 3. Set version to Published
     await tx.rosterVersion.update({
       where: { id: rosterVersionId },
       data: {
@@ -530,15 +871,15 @@ export async function publishRosterVersion(rosterVersionId: string, publisherId:
       data: { status: 'PUBLISHED' }
     })
     
-    // 3. Map trips to shift codes and upsert into Shift table for each driver
+    // 4. Map trips to shift codes and upsert into Shift table for each driver
     const driverFirstTripTime = new Map<string, string>() // userId -> earliest trip depTime
     
     for (const trip of version.trips) {
       for (const assign of trip.assignments) {
         if (!assign.matchedUserId) continue
         
-        // Only map H1 and H2 drivers to standard calendar shifts
-        if (assign.role !== 'H1' && assign.role !== 'H2') continue
+        // Map H1, H2, T, and R drivers to standard calendar shifts
+        if (assign.role !== 'H1' && assign.role !== 'H2' && assign.role !== 'T' && assign.role !== 'R') continue
         
         const depTime = trip.departureTime || '08:00:00'
         const existingDep = driverFirstTripTime.get(assign.matchedUserId)
@@ -582,7 +923,7 @@ export async function publishRosterVersion(rosterVersionId: string, publisherId:
       })
     }
     
-    // 4. Create Audit Log
+    // 5. Create Audit Log
     await tx.auditLog.create({
       data: {
         actorId: publisherId,
@@ -596,11 +937,64 @@ export async function publishRosterVersion(rosterVersionId: string, publisherId:
         }
       }
     })
-    
-    return { success: true }
+
+    // 6. Collect all assigned driver IDs
+    const allDriverUserIds = new Set<string>()
+    for (const trip of version.trips) {
+      for (const assign of trip.assignments) {
+        if (assign.matchedUserId) allDriverUserIds.add(assign.matchedUserId)
+      }
+    }
+
+    return {
+      success: true,
+      versionNo: version.versionNo,
+      jalaliDate: version.rosterDay.jalaliDate,
+      rosterDayId: version.rosterDayId,
+      allDriverUserIds: [...allDriverUserIds],
+      previousPublishedId: previousPublished?.id ?? null,
+    }
   })
+
+  // 7. Send targeted notifications OUTSIDE transaction (§۸.۳)
+  const { createNotification, createBulkNotifications } = await import('@/server/modules/notifications/service')
+  const { diffRosterVersions } = await import('./diff')
+
+  const rosterLink = `/roster?date=${result.jalaliDate}`
+
+  if (result.previousPublishedId) {
+    // Diff against previous → notify only affected drivers
+    const diff = await diffRosterVersions(rosterVersionId, result.previousPublishedId)
+
+    if (diff && diff.affectedUserIds.length > 0) {
+      const changeSummary = [
+        diff.added.length > 0 ? `${diff.added.length} سفر جدید` : '',
+        diff.removed.length > 0 ? `${diff.removed.length} سفر حذف شده` : '',
+        diff.changed.length > 0 ? `${diff.changed.length} سفر تغییریافته` : '',
+      ].filter(Boolean).join('، ')
+
+      for (const userId of diff.affectedUserIds) {
+        await createNotification({
+          userId,
+          type: 'warning',
+          title: `تغییر لوحه ${result.jalaliDate} (نسخه ${result.versionNo})`,
+          body: `لوحه اعزام به‌روزرسانی شد: ${changeSummary}. لطفاً سفرهای خود را بررسی کنید.`,
+          link: rosterLink,
+        })
+      }
+    }
+  } else {
+    // First publish → notify all assigned drivers
+    if (result.allDriverUserIds.length > 0) {
+      await createBulkNotifications(result.allDriverUserIds, {
+        type: 'info',
+        title: `لوحه اعزام ${result.jalaliDate} منتشر شد`,
+        body: `لوحه اعزام روزانه نسخه ${result.versionNo} منتشر شد. لطفاً سفرهای خود را مشاهده و تأیید رؤیت کنید.`,
+        link: rosterLink,
+      })
+    }
+  }
+
+  return { success: true, notifiedUserIds: result.allDriverUserIds }
 }
 
-export async function commitRosterFile(rosterVersionId: string, publisherId: string) {
-  return publishRosterVersion(rosterVersionId, publisherId)
-}

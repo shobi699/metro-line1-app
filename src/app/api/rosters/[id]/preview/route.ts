@@ -33,7 +33,7 @@ export async function GET(
       return NextResponse.json({ error: 'نسخه لوحه یافت نشد' }, { status: 404 })
     }
 
-    const issues = validateRoster(rosterVersion.trips, rosterVersion.trips.flatMap(t => t.assignments))
+    const issues = await validateRoster(rosterVersion.trips, rosterVersion.trips.flatMap(t => t.assignments))
 
     return NextResponse.json({
       data: {

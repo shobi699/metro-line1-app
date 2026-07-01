@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/features/auth'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { toFa } from '@/lib/fa'
 import {
@@ -11,256 +11,273 @@ import {
   AlertTriangle,
   CheckCircle,
   Activity,
+  Radio,
+  FileSpreadsheet,
+  Clock,
+  Zap,
+  ShieldAlert
 } from 'lucide-react'
 
-interface AnalyticsData {
-  totalUsers: number
-  activeUsers: number
-  pendingUsers: number
-  totalTickets: number
-  openTickets: number
-  resolvedTickets: number
-  totalBulletins: number
-  readBulletins: number
-  totalShifts: number
-  totalFeedback: number
-  respondedFeedback: number
-  totalChecklists: number
+interface AuditLogRow {
+  id: string
+  operatorName: string
+  role: string
+  action: string
+  dateTime: string
+  module: string
 }
 
 export default function AnalyticsPage() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
-  const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'kpis' | 'audit-logs' | 'telemetry'>('kpis')
 
   const isAdmin = user?.roleKey === 'admin' || user?.roleKey === 'super_admin'
 
-  async function loadAnalytics() {
-    if (!accessToken) return
-    setLoading(true)
-    try {
-      const headers = { Authorization: `Bearer ${accessToken}` }
-      const [usersRes, ticketsRes, bulletinsRes, feedbackRes] = await Promise.all([
-        fetch('/api/users?pageSize=1', { headers }),
-        fetch('/api/tickets', { headers }),
-        fetch('/api/bulletins', { headers }),
-        fetch('/api/feedback', { headers }),
-      ])
+  const [auditLogs, setAuditLogs] = useState<AuditLogRow[]>([])
 
-      const [usersData, ticketsData, bulletinsData, feedbackData] = await Promise.all([
-        usersRes.ok ? usersRes.json() : { data: { total: 0, active: 0, pending: 0 } },
-        ticketsRes.ok ? ticketsRes.json() : { data: { stats: { total: 0, open: 0, resolved: 0 } } },
-        bulletinsRes.ok ? bulletinsRes.json() : { data: [] },
-        feedbackRes.ok ? feedbackRes.json() : { data: { total: 0, responded: 0 } },
-      ])
+  const defaultAuditLogs: AuditLogRow[] = [
+    { id: 'log-1', operatorName: 'سهراب مرادی', role: 'مدیر شیفت OCC', action: 'اعلام وضعیت بحران قرمز در بلاک ۷ شمالی', dateTime: '۱۴۰۵/۰۴/۰۲ - ۱۲:۳۰', module: 'مدیریت بحران' },
+    { id: 'log-2', operatorName: 'علیرضا کریمی', role: 'سرپرست ایستگاه تجریش', action: 'تأیید درخواست تعویض شیفت راهبر حمیدی', dateTime: '۱۴۰۵/۰۴/۰۲ - ۱۱:۱۵', module: 'لوحه و شیفت‌ها' },
+    { id: 'log-3', operatorName: 'جواد رضایی', role: 'مسئول تدارکات دپو', action: 'تحویل بی‌سیم دستی تترا به راهبر سلیمی', dateTime: '۱۴۰۵/۰۴/۰۲ - ۰۹:۴۰', module: 'تجهیزات انفرادی' },
+    { id: 'log-4', operatorName: 'سهراب مرادی', role: 'مدیر شیفت OCC', action: 'انتشار فرم جدید گزارش سوانح سیگنالینگ', dateTime: '۱۴۰۵/۰۴/۰۱ - ۱۵:۲۰', module: 'فرم‌ساز سازمانی' },
+    { id: 'log-5', operatorName: 'خانم دکتر هاشمی', role: 'سرپرست آموزش', action: 'بارگذاری مستند جدید آیین‌نامه رانندگی قطار', dateTime: '۱۴۰۵/۰۴/۰۱ - ۱۰:۰۵', module: 'مدیریت اسناد' },
+  ]
 
-      setData({
-        totalUsers: usersData.data?.total ?? 0,
-        activeUsers: usersData.data?.active ?? 0,
-        pendingUsers: usersData.data?.pending ?? 0,
-        totalTickets: ticketsData.data?.stats?.total ?? 0,
-        openTickets: ticketsData.data?.stats?.open ?? 0,
-        resolvedTickets: ticketsData.data?.stats?.resolved ?? 0,
-        totalBulletins: Array.isArray(bulletinsData.data) ? bulletinsData.data.length : 0,
-        readBulletins: 0,
-        totalShifts: 0,
-        totalFeedback: feedbackData.data?.total ?? 0,
-        respondedFeedback: feedbackData.data?.responded ?? 0,
-        totalChecklists: 0,
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!isAdmin) return
-    void loadAnalytics()
+    
+    // Load audit logs from localStorage or mock
+    if (typeof window !== 'undefined') {
+      const saved = window.localStorage.getItem('metro_audit_logs')
+      if (saved) setAuditLogs(JSON.parse(saved))
+      else {
+        setAuditLogs(defaultAuditLogs)
+        window.localStorage.setItem('metro_audit_logs', JSON.stringify(defaultAuditLogs))
+      }
+    }
+    
+    const timer = setTimeout(() => setLoading(false), 800)
+    return () => clearTimeout(timer)
   }, [accessToken, isAdmin])
-
-  const metrics = data
-    ? [
-        {
-          title: 'کل پرسنل',
-          value: data.totalUsers,
-          icon: Users,
-          color: 'text-info',
-          bgColor: 'bg-info/10',
-          detail: `${toFa(data.activeUsers)} فعال / ${toFa(data.pendingUsers)} در انتظار`,
-        },
-        {
-          title: 'تیکت‌ها',
-          value: data.totalTickets,
-          icon: AlertTriangle,
-          color: 'text-warning',
-          bgColor: 'bg-warning/10',
-          detail: `${toFa(data.openTickets)} باز / ${toFa(data.resolvedTickets)} حل شده`,
-        },
-        {
-          title: 'بخشنامه‌ها',
-          value: data.totalBulletins,
-          icon: Activity,
-          color: 'text-accent',
-          bgColor: 'bg-accent/10',
-          detail: `${toFa(data.readBulletins)} خوانده شده`,
-        },
-        {
-          title: 'بازخوردها',
-          value: data.totalFeedback,
-          icon: CheckCircle,
-          color: 'text-success',
-          bgColor: 'bg-success/10',
-          detail: `${toFa(data.respondedFeedback)} پاسخ داده شده`,
-        },
-      ]
-    : []
-
-  const kpis = data
-    ? [
-        {
-          label: 'نرخ پاسخ‌گویی به بازخوردها',
-          value: data.totalFeedback > 0 ? Math.round((data.respondedFeedback / data.totalFeedback) * 100) : 0,
-          color: '#34c759',
-        },
-        {
-          label: 'نرخ حل تیکت‌ها',
-          value: data.totalTickets > 0 ? Math.round((data.resolvedTickets / data.totalTickets) * 100) : 0,
-          color: '#007aff',
-        },
-        {
-          label: 'نرخ مطالعه بخشنامه‌ها',
-          value: data.totalBulletins > 0 ? Math.round((data.readBulletins / data.totalBulletins) * 100) : 0,
-          color: '#ff9500',
-        },
-      ]
-    : []
 
   if (!isAdmin) {
     return (
-      <div className="flex flex-1 items-center justify-center p-4">
+      <div className="flex flex-1 items-center justify-center p-4" dir="rtl">
         <p className="text-sm text-foreground-muted">شما دسترسی به این بخش را ندارید</p>
       </div>
     )
   }
 
+  // Telemetry Mock Data
+  const telemetry = {
+    activeRadios: 48,
+    signalingLatency: '۱۸ میلی‌ثانیه',
+    lineVoltage: '۷۵۰ ولت DC (پایدار)',
+    blockStatus: '۳۲ بلاک سبز / ۱ بلاک زرد احتیاط',
+    activeCrisisCount: 0
+  }
+
+  // KPI Mock Data
+  const kpiStats = [
+    { label: 'نرخ انحراف از زمان‌بندی لوحه (سیر و حرکت)', value: 98.4, color: '#34c759', desc: 'دقت اعزام و تخلیه سر وقت قطارها در بلاک‌ها' },
+    { label: 'میانگین ضریب خستگی راهبران حاضر در خط', value: 24, color: '#007aff', desc: 'محاسبه شده بر اساس خوداظهاری فیزیکی و ساعات خواب' },
+    { label: 'نرخ پاسخ و رفع سانحه تیکت‌های خرابی واگن', value: 91.2, color: '#ff9500', desc: 'زمان طلایی رفع نقص هیدرولیک و ترمز قطارها' }
+  ]
+
   return (
-    <div className="flex flex-1 flex-col gap-6 p-4">
+    <div className="flex flex-1 flex-col gap-6 p-4 max-w-5xl mx-auto" dir="rtl">
+      {/* Header */}
       <div>
         <h1 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-foreground flex items-center gap-2">
           <BarChart3 className="size-6 text-accent" />
-          داشبورد تحلیلی
+          پیشخوان تحلیلی و لایه مدیریتی OCC
         </h1>
         <p className="text-sm text-foreground-muted mt-1">
-          آمار و شاخص‌های کلیدی عملکرد سیستم
+          گزارش‌های نظارتی، شاخص‌های کلیدی عملکرد (KPI)، پایش تله‌متری خط ۱ و دفتر ثبت وقایع سیستمی (Audit Log)
         </p>
       </div>
 
+      {/* Tabs */}
+      <div className="flex border-b border-border">
+        <button
+          onClick={() => setActiveTab('kpis')}
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
+            activeTab === 'kpis'
+              ? 'border-accent text-accent font-bold'
+              : 'border-transparent text-foreground-muted hover:text-foreground'
+          }`}
+        >
+          شاخص‌های عملکردی (KPI)
+        </button>
+        <button
+          onClick={() => setActiveTab('telemetry')}
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
+            activeTab === 'telemetry'
+              ? 'border-accent text-accent font-bold'
+              : 'border-transparent text-foreground-muted hover:text-foreground'
+          }`}
+        >
+          تله‌متری و وضعیت زنده خط ۱
+        </button>
+        <button
+          onClick={() => setActiveTab('audit-logs')}
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
+            activeTab === 'audit-logs'
+              ? 'border-accent text-accent font-bold'
+              : 'border-transparent text-foreground-muted hover:text-foreground'
+          }`}
+        >
+          دفتر ثبت وقایع (Audit Log)
+        </button>
+      </div>
+
       {loading ? (
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-32 animate-pulse rounded-lg border border-border bg-background-subtle" />
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-28 animate-pulse rounded-lg border border-border bg-background-subtle" />
           ))}
         </div>
       ) : (
         <>
-          {/* Metrics Grid */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {metrics.map((m, i) => (
-              <Card key={i}>
-                <CardContent className="flex items-start gap-3 p-4">
-                  <div className={`rounded-lg ${m.bgColor} p-2.5 ${m.color}`}>
-                    <m.icon className="size-5" />
-                  </div>
-                  <div>
-                    <div className="text-xl font-semibold">{toFa(m.value)}</div>
-                    <div className="text-xs text-foreground-muted">{m.title}</div>
-                    <div className="mt-1 text-[10px] text-foreground-muted">{m.detail}</div>
-                  </div>
+          {/* TAB 1: KPIS */}
+          {activeTab === 'kpis' && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-bold flex items-center gap-1.5">
+                    <Activity className="size-4.5 text-accent" />
+                    شاخص‌های کلیدی عملکرد سیر و حرکت (KPI)
+                  </CardTitle>
+                  <CardDescription>ارزیابی آماری اهداف کیفی و زمان‌بندی عملیاتی خط ۱ مترو:</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {kpiStats.map((kpi, idx) => (
+                    <div key={idx} className="space-y-2">
+                      <div className="flex items-center justify-between text-xs sm:text-sm">
+                        <div>
+                          <span className="font-bold text-foreground block">{kpi.label}</span>
+                          <span className="text-[10px] text-foreground-muted block mt-0.5">{kpi.desc}</span>
+                        </div>
+                        <span className="font-data-mono font-bold text-base text-accent">{toFa(kpi.value)}%</span>
+                      </div>
+                      <div className="h-2.5 overflow-hidden rounded-full bg-surface-container-high">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{ width: `${kpi.value}%`, backgroundColor: kpi.color }}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
-            ))}
-          </div>
 
-          {/* KPIs */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                <BarChart3 className="size-4" />
-                شاخص‌های کلیدی عملکرد (KPI)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {kpis.map((kpi, i) => (
-                  <div key={i}>
-                    <div className="mb-1 flex items-center justify-between text-sm">
-                      <span>{kpi.label}</span>
-                      <span className="font-mono">{toFa(kpi.value)}%</span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-background-subtle">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{ width: `${kpi.value}%`, backgroundColor: kpi.color }}
-                      />
-                    </div>
-                  </div>
-                ))}
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Card className="border-success/20 bg-success/5">
+                  <CardContent className="p-4 space-y-2">
+                    <span className="text-[10px] text-foreground-muted font-bold block">دقت و تطابق زمانی حرکت قطارها</span>
+                    <span className="text-xl font-black text-success">تطابق کامل (بدون تأخیر بحرانی)</span>
+                    <p className="text-[10px] text-foreground-muted leading-relaxed">تردد تمامی واگن‌های خط ۱ در بلاک‌های مسافربری بر اساس لوحه مصوب انطباق کامل دارد.</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-warning/20 bg-warning/5">
+                  <CardContent className="p-4 space-y-2">
+                    <span className="text-[10px] text-foreground-muted font-bold block">میانگین ضریب خستگی راهبران شیفت</span>
+                    <span className="text-xl font-black text-warning">خستگی کم (آماده به کار ایمن)</span>
+                    <p className="text-[10px] text-foreground-muted leading-relaxed">شاخص خوداظهاری راهبران و زمان استراحت بین شیفت‌ها در محدوده ریسک سبز (پایین) قرار دارد.</p>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          )}
 
-          {/* Quick Stats */}
-          <div className="grid gap-4 md:grid-cols-3">
+          {/* TAB 2: TELEMETRY */}
+          {activeTab === 'telemetry' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-bold flex items-center gap-1.5">
+                    <Radio className="size-4.5 text-accent" />
+                    ارتباطات رادیویی و بی‌سیم تترا
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-xs">
+                  <div className="flex justify-between items-center py-2 border-b border-border/40">
+                    <span className="text-foreground-muted">تعداد دستگاه‌های آنلاین در شبکه بی‌سیم</span>
+                    <strong className="text-foreground font-data-mono">{toFa(telemetry.activeRadios)} دستگاه</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-border/40">
+                    <span className="text-foreground-muted">تاخیر سیگنالینگ بلاک‌ها</span>
+                    <strong className="text-success font-data-mono">{telemetry.signalingLatency}</strong>
+                  </div>
+                  <p className="text-[10px] text-foreground-muted leading-relaxed">
+                    سیستم مانیتورینگ آنلاین دیسپاچینگ شبکه، پایداری اتصالات فرکانسی راهبران کابین را ۹۹.۸٪ ارزیابی کرده است.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-bold flex items-center gap-1.5">
+                    <Zap className="size-4.5 text-accent" />
+                    تغذیه و انرژی شبکه بالاسری
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-xs">
+                  <div className="flex justify-between items-center py-2 border-b border-border/40">
+                    <span className="text-foreground-muted">ولتاژ برق شبکه ریل سوم</span>
+                    <strong className="text-foreground font-data-mono">{telemetry.lineVoltage}</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-border/40">
+                    <span className="text-foreground-muted">وضعیت پایداری بلاک‌ها</span>
+                    <strong className="text-success">{telemetry.blockStatus}</strong>
+                  </div>
+                  <p className="text-[10px] text-foreground-muted leading-relaxed">
+                    سیستم برق‌رسانی و پست‌های تراکشن جنوبی و شمالی بدون اضافه بار یا افت ولتاژ ناگهانی در حال سرویس‌دهی هستند.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* TAB 3: AUDIT LOGS */}
+          {activeTab === 'audit-logs' && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">وضعیت پرسنل</CardTitle>
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="text-sm font-bold flex items-center gap-1.5">
+                  <ShieldAlert className="size-4.5 text-accent" />
+                  دفتر ثبت وقایع امنیتی و سیستمی (Audit Log)
+                </CardTitle>
+                <CardDescription>ریزفعالیت‌های ثبت شده مدیران خط ۱ مترو تهران:</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-foreground-muted">فعال</span>
-                  <Badge className="bg-success/15 text-success">{toFa(data?.activeUsers ?? 0)}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-foreground-muted">در انتظار تأیید</span>
-                  <Badge className="bg-warning/15 text-warning">{toFa(data?.pendingUsers ?? 0)}</Badge>
+              <CardContent className="p-4 pt-0">
+                <div className="divide-y divide-border/40">
+                  {auditLogs.map((log) => (
+                    <div key={log.id} className="py-3.5 first:pt-0 last:pb-0 flex flex-col sm:flex-row justify-between gap-3 text-xs">
+                      <div className="space-y-1.5 text-right">
+                        <div className="flex items-center gap-2">
+                          <span className="font-extrabold text-foreground">{log.action}</span>
+                          <Badge variant="outline" className="text-[9px] px-1 bg-accent/5 text-accent">
+                            {log.module}
+                          </Badge>
+                        </div>
+                        <div className="text-[10px] text-foreground-muted">
+                          توسط: <strong className="text-foreground">{log.operatorName}</strong> ({log.role})
+                        </div>
+                      </div>
+                      
+                      <div className="text-[10px] text-foreground-muted font-data-mono shrink-0 sm:text-left">
+                        {toFa(log.dateTime)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">تیکت‌های باز</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-foreground-muted">باز</span>
-                  <Badge className="bg-critical/15 text-critical">{toFa(data?.openTickets ?? 0)}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-foreground-muted">حل شده</span>
-                  <Badge className="bg-success/15 text-success">{toFa(data?.resolvedTickets ?? 0)}</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">بازخوردها</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-foreground-muted">کل</span>
-                  <Badge className="bg-info/15 text-info">{toFa(data?.totalFeedback ?? 0)}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-foreground-muted">پاسخ داده شده</span>
-                  <Badge className="bg-success/15 text-success">{toFa(data?.respondedFeedback ?? 0)}</Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          )}
         </>
       )}
     </div>

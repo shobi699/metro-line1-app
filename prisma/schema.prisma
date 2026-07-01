@@ -80,6 +80,10 @@ enum ChatRoomKind {
   shift
   station
   custom
+  training
+  announcement
+  emergency
+  management
 }
 
 enum PostType {
@@ -88,6 +92,9 @@ enum PostType {
   training
   circular
   gallery
+  announcement
+  directive
+  form
 }
 
 // ── Models ─────────────────────────────────────────────
@@ -107,10 +114,12 @@ model User {
 
   role              Role              @relation(fields: [roleId], references: [id])
   importJobs        ImportJob[]       @relation("ImportActor")
-  rosterFiles       RosterFile[]      @relation("RosterUploader")
+
   shifts            Shift[]           @relation("ShiftAssignee")
   swapRequestsInit  SwapRequest[]     @relation("SwapRequester")
   swapRequestsTarget SwapRequest[]    @relation("SwapTarget")
+  tripSwapRequestsInit   TripSwapRequest[] @relation("TripSwapRequester")
+  tripSwapRequestsTarget TripSwapRequest[] @relation("TripSwapTarget")
   ticketsCreated    Ticket[]          @relation("TicketCreator")
   ticketLogs        TicketLog[]       @relation("TicketLogActor")
   auditLogs         AuditLog[]        @relation("AuditActor")
@@ -198,19 +207,6 @@ model ImportJob {
   @@index([status])
 }
 
-model RosterFile {
-  id          String   @id @default(cuid())
-  fileName    String
-  period      String
-  parsedData  Json
-  uploaderId  String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  uploader User @relation("RosterUploader", fields: [uploaderId], references: [id])
-
-  @@index([uploaderId])
-}
 
 model Shift {
   id          String     @id @default(cuid())
@@ -324,6 +320,30 @@ model SwapRequest {
   @@index([status])
 }
 
+model TripSwapRequest {
+  id                  String            @id @default(cuid())
+  requesterId         String
+  targetId            String
+  sourceAssignmentId  String            // TripAssignment being swapped by requester
+  targetAssignmentId  String            // TripAssignment being swapped by target
+  status              SwapRequestStatus @default(pending)
+  note                String?
+  reviewedBy          String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  requester         User           @relation("TripSwapRequester", fields: [requesterId], references: [id])
+  target            User           @relation("TripSwapTarget", fields: [targetId], references: [id])
+  sourceAssignment  TripAssignment @relation("TripSwapSourceAssignment", fields: [sourceAssignmentId], references: [id])
+  targetAssignment  TripAssignment @relation("TripSwapTargetAssignment", fields: [targetAssignmentId], references: [id])
+
+  @@index([requesterId])
+  @@index([targetId])
+  @@index([sourceAssignmentId])
+  @@index([targetAssignmentId])
+  @@index([status])
+}
+
 model SafetyBulletin {
   id          String   @id @default(cuid())
   title       String
@@ -340,6 +360,7 @@ model ReadReceipt {
   userId          String
   safetyBulletinId String
   readAt          DateTime @default(now())
+  device          String?
 
   user            User            @relation("ReceiptUser", fields: [userId], references: [id])
   safetyBulletin  SafetyBulletin  @relation(fields: [safetyBulletinId], references: [id])
@@ -392,6 +413,11 @@ model AuditLog {
   action    AuditLogAction
   before    Json?
   after     Json?
+  reason    String?        // دلیل تغییر
+  ipAddress String?        // آدرس آی‌پی درخواست‌دهنده
+  userAgent String?        // مشخصات مرورگر / کلاینت
+  device    String?        // نوع دستگاه: mobile | desktop | tablet
+  metadata  Json?          // اطلاعات اضافی دلخواه
   createdAt DateTime       @default(now())
 
   actor User @relation("AuditActor", fields: [actorId], references: [id])
@@ -441,6 +467,9 @@ model Message {
   attachmentUrl  String?
   attachmentType String?
   pinned         Boolean   @default(false)
+  priority       String    @default("normal") // normal | important | urgent | emergency | critical
+  tags           String?   // comma-separated tags or JSON
+  readReceipts   Json?     // JSON array of ReadReceipt { userId, userName, seenAt, device, ipAddress, signature, docUrl }
   createdAt      DateTime  @default(now())
   editedAt       DateTime?
 
@@ -453,30 +482,38 @@ model Message {
 // ── Content (وبلاگ/اخبار/آموزش) ─────────────────────────
 
 model Post {
-  id          String   @id @default(cuid())
-  type        PostType @default(news)
-  title       String
-  slug        String   @unique
-  excerpt     String?
-  body        String
-  category    String?
-  coverUrl    String?
-  mediaUrl    String?
-  mediaType   String?
-  published   Boolean  @default(false)
-  mandatory   Boolean  @default(false)
-  authorId    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String    @id @default(cuid())
+  type          PostType  @default(news)
+  title         String
+  slug          String    @unique
+  excerpt       String?
+  body          String
+  category      String?
+  coverUrl      String?
+  mediaUrl      String?
+  mediaType     String?
+  published     Boolean   @default(false)
+  mandatory     Boolean   @default(false)
+  status        String    @default("draft") // draft | review | approved | published | archived
+  publishAt     DateTime? // زمان انتشار زمان‌بندی‌شده
+  reviewedById  String?
+  reviewedAt    DateTime?
+  archivedAt    DateTime?
+  nextReviewAt  DateTime? // یادآوری بازنگری دوره‌ای
+  authorId      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   author    User           @relation("PostAuthor", fields: [authorId], references: [id])
   reads     PostRead[]
   reactions PostReaction[]
   comments  Comment[]
 
+  @@index([type, status])
   @@index([type, published])
   @@index([authorId])
   @@index([createdAt])
+  @@index([status])
 }
 
 model PostRead {
@@ -730,21 +767,41 @@ model ChecklistRecord {
 // ── Knowledge Base ─────────────────────────────────────
 
 model KnowledgeArticle {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  body        String
-  category    String?
-  tags        String?  // comma-separated
-  attachments Json?    // [{ url, name, type }]
-  authorId    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                   String    @id @default(cuid())
+  title                String
+  slug                 String    @unique
+  body                 String
+  category             String?
+  tags                 String?   // comma-separated
+  attachments          Json?     // [{ url, name, type }]
+  version              Int       @default(1)
+  validFrom            DateTime?
+  validUntil           DateTime?
+  ownerId              String?
+  confidentialityLevel String    @default("internal") // public | internal | confidential | secret
+  relatedPostId        String?   // لینک به دوره آموزشی مرتبط
+  relatedQuizPostId    String?   // لینک به آزمون مرتبط
+  authorId             String
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   author User @relation(fields: [authorId], references: [id])
 
   @@index([category])
   @@index([createdAt])
+  @@index([confidentialityLevel])
+}
+
+model KnowledgeFAQ {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  category  String?
+  articleId String?  // لینک اختیاری به مقاله دانشنامه
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
 }
 
 // ── Crisis Management ──────────────────────────────────
@@ -972,7 +1029,30 @@ model TripAssignment {
   trip           Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
   matchedUser    User?            @relation("TripAssignmentUser", fields: [matchedUserId], references: [id])
   confirmedBy    User?            @relation("TripAssignmentConfirmer", fields: [confirmedById], references: [id])
+  tripSwapSourceAssignments TripSwapRequest[] @relation("TripSwapSourceAssignment")
+  tripSwapTargetAssignments TripSwapRequest[] @relation("TripSwapTargetAssignment")
 
   @@index([tripId])
   @@index([matchedUserId])
 }
+
+model RosterTemplate {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  description  String?
+  sourceType   String   @default("EXCEL") // EXCEL | PDF
+  // Excel column mappings (existing)
+  rightMapping Json?    // ColumnMapping JSON for Excel right block
+  leftMapping  Json?    // ColumnMapping JSON for Excel left block
+  // PDF template fields (§۴.۳)
+  pageWidth    Int?     // PDF page width in pixels
+  pageHeight   Int?     // PDF page height in pixels
+  rightBlock   Json?    // { x, y, width, height } — right table block coordinates
+  leftBlock    Json?    // { x, y, width, height } — left table block coordinates
+  headerZones  Json?    // [{ label, box: {x, y, width, height} }] — metadata extraction zones
+  pdfColumns   Json?    // ColumnMapping[] for PDF column positions
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+

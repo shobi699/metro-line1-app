@@ -15,6 +15,21 @@ async function main() {
   const prisma = new PrismaClient({ adapter })
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 12)
 
+  // Clear non-upsert tables to allow repeat execution without constraint failures
+  await prisma.shiftAssignment.deleteMany().catch(() => {})
+  await prisma.shiftTemplate.deleteMany().catch(() => {})
+  await prisma.setting.deleteMany().catch(() => {})
+  await prisma.message.deleteMany().catch(() => {})
+  await prisma.chatRoom.deleteMany().catch(() => {})
+  await prisma.auditLog.deleteMany().catch(() => {})
+  await prisma.customFieldDef.deleteMany().catch(() => {})
+  await prisma.swapRequest.deleteMany().catch(() => {})
+  await prisma.ticketLog.deleteMany().catch(() => {})
+  await prisma.ticket.deleteMany().catch(() => {})
+  await prisma.readReceipt.deleteMany().catch(() => {})
+  await prisma.safetyBulletin.deleteMany().catch(() => {})
+  await prisma.post.deleteMany().catch(() => {})
+
   // ── Roles (dynamic RBAC: flat permission keys) ─────────
   const roles = {} as Record<string, string>
   const adminPerms = [

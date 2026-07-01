@@ -12,6 +12,32 @@ function logSeed(_message?: string) {
 export async function seedDatabase(prisma: PrismaClient, force = false) {
   logSeed('seedDatabase call initiated')
   try {
+    if (force) {
+      logSeed('Force flag provided. Cleaning up database tables...')
+      try {
+        await prisma.readReceipt.deleteMany()
+        await prisma.safetyBulletin.deleteMany()
+        await prisma.knowledgeArticle.deleteMany()
+        await prisma.checklistRecord.deleteMany()
+        await prisma.checklistTemplate.deleteMany()
+        await prisma.performanceAppeal.deleteMany()
+        await prisma.performanceLog.deleteMany()
+        await prisma.performanceActionType.deleteMany()
+        await prisma.competency.deleteMany()
+        await prisma.scoreSnapshot.deleteMany()
+        await prisma.nomination.deleteMany()
+        await prisma.tripAssignment.deleteMany()
+        await prisma.trip.deleteMany()
+        await prisma.rosterVersion.deleteMany()
+        await prisma.rosterDay.deleteMany()
+        await prisma.user.deleteMany()
+        await prisma.role.deleteMany()
+        await prisma.setting.deleteMany()
+        logSeed('Database clean up completed successfully.')
+      } catch (cleanupErr) {
+        logSeed(`Error during cleanup: ${cleanupErr}`)
+      }
+    }
     const count = await prisma.role.count()
     logSeed(`Current role count in database: ${count}`)
     if (count > 0 && !force) {
@@ -474,6 +500,60 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
     }
     logSeed('Read receipts seeded.')
 
+    // ── Knowledge articles (RAG) ──────────────────────────
+    await prisma.knowledgeArticle.deleteMany()
+    await prisma.knowledgeArticle.createMany({
+      data: [
+        {
+          title: 'دستورالعمل سرعت‌های مجاز سیر در خط ۱ (بند ۴-۳)',
+          slug: 'line1-speed-limits',
+          body: `مقررات سرعت‌های مجاز در سیر و حرکت خط ۱ مترو تهران:
+۱. حداکثر سرعت سیر تحت سیستم سیگنالینگ ATP و در شرایط عادی ۸۰ کیلومتر بر ساعت است.
+۲. سرعت عبور از سوزن‌های انحرافی در ایستگاه‌های دارای خط فرعی، حداکثر ۳۰ کیلومتر بر ساعت می‌باشد.
+۳. در زمان خرابی سیگنالینگ و حرکت به صورت دستی با فرمان OCC، سرعت قطار نباید از ۲۵ کیلومتر بر ساعت تجاوز کند.
+۴. حداکثر سرعت حرکت در دپوهای فتح‌آباد و کهریزک ۱۵ کیلومتر بر ساعت تعیین شده است.`,
+          category: 'operation',
+          tags: 'سرعت,سوزن,atp,دپو,سیر',
+          authorId: superAdmin.id,
+        },
+        {
+          title: 'پروتکل تخلیه اضطراری مسافران در تونل (بند ۱۲-۵)',
+          slug: 'emergency-passenger-evacuation',
+          body: `دستورالعمل تخلیه اضطراری مسافران در داخل تونل خط ۱:
+۱. در صورت توقف قطار به دلیل حریق یا نقص فنی غیرقابل حرکت، راهبر موظف است فوراً موقعیت بلاک را به OCC گزارش داده و درخواست قطع برق ریل سوم (۷۵۰ ولت DC) را نماید.
+۲. تخلیه مسافران تنها پس از اعلام قطع کامل جریان برق توسط مرکز فرمان و تایید نهایی آن مجاز است.
+۳. راهبر باید درب‌های خروجی فرار اضطراری جلو یا انتهای قطار را باز کند.
+۴. هدایت مسافران باید همواره در جهت خلاف جریان باد و به سمت نزدیک‌ترین ایستگاه یا خروجی اضطراری تونل انجام گیرد.`,
+          category: 'safety',
+          tags: 'تخلیه,تونل,حریق,اضطراری,ریل سوم',
+          authorId: superAdmin.id,
+        },
+        {
+          title: 'پروتکل ارتباطات رادیویی و بی‌سیم راهبری (بند ۷-۱۲)',
+          slug: 'driver-radio-protocol',
+          body: `مقررات ارتباط رادیویی بی‌سیم بین راهبران و دیسپچرز مرکز فرمان (OCC):
+۱. کانال ارتباطی پیش‌فرض رادیو بی‌سیم به صورت نیمه-دوبلکس (Half-Duplex) کار می‌کند. راهبران باید پس از فشردن دکمه PTT ابتدا کد قطار خود را اعلام کنند.
+۲. مخابره پیام‌ها باید با نهایت اختصار، وضوح و رعایت کدهای استاندارد باشد.
+۳. در زمان شنیده شدن کد اعلام وضعیت اضطراری (کد قرمز یا SOS)، تمامی پرسنل و راهبران باید بلافاصله مکالمات رادیویی غیرحیاتی را متوقف کرده و خط را برای OCC باز نگه دارند.`,
+          category: 'operation',
+          tags: 'بیسیم,رادیو,occ,ارتباطات,sos',
+          authorId: superAdmin.id,
+        },
+        {
+          title: 'کنترل ترمز و توقف در شیب‌های تند خط ۱ (بند ۵-۲)',
+          slug: 'steep-slope-braking',
+          body: `دستورالعمل کنترل قطار و سیستم ترمز در شیب‌های تند خط ۱ (از تجریش تا قلهک):
+۱. شیب مسیر در بخش‌های شمالی خط ۱ تا ۴۵ در هزار می‌رسد. راهبر باید همواره عقربه‌های فشار مخازن ترمز اصلی را بررسی کند که نباید کمتر از ۷.۵ بار باشد.
+۲. در صورت افت فشار باد اصلی به کمتر از ۵.۵ بار، قطار به صورت خودکار ترمز اضطراری (Emergency Brake) اعمال می‌کند.
+۳. برای شروع حرکت مجدد در شیب، راهبر باید سیستم کشش (Traction) را همزمان با رهاسازی تدریجی ترمز پنوماتیک به کار گیرد تا از پس زدن قطار جلوگیری شود.`,
+          category: 'technical',
+          tags: 'ترمز,شیب,تجریش,باد,پنوماتیک',
+          authorId: superAdmin.id,
+        }
+      ]
+    })
+    logSeed('Knowledge articles seeded.')
+
     // ── Tickets ────────────────────────────────────────────
     const tickets = await Promise.all([
       prisma.ticket.create({
@@ -670,6 +750,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
 }
 
 async function seedDefaultSettings(prisma: PrismaClient) {
+  await prisma.setting.deleteMany()
   await prisma.setting.createMany({
     data: [
       {

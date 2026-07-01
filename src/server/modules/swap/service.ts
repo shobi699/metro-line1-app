@@ -13,6 +13,7 @@ export interface SwapRequestWithRelations {
   sourceShift: { id: string; date: Date; code: ShiftCode }
   targetShift: { id: string; date: Date; code: ShiftCode }
   reviewedBy: string | null
+  violations?: RuleViolation[]
 }
 
 export interface RuleViolation {
@@ -429,7 +430,7 @@ export async function getSwapInbox(
     where.targetId = userId
   }
 
-  return prisma.swapRequest.findMany({
+  const requests = await prisma.swapRequest.findMany({
     where: where as never,
     include: {
       requester: { select: { id: true, name: true, nationalId: true } },
@@ -439,6 +440,28 @@ export async function getSwapInbox(
     },
     orderBy: { createdAt: 'desc' },
   })
+
+  const results = await Promise.all(
+    requests.map(async (req) => {
+      let violations: RuleViolation[] = []
+      try {
+        violations = await validateSwapRules(
+          req.requesterId,
+          req.targetId,
+          req.sourceShiftId,
+          req.targetShiftId,
+        )
+      } catch (err) {
+        // silent fallback for draft/incomplete data
+      }
+      return {
+        ...req,
+        violations,
+      } as SwapRequestWithRelations
+    })
+  )
+
+  return results
 }
 
 export async function getUserSwapRequests(userId: string) {
@@ -455,3 +478,344 @@ export async function getUserSwapRequests(userId: string) {
     orderBy: { createdAt: 'desc' },
   })
 }
+
+// ── Trip-Level Swap Requests (Roster Integration) ─────────────────────────
+
+import { validateRoster } from '@/server/modules/roster/service'
+
+export async function validateTripSwapRules(
+  requesterId: string,
+  targetId: string,
+  sourceAssignmentId: string,
+  targetAssignmentId: string,
+): Promise<RuleViolation[]> {
+  const violations: RuleViolation[] = []
+
+  const [sourceAssign, targetAssign, requester, target] = await Promise.all([
+    prisma.tripAssignment.findUnique({ where: { id: sourceAssignmentId }, include: { trip: true } }),
+    prisma.tripAssignment.findUnique({ where: { id: targetAssignmentId }, include: { trip: true } }),
+    prisma.user.findUnique({ where: { id: requesterId }, include: { role: true } }),
+    prisma.user.findUnique({ where: { id: targetId }, include: { role: true } }),
+  ])
+
+  if (!sourceAssign || !targetAssign) {
+    violations.push({ rule: 'invalid_assignment', message: 'یکی از نوبت‌های اعزام یافت نشد' })
+    return violations
+  }
+
+  if (!requester || !target) {
+    violations.push({ rule: 'invalid_user', message: 'کاربر متقاضی یا مقصد یافت نشد' })
+    return violations
+  }
+
+  // Check role parity
+  if (requester.roleId !== target.roleId) {
+    violations.push({
+      rule: 'role_parity',
+      message: `عدم انطباق نقش: نقش متقاضی (${requester.role.name}) با نقش کاربر مقصد (${target.role.name}) یکسان نیست`,
+    })
+  }
+
+  if (sourceAssign.matchedUserId !== requesterId) {
+    violations.push({ rule: 'not_your_trip', message: 'نوبت اعزام مبدا متعلق به شما نیست' })
+  }
+
+  if (targetAssign.matchedUserId !== targetId) {
+    violations.push({ rule: 'not_their_trip', message: 'نوبت اعزام مقصد متعلق به کاربر مقصد نیست' })
+  }
+
+  if (violations.length > 0) return violations
+
+  // Simulate the swap on the day's roster and check fatigue and overlap rules
+  const rosterVersionId = sourceAssign.trip.rosterVersionId
+  const allTrips = await prisma.trip.findMany({
+    where: { rosterVersionId },
+    include: { assignments: true },
+  })
+
+  const simulatedAssignments = allTrips.flatMap((t) =>
+    t.assignments.map((a) => {
+      let matchedUserId = a.matchedUserId
+      if (a.id === sourceAssignmentId) {
+        matchedUserId = targetId
+      } else if (a.id === targetAssignmentId) {
+        matchedUserId = requesterId
+      }
+      return {
+        ...a,
+        matchedUserId,
+      }
+    })
+  )
+
+  const rosterIssues = await validateRoster(allTrips, simulatedAssignments)
+  const criticalIssues = rosterIssues.filter(
+    (issue) => issue.severity === 'CRITICAL' || issue.severity === 'ERROR'
+  )
+
+  criticalIssues.forEach((issue) => {
+    violations.push({
+      rule: 'fatigue_or_overlap',
+      message: issue.message,
+    })
+  })
+
+  return violations
+}
+
+export async function createTripSwapRequest(
+  requesterId: string,
+  targetId: string,
+  sourceAssignmentId: string,
+  targetAssignmentId: string,
+  note?: string,
+): Promise<{ tripSwapRequest?: any; violations: RuleViolation[] }> {
+  // Check if allowSwapRequests setting is enabled
+  const allowSwaps = await getSettingValue('shifts.allowSwapRequests', true)
+  if (!allowSwaps) {
+    return { violations: [{ rule: 'swaps_disabled', message: 'ثبت درخواست جابجایی شیفت در تنظیمات سیستم غیرفعال است.' }] }
+  }
+
+  const violations = await validateTripSwapRules(
+    requesterId,
+    targetId,
+    sourceAssignmentId,
+    targetAssignmentId,
+  )
+
+  if (violations.length > 0) {
+    return { violations }
+  }
+
+  const tripSwapRequest = await prisma.tripSwapRequest.create({
+    data: {
+      requesterId,
+      targetId,
+      sourceAssignmentId,
+      targetAssignmentId,
+      note: note || null,
+      status: 'pending',
+    },
+    include: {
+      requester: { select: { id: true, name: true, nationalId: true } },
+      target: { select: { id: true, name: true, nationalId: true } },
+      sourceAssignment: { include: { trip: true } },
+      targetAssignment: { include: { trip: true } },
+    },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      actorId: requesterId,
+      entity: 'TripSwapRequest',
+      entityId: tripSwapRequest.id,
+      action: 'create',
+      after: tripSwapRequest,
+    },
+  })
+
+  return { tripSwapRequest, violations: [] }
+}
+
+export async function acceptTripSwapRequest(
+  swapRequestId: string,
+  targetUserId: string,
+): Promise<any> {
+  const swapRequest = await prisma.tripSwapRequest.findUnique({
+    where: { id: swapRequestId },
+  })
+
+  if (!swapRequest) throw new Error('درخواست یافت نشد')
+  if (swapRequest.targetId !== targetUserId) throw new Error('شما طرف این درخواست نیستید')
+  if (swapRequest.status !== 'pending') throw new Error('این درخواست قبلاً بررسی شده')
+
+  // Run the rule engine before colleague acceptance
+  const violations = await validateTripSwapRules(
+    swapRequest.requesterId,
+    swapRequest.targetId,
+    swapRequest.sourceAssignmentId,
+    swapRequest.targetAssignmentId,
+  )
+
+  if (violations.length > 0) {
+    throw new Error(`مغایرت با قوانین نوبت اعزام: ${violations.map((v) => v.message).join(' | ')}`)
+  }
+
+  // Update TripSwapRequest to show colleague accepted (store as "accepted:targetUserId" in reviewedBy)
+  await prisma.$transaction([
+    prisma.tripSwapRequest.update({
+      where: { id: swapRequestId },
+      data: {
+        reviewedBy: `accepted:${targetUserId}`,
+      },
+    }),
+    prisma.auditLog.create({
+      data: {
+        actorId: targetUserId,
+        entity: 'TripSwapRequest',
+        entityId: swapRequestId,
+        action: 'update',
+        before: { status: swapRequest.status, reviewedBy: swapRequest.reviewedBy } as any,
+        after: { status: 'pending', reviewedBy: `accepted:${targetUserId}` } as any,
+      },
+    }),
+  ])
+
+  return prisma.tripSwapRequest.findUnique({
+    where: { id: swapRequestId },
+    include: {
+      requester: { select: { id: true, name: true, nationalId: true } },
+      target: { select: { id: true, name: true, nationalId: true } },
+      sourceAssignment: { include: { trip: true } },
+      targetAssignment: { include: { trip: true } },
+    },
+  })
+}
+
+export async function approveTripSwapRequest(
+  swapRequestId: string,
+  reviewerId: string,
+  decision: 'approved' | 'rejected',
+): Promise<any> {
+  const swapRequest = await prisma.tripSwapRequest.findUnique({
+    where: { id: swapRequestId },
+  })
+
+  if (!swapRequest) throw new Error('درخواست یافت نشد')
+  if (swapRequest.status !== 'pending') throw new Error('این درخواست قبلاً بررسی شده')
+
+  // Enforce: Colleague must accept first before admin can approve!
+  if (decision === 'approved' && (!swapRequest.reviewedBy || !swapRequest.reviewedBy.startsWith('accepted:'))) {
+    throw new Error('این درخواست ابتدا باید توسط همکار تایید (پذیرش) شود.')
+  }
+
+  if (decision === 'approved') {
+    const violations = await validateTripSwapRules(
+      swapRequest.requesterId,
+      swapRequest.targetId,
+      swapRequest.sourceAssignmentId,
+      swapRequest.targetAssignmentId,
+    )
+
+    if (violations.length > 0) {
+      throw new Error(`مغایرت با قوانین نوبت اعزام: ${violations.map((v) => v.message).join(' | ')}`)
+    }
+
+    const [reqUser, tarUser] = await Promise.all([
+      prisma.user.findUnique({ where: { id: swapRequest.requesterId } }),
+      prisma.user.findUnique({ where: { id: swapRequest.targetId } }),
+    ])
+
+    if (!reqUser || !tarUser) throw new Error('راهبر یافت نشد')
+
+    await prisma.$transaction([
+      prisma.tripAssignment.update({
+        where: { id: swapRequest.sourceAssignmentId },
+        data: {
+          matchedUserId: swapRequest.targetId,
+          personnelNo: tarUser.nationalId || null,
+          rawName: tarUser.name,
+        },
+      }),
+      prisma.tripAssignment.update({
+        where: { id: swapRequest.targetAssignmentId },
+        data: {
+          matchedUserId: swapRequest.requesterId,
+          personnelNo: reqUser.nationalId || null,
+          rawName: reqUser.name,
+        },
+      }),
+      prisma.tripSwapRequest.update({
+        where: { id: swapRequestId },
+        data: { status: 'approved', reviewedBy: reviewerId },
+      }),
+      prisma.auditLog.create({
+        data: {
+          actorId: reviewerId,
+          entity: 'TripSwapRequest',
+          entityId: swapRequestId,
+          action: 'update',
+          before: { status: swapRequest.status, reviewedBy: swapRequest.reviewedBy } as any,
+          after: { status: 'approved', reviewedBy: reviewerId } as any,
+        },
+      }),
+    ])
+  } else {
+    await prisma.$transaction([
+      prisma.tripSwapRequest.update({
+        where: { id: swapRequestId },
+        data: { status: 'rejected', reviewedBy: reviewerId },
+      }),
+      prisma.auditLog.create({
+        data: {
+          actorId: reviewerId,
+          entity: 'TripSwapRequest',
+          entityId: swapRequestId,
+          action: 'update',
+          before: { status: swapRequest.status, reviewedBy: swapRequest.reviewedBy } as any,
+          after: { status: 'rejected', reviewedBy: reviewerId } as any,
+        },
+      }),
+    ])
+  }
+
+  return prisma.tripSwapRequest.findUnique({
+    where: { id: swapRequestId },
+    include: {
+      requester: { select: { id: true, name: true, nationalId: true } },
+      target: { select: { id: true, name: true, nationalId: true } },
+      sourceAssignment: { include: { trip: true } },
+      targetAssignment: { include: { trip: true } },
+    },
+  })
+}
+
+export async function getTripSwaps(
+  userId: string,
+  roleKey: string,
+): Promise<any[]> {
+  const where: Record<string, unknown> = {}
+
+  if (roleKey === 'super_admin' || roleKey === 'admin') {
+    // Admin sees all
+  } else {
+    // Operator/driver sees requests involving them
+    where.OR = [{ requesterId: userId }, { targetId: userId }]
+  }
+
+  const requests = await prisma.tripSwapRequest.findMany({
+    where: where as never,
+    include: {
+      requester: { select: { id: true, name: true, nationalId: true } },
+      target: { select: { id: true, name: true, nationalId: true } },
+      sourceAssignment: { include: { trip: true } },
+      targetAssignment: { include: { trip: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  const results = await Promise.all(
+    requests.map(async (req) => {
+      let violations: RuleViolation[] = []
+      if (req.status === 'pending') {
+        try {
+          violations = await validateTripSwapRules(
+            req.requesterId,
+            req.targetId,
+            req.sourceAssignmentId,
+            req.targetAssignmentId,
+          )
+        } catch (err) {
+          // silent fallback
+        }
+      }
+      return {
+        ...req,
+        violations,
+      }
+    })
+  )
+
+  return results
+}
+

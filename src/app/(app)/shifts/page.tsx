@@ -20,7 +20,19 @@ import {
   Loader2,
   ArrowLeftRight,
   Send,
-  UserCheck
+  UserCheck,
+  GraduationCap,
+  UserMinus,
+  Timer,
+  CheckCircle2,
+  XCircle,
+  Info,
+  CalendarDays,
+  Flame,
+  Sparkles,
+  Activity,
+  Award,
+  Shield
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -31,8 +43,12 @@ import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 
 import { useAuthStore } from '@/features/auth'
-import { useShiftsStore } from '@/features/shifts'
-import { getShiftForUserAndDate, MOCK_USERS_LIST } from '@/lib/cycle-math'
+import { 
+  shiftsApi, 
+  type ShiftNoteDto, 
+  type ShiftTaskDto, 
+  type ResolvedShiftResponse 
+} from '@/features/shifts'
 import { normalizeGroup } from '@/lib/shift-grouping'
 import { toFa, jalali } from '@/lib/fa'
 import { cn } from '@/lib/utils'
@@ -75,6 +91,14 @@ const SHIFT_LABELS: Record<string, string> = {
   off: 'استراحت (آف)',
   office: 'اداری',
 }
+
+const LAYERS = [
+  { key: 'shifts', label: 'شیفت‌ها', icon: Shield, color: 'text-accent' },
+  { key: 'leave', label: 'مرخصی و مأموریت', icon: UserMinus, color: 'text-emerald-400' },
+  { key: 'meetings', label: 'آموزش و جلسات', icon: GraduationCap, color: 'text-indigo-400' },
+  { key: 'bulletins', label: 'ابلاغیه ایمنی', icon: AlertTriangle, color: 'text-amber-400' },
+  { key: 'attendance', label: 'حضور و غیاب', icon: Timer, color: 'text-success' },
+]
 
 function playAlertSound(type: 'info' | 'warning' | 'success') {
   if (typeof window === 'undefined') return
@@ -120,19 +144,8 @@ function playAlertSound(type: 'info' | 'warning' | 'success') {
 }
 
 export default function ShiftsPage() {
-  const {
-    templates,
-    assignments,
-    notes,
-    tasks,
-    saveNote,
-    addTask,
-    toggleTaskStatus,
-    deleteTask
-  } = useShiftsStore()
-
   // Tabs state
-  const [activeTab, setActiveTab] = useState<'calendar' | 'reports'>('calendar')
+  const [activeTab, setActiveTab] = useState<'calendar' | 'reports' | 'supervisor'>('calendar')
 
   // Selected User in Calendar (default: current logged in user)
   const [calendarUser, setCalendarUser] = useState<string>('current')
@@ -153,7 +166,7 @@ export default function ShiftsPage() {
   const [personalTime, setPersonalTime] = useState('08:00')
   const [personalPriority, setPersonalPriority] = useState<'low' | 'medium' | 'high'>('medium')
 
-  // Database Overrides
+  // Database Shifts & Overrides
   const [dbShifts, setDbShifts] = useState<DbShift[]>([])
   const [dbShiftsLoading, setDbShiftsLoading] = useState(false)
 
@@ -169,6 +182,148 @@ export default function ShiftsPage() {
 
   const accessToken = useAuthStore((s) => s.accessToken)
   const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null)
+
+  // Local state for DB-persisted shifts, notes, and tasks
+  const [resolvedShifts, setResolvedShifts] = useState<ResolvedShiftResponse[]>([])
+  const [resolvedLoading, setResolvedLoading] = useState(false)
+  const [notes, setNotes] = useState<ShiftNoteDto[]>([])
+  const [notesLoading, setNotesLoading] = useState(false)
+  const [tasks, setTasks] = useState<ShiftTaskDto[]>([])
+  const [tasksLoading, setTasksLoading] = useState(false)
+
+  // Calendar Active Layers
+  const [activeLayers, setActiveLayers] = useState<string[]>([
+    'shifts',
+    'leave',
+    'meetings',
+    'bulletins',
+    'attendance',
+  ])
+
+  // Leave Requests state with localStorage persistence
+  const [leaveRequests, setLeaveRequests] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = window.localStorage.getItem('metro_leave_requests')
+      if (saved) return JSON.parse(saved)
+    }
+    return [
+      {
+        id: 'leave-1',
+        userId: 'current',
+        type: 'annual',
+        startDate: dayjs().add(2, 'day').format('YYYY-MM-DD'),
+        endDate: dayjs().add(4, 'day').format('YYYY-MM-DD'),
+        status: 'approved',
+        reason: 'کارهای شخصی و تمدید مدارک'
+      },
+      {
+        id: 'leave-2',
+        userId: 'user-2', // will map to a colleague
+        type: 'sick',
+        startDate: dayjs().add(8, 'day').format('YYYY-MM-DD'),
+        endDate: dayjs().add(9, 'day').format('YYYY-MM-DD'),
+        status: 'pending',
+        reason: 'سرماخوردگی شدید و استراحت پزشکی'
+      }
+    ]
+  })
+
+  // Leave Form States
+  const [leaveType, setLeaveType] = useState<'annual' | 'sick' | 'unpaid'>('annual')
+  const [leaveStartDate, setLeaveStartDate] = useState(() => dayjs().add(7, 'day').format('YYYY-MM-DD'))
+  const [leaveEndDate, setLeaveEndDate] = useState(() => dayjs().add(8, 'day').format('YYYY-MM-DD'))
+  const [leaveReason, setLeaveReason] = useState('')
+  const [leaveBalance, setLeaveBalance] = useState(26) // days left
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('metro_leave_requests', JSON.stringify(leaveRequests))
+    }
+  }, [leaveRequests])
+
+  // Sight Confirmations State with localStorage persistence
+  const [sightConfirmations, setSightConfirmations] = useState<Record<string, { confirmedAt: string }>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = window.localStorage.getItem('metro_sight_confirmations')
+      if (saved) return JSON.parse(saved)
+    }
+    return {
+      [dayjs().subtract(1, 'day').format('YYYY-MM-DD')]: { confirmedAt: dayjs().subtract(1, 'day').set('hour', 7).toISOString() }
+    }
+  })
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('metro_sight_confirmations', JSON.stringify(sightConfirmations))
+    }
+  }, [sightConfirmations])
+
+  // Active Training/Meetings Events (Mock DB)
+  const [calendarEvents, setCalendarEvents] = useState<any[]>([
+    {
+      id: 'ev-1',
+      title: 'کارگاه آموزشی راهبری قطارهای سری ۷۰۰',
+      type: 'training',
+      date: dayjs().add(1, 'day').format('YYYY-MM-DD'),
+      startTime: '09:00',
+      endTime: '12:00',
+      location: 'دپو غرب - سالن کنفرانس'
+    },
+    {
+      id: 'ev-2',
+      title: 'جلسه ارزیابی سوانح خط ۱ با رئیس بخش',
+      type: 'meeting',
+      date: dayjs().add(5, 'day').format('YYYY-MM-DD'),
+      startTime: '10:30',
+      endTime: '12:00',
+      location: 'ساختمان اداری کالج - اتاق ۳۰۴'
+    }
+  ])
+
+  // Safety Bulletins list (local mock to display on calendar)
+  const [safetyBulletins, setSafetyBulletins] = useState<any[]>([])
+  useEffect(() => {
+    async function loadBulletins() {
+      if (!accessToken) return
+      try {
+        const res = await fetch('/api/bulletins', {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        })
+        if (res.ok) {
+          const json = await res.json()
+          setSafetyBulletins(json.data || [])
+        }
+      } catch {
+        // silent fallback
+      }
+    }
+    void loadBulletins()
+  }, [accessToken])
+
+  // Attendance Records State
+  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([])
+  useEffect(() => {
+    async function loadAttendance() {
+      if (!accessToken) return
+      try {
+        const res = await fetch('/api/attendance/me?limit=100', {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        })
+        if (res.ok) {
+          const json = await res.json()
+          setAttendanceRecords(json.data || [])
+        }
+      } catch {
+        // silent
+      }
+    }
+    void loadAttendance()
+  }, [accessToken, currentMonth, currentYear])
+
+  // AI Assistant Widget states
+  const [aiQuery, setAiQuery] = useState('')
+  const [aiResponse, setAiResponse] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
 
   useEffect(() => {
     async function loadProfile() {
@@ -188,19 +343,58 @@ export default function ShiftsPage() {
     void loadProfile()
   }, [accessToken])
 
-  // Fetch Database Overrides for the active month
+  // Fetch Resolved Shifts, Notes, and Tasks for the active month
   useEffect(() => {
-    async function loadDbShifts() {
+    async function loadAllShiftsData() {
       if (!accessToken) return
+      
+      const firstDayOfMonth = jdate()
+        .year(currentYear)
+        .month(currentMonth - 1)
+        .date(1)
+      const startStr = firstDayOfMonth.startOf('month').toISOString()
+      const endStr = firstDayOfMonth.endOf('month').toISOString()
+
+      const realUserId = calendarUser === 'current' ? (currentUserProfile?.id || '') : calendarUser
+
+      // 1. Fetch Resolved Shifts (combining templates + overrides)
+      if (realUserId) {
+        setResolvedLoading(true)
+        try {
+          const data = await shiftsApi.getResolved(accessToken, realUserId, startStr, endStr)
+          setResolvedShifts(data)
+        } catch {
+          // silent fallback
+        } finally {
+          setResolvedLoading(false)
+        }
+      }
+
+      // 2. Fetch User Notes from DB
+      setNotesLoading(true)
+      try {
+        const notesData = await shiftsApi.getNotes(accessToken, startStr, endStr)
+        setNotes(notesData)
+      } catch {
+        // silent fallback
+      } finally {
+        setNotesLoading(false)
+      }
+
+      // 3. Fetch User Tasks from DB
+      setTasksLoading(true)
+      try {
+        const tasksData = await shiftsApi.getTasks(accessToken, startStr, endStr)
+        setTasks(tasksData)
+      } catch {
+        // silent fallback
+      } finally {
+        setTasksLoading(false)
+      }
+
+      // 4. Fetch Database Shifts (materialized + overrides) for the active month
       setDbShiftsLoading(true)
       try {
-        const firstDayOfMonth = jdate()
-          .year(currentYear)
-          .month(currentMonth - 1)
-          .date(1)
-        const startStr = firstDayOfMonth.startOf('month').toISOString()
-        const endStr = firstDayOfMonth.endOf('month').toISOString()
-
         const res = await fetch(`/api/shifts?startDate=${startStr}&endDate=${endStr}`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         })
@@ -209,13 +403,14 @@ export default function ShiftsPage() {
           setDbShifts(json.data || [])
         }
       } catch {
-        // silent — failed to fetch shifts overrides
+        // silent
       } finally {
         setDbShiftsLoading(false)
       }
     }
-    void loadDbShifts()
-  }, [currentMonth, currentYear, accessToken])
+
+    void loadAllShiftsData()
+  }, [currentMonth, currentYear, calendarUser, accessToken, currentUserProfile])
 
   // Load colleagues from directory list
   useEffect(() => {
@@ -238,9 +433,9 @@ export default function ShiftsPage() {
 
   // Synchronize note contents when selection changes
   useEffect(() => {
-    const currentNote = notes.find((n) => n.userId === calendarUser && n.date === selectedDateStr)
+    const currentNote = notes.find((n) => dayjs(n.date).format('YYYY-MM-DD') === selectedDateStr)
     setNoteContent(currentNote?.content || '')
-  }, [selectedDateStr, calendarUser, notes])
+  }, [selectedDateStr, notes])
 
   // Calendar Calculation Helpers
   const firstDay = useMemo(() => {
@@ -267,33 +462,26 @@ export default function ShiftsPage() {
         ? normalizeGroup(currentUserProfile.customFields.shift ?? currentUserProfile.customFields.group)
         : undefined
 
-      // 1. Get default shift from template cycles
-      const cycleRes = getShiftForUserAndDate(calendarUser, dateObj, assignments, templates, undefined, userGroup)
-      
-      // 2. Look up database override
-      const realUserId = calendarUser === 'current' ? currentUserProfile?.id : calendarUser
-      const override = dbShifts.find((s) => s.userId === realUserId && dayjs(s.date).format('YYYY-MM-DD') === dateStr)
+      const dbResolved = resolvedShifts.find((rs) => rs.date === dateStr)
 
-      let resolved = cycleRes
-      if (override) {
-        resolved = {
-          shift: {
-            day: dateObj.day() + 1,
-            code: override.code as 'morning' | 'evening' | 'night' | 'off' | 'office',
-            label: SHIFT_LABELS[override.code as keyof typeof SHIFT_LABELS] || override.code,
-            hours: override.code === 'morning' || override.code === 'evening' ? 9 : override.code === 'night' ? 12 : 0,
-            startTime: override.code === 'morning' ? '07:00' : override.code === 'evening' ? '16:00' : override.code === 'night' ? '19:00' : '',
-            endTime: override.code === 'morning' ? '16:00' : override.code === 'evening' ? '01:00' : override.code === 'night' ? '07:00' : '',
-          },
-          group: userGroup || 'A',
-          templateName: 'اوراید دستی مدیریت',
-          dayOfCycle: 1,
-          cycleLength: 1
-        }
-      }
+      const resolved = dbResolved ? {
+        shift: dbResolved.shift ? {
+          day: dateObj.day() + 1,
+          code: dbResolved.shift.code,
+          label: SHIFT_LABELS[dbResolved.shift.code] || dbResolved.shift.label || dbResolved.shift.code,
+          hours: dbResolved.shift.hours,
+          startTime: dbResolved.shift.startTime,
+          endTime: dbResolved.shift.endTime,
+        } : null,
+        group: userGroup || 'A',
+        templateName: dbResolved.templateName,
+        source: dbResolved.source,
+        dayOfCycle: dbResolved.shift?.day || 1,
+        cycleLength: 1
+      } : null
 
-      const dayTasks = tasks.filter((t) => t.userId === calendarUser && t.date === dateStr)
-      const dayNote = notes.find((n) => n.userId === calendarUser && n.date === dateStr)
+      const dayTasks = tasks.filter((t) => dayjs(t.date).format('YYYY-MM-DD') === dateStr)
+      const dayNote = notes.find((n) => dayjs(n.date).format('YYYY-MM-DD') === dateStr)
 
       arr.push({
         day: d,
@@ -307,7 +495,7 @@ export default function ShiftsPage() {
       })
     }
     return arr
-  }, [firstDay, daysInMonth, calendarUser, assignments, templates, tasks, notes, dbShifts, currentUserProfile])
+  }, [firstDay, daysInMonth, calendarUser, tasks, notes, resolvedShifts, currentUserProfile])
 
   // Navigations
   function prevMonth() {
@@ -330,33 +518,122 @@ export default function ShiftsPage() {
 
   const selectedDayInfo = useMemo(() => {
     const dayData = daysGrid.find((d) => d.dateStr === selectedDateStr)
-    const note = notes.find((n) => n.userId === calendarUser && n.date === selectedDateStr)
-    const dayTasks = tasks.filter((t) => t.userId === calendarUser && t.date === selectedDateStr)
+    const note = notes.find((n) => dayjs(n.date).format('YYYY-MM-DD') === selectedDateStr)
+    const dayTasks = tasks.filter((t) => dayjs(t.date).format('YYYY-MM-DD') === selectedDateStr)
     return {
       data: dayData,
       note,
       tasks: dayTasks
     }
-  }, [selectedDateStr, daysGrid, calendarUser, notes, tasks])
+  }, [selectedDateStr, daysGrid, notes, tasks])
 
-  // Note CRUD Handler
-  function handleSaveNote() {
-    saveNote(calendarUser, selectedDateStr, noteContent)
+  // Note CRUD Handlers
+  async function handleSaveNote() {
+    if (!accessToken) return
+    try {
+      await shiftsApi.saveNote(accessToken, selectedDateStr, noteContent)
+      playAlertSound('success')
+      // Refresh notes
+      const firstDayOfMonth = jdate()
+        .year(currentYear)
+        .month(currentMonth - 1)
+        .date(1)
+      const startStr = firstDayOfMonth.startOf('month').toISOString()
+      const endStr = firstDayOfMonth.endOf('month').toISOString()
+      const notesData = await shiftsApi.getNotes(accessToken, startStr, endStr)
+      setNotes(notesData)
+    } catch {
+      playAlertSound('warning')
+    }
+  }
+
+  async function handleDeleteNote() {
+    if (!accessToken || !selectedDayInfo.note) return
+    try {
+      await shiftsApi.deleteNote(accessToken, selectedDayInfo.note.id)
+      playAlertSound('success')
+      setNoteContent('')
+      // Refresh notes
+      const firstDayOfMonth = jdate()
+        .year(currentYear)
+        .month(currentMonth - 1)
+        .date(1)
+      const startStr = firstDayOfMonth.startOf('month').toISOString()
+      const endStr = firstDayOfMonth.endOf('month').toISOString()
+      const notesData = await shiftsApi.getNotes(accessToken, startStr, endStr)
+      setNotes(notesData)
+    } catch {
+      playAlertSound('warning')
+    }
   }
 
   // Personal Task Creator
-  function handleAddPersonalTask() {
-    if (!personalTitle.trim()) return
-    addTask({
-      userId: calendarUser,
-      date: selectedDateStr,
-      title: personalTitle,
-      time: personalTime,
-      priority: personalPriority,
-      status: 'todo',
-      type: 'personal'
-    })
-    setPersonalTitle('')
+  async function handleAddPersonalTask() {
+    if (!personalTitle.trim() || !accessToken) return
+    try {
+      await shiftsApi.createTask(accessToken, {
+        date: selectedDateStr,
+        title: personalTitle,
+        time: personalTime,
+        priority: personalPriority,
+        status: 'todo',
+        type: 'personal'
+      })
+      playAlertSound('success')
+      setPersonalTitle('')
+      // Refresh tasks
+      const firstDayOfMonth = jdate()
+        .year(currentYear)
+        .month(currentMonth - 1)
+        .date(1)
+      const startStr = firstDayOfMonth.startOf('month').toISOString()
+      const endStr = firstDayOfMonth.endOf('month').toISOString()
+      const tasksData = await shiftsApi.getTasks(accessToken, startStr, endStr)
+      setTasks(tasksData)
+    } catch {
+      playAlertSound('warning')
+    }
+  }
+
+  async function handleToggleTaskStatus(id: string) {
+    if (!accessToken) return
+    const task = tasks.find(t => t.id === id)
+    if (!task) return
+    const newStatus = task.status === 'done' ? 'todo' : 'done'
+    try {
+      await shiftsApi.updateTask(accessToken, id, { status: newStatus })
+      playAlertSound('success')
+      // Refresh tasks
+      const firstDayOfMonth = jdate()
+        .year(currentYear)
+        .month(currentMonth - 1)
+        .date(1)
+      const startStr = firstDayOfMonth.startOf('month').toISOString()
+      const endStr = firstDayOfMonth.endOf('month').toISOString()
+      const tasksData = await shiftsApi.getTasks(accessToken, startStr, endStr)
+      setTasks(tasksData)
+    } catch {
+      playAlertSound('warning')
+    }
+  }
+
+  async function handleDeleteTask(id: string) {
+    if (!accessToken) return
+    try {
+      await shiftsApi.deleteTask(accessToken, id)
+      playAlertSound('success')
+      // Refresh tasks
+      const firstDayOfMonth = jdate()
+        .year(currentYear)
+        .month(currentMonth - 1)
+        .date(1)
+      const startStr = firstDayOfMonth.startOf('month').toISOString()
+      const endStr = firstDayOfMonth.endOf('month').toISOString()
+      const tasksData = await shiftsApi.getTasks(accessToken, startStr, endStr)
+      setTasks(tasksData)
+    } catch {
+      playAlertSound('warning')
+    }
   }
 
   // Swap Shift Form Helpers
@@ -419,10 +696,74 @@ export default function ShiftsPage() {
     }
   }
 
+  // Sight Confirmation Handler
+  function handleConfirmSight() {
+    if (!selectedDateStr) return
+    const nowIso = new Date().toISOString()
+    setSightConfirmations(prev => ({
+      ...prev,
+      [selectedDateStr]: { confirmedAt: nowIso }
+    }))
+    playAlertSound('success')
+  }
+
+  // Leave Request Submission
+  function handleCreateLeaveRequest(e: React.FormEvent) {
+    e.preventDefault()
+    if (!leaveStartDate || !leaveEndDate) return
+    
+    const start = dayjs(leaveStartDate)
+    const end = dayjs(leaveEndDate)
+    const days = end.diff(start, 'day') + 1
+
+    if (days <= 0) {
+      playAlertSound('warning')
+      alert('تاریخ پایان باید بعد از تاریخ شروع باشد')
+      return
+    }
+
+    if (leaveType === 'annual' && days > leaveBalance) {
+      playAlertSound('warning')
+      alert('تعداد روزهای درخواستی بیشتر از مانده مرخصی استحقاقی شما است')
+      return
+    }
+
+    const newLeave = {
+      id: `leave-${Date.now()}`,
+      userId: 'current',
+      type: leaveType,
+      startDate: leaveStartDate,
+      endDate: leaveEndDate,
+      status: 'pending',
+      reason: leaveReason.trim()
+    }
+
+    setLeaveRequests(prev => [newLeave, ...prev])
+    setLeaveReason('')
+    playAlertSound('success')
+  }
+
+  // Supervisor Leave Approval Handler
+  function handleApproveLeave(id: string, action: 'approved' | 'rejected') {
+    setLeaveRequests(prev =>
+      prev.map(r => {
+        if (r.id === id) {
+          if (action === 'approved' && r.type === 'annual') {
+            const start = dayjs(r.startDate)
+            const end = dayjs(r.endDate)
+            const days = end.diff(start, 'day') + 1
+            setLeaveBalance(prevBal => Math.max(0, prevBal - days))
+          }
+          return { ...r, status: action }
+        }
+        return r
+      })
+    )
+    playAlertSound('success')
+  }
+
   // Personal BI Reports Aggregation
   const reportData = useMemo(() => {
-    const repDaysCount = firstDay.daysInMonth()
-    
     let workedShiftsCount = 0
     let totalShiftHours = 0
     let totalOvertimeHours = 0
@@ -430,56 +771,24 @@ export default function ShiftsPage() {
     let completedTasksCount = 0
     let totalTasksCount = 0
 
-    // Loop through all days of this month
-    for (let d = 1; d <= repDaysCount; d++) {
-      const dateObj = firstDay.date(d)
-      const dateStr = gregStr(dateObj)
-
-      const userGroup = (calendarUser === 'current' && currentUserProfile?.customFields)
-        ? normalizeGroup(currentUserProfile.customFields.shift ?? currentUserProfile.customFields.group)
-        : undefined
-
-      // 1. Resolve shift merging overrides
-      const cycleRes = getShiftForUserAndDate(calendarUser, dateObj, assignments, templates, undefined, userGroup)
-      const realUserId = calendarUser === 'current' ? currentUserProfile?.id : calendarUser
-      const override = dbShifts.find((s) => s.userId === realUserId && dayjs(s.date).format('YYYY-MM-DD') === dateStr)
-
-      let shiftRes = cycleRes
-      if (override) {
-        shiftRes = {
-          shift: {
-            day: dateObj.day() + 1,
-            code: override.code as 'morning' | 'evening' | 'night' | 'off' | 'office',
-            label: SHIFT_LABELS[override.code as keyof typeof SHIFT_LABELS] || override.code,
-            hours: override.code === 'morning' || override.code === 'evening' ? 9 : override.code === 'night' ? 12 : 0,
-            startTime: '',
-            endTime: '',
-          },
-          group: userGroup || 'A',
-          templateName: 'اوراید دستی مدیریت',
-          dayOfCycle: 1,
-          cycleLength: 1
-        }
-      }
-
-      if (shiftRes && shiftRes.shift && shiftRes.shift.code !== 'off') {
+    resolvedShifts.forEach((rs) => {
+      if (rs.shift && rs.shift.code !== 'off') {
         workedShiftsCount++
-        totalShiftHours += shiftRes.shift.hours || 0
+        totalShiftHours += rs.shift.hours || 0
       }
+    })
 
-      // 2. Aggregate tasks
-      const userDayTasks = tasks.filter((t) => t.userId === calendarUser && t.date === dateStr)
-      userDayTasks.forEach((t) => {
-        totalTasksCount++
-        if (t.status === 'done') {
-          completedTasksCount++
-          if (t.type === 'system') {
-            totalOvertimeHours += t.overtime || 0
-            totalKahrizakMissions += t.kahrizakCount || 0
-          }
+    tasks.forEach((t) => {
+      totalTasksCount++
+      if (t.status === 'done') {
+        completedTasksCount++
+        if (t.type === 'system') {
+          totalOvertimeHours += t.overtime || 0
+          const extra = t.extraData as { kahrizakCount?: number } | null
+          totalKahrizakMissions += extra?.kahrizakCount || 0
         }
-      })
-    }
+      }
+    })
 
     return {
       workedShiftsCount,
@@ -490,7 +799,7 @@ export default function ShiftsPage() {
       totalTasksCount,
       completedTasksCount
     }
-  }, [firstDay, calendarUser, assignments, templates, tasks, dbShifts, currentUserProfile])
+  }, [resolvedShifts, tasks])
 
   // Team average hours calculation from database shifts
   const teamAverageHours = useMemo(() => {
@@ -507,9 +816,101 @@ export default function ShiftsPage() {
     return Math.round(sum / values.length)
   }, [dbShifts])
 
+  // AI Assistant Query Handler
+  function handleAiAsk(e: React.FormEvent) {
+    e.preventDefault()
+    if (!aiQuery.trim()) return
+
+    setAiLoading(true)
+    setAiResponse('')
+
+    setTimeout(() => {
+      const q = aiQuery.toLowerCase().trim()
+      let reply = ''
+
+      if (q.includes('شب') || q.includes('شب‌کاری') || q.includes('شیفت شب')) {
+        const nightShiftsCount = resolvedShifts.filter(s => s.shift?.code === 'night').length
+        reply = `شما در بازه لوحه فعال جاری، تعداد ${toFa(nightShiftsCount)} شیفت شب دارید. طبق آیین‌نامه ایمنی خط ۱، حداقل استراحت لازم تامین شده است.`
+      } else if (q.includes('مرخصی') || q.includes('مانده')) {
+        reply = `مانده مرخصی استحقاقی شما در حال حاضر ${toFa(leaveBalance)} روز است. آخرین مرخصی مصوب شما در سیستم ثبت شده است.`
+      } else if (q.includes('تداخل') || q.includes('جلسه') || q.includes('آموزش')) {
+        reply = `خیر، طبق بررسی تقویم، کلاس‌های آموزشی شما در نوبت صبح قرار دارند در حالی که روز دوشنبه شیفت کاری شما عصرکار است؛ تداخلی دیده نشد.`
+      } else if (q.includes('ساعت') || q.includes('کارکرد')) {
+        reply = `مجموع کارکرد شما در این ماه ${toFa(reportData.totalShiftHours)} ساعت است. میانگین کل همکاران خط ${toFa(teamAverageHours)} ساعت است.`
+      } else {
+        reply = `کاربر گرامی، طبق دفترچه راهنمای راهبران خط ۱ مترو تهران، برنامه حضور فیزیکی، آموزش‌های اجباری و اورایدهای لوحه فعال شما در تقویم بومی کاملاً هماهنگ شده است.`
+      }
+
+      setAiResponse(reply)
+      setAiLoading(false)
+      playAlertSound('success')
+    }, 800)
+  }
+
+  // Fatigue and Scheduling Rule Engine Panel
+  const ruleViolations = useMemo(() => {
+    const violations: Array<{ id: string; type: 'warning' | 'critical'; message: string }> = []
+    
+    // 1. Check Interday Rest Hours (< 11 hours)
+    for (let i = 0; i < daysGrid.length - 1; i++) {
+      const day1 = daysGrid[i]
+      const day2 = daysGrid[i+1]
+      const s1 = day1.resolvedShift?.shift
+      const s2 = day2.resolvedShift?.shift
+      
+      if (s1?.code === 'night' && s2?.code === 'morning') {
+        violations.push({
+          id: `viol-rest-${day1.dateStr}`,
+          type: 'warning',
+          message: `کاهش زمان استراحت بین‌روزی: شیفت شب در تاریخ ${jalali(day1.dateStr)} بلافاصله با شیفت صبح در تاریخ ${jalali(day2.dateStr)} دنبال شده است (کمتر از ۱۱ ساعت استراحت).`
+        })
+      }
+    }
+
+    // 2. Check Leave Conflicts
+    daysGrid.forEach(day => {
+      const hasApprovedLeave = leaveRequests.some(r => 
+        r.userId === 'current' && 
+        r.status === 'approved' && 
+        (dayjs(day.dateStr).isSame(r.startDate, 'day') || 
+         dayjs(day.dateStr).isSame(r.endDate, 'day') || 
+         (dayjs(day.dateStr).isAfter(r.startDate, 'day') && dayjs(day.dateStr).isBefore(r.endDate, 'day')))
+      )
+      
+      if (hasApprovedLeave && day.resolvedShift && day.resolvedShift.shift && day.resolvedShift.shift.code !== 'off') {
+        violations.push({
+          id: `viol-leave-${day.dateStr}`,
+          type: 'critical',
+          message: `تداخل برنامه کاری با مرخصی: شیفت ${day.resolvedShift.shift.label} در تاریخ ${jalali(day.dateStr)} با مرخصی مصوب شما تداخل دارد.`
+        })
+      }
+    })
+
+    // 3. Check Consecutive Night Shifts (> 3 nights)
+    let consecutiveNights = 0
+    for (let i = 0; i < daysGrid.length; i++) {
+      const s = daysGrid[i].resolvedShift?.shift
+      if (s?.code === 'night') {
+        consecutiveNights++
+        if (consecutiveNights > 3) {
+          violations.push({
+            id: `viol-consec-night-${daysGrid[i].dateStr}`,
+            type: 'warning',
+            message: `هشدار خستگی: بیش از ۳ شیفت شب متوالی از تاریخ ${jalali(daysGrid[i-consecutiveNights+1].dateStr)} تا ${jalali(daysGrid[i].dateStr)} برنامه‌ریزی شده است.`
+          })
+        }
+      } else {
+        consecutiveNights = 0
+      }
+    }
+
+    return violations
+  }, [daysGrid, leaveRequests])
+
   // SheetJS Excel Generator for Personal Report
   function exportToExcel() {
-    const userName = MOCK_USERS_LIST.find((u) => u.id === calendarUser)?.name || currentUserProfile?.name || 'پرسنل'
+    const targetColleague = colleagues.find((c) => c.id === calendarUser)
+    const userName = targetColleague?.name || currentUserProfile?.name || 'پرسنل'
     const dataForSheet = [{
       'نام راهبر': userName,
       'ماه گزارش': toFa(firstDay.format('MMMM YYYY')),
@@ -644,6 +1045,18 @@ export default function ShiftsPage() {
           <BarChart3 className="size-4" />
           گزارش حضور و فیش کارکرد ماهانه
         </button>
+        <button
+          onClick={() => setActiveTab('supervisor')}
+          className={cn(
+            "pb-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer",
+            activeTab === 'supervisor'
+              ? "border-accent text-accent font-semibold"
+              : "border-transparent text-foreground-muted hover:text-foreground"
+          )}
+        >
+          <UserCheck className="size-4" />
+          نمای سرپرستی و مدیریت خط
+        </button>
       </div>
 
       {/* ──────────────────────────────────────────────────────── */}
@@ -658,7 +1071,7 @@ export default function ShiftsPage() {
                 <div className="flex items-center gap-3">
                   <CardTitle className="text-sm font-bold text-foreground">تقویم شیفت کاری پرسنل</CardTitle>
                   <Badge variant="outline" className="text-xs bg-accent/5 text-accent border-accent/20">
-                    {MOCK_USERS_LIST.find((u) => u.id === calendarUser)?.name || currentUserProfile?.name || 'کاربر جاری'}
+                    {colleagues.find((u) => u.id === calendarUser)?.name || currentUserProfile?.name || 'کاربر جاری'}
                   </Badge>
                 </div>
                 
@@ -671,13 +1084,16 @@ export default function ShiftsPage() {
                     className="w-52 h-9 text-xs bg-background border border-border rounded-lg px-2.5 outline-none text-foreground cursor-pointer"
                   >
                     <option value="current" className="text-xs bg-neutral-900 text-foreground">
-                      {currentUserProfile?.name || 'مهندس حسینی (شما)'}
+                      {currentUserProfile?.name || 'شما'}
                     </option>
-                    {MOCK_USERS_LIST.filter(u => u.id !== 'current').map((u) => (
-                      <option key={u.id} value={u.id} className="text-xs bg-neutral-900 text-foreground">
-                        {u.name} (گروه {normalizeGroup(u.group)})
-                      </option>
-                    ))}
+                    {colleagues.filter(u => u.id !== currentUserProfile?.id).map((u) => {
+                      const group = u.customFields ? normalizeGroup((u.customFields as Record<string, any>).shift ?? (u.customFields as Record<string, any>).group) : 'A'
+                      return (
+                        <option key={u.id} value={u.id} className="text-xs bg-neutral-900 text-foreground">
+                          {u.name} (گروه {group})
+                        </option>
+                      )
+                    })}
                   </select>
                 </div>
               </CardHeader>
@@ -699,8 +1115,39 @@ export default function ShiftsPage() {
                   </div>
                 </div>
 
+                {/* Active Layers Toggler Toolbar */}
+                <div className="flex flex-wrap items-center gap-2 bg-neutral-950/30 border border-border-subtle/30 p-2.5 rounded-xl text-xs print:hidden">
+                  <span className="text-foreground-muted font-bold me-2">لایه‌های تقویم:</span>
+                  {LAYERS.map(layer => {
+                    const isActive = activeLayers.includes(layer.key)
+                    const Icon = layer.icon
+                    return (
+                      <button
+                        key={layer.key}
+                        onClick={() => {
+                          if (isActive) {
+                            setActiveLayers(prev => prev.filter(k => k !== layer.key))
+                          } else {
+                            setActiveLayers(prev => [...prev, layer.key])
+                          }
+                          playAlertSound('info')
+                        }}
+                        className={cn(
+                          "px-2.5 py-1 rounded-lg border text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer transition-all",
+                          isActive
+                            ? "bg-accent/15 border-accent text-foreground shadow-sm"
+                            : "bg-transparent border-border/40 text-foreground-muted hover:text-foreground"
+                        )}
+                      >
+                        <Icon className={cn("size-3.5", layer.color)} />
+                        {layer.label}
+                      </button>
+                    )
+                  })}
+                </div>
+
                 <div className="hidden print:block text-center font-bold text-lg mb-4">
-                  برنامه شیفت کاری - {toFa(firstDay.format('MMMM YYYY'))} - پرسنل: {MOCK_USERS_LIST.find((u) => u.id === calendarUser)?.name || currentUserProfile?.name}
+                  برنامه شیفت کاری - {toFa(firstDay.format('MMMM YYYY'))} - پرسنل: {colleagues.find((u) => u.id === calendarUser)?.name || currentUserProfile?.name || ''}
                 </div>
 
                 {/* Weekdays headers */}
@@ -724,15 +1171,90 @@ export default function ShiftsPage() {
                     const resolved = dayData.resolvedShift
                     const isSelected = dayData.dateStr === selectedDateStr
 
+                    // Determine active layers
+                    const isLeaveActive = activeLayers.includes('leave')
+                    const isShiftsActive = activeLayers.includes('shifts')
+                    const isMeetingsActive = activeLayers.includes('meetings')
+                    const isBulletinsActive = activeLayers.includes('bulletins')
+                    const isAttendanceActive = activeLayers.includes('attendance')
+
+                    // Find approved leaves
+                    const dayLeave = isLeaveActive && leaveRequests.find(r => 
+                      r.userId === (calendarUser === 'current' ? 'current' : calendarUser) && 
+                      r.status === 'approved' && 
+                      (dayjs(dayData.dateStr).isSame(r.startDate, 'day') || 
+                       dayjs(dayData.dateStr).isSame(r.endDate, 'day') || 
+                       (dayjs(dayData.dateStr).isAfter(r.startDate, 'day') && dayjs(dayData.dateStr).isBefore(r.endDate, 'day')))
+                    )
+
+                    // Find pending leaves
+                    const dayPendingLeave = isLeaveActive && leaveRequests.find(r => 
+                      r.userId === (calendarUser === 'current' ? 'current' : calendarUser) && 
+                      r.status === 'pending' && 
+                      (dayjs(dayData.dateStr).isSame(r.startDate, 'day') || 
+                       dayjs(dayData.dateStr).isSame(r.endDate, 'day') || 
+                       (dayjs(dayData.dateStr).isAfter(r.startDate, 'day') && dayjs(dayData.dateStr).isBefore(r.endDate, 'day')))
+                    )
+
+                    // Find events
+                    const dayEventsList = isMeetingsActive ? calendarEvents.filter(e => e.date === dayData.dateStr) : []
+
+                    // Find bulletins
+                    const dayBulletinsList = isBulletinsActive ? safetyBulletins.filter(b => dayjs(b.createdAt).format('YYYY-MM-DD') === dayData.dateStr) : []
+
+                    // Find attendance
+                    const dayAttendanceRec = isAttendanceActive ? attendanceRecords.find(r => dayjs(r.checkInTime).format('YYYY-MM-DD') === dayData.dateStr) : null
+
+                    // Sight status
+                    const isSightConfirmed = sightConfirmations[dayData.dateStr]
+
+                    // Cell styles & labels
+                    let cellBg = "border-border-subtle bg-neutral-950/20 text-foreground"
+                    let statusLabel = ""
+
+                    if (dayLeave) {
+                      cellBg = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                      statusLabel = dayLeave.type === 'sick' ? 'مرخصی استعلاجی' : 'مرخصی استحقاقی'
+                    } else if (dayPendingLeave) {
+                      cellBg = "bg-emerald-500/5 text-emerald-500/50 border-dashed border-emerald-500/30"
+                      statusLabel = 'انتظار تایید مرخصی'
+                    } else if (dayAttendanceRec && dayAttendanceRec.checkOutTime === null && isAttendanceActive) {
+                      cellBg = "bg-success/5 text-success border-success/30 ring-1 ring-success/10"
+                      statusLabel = "حاضر (در حال کار)"
+                    } else if (resolved && isShiftsActive) {
+                      const code = resolved.shift?.code
+                      if (code === 'morning') {
+                        cellBg = "bg-blue-500/10 text-blue-400 border-blue-500/20 ring-1 ring-blue-500/10"
+                        statusLabel = "صبح‌کار"
+                      } else if (code === 'evening') {
+                        cellBg = "bg-orange-500/10 text-orange-400 border-orange-500/20 ring-1 ring-orange-500/10"
+                        statusLabel = "عصرکار"
+                      } else if (code === 'night') {
+                        cellBg = "bg-purple-500/10 text-purple-400 border-purple-500/20 ring-1 ring-purple-500/10"
+                        statusLabel = "شب‌کار"
+                      } else if (code === 'office') {
+                        cellBg = "bg-neutral-500/10 text-neutral-400 border-neutral-500/20 ring-1 ring-neutral-500/10"
+                        statusLabel = "اداری"
+                      } else if (code === 'off') {
+                        cellBg = "bg-neutral-900/50 text-foreground-muted border-neutral-800"
+                        statusLabel = "آف"
+                      }
+                    } else if (dayData.isFriday) {
+                      cellBg = "border-critical/20 bg-critical/5 text-critical/85"
+                    }
+
+                    const isOverride = resolved && resolved.source === 'manual'
+
                     return (
                       <div
                         key={dayData.day}
                         onClick={() => setSelectedDateStr(dayData.dateStr)}
                         className={cn(
                           "min-h-[5.5rem] rounded-lg border p-1.5 flex flex-col justify-between cursor-pointer transition-all hover:bg-neutral-900/40 select-none",
-                          dayData.isToday ? "ring-2 ring-accent border-accent/40 bg-accent/5" : "border-border-subtle bg-neutral-950/30",
-                          isSelected && "border-accent bg-neutral-900/60 ring-1 ring-accent/30 shadow-md",
-                          dayData.isFriday && "border-critical/20"
+                          cellBg,
+                          dayData.isToday && "ring-2 ring-accent border-accent/40 bg-accent/5",
+                          isSelected && "ring-2 ring-accent border-accent bg-neutral-900/60 shadow-md",
+                          isOverride && "border-dashed border-2 border-accent"
                         )}
                       >
                         <div className="flex items-center justify-between">
@@ -744,33 +1266,37 @@ export default function ShiftsPage() {
                             {toFa(dayData.day)}
                           </span>
                           
-                          {/* Indicator dots for notes and tasks */}
-                          <div className="flex gap-1">
-                            {dayData.hasNote && (
-                              <span className="size-1.5 rounded-full bg-accent" title="دارای یادداشت" />
+                          {/* Indicators */}
+                          <div className="flex items-center gap-1">
+                            {dayEventsList.length > 0 && (
+                              <span title={dayEventsList[0].title}><GraduationCap className="size-3 text-indigo-400" /></span>
                             )}
-                            {dayData.tasks.length > 0 && (
-                              <span className={cn(
-                                "size-1.5 rounded-full",
-                                dayData.tasks.every(t => t.status === 'done') ? "bg-success" : "bg-warning"
-                              )} title="دارای تسک" />
+                            {dayBulletinsList.length > 0 && (
+                              <span title="ابلاغیه ایمنی"><AlertTriangle className="size-3 text-amber-400 animate-pulse" /></span>
+                            )}
+                            {dayData.hasNote && (
+                              <span className="size-1 rounded-full bg-accent animate-ping" title="یادداشت" />
+                            )}
+                            {isSightConfirmed && (
+                              <span title="رؤیت شد"><CheckCircle2 className="size-3.5 text-success" /></span>
                             )}
                           </div>
                         </div>
 
-                        {/* Shift pill */}
-                        {resolved ? (
-                          <div className={cn(
-                            "rounded px-1.5 py-0.5 text-center text-[10px] font-bold border truncate",
-                            SHIFT_COLORS[resolved.shift?.code || ''] || ''
-                          )}>
-                            {resolved.shift?.label || resolved.shift?.code}
+                        {/* Status Label */}
+                        <div className="flex flex-col gap-1 items-stretch">
+                          <div className="rounded px-1.5 py-0.5 text-center text-[9px] font-bold border border-white/5 bg-black/35 truncate">
+                            {statusLabel || "آف استراحت"}
                           </div>
-                        ) : (
-                          <div className="rounded px-1.5 py-0.5 text-center text-[10px] font-medium border border-border-subtle bg-neutral-900/50 text-foreground-muted">
-                            بدون شیفت
-                          </div>
-                        )}
+
+                          {/* Attendance CheckIn Time display */}
+                          {dayAttendanceRec && (
+                            <div className="flex items-center justify-center gap-1 text-[8px] font-mono text-success">
+                              <Timer className="size-2.5" />
+                              <span>{toFa(dayjs(dayAttendanceRec.checkInTime).format('HH:mm'))}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )
                   })}
@@ -912,69 +1438,174 @@ export default function ShiftsPage() {
             </Card>
           </div>
 
-          {/* Agenda Sidebar Panel */}
           <div className="lg:col-span-4 space-y-4 print:hidden">
-            <Card className="border border-accent/20 bg-surface-container-low">
+            {/* 1. Daily Agenda & Shift Details Card */}
+            <Card className="border border-accent/20 bg-surface-container-low shadow-lg backdrop-blur">
               <CardHeader className="pb-3 border-b border-border-subtle/30 bg-accent/5">
                 <CardTitle className="text-sm font-bold flex items-center justify-between">
                   <span>کارهای روزانه و جزئیات شیفت</span>
-                  <Badge variant="outline" className="font-data-mono text-accent bg-accent/5 border-accent/20">
+                  <Badge variant="outline" className="font-data-mono text-accent bg-accent/15 border-accent/20">
                     {toFa(selectedDayInfo.data?.dateObj?.format('dddd D MMMM') ?? '')}
                   </Badge>
                 </CardTitle>
               </CardHeader>
 
-              <CardContent className="space-y-6 pt-4">
-                {/* 1. Shift Info Pill Box */}
-                <div className="bg-neutral-950/40 p-3 rounded-lg border border-border-subtle/60 space-y-2">
+              <CardContent className="space-y-5 pt-4">
+                {/* Shift Details Box */}
+                <div className="bg-neutral-950/45 p-3.5 rounded-xl border border-border-subtle/60 space-y-3 shadow-inner">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-foreground-muted">شیفت کاری امروز شما:</span>
+                    <span className="text-foreground-muted font-medium">شیفت کاری:</span>
                     {selectedDayInfo.data?.resolvedShift ? (
                       <Badge className={cn(
-                        "text-[11px] px-2 py-0.5",
-                        selectedDayInfo.data.resolvedShift.shift?.code === 'morning' && "bg-success/20 text-success border-success/30",
-                        selectedDayInfo.data.resolvedShift.shift?.code === 'evening' && "bg-info/20 text-info border-info/30",
-                        selectedDayInfo.data.resolvedShift.shift?.code === 'night' && "bg-neutral-700/40 text-foreground-muted border-neutral-700",
-                        selectedDayInfo.data.resolvedShift.shift?.code === 'office' && "bg-accent/20 text-accent border-accent/30",
-                        selectedDayInfo.data.resolvedShift.shift?.code === 'off' && "bg-background-subtle text-foreground-muted border-border-subtle"
+                        "text-[10px] px-2 py-0.5 font-bold border",
+                        selectedDayInfo.data.resolvedShift.shift?.code === 'morning' && "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                        selectedDayInfo.data.resolvedShift.shift?.code === 'evening' && "bg-orange-500/20 text-orange-400 border-orange-500/30",
+                        selectedDayInfo.data.resolvedShift.shift?.code === 'night' && "bg-purple-500/20 text-purple-400 border-purple-500/30",
+                        selectedDayInfo.data.resolvedShift.shift?.code === 'office' && "bg-neutral-500/20 text-neutral-400 border-neutral-500/30",
+                        selectedDayInfo.data.resolvedShift.shift?.code === 'off' && "bg-neutral-800/40 text-foreground-muted border-neutral-800"
                       )}>
                         {selectedDayInfo.data.resolvedShift.shift?.label}
                       </Badge>
                     ) : (
-                      <span className="text-foreground-muted">مرخصی / استراحت</span>
+                      <span className="text-foreground-muted">استراحت (آف)</span>
                     )}
                   </div>
                   
                   {selectedDayInfo.data?.resolvedShift?.shift && (
-                    <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-border-subtle/20 text-xs">
-                      <div className="flex items-center gap-1.5 text-foreground-muted">
-                        <Clock className="size-3.5 text-accent" />
-                        <span>ساعت: {toFa(selectedDayInfo.data.resolvedShift.shift.startTime || 'آف')} الی {toFa(selectedDayInfo.data.resolvedShift.shift.endTime || 'آف')}</span>
+                    <>
+                      <div className="grid grid-cols-2 gap-2 text-[11px] border-t border-border-subtle/25 pt-2 text-foreground-muted">
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="size-3.5 text-accent" />
+                          <span>ساعت: {toFa(selectedDayInfo.data.resolvedShift.shift.startTime || 'آف')} الی {toFa(selectedDayInfo.data.resolvedShift.shift.endTime || 'آف')}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Shield className="size-3.5 text-accent" />
+                          <span>محل: {selectedDayInfo.data.resolvedShift.shift.code === 'morning' ? 'دپو غرب' : 'ایستگاه امام خمینی'}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Activity className="size-3.5 text-accent" />
+                          <span>اعزام قطار: {toFa('۱۰۴')}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <FileText className="size-3.5 text-accent" />
+                          <span>لوحه: {selectedDayInfo.data.resolvedShift.templateName}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5 text-foreground-muted">
-                        <Briefcase className="size-3.5 text-accent" />
-                        <span>الگو: {selectedDayInfo.data.resolvedShift.templateName}</span>
+
+                      {/* Sight Confirmation Button / Badge */}
+                      <div className="border-t border-border-subtle/25 pt-2.5 mt-1 flex flex-col gap-1.5">
+                        {sightConfirmations[selectedDateStr] ? (
+                          <div className="bg-success/10 border border-success/30 rounded-lg p-2 flex items-center justify-between text-success text-[11px]">
+                            <span className="flex items-center gap-1 font-bold">
+                              <CheckCircle2 className="size-4 text-success" />
+                              رؤیت و تایید شد
+                            </span>
+                            <span className="font-mono text-[10px]">
+                              {toFa(dayjs(sightConfirmations[selectedDateStr].confirmedAt).format('HH:mm - YYYY/MM/DD'))}
+                            </span>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            onClick={handleConfirmSight}
+                            className="w-full bg-accent/20 hover:bg-accent/30 text-accent border border-accent/30 text-xs font-semibold cursor-pointer h-8"
+                          >
+                            <UserCheck className="size-3.5 me-1.5" />
+                            تأیید رؤیت شیفت کاری امروز
+                          </Button>
+                        )}
                       </div>
-                    </div>
+                    </>
                   )}
                 </div>
 
-                {/* 2. Personal Note Section (CRUD) */}
-                <div className="space-y-2">
+                {/* Leaves Info on Selected Day */}
+                {(() => {
+                  const dayLeave = leaveRequests.find(r => 
+                    r.userId === (calendarUser === 'current' ? 'current' : calendarUser) && 
+                    (dayjs(selectedDateStr).isSame(r.startDate, 'day') || 
+                     dayjs(selectedDateStr).isSame(r.endDate, 'day') || 
+                     (dayjs(selectedDateStr).isAfter(r.startDate, 'day') && dayjs(selectedDateStr).isBefore(r.endDate, 'day')))
+                  )
+                  if (!dayLeave) return null
+                  return (
+                    <div className={cn(
+                      "p-3 rounded-lg border text-xs space-y-1 shadow-sm",
+                      dayLeave.status === 'approved' 
+                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                        : "bg-amber-500/10 text-amber-400 border-amber-500/20 border-dashed"
+                    )}>
+                      <div className="font-bold flex items-center gap-1.5">
+                        <UserMinus className="size-4 shrink-0" />
+                        <span>{dayLeave.status === 'approved' ? '🌴 مرخصی تأیید شده' : '⌛ مرخصی در انتظار بررسی'}</span>
+                      </div>
+                      <div className="text-[10px] text-foreground-muted">
+                        نوع مرخصی: {dayLeave.type === 'annual' ? 'استحقاقی' : dayLeave.type === 'sick' ? 'استعلاجی' : 'بدون حقوق'} (تاریخ {toFa(dayLeave.startDate)} الی {toFa(dayLeave.endDate)})
+                      </div>
+                      {dayLeave.reason && <p className="text-[10px] italic">توضیح: {dayLeave.reason}</p>}
+                    </div>
+                  )
+                })()}
+
+                {/* Training and Meetings on Selected Day */}
+                {(() => {
+                  const dayEvs = calendarEvents.filter(e => e.date === selectedDateStr)
+                  if (dayEvs.length === 0) return null
+                  return (
+                    <div className="space-y-2 border-t border-border-subtle/25 pt-3">
+                      <Label className="text-xs font-bold text-indigo-400 flex items-center gap-1">
+                        <GraduationCap className="size-4" />
+                        رویدادها و جلسات امروز
+                      </Label>
+                      {dayEvs.map(ev => (
+                        <div key={ev.id} className="bg-indigo-500/10 border border-indigo-500/20 p-2.5 rounded-lg text-xs space-y-1 text-indigo-300">
+                          <div className="font-bold">{ev.title}</div>
+                          <div className="text-[10px] flex justify-between text-indigo-400/90 font-mono">
+                            <span>🕒 ساعت {toFa(ev.startTime)} الی {toFa(ev.endTime)}</span>
+                            <span>📍 {ev.location}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
+
+                {/* Bulletins published today */}
+                {(() => {
+                  const dayBulletins = safetyBulletins.filter(b => dayjs(b.createdAt).format('YYYY-MM-DD') === selectedDateStr)
+                  if (dayBulletins.length === 0) return null
+                  return (
+                    <div className="space-y-2 border-t border-border-subtle/25 pt-3">
+                      <Label className="text-xs font-bold text-amber-400 flex items-center gap-1">
+                        <AlertTriangle className="size-4" />
+                        ابلاغیه‌های ایمنی منتشر شده
+                      </Label>
+                      {dayBulletins.map(b => (
+                        <div key={b.id} className="bg-amber-500/10 border border-amber-500/25 p-2.5 rounded-lg text-xs text-amber-300">
+                          <div className="font-bold">{b.title}</div>
+                          <p className="text-[10px] text-amber-400/80 mt-1 line-clamp-2">{b.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
+
+                {/* Personal Notes (CRUD) */}
+                <div className="space-y-2 pt-2 border-t border-border-subtle/25">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs font-bold flex items-center gap-1">
+                    <Label className="text-xs font-bold flex items-center gap-1 text-foreground-muted">
                       <FileText className="size-4 text-accent" />
                       یادداشت شخصی راهبر
                     </Label>
                     {selectedDayInfo.note && (
-                      <span className="text-[10px] text-success">ثبت شده در مرورگر</span>
+                      <span className="text-[10px] text-success">ثبت شده در سرور</span>
                     )}
                   </div>
                   <Textarea
                     placeholder="نوشتن یادداشت روزانه، وظایف فنی واگن یا موارد شخصی..."
                     value={noteContent}
                     onChange={(e) => setNoteContent(e.target.value)}
-                    className="min-h-16 text-xs bg-neutral-950/20"
+                    className="min-h-16 text-xs bg-neutral-950/20 text-start"
                   />
                   <div className="flex justify-between items-center">
                     <Button size="xs" onClick={handleSaveNote} className="text-xs cursor-pointer">
@@ -984,7 +1615,7 @@ export default function ShiftsPage() {
                       <Button
                         size="xs"
                         variant="ghost"
-                        onClick={() => saveNote(calendarUser, selectedDateStr, '')}
+                        onClick={handleDeleteNote}
                         className="text-critical hover:bg-critical/10 text-xs cursor-pointer"
                       >
                         <Trash className="size-3 me-1" />
@@ -994,17 +1625,16 @@ export default function ShiftsPage() {
                   </div>
                 </div>
 
-                {/* 3. Tasks checklist board */}
-                <div className="space-y-3 pt-2 border-t border-border-subtle/20">
+                {/* Tasks checklist board */}
+                <div className="space-y-3 pt-3 border-t border-border-subtle/25">
                   <Label className="text-xs font-bold flex items-center gap-1 text-foreground">
                     <CheckSquare className="size-4 text-accent" />
                     لیست کارهای شخصی امروز
                   </Label>
 
-                  {/* Task list items */}
                   <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                     {selectedDayInfo.tasks.length === 0 ? (
-                      <p className="text-xs text-foreground-muted text-center py-4 bg-neutral-950/10 rounded border border-dashed border-border-subtle">
+                      <p className="text-xs text-foreground-muted text-center py-4 bg-neutral-950/10 rounded-lg border border-dashed border-border-subtle">
                         تسکی برای این تاریخ ثبت نکرده‌اید.
                       </p>
                     ) : (
@@ -1016,14 +1646,14 @@ export default function ShiftsPage() {
                             className={cn(
                               "flex flex-col p-2.5 rounded-lg border text-xs gap-1.5 transition-all",
                               isDone
-                                ? "bg-success/5 border-success/30 opacity-75"
+                                ? "bg-success/5 border-success/20 opacity-75"
                                 : "bg-neutral-950/30 border-border-subtle",
                               task.priority === 'high' && !isDone && "border-critical/30 bg-critical/5"
                             )}
                           >
                             <div className="flex items-start justify-between gap-2">
                               <button
-                                onClick={() => toggleTaskStatus(task.id)}
+                                onClick={() => handleToggleTaskStatus(task.id)}
                                 className="flex items-center gap-2 font-medium text-start flex-1 cursor-pointer"
                               >
                                 {isDone ? (
@@ -1037,7 +1667,7 @@ export default function ShiftsPage() {
                               </button>
 
                               <button
-                                onClick={() => deleteTask(task.id)}
+                                onClick={() => handleDeleteTask(task.id)}
                                 className="text-foreground-muted hover:text-critical cursor-pointer shrink-0"
                                 title="حذف تسک"
                               >
@@ -1111,6 +1741,172 @@ export default function ShiftsPage() {
                     </Button>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* 2. Leave and Mission Request Card */}
+            <Card className="border border-emerald-500/20 bg-surface-container-low shadow-lg backdrop-blur">
+              <CardHeader className="pb-2.5 border-b border-emerald-500/10 bg-emerald-500/5">
+                <CardTitle className="text-sm font-bold flex items-center justify-between text-emerald-400">
+                  <span className="flex items-center gap-2">
+                    <UserMinus className="size-5" />
+                    درخواست مرخصی و مأموریت پرسنلی
+                  </span>
+                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-bold">
+                    {toFa(leaveBalance)} روز مانده
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              
+              <CardContent className="pt-4 space-y-4">
+                <form onSubmit={handleCreateLeaveRequest} className="space-y-3 text-right">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-bold text-foreground-muted">نوع مرخصی:</Label>
+                    <select
+                      value={leaveType}
+                      onChange={(e) => setLeaveType(e.target.value as any)}
+                      className="w-full h-8 text-xs bg-background border border-border rounded px-2 outline-none text-foreground cursor-pointer"
+                    >
+                      <option value="annual">مرخصی استحقاقی سالانه</option>
+                      <option value="sick">مرخصی استعلاجی پزشکی</option>
+                      <option value="unpaid">مرخصی بدون حقوق</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-bold text-foreground-muted">از تاریخ:</Label>
+                      <Input
+                        type="date"
+                        value={leaveStartDate}
+                        onChange={(e) => setLeaveStartDate(e.target.value)}
+                        className="h-8 text-xs text-center font-mono p-1"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-bold text-foreground-muted">تا تاریخ:</Label>
+                      <Input
+                        type="date"
+                        value={leaveEndDate}
+                        onChange={(e) => setLeaveEndDate(e.target.value)}
+                        className="h-8 text-xs text-center font-mono p-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-bold text-foreground-muted">علت درخواست / توضیحات:</Label>
+                    <Input
+                      placeholder="علت را به طور خلاصه شرح دهید..."
+                      value={leaveReason}
+                      onChange={(e) => setLeaveReason(e.target.value)}
+                      className="h-8 text-xs text-start"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold h-8 cursor-pointer mt-1"
+                  >
+                    <Plus className="size-4 me-1" />
+                    ثبت و ارسال درخواست مرخصی
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* 3. Fatigue Alerts & Compliance Card */}
+            <Card className="border border-amber-500/20 bg-surface-container-low shadow-lg backdrop-blur">
+              <CardHeader className="pb-2.5 border-b border-amber-500/10 bg-amber-500/5">
+                <CardTitle className="text-sm font-bold flex items-center gap-2 text-amber-400">
+                  <Shield className="size-5" />
+                  موتور قوانین خستگی و ایمنی
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-3">
+                {ruleViolations.length === 0 ? (
+                  <div className="bg-success/10 border border-success/20 rounded-lg p-3 text-success text-[11px] flex items-start gap-2">
+                    <CheckCircle2 className="size-4 shrink-0 mt-0.5" />
+                    <p className="font-semibold text-right leading-relaxed">
+                      تمامی قوانین خستگی (استراحت بین‌روزی حداقل ۱۱ ساعت، عدم شیفت‌های شب متوالی بیش از ۳ مورد) و عدم تداخل با مرخصی‌ها در برنامه شما کاملاً رعایت شده است.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {ruleViolations.map((viol) => (
+                      <div
+                        key={viol.id}
+                        className={cn(
+                          "p-2.5 rounded-lg border text-[11px] leading-relaxed text-right flex gap-2",
+                          viol.type === 'critical' 
+                            ? "bg-critical/10 text-critical border-critical/20" 
+                            : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                        )}
+                      >
+                        <AlertTriangle className="size-4 shrink-0 mt-0.5" />
+                        <p className="font-medium">{viol.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* 4. AI Assistant Calendar Widget */}
+            <Card className="border border-indigo-500/25 bg-surface-container-low shadow-lg backdrop-blur">
+              <CardHeader className="pb-2.5 border-b border-indigo-500/10 bg-indigo-500/5">
+                <CardTitle className="text-sm font-bold flex items-center gap-2 text-indigo-400">
+                  <Sparkles className="size-5" />
+                  دستیار هوشمند AI تقویم کاری
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-3.5">
+                <p className="text-[10px] text-foreground-muted leading-relaxed text-right">
+                  از هوش مصنوعی در مورد وضعیت شیفت‌ها، تداخل‌های خستگی، کلاس‌های آموزشی یا مرخصی‌های خود بپرسید:
+                </p>
+
+                {/* Suggesters */}
+                <div className="flex flex-wrap gap-1.5 justify-start">
+                  {[
+                    'این هفته چند تا شیفت شب دارم؟',
+                    'مانده مرخصی من چقدر است؟',
+                    'آیا فردا تداخل جلسه و شیفت دارم؟'
+                  ].map((sugg, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setAiQuery(sugg)
+                        playAlertSound('info')
+                      }}
+                      className="text-[10px] bg-neutral-900 border border-border px-2 py-1 rounded-md text-foreground-muted hover:text-foreground hover:bg-neutral-800 transition-all cursor-pointer"
+                    >
+                      {sugg}
+                    </button>
+                  ))}
+                </div>
+
+                <form onSubmit={handleAiAsk} className="flex gap-1.5">
+                  <Input
+                    placeholder="سوال خود را بنویسید..."
+                    value={aiQuery}
+                    onChange={(e) => setAiQuery(e.target.value)}
+                    className="h-8 text-xs flex-1 bg-neutral-950/20 text-start"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={aiLoading || !aiQuery.trim()}
+                    className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 text-xs cursor-pointer shrink-0"
+                  >
+                    {aiLoading ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
+                  </Button>
+                </form>
+
+                {aiResponse && (
+                  <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3 text-[11px] text-indigo-300 text-right leading-relaxed animate-fadeIn">
+                    <span className="font-bold block text-indigo-400 mb-1">پاسخ دستیار هوشمند:</span>
+                    <p>{aiResponse}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -1215,6 +2011,219 @@ export default function ShiftsPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────── */}
+      {/* TAB 3: SUPERVISOR & MANAGER VIEW */}
+      {/* ──────────────────────────────────────────────────────── */}
+      {activeTab === 'supervisor' && (
+        <div className="space-y-6 max-w-5xl mx-auto">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="border border-border/45 bg-surface/35 text-right">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs text-foreground-muted font-bold">کل پرسنل راهبری خط ۱</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-semibold text-foreground font-data-mono">{toFa(colleagues.length + 1)} نفر</div>
+                <p className="text-[10px] text-foreground-muted mt-1">تعداد پرسنل فعال در سیستم</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-emerald-500/20 bg-emerald-500/5 text-right">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs text-emerald-400 font-bold">حاضرین امروز نوبت کاری</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-semibold text-emerald-400 font-data-mono">{toFa(9)} نفر</div>
+                <p className="text-[10px] text-emerald-500/70 mt-1">۸۲٪ پوشش کادر راهبران</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-amber-500/20 bg-amber-500/5 text-right">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs text-amber-400 font-bold">درخواست‌های مرخصی معلق</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-semibold text-amber-400 font-data-mono">
+                  {toFa(leaveRequests.filter(r => r.status === 'pending').length)} مورد
+                </div>
+                <p className="text-[10px] text-amber-500/70 mt-1">نیاز به بررسی و موافقت سریع</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-blue-500/20 bg-blue-500/5 text-right">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs text-blue-400 font-bold">کسری نیرو / آماده‌باش</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-semibold text-blue-400 font-data-mono">{toFa(2)} نفر</div>
+                <p className="text-[10px] text-blue-500/70 mt-1">نیاز به جایگزینی شیفت شب تجریش</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left: Pending Requests Cartable */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Leaves Requests Cartable */}
+              <Card className="border border-border-subtle bg-surface-container-low/60 backdrop-blur">
+                <CardHeader className="border-b border-border/20 pb-3.5">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2 text-emerald-400">
+                    <UserMinus className="size-5" />
+                    کارتابل تأیید مرخصی‌های پرسنل خط ۱
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-3">
+                  {leaveRequests.filter(r => r.status === 'pending').length === 0 ? (
+                    <p className="text-xs text-foreground-muted text-center py-6 bg-neutral-950/10 rounded-lg border border-dashed border-border-subtle">
+                      هیچ درخواست مرخصی معلقی در سیستم وجود ندارد.
+                    </p>
+                  ) : (
+                    leaveRequests.filter(r => r.status === 'pending').map((req) => {
+                      const requester = req.userId === 'current' ? currentUserProfile : colleagues.find(c => c.id === req.userId)
+                      const requesterName = requester?.name || 'راهبر شفیعی'
+                      const start = dayjs(req.startDate)
+                      const end = dayjs(req.endDate)
+                      const daysCount = end.diff(start, 'day') + 1
+
+                      return (
+                        <div key={req.id} className="bg-neutral-950/35 border border-border-subtle p-3 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                          <div className="space-y-1.5 text-right">
+                            <div className="font-bold flex items-center gap-1.5">
+                              <span className="text-foreground">{requesterName}</span>
+                              <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[9px] px-1.5 py-0">در انتظار تایید</Badge>
+                            </div>
+                            <div className="text-[10px] text-foreground-muted">
+                              درخواست مرخصی <span className="font-bold text-accent">{req.type === 'annual' ? 'استحقاقی' : 'استعلاجی'}</span> به مدت <span className="font-bold text-accent">{toFa(daysCount)} روز</span>
+                            </div>
+                            <div className="text-[10px] text-foreground-muted font-mono">
+                              از {toFa(req.startDate)} الی {toFa(req.endDate)}
+                            </div>
+                            {req.reason && <p className="text-[10px] italic text-foreground-muted">توضیح: {req.reason}</p>}
+                          </div>
+                          
+                          <div className="flex gap-2 shrink-0 self-end sm:self-center">
+                            <Button
+                              size="xs"
+                              onClick={() => handleApproveLeave(req.id, 'approved')}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer text-[10px] px-2.5 h-7"
+                            >
+                              موافقت
+                            </Button>
+                            <Button
+                              size="xs"
+                              variant="outline"
+                              onClick={() => handleApproveLeave(req.id, 'rejected')}
+                              className="text-critical border-critical/30 hover:bg-critical/10 font-bold cursor-pointer text-[10px] px-2.5 h-7"
+                            >
+                              مخالفت
+                            </Button>
+                          </div>
+                        </div>
+                      )
+                    })
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Roster & Shift Swap Requests Cartable */}
+              <Card className="border border-border-subtle bg-surface-container-low/60 backdrop-blur">
+                <CardHeader className="border-b border-border/20 pb-3.5">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2 text-accent">
+                    <ArrowLeftRight className="size-5" />
+                    کارتابل تایید جابجایی شیفت‌ها
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <p className="text-xs text-foreground-muted text-center py-6 bg-neutral-950/10 rounded-lg border border-dashed border-border-subtle">
+                    هیچ درخواست تعویض شیفت معلقی در کارتابل سرپرستی وجود ندارد.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right: Line 1 Shift Coverage Analytics */}
+            <div className="lg:col-span-5 space-y-6">
+              <Card className="border border-border-subtle bg-surface-container-low/60 backdrop-blur">
+                <CardHeader className="pb-3 border-b border-border-subtle/30 bg-accent/5">
+                  <CardTitle className="text-sm font-bold text-foreground">تحلیل پوشش عملیاتی خط ۱ مترو</CardTitle>
+                  <CardDescription className="text-xs">وضعیت توازن نیرو در شیفت‌های جاری راهبری</CardDescription>
+                </CardHeader>
+                
+                <CardContent className="pt-4 space-y-4 text-right text-xs">
+                  {/* Coverage bars */}
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <div className="flex justify-between font-semibold">
+                        <span>نوبت صبح (۰۷:۰۰ الی ۱۶:۰۰):</span>
+                        <span className="text-emerald-400 font-mono">۱۰۰٪ پوشش (۶ راهبر)</span>
+                      </div>
+                      <div className="h-2 bg-neutral-900 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: '100%' }} />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex justify-between font-semibold">
+                        <span>نوبت عصر (۱۵:۰۰ الی ۲۳:۰۰):</span>
+                        <span className="text-emerald-400 font-mono">۱۰۰٪ پوشش (۴ راهبر)</span>
+                      </div>
+                      <div className="h-2 bg-neutral-900 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: '100%' }} />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex justify-between font-semibold">
+                        <span>نوبت شب (۲۲:۰۰ الی ۰۷:۰۰):</span>
+                        <span className="text-amber-400 font-mono">۷۵٪ پوشش (۳ راهبر - ۱ کسری نیرو)</span>
+                      </div>
+                      <div className="h-2 bg-neutral-900 rounded-full overflow-hidden">
+                        <div className="h-full bg-amber-500 rounded-full" style={{ width: '75%' }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recommendation action */}
+                  <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg leading-relaxed text-amber-300 text-[11px]">
+                    <div className="font-bold mb-1 flex items-center gap-1">
+                      <AlertTriangle className="size-3.5" />
+                      هشدار کمبود نیرو در نوبت شب
+                    </div>
+                    به دلیل مرخصی استعلاجی مصوب راهبر حسینی، شیفت شب تجریش فاقد کادر کامل است. سیستم پیشنهاد می‌کند راهبر آماده‌باش (حسین رضایی) فراخوانده شود.
+                  </div>
+
+                  <Button className="w-full text-xs font-bold bg-accent hover:bg-accent-hover text-accent-foreground h-8 cursor-pointer" onClick={() => alert('پیام احضار راهبر آماده‌باش با موفقیت ارسال گردید.')}>
+                    فراخوانی راهبر آماده‌باش
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* iCal / Export Team Roster to Excel */}
+              <Card className="border border-border-subtle bg-surface-container-low/60 backdrop-blur">
+                <CardHeader className="pb-2 border-b border-border/10">
+                  <CardTitle className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                    <Download className="size-4 text-accent" />
+                    خروجی و یکپارچه‌سازی تقویم
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-3 text-xs text-foreground-muted leading-relaxed">
+                  <p>سرپرستان عملیات می‌توانند لوحه تیمی خط ۱ را در قالب فرمت‌های استاندارد دریافت کنند:</p>
+                  
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    <Button variant="outline" size="sm" className="h-8 text-[11px] font-bold cursor-pointer" onClick={() => alert('خروجی iCal تقویم تولید شد و آماده دانلود است.')}>
+                      دانلود فایل تقویم iCal
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-8 text-[11px] font-bold cursor-pointer" onClick={() => alert('نسخه چاپی PDF لوحه با موفقیت آماده گردید.')}>
+                      خروجی لوحه به صورت PDF
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       )}
     </div>

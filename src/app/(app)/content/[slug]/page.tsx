@@ -52,6 +52,9 @@ const TYPE_LABELS: Record<string, string> = {
   training: 'آموزش',
   circular: 'بخش‌نامه',
   gallery: 'گالری',
+  announcement: 'اطلاعیه اداری',
+  directive: 'دستورالعمل',
+  form: 'فرم و فایل',
 }
 
 function renderBody(body: string, handleVideoEnded: () => void) {

@@ -229,6 +229,66 @@ function playEmergencyAlarm(active: boolean) {
   }
 }
 
+// ── Recommended Content Widget ─────────────────────────────────────
+
+const TYPE_LABELS: Record<string, string> = {
+  news: 'اخبار',
+  blog: 'وبلاگ',
+  training: 'آموزش',
+  circular: 'بخش‌نامه',
+  gallery: 'گالری',
+  announcement: 'اطلاعیه',
+  directive: 'دستورالعمل',
+  form: 'فرم',
+}
+
+function RecommendedContentWidget({ accessToken }: { accessToken: string | null }) {
+  const [recommended, setRecommended] = useState<Array<{
+    id: string; type: string; title: string; slug: string; excerpt: string | null
+    coverUrl: string | null; mandatory: boolean; category: string | null; createdAt: string
+  }>>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!accessToken) return
+    fetch('/api/posts/recommended', { headers: { Authorization: `Bearer ${accessToken}` } })
+      .then((r) => r.json())
+      .then((d) => setRecommended(d.data ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [accessToken])
+
+  if (loading || recommended.length === 0) return null
+
+  return (
+    <div className="bg-surface-container-low/40 backdrop-blur border border-border-subtle/50 rounded-2xl p-5 shadow-sm space-y-4">
+      <div className="flex items-center justify-between border-b border-border/30 pb-2">
+        <h2 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+          <Newspaper className="size-4 text-accent" />
+          <span>محتوای پیشنهادی برای شما</span>
+        </h2>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        {recommended.slice(0, 4).map((post) => (
+          <Link key={post.id} href={`/content/${post.slug}`}>
+            <div className="p-3 bg-surface/30 hover:bg-surface/50 border border-border/40 rounded-xl transition-all flex flex-col gap-2 cursor-pointer hover:border-accent/30">
+              {post.coverUrl && (
+                <img src={post.coverUrl} alt="" className="h-20 w-full rounded-lg object-cover" />
+              )}
+              <div className="flex items-center gap-1.5">
+                {post.mandatory && <span className="size-1.5 rounded-full bg-critical animate-pulse" />}
+                <span className="text-[9px] text-accent font-semibold">{TYPE_LABELS[post.type] ?? post.type}</span>
+              </div>
+              <div className="text-[11px] font-bold text-foreground leading-relaxed line-clamp-2">{post.title}</div>
+              {post.excerpt && <div className="text-[9px] text-foreground-muted line-clamp-2">{post.excerpt}</div>}
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Main Dashboard Page ─────────────────────────────────────────────
 
 export default function DashboardPage() {
@@ -1389,6 +1449,9 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+
+          {/* Recommended Content Widget */}
+          <RecommendedContentWidget accessToken={accessToken} />
 
           {/* Quick Access Menu Grid */}
           <div className="bg-surface-container-low/40 backdrop-blur border border-border-subtle/50 rounded-2xl p-5 shadow-sm space-y-4">

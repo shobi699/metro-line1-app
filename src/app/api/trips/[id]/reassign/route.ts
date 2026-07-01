@@ -49,7 +49,8 @@ export async function POST(
         rawName: rawName || userToMatch?.name || assignment.rawName,
         matchStatus: matchedUserId ? 'MANUAL_MATCHED' : 'UNMATCHED',
         confirmedById: user.id,
-        confirmedAt: new Date()
+        confirmedAt: new Date(),
+        disputed: false
       }
     })
 

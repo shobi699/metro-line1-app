@@ -65,3 +65,30 @@ export function requirePermission(
 export function authErrorResponse(err: AuthError) {
   return NextResponse.json({ error: err.error }, { status: err.status })
 }
+
+/**
+ * بررسی دسترسی ویژگی‌محور (ABAC) و محدود شده (Scoped).
+ * به عنوان مثال، سرشیفت شیفت الف فقط مجاز به مدیریت پرسنل همان شیفت/گروه است.
+ */
+export function checkAbacAccess(
+  user: AuthUser,
+  targetUser: { id: string; group?: string; shift?: string },
+  userGroup?: string
+): boolean {
+  // مدیر ارشد و ادمین به همه دسترسی دارند
+  if (user.roleKey === 'super_admin' || user.roleKey === 'admin') {
+    return true
+  }
+
+  // اگر نقش سرشیفت باشد:
+  if (user.roleKey === 'shift_lead') {
+    const operatorGroup = userGroup || 'A'
+    const targetGroup = targetUser.group || 'A'
+    
+    // سرشیفت فقط پرسنل هم‌گروه خود را مدیریت می‌کند
+    return operatorGroup === targetGroup
+  }
+
+  // کاربر عادی فقط خودش را مدیریت می‌کند
+  return user.id === targetUser.id
+}

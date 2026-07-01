@@ -38,13 +38,19 @@ export async function PATCH(
   }
 
   const body = await request.json()
-  const { title, body: articleBody, category, tags } = body
+  const { title, body: articleBody, category, tags, validFrom, validUntil, ownerId, confidentialityLevel, relatedPostId, relatedQuizPostId } = body
 
   await updateArticle(article.id, {
     title,
     body: articleBody,
     category,
     tags,
+    validFrom,
+    validUntil,
+    ownerId,
+    confidentialityLevel,
+    relatedPostId,
+    relatedQuizPostId,
   })
 
   await prisma.auditLog.create({

@@ -1,6 +1,5 @@
 
-# طرح جامع ماژول مدیریت لوحه و اعزام پرسل
-tarhe lohe.md
+# طرح جامع ماژول مدیریت لوحه و اعزام پرسنل
 ## Roster & Shift Module v2.6
 
 ## ۱) هدف ماژول
@@ -820,71 +819,3 @@ MANUAL_REVIEW
 
 طرح  که لوحه را فقط «یک جدول برنامه حرکت» نبینی؛ بلکه آن را به **هسته عملیاتی اعزام روزانه** تبدیل کنی. این ماژول می‌تواند قلب سیستم باشد، چون از روی آن تقویم، حضور، آماده‌باش، هشدار خستگی، گزارش عملکرد، چک‌لیست و حتی AI Assistant تغذیه می‌شوند.
 
-طرح اجرای ماژول مدیریت لوحه و اعزام پرسنل (Roster v2.6)
-بر اساس سند lohe/tarhe lohe.md (۱۷ بخش) و انventory فعلی. اکثر مدل داده و استخراج Excel موجود است؛ کار روی شکاف‌ها و فازهای ناتمام متمرکز است.
-
-انتخاب‌های شما:
-
-فاز ۱ (اول): مدیریت نسخه + diff + اعلان هدفمند
-آفلاین (بعداً): صف کامل + حل تعارض
-PDF (بعداً): Template-based با مختصات Box
-فاز ۱ — هسته نسخه‌گذاری و اعلان (همین مرحله اجرا می‌شود)
-۱.۱ موتور diff نسخه (§۸.۲)
-فایل جدید src/server/modules/roster/diff.ts با تابع diffRosterVersions(oldId, newId):
-سفر اضافه/حذف‌شده، تغییر راهبر H1/H2، تغییر زمان حرکت/رسیدن، تغییر شماره قطار/جهت/توضیح
-خروجی { added, removed, changed: [{ tripId, fields: [...] }] }
-مسیر GET /api/rosters/[id]/diff?against=<versionId> (admin) — اگر against نباشد، نسخه قبلی همان روز مقایسه می‌شود
-۱.۲ اعلان هدفمند انتشار/تغییر (§۸.۳، §۱۳.۴)
-در publishRosterVersion پس از انتشار:
-اگر نسخه قبلی منتشرشده وجود داشت → اجرای diff → اعلان فقط به راهبرانی که سفرشان تغییر/حذف شده + H2 + سرشیفت
-اگر اولین انتشار → createBulkNotifications به همه راهبران تخصیص‌یافته با لینک لوحه امروز
-استفاده از createNotification/createBulkNotifications موجود در notifications/service.ts
-۱.۳ مسیرهای گمشده §۱۴ (بخش ادمین/رایگان)
-POST /api/rosters/[id]/validate → اجرای validateRoster و بازگرداندن issues
-GET /api/rosters/[id]/issues → همین (read-only)
-رفع ابهام پارامتر id: جدا کردن trips/assignment/[id]/reassign و resolve-dispute از trips/[id] (طراحی sub-path تمیز)
-۱.۴ پاک‌سازی فنی (hard rules)
-حذف مدل یتیم RosterFile از schema + فیلد User.rosterFiles (هیچ مسیری نمی‌نویسد)
-اصلاح barrel شکسته src/server/modules/roster/index.ts (re-exportهای ناموجود: parseRosterExcel, applyRosterToShifts, commitRosterFile, RosterRow, ParsedRoster, RosterImportResult)
-حذف مسیرهای منسوخ /api/roster/upload و /confirm (HTTP 410)
-اصلاح iCal export: استفاده از ?token= در me/roster/export (مصرف‌کننده‌ها token می‌فرستند ولی هندلر نادیده می‌گیرد) → احراز هویت با token-query به‌علاوه cookie
-۱.۵ UI
-در صفحه roster/upload/page.tsx: پنل «مقایسه با نسخه قبلی» قبل از انتشار که خروجی diff را نشان می‌دهد + پیش‌نمایش اعلان‌هایی که ارسال خواهند شد
-در صفحه roster/page.tsx: نمایش شماره نسخه + لینک تاریخچه تغییرات
-فاز ۲ — اعتبارسنجی و اتصال ماژول‌ها (§۷، §۱۳)
-۲.۱ اعتبارسنجی کامل Anti-Fatigue (§۷.۳)
-گسترش validateRoster: تعداد سفرهای پشت‌سرهم، تعداد شانت، انتقال شیفت (پایان آخرین سفر → شروع شیفت بعدی روز)، مجموع سفرها
-اعتبارسنجی ساختاری §۷.۱ (زمان صعودی، ردیف تکراری، جهت مشخص) و پرسنلی §۷.۲ (تخصیص همزمان دو قطار، وضعیت فعال، گواهی معتبر) — اگر مدل گواهی باشد
-۲.۲ اتصال حضور و غیاب (§۱۳.۲)
-مسیرهای ready و cabin-handover → ساخت/بستن AttendanceRecord (مدل موجود) به‌جای فقط timestamp
-وقتی stationId لازم → استفاده از کد ایستگاه به‌عنوان String (مدل Station وجود ندارد)
-۲.۳ اتصال چک‌لیست (§۱۳.۳)
-قبل از حرکت هر سفر، ChecklistTemplate فعال روز را برای راهبر محدود می‌کند (موجود) — وصل به TripAssignment نزدیک حرکت
-۲.۴ مسیرهای گمشده §۱۴ (راننده/سرشیفت)
-GET /api/me/trips?date=، GET /api/supervisor/trips/live، POST /api/trips/[id]/approve-delay
-فاز ۳ — موتور PDF + Visual Mapper (§۴.۲، §۴.۳، §۵)
-طبق انتخاب شما: Template-based با مختصات Box
-
-۳.۱ گسترش مدل RosterTemplate
-فیلدهای pageWidth/pageHeight, rightBlock/leftBlock: Json (Box), headerZones: Json, columns: Json (ColumnMapping[]) برای PDF (در حال حاضر فقط ستون Excel دارد)
-مهاجرت Prisma
-۳.۲ Template Parser PDF
-تبدیل هر صفحه PDF به تصویر → خواندن پیکسل‌ها در Boxهای قالب → OCR هر سلول با مدل مختصات ذخیره‌شده
-ادغام چند صفحه، حذف تکرار سربرگ، تشخیص جهت از بلوک راست/چپ
-۳.۳ Visual Mapper پنل ادمین (§۵)
-روی پیش‌نمایش فایل، ادمین ناحیه راست/چپ و ستون‌های H1/H2/T/R و زمان‌ها را انتخاب و الگو را ذخیره می‌کند
-مسیر POST /api/rosters/[id]/map-template
-فاز ۴ — آفلاین + موبایل Cabin (§۹.۴، §۱۱.۲، §۱۱.۳)
-طبق انتخاب شما: صف کامل + حل تعارض
-
-۴.۱ صف عملیات آفلاین (§۱۱.۲)
-در موبایل، صف دائمی AsyncStorage برای receipt/ready/handover/dispute/delay/checklist/attendance هنگام قطع LTE با sync خودکار
-مدل ساده PendingOp با idempotency key برای جلوگیری از ثبت دوباره
-۴.۲ حل تعارض نسخه (§۱۱.۳)
-هنگام دریافت نسخه جدید لوحه، تطبیق عملیات صف‌شده با سفرهای تغییرکرده/حذف‌شده → هشدار سرشیفت + پیام واضح به کاربر
-۴.۳ حالت Cabin واقعی (§۹.۴)
-نزدیک زمان حرکت: فقط سفر فعلی، مخفی کردن نوتیف غیرضروری، SOS و اعلام آمادگی فعال، کنتراست/فونت بزرگ
-فاز ۵ — داشبورد، گزارش‌ها و اتصال نهایی (§۱۲، §۱۳.۱، §۱۳.۴، §۱۳.۵)
-§۱۲.۳ گزارش‌های مدیریتی واقعی (حذف داده mock صفحه analytics، محاسبه از روی لوحه منتشرشده)
-§۱۲.۱/۱۲.۲ داشبورد لحظه‌ای و گانت (بهبود موجود)
-§۱۳.۱ اتصال تقویم کاری، §۱۳.۴ نوتیف کامل (نزدیک حرکت، عدم رؤیت، شانت کم)، §۱۳.۵ اتصال AI Assistant

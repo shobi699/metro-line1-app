@@ -39,6 +39,8 @@ import {
   Award,
   Mic,
   Clock,
+  TrendingUp,
+  Vote,
 } from 'lucide-react'
 
 interface NavItem {
@@ -75,6 +77,9 @@ const NAVIGATION_SECTIONS: NavSection[] = [
           { label: 'داشبورد اصلی', href: '/dashboard', icon: LayoutDashboard },
           { label: 'اعلانات سیستم', href: '/notifications', icon: Bell },
           { label: 'پروفایل کاربری', href: '/profile', icon: User },
+          { label: 'رزرو وقت جلسه', href: '/meetings', icon: Calendar },
+          { label: 'نظرسنجی‌ها', href: '/polls', icon: Vote },
+          { label: 'پایش خستگی و سلامت کاری', href: '/fatigue', icon: Activity },
           { label: 'جدول برترها (رتبه)', href: '/leaderboard', icon: Trophy },
           { label: 'کارنامه و ارزیابی عملکرد', href: '/performance', icon: Award },
           { label: 'ثبت بازخورد و پیام', href: '/feedback', icon: MessageSquare },
@@ -91,6 +96,8 @@ const NAVIGATION_SECTIONS: NavSection[] = [
           { label: 'حضور و غیاب هوشمند', href: '/attendance', icon: UserCheck },
           { label: 'چک‌لیست حرکت قطار', href: '/checklists', icon: ClipboardCheck },
           { label: 'ثبت خرابی و تیکتینگ', href: '/tickets', icon: AlertTriangle },
+          { label: 'تجهیزات انفرادی من', href: '/equipment', icon: HardDrive },
+          { label: 'مرخصی و مأموریت‌ها', href: '/leaves', icon: Calendar },
         ]
       },
       {
@@ -132,6 +139,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         label: 'آموزش و آزمون‌ها',
         icon: GraduationCap,
         items: [
+          { label: 'آموزش بدو خدمت (Onboarding)', href: '/onboarding', icon: GraduationCap },
           { label: 'دوره‌ها و مقالات آموزشی', href: '/content', icon: Newspaper },
           { label: 'گالری ویدیوهای آموزشی', href: '/learning/gallery', icon: Video },
           { label: 'کارنامه و آزمون‌های من', href: '/learning/exams', icon: Award },
@@ -164,6 +172,8 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         items: [
           { label: 'مدیریت شیفت‌ها', href: '/admin/shifts', icon: Calendar },
           { label: 'بارگذاری اکسل لوحه', href: '/roster/upload', icon: FileSpreadsheet },
+          { label: 'نمای گانت لوحه', href: '/roster?view=gantt', icon: TrendingUp },
+          { label: 'آمار و تحلیل اعزام‌ها', href: '/roster/analytics', icon: BarChart3 },
           { label: 'مدیریت چک‌لیست‌ها', href: '/checklists', icon: ClipboardCheck },
         ]
       },
@@ -183,12 +193,14 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         icon: BarChart3,
         roles: ['admin', 'super_admin'],
         items: [
+          { label: 'فرم‌ساز سازمانی', href: '/admin/form-builder', icon: Settings },
           { label: 'داشبورد تحلیلی', href: '/admin/analytics', icon: BarChart3 },
           { label: 'پیکربندی کاتالوگ عملکرد', href: '/admin/performance-config', icon: Award },
           { label: 'اعتراضات ارزیابی عملکرد', href: '/admin/performance-appeals', icon: FileSpreadsheet },
           { label: 'سیگنالینگ و شبکه برق', href: '/admin/infrastructure', icon: HardDrive },
           { label: 'ثبت خودروها و پلاک‌خوان', href: '/admin/license-plates', icon: Settings },
           { label: 'صلاحیت و گواهی راهبران', href: '/admin/operator-licenses', icon: ShieldCheck },
+          { label: 'دفتر ثبت وقایع (Audit Log)', href: '/admin/audit-logs', icon: Shield },
           { label: 'تنظیمات سیستم', href: '/admin/settings', icon: Settings },
         ]
       }

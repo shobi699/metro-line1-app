@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { jalali } from '@/lib/fa'
 import { cn } from '@/lib/utils'
-import { Search, Heart, MessageSquare, CheckCircle2, ImageIcon, Video, Award, Newspaper, Lock } from 'lucide-react'
+import { Search, Heart, MessageSquare, CheckCircle2, ImageIcon, Video, Award, Newspaper, Lock, FileText } from 'lucide-react'
 
 interface PostCard {
   id: string
@@ -38,9 +38,12 @@ const TYPE_LABELS: Record<string, string> = {
   training: 'آموزش',
   circular: 'بخش‌نامه',
   gallery: 'گالری',
+  announcement: 'اطلاعیه اداری',
+  directive: 'دستورالعمل',
+  form: 'فرم و فایل',
 }
 
-const TYPE_FILTERS = ['', 'news', 'training', 'circular', 'blog', 'gallery']
+const TYPE_FILTERS = ['', 'news', 'training', 'circular', 'blog', 'gallery', 'announcement', 'directive', 'form']
 
 export default function ContentPage() {
   const accessToken = useAuthStore((s) => s.accessToken)
@@ -183,6 +186,9 @@ export default function ContentPage() {
                     )}
                     {post.mediaType?.startsWith('image/') && (
                       <ImageIcon className="size-3.5" />
+                    )}
+                    {post.mediaType === 'application/pdf' && (
+                      <FileText className="size-3.5 text-accent" />
                     )}
                   </div>
                   <h3 className="text-sm font-medium line-clamp-2">{post.title}</h3>

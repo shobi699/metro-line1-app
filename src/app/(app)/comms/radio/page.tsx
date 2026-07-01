@@ -48,6 +48,13 @@ export default function RadioSimulatorPage() {
   }, [])
 
   const audioCtxRef = useRef<AudioContext | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const mediaStreamRef = useRef<MediaStream | null>(null)
+  const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null)
+  const analyserNodeRef = useRef<AnalyserNode | null>(null)
+  const animationFrameRef = useRef<number | null>(null)
+  const bandpassFilterRef = useRef<BiquadFilterNode | null>(null)
+  const noiseSourceRef = useRef<AudioBufferSourceNode | null>(null)
 
   const formatFarsiNumber = (numStr: string) => {
     const farsiDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
@@ -69,6 +76,132 @@ export default function RadioSimulatorPage() {
       audioCtxRef.current = new (window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)()
     }
   };
+
+  const startStaticNoise = () => {
+    try {
+      initAudio()
+      const ctx = audioCtxRef.current
+      if (!ctx || muted) return
+      
+      const bufferSize = ctx.sampleRate * 2
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
+      const data = buffer.getChannelData(0)
+      for (let i = 0; i < bufferSize; i++) {
+        // eslint-disable-next-line react-hooks/purity
+        data[i] = Math.random() * 2 - 1
+      }
+      
+      const source = ctx.createBufferSource()
+      source.buffer = buffer
+      source.loop = true
+      
+      const filter = ctx.createBiquadFilter()
+      filter.type = 'bandpass'
+      filter.frequency.value = 1200
+      filter.Q.value = 0.8
+      
+      const gain = ctx.createGain()
+      gain.gain.setValueAtTime(0.004, ctx.currentTime)
+      
+      source.connect(filter)
+      filter.connect(gain)
+      gain.connect(ctx.destination)
+      
+      source.start()
+      noiseSourceRef.current = source
+    } catch {}
+  }
+
+  const stopStaticNoise = () => {
+    try {
+      if (noiseSourceRef.current) {
+        noiseSourceRef.current.stop()
+        noiseSourceRef.current.disconnect()
+        noiseSourceRef.current = null
+      }
+    } catch {}
+  }
+
+  const drawWaveform = () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    
+    const analyser = analyserNodeRef.current
+    if (!analyser) return
+    
+    const bufferLength = analyser.frequencyBinCount
+    const dataArray = new Uint8Array(bufferLength)
+    
+    const draw = () => {
+      animationFrameRef.current = requestAnimationFrame(draw)
+      analyser.getByteTimeDomainData(dataArray)
+      
+      ctx.fillStyle = 'rgba(23, 23, 23, 0.4)'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      
+      ctx.lineWidth = 2
+      ctx.strokeStyle = '#ef4444' // red waveform for transmitting
+      ctx.beginPath()
+      
+      const sliceWidth = canvas.width / bufferLength
+      let x = 0
+      
+      for (let i = 0; i < bufferLength; i++) {
+        const v = dataArray[i] / 128.0
+        const y = (v * canvas.height) / 2
+        
+        if (i === 0) {
+          ctx.moveTo(x, y)
+        } else {
+          ctx.lineTo(x, y)
+        }
+        
+        x += sliceWidth
+      }
+      
+      ctx.lineTo(canvas.width, canvas.height / 2)
+      ctx.stroke()
+    }
+    
+    draw()
+  }
+
+  const drawFakeWaveform = (isActiveTransmitting = false) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    
+    let phase = 0
+    const draw = () => {
+      animationFrameRef.current = requestAnimationFrame(draw)
+      
+      ctx.fillStyle = 'rgba(23, 23, 23, 0.4)'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      
+      ctx.lineWidth = 1.5
+      ctx.strokeStyle = isActiveTransmitting ? '#ef4444' : '#f59e0b' // yellow/amber for receiving
+      ctx.beginPath()
+      
+      const step = 4
+      for (let x = 0; x < canvas.width; x += step) {
+        // eslint-disable-next-line react-hooks/purity
+        const amplitude = isActiveTransmitting ? 12 : 16
+        // eslint-disable-next-line react-hooks/purity
+        const y = canvas.height / 2 + Math.sin(x * 0.08 + phase) * amplitude * (Math.random() * 0.5 + 0.8)
+        if (x === 0) {
+          ctx.moveTo(x, y)
+        } else {
+          ctx.lineTo(x, y)
+        }
+      }
+      ctx.stroke()
+      phase += 0.2
+    }
+    draw()
+  }
 
   const playSystemTone = (freq: number, duration: number) => {
     try {
@@ -242,7 +375,7 @@ export default function RadioSimulatorPage() {
             `رئیس ایستگاه دروازه دولت در فرکانس اختصاصی ${dialedCode}؛ در انتظار تایید خروج قطار عملیاتی.`,
             `تکنسین پست علائم؛ ولتاژ تغذیه فرستنده در فرکانس ${dialedCode} پایدار گزارش شد.`
           ]
-          message = codes[Math.floor(Math.random() * codes.length)]
+message = codes[Math.floor(Math.random() * codes.length)]
           sender = Math.random() > 0.5 ? 'مرکز فرمان OCC' : `راهبر سیستم (کد ${dialedCode})`
         } else {
           const randomMessages = [
@@ -260,11 +393,20 @@ export default function RadioSimulatorPage() {
         setState('RECEIVING')
         setCurrentTransmittingText(message)
         playStartBeep()
+        startStaticNoise()
+        
+        setTimeout(() => {
+          drawFakeWaveform(false)
+        }, 180)
 
         const now = new Date()
         const timeStr = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
 
         setTimeout(() => {
+          if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current)
+          }
+          stopStaticNoise()
           setRadioLogs((prev) => [
             {
               id: Date.now().toString(),
@@ -282,7 +424,13 @@ export default function RadioSimulatorPage() {
       }
     }, intervalTime)
 
-    return () => clearInterval(interval)
+    return () => {
+      clearInterval(interval)
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+      stopStaticNoise()
+    }
   }, [state, channel, dialedCode, muted, config])
 
   // Handle Push To Talk (PTT) Press
@@ -290,10 +438,66 @@ export default function RadioSimulatorPage() {
     if (state !== 'IDLE') return
     setState('TRANSMITTING')
     playStartBeep()
+    startStaticNoise()
+
+    // Request Mic Access and connect to Web Audio API for real oscilloscope
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+        mediaStreamRef.current = stream
+        initAudio()
+        const ctx = audioCtxRef.current
+        if (!ctx) return
+        
+        const source = ctx.createMediaStreamSource(stream)
+        sourceNodeRef.current = source
+        
+        const filter = ctx.createBiquadFilter()
+        filter.type = 'bandpass'
+        filter.frequency.value = 1500
+        filter.Q.value = 1.2
+        bandpassFilterRef.current = filter
+        
+        const analyser = ctx.createAnalyser()
+        analyser.fftSize = 256
+        analyserNodeRef.current = analyser
+        
+        source.connect(filter)
+        filter.connect(analyser)
+        
+        // Connect to destination to hear voice feedback with radio walkie-talkie filter
+        analyser.connect(ctx.destination)
+        
+        drawWaveform()
+      }).catch((err) => {
+        console.warn('Microphone access denied:', err)
+        drawFakeWaveform(true)
+      })
+    } else {
+      drawFakeWaveform(true)
+    }
   }
 
   const handlePttRelease = () => {
     if (state !== 'TRANSMITTING') return
+    
+    // Stop recording and voice visualization
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
+    }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop())
+      mediaStreamRef.current = null
+    }
+    if (sourceNodeRef.current) {
+      sourceNodeRef.current.disconnect()
+      sourceNodeRef.current = null
+    }
+    if (bandpassFilterRef.current) {
+      bandpassFilterRef.current.disconnect()
+      bandpassFilterRef.current = null
+    }
+    
+    stopStaticNoise()
     playSquelch()
     setState('IDLE')
 
@@ -338,6 +542,25 @@ export default function RadioSimulatorPage() {
       window.removeEventListener('keyup', handleKeyUp)
     }
   }, [state, channel, dialedCode])
+
+  useEffect(() => {
+    if (state === 'IDLE') {
+      const canvas = canvasRef.current
+      if (canvas) {
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.fillStyle = 'rgba(23, 23, 23, 0.4)'
+          ctx.fillRect(0, 0, canvas.width, canvas.height)
+          ctx.lineWidth = 1
+          ctx.strokeStyle = '#10b981'
+          ctx.beginPath()
+          ctx.moveTo(0, canvas.height / 2)
+          ctx.lineTo(canvas.width, canvas.height / 2)
+          ctx.stroke()
+        }
+      }
+    }
+  }, [state])
 
   const channelFreqs: Record<string, string> = {
     'OCC MAIN': '385.125 MHz',
@@ -392,7 +615,7 @@ export default function RadioSimulatorPage() {
           <span className="text-[10px] font-mono tracking-widest text-foreground-muted mb-3 uppercase">Motorola MTP850 TETRA</span>
 
           {/* LCD Screen Container */}
-          <div className={`w-full h-40 rounded-lg border p-3 flex flex-col justify-between transition-all duration-300 relative ${
+          <div className={`w-full h-48 rounded-lg border p-3 flex flex-col justify-between transition-all duration-300 relative ${
             state === 'TRANSMITTING'
               ? 'bg-critical/10 border-critical/50'
               : state === 'RECEIVING'
@@ -428,6 +651,16 @@ export default function RadioSimulatorPage() {
                   ? 'RECEIVING...'
                   : 'READY / آماده'}
               </h2>
+            </div>
+
+            {/* Live Audio Visualizer Canvas */}
+            <div className="w-full flex items-center justify-center">
+              <canvas
+                ref={canvasRef}
+                className="w-full h-8 bg-neutral-950/60 rounded border border-border-subtle/20 shadow-inner"
+                width={260}
+                height={32}
+              />
             </div>
 
             {/* LCD Screen Bottom */}

@@ -22,7 +22,7 @@ export function jdate(input?: dayjs.ConfigType): dayjs.Dayjs {
  * (به‌جای سازنده‌ی { jalali: true } که دچار اختلاف یک‌روزه‌ی UTC می‌شود).
  */
 export function fromJalali(jy: number, jm1to12: number, jd: number): dayjs.Dayjs {
-  return jdate().year(jy).month(jm1to12 - 1).date(jd)
+  return jdate().date(1).year(jy).month(jm1to12 - 1).date(jd)
 }
 
 /**

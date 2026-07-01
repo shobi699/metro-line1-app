@@ -32,6 +32,9 @@ export async function GET(
         mediaType: true,
         published: true,
         mandatory: true,
+        status: true,
+        publishAt: true,
+        nextReviewAt: true,
       },
     })
     return NextResponse.json({ data: post })

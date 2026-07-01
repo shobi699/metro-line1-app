@@ -68,6 +68,7 @@ export async function acknowledgeBulletin(
       userId,
       safetyBulletinId: bulletinId,
       readAt: new Date(),
+      device: userAgent || 'نامشخص',
     },
   })
 

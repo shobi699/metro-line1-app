@@ -64,6 +64,7 @@ describe('content service', () => {
         body: 'متن',
         published: true,
         mandatory: false,
+        status: 'draft',
       },
       'author-1',
     )

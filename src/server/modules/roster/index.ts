@@ -3,8 +3,20 @@ export {
   validateRoster,
   createRosterDayDraft,
   publishRosterVersion,
-  commitRosterFile,
+  type ColumnMapping,
+  type ValidationIssue,
+  DEFAULT_RIGHT_MAPPING,
+  DEFAULT_LEFT_MAPPING,
 } from './service'
+export {
+  diffRosterVersions,
+  computeDiff,
+  type RosterDiff,
+  type TripSummary,
+  type ChangedTrip,
+  type TripFieldChange,
+  type TripFieldKey,
+} from './diff'
 export {
   getUserShifts,
   getAllShifts,
@@ -34,4 +46,5 @@ export {
   updateTask,
   deleteTask,
 } from './notes-tasks'
+export { parseRosterPDF } from './pdf-parser'
 export { shiftTemplateSchema, shiftAssignmentSchema, shiftNoteSchema, shiftTaskSchema } from '@/lib/zod/roster'

@@ -19,6 +19,9 @@ vi.mock('@/server/db', () => ({
     setting: {
       findUnique: vi.fn(),
     },
+    user: {
+      findUnique: vi.fn(),
+    },
     $transaction: vi.fn(async (ops: unknown[]) => ops),
   },
 }))
@@ -59,12 +62,15 @@ describe('chat service', () => {
       attachmentUrl: null,
       attachmentType: null,
       pinned: false,
+      priority: 'normal',
+      tags: null,
+      readReceipts: null,
       createdAt: new Date('2026-06-23T10:00:00Z'),
       sender: { name: 'علی راهبر' },
     }
     vi.mocked(prisma.message.create).mockResolvedValue(created as never)
 
-    const view = await sendMessage('room-1', 'user-1', { body: 'سلام' })
+    const view = await sendMessage('room-1', 'user-1', { body: 'سلام', priority: 'normal' })
 
     expect(view.senderName).toBe('علی راهبر')
     expect(view.body).toBe('سلام')
@@ -86,5 +92,39 @@ describe('chat service', () => {
       pinMessage('room-1', 'msg-1', 'user-1', true),
     ).rejects.toThrow('فقط مدیر روم می‌تواند پیام پین کند')
     expect(prisma.message.update).not.toHaveBeenCalled()
+  })
+
+  // ── تست‌های جدید رسید قانونی و ممیزی — بخش ۵.۲ سند tosee.md
+  it('records a legal read-receipt for a message', async () => {
+    const { acknowledgeMessage } = await import('./service')
+
+    vi.mocked(prisma.message.findUnique).mockResolvedValue({
+      id: 'msg-1',
+      roomId: 'room-1',
+      readReceipts: null,
+    } as any)
+
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      id: 'user-2',
+      name: 'محمدرضا مدیر',
+    } as any)
+
+    const receipts = await acknowledgeMessage('msg-1', 'user-2', {
+      device: 'mobile',
+      ipAddress: '192.168.1.100',
+      signature: 'TEST-SIGN-123'
+    })
+
+    expect(receipts).toHaveLength(1)
+    expect(receipts[0]).toEqual(
+      expect.objectContaining({
+        userId: 'user-2',
+        userName: 'محمدرضا مدیر',
+        device: 'mobile',
+        ipAddress: '192.168.1.100',
+        signature: 'TEST-SIGN-123',
+      })
+    )
+    expect(prisma.message.update).toHaveBeenCalledOnce()
   })
 })

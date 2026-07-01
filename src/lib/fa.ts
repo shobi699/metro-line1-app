@@ -1,3 +1,5 @@
+import { fromJalali } from './dayjs'
+
 const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
 
 export function toFa(n: number | string): string {
@@ -95,8 +97,7 @@ function gd_j(jy: number): number {
 }
 
 export function jalaliToDate(jy: number, jm: number, jd: number): Date {
-  const [gy, gm, gd] = jalaliToGregorianArray(jy, jm, jd)
-  return new Date(gy, gm - 1, gd)
+  return fromJalali(jy, jm, jd).toDate()
 }
 
 export function normalizeFarsiString(str: string): string {

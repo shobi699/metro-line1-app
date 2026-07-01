@@ -96,6 +96,9 @@ export function RosterScreen() {
   const [disputeNote, setDisputeNote] = useState('')
   const [disputeTripId, setDisputeTripId] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
+  
+  // Calendar Sync Modal state
+  const [syncModalVisible, setSyncModalVisible] = useState(false)
 
   // Fetch driver's personal roster
   async function fetchRoster(showLoader = true) {
@@ -272,9 +275,14 @@ export function RosterScreen() {
             <Text style={styles.headerSubtitle}>لوحه امروز بارگذاری نشده است</Text>
           )}
         </View>
-        <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh}>
-          <Clock size={20} color="#ff3b30" />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row-reverse', gap: 8 }}>
+          <TouchableOpacity style={styles.refreshButton} onPress={() => setSyncModalVisible(true)}>
+            <Calendar size={20} color="#ff3b30" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh}>
+            <Clock size={20} color="#ff3b30" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Tabs - 3 options */}
@@ -345,6 +353,8 @@ export function RosterScreen() {
                 .map((trip) => {
                   const h1 = trip.assignments.find(a => a.role === 'H1')
                   const h2 = trip.assignments.find(a => a.role === 'H2')
+                  const assistT = trip.assignments.find(a => a.role === 'T')
+                  const assistR = trip.assignments.find(a => a.role === 'R')
                   
                   return (
                     <View key={trip.id} style={styles.fullTripCard}>
@@ -367,11 +377,11 @@ export function RosterScreen() {
                             <View style={styles.activeDot} />
                           )}
                         </View>
-
+ 
                         {/* H2 Row */}
                         <View style={styles.driverRow}>
                           <User size={13} color="#a0a3b0" />
-                          <Text style={styles.driverLabel}>H2 (کمکی):</Text>
+                          <Text style={styles.driverLabel}>H2 (دوم):</Text>
                           <Text style={styles.driverName}>
                             {h2?.matchedUser?.name || h2?.rawName || 'کابین تک راهبر'}
                           </Text>
@@ -380,13 +390,41 @@ export function RosterScreen() {
                           )}
                         </View>
 
+                        {/* Assistant T Row */}
+                        {assistT && (
+                          <View style={styles.driverRow}>
+                            <User size={13} color="#a0a3b0" />
+                            <Text style={styles.driverLabel}>کمکی T:</Text>
+                            <Text style={styles.driverName}>
+                              {assistT?.matchedUser?.name || assistT?.rawName || '—'}
+                            </Text>
+                            {assistT?.readyAt && (
+                              <View style={styles.activeDot} />
+                            )}
+                          </View>
+                        )}
+
+                        {/* Assistant R Row */}
+                        {assistR && (
+                          <View style={styles.driverRow}>
+                            <User size={13} color="#a0a3b0" />
+                            <Text style={styles.driverLabel}>کمکی R:</Text>
+                            <Text style={styles.driverName}>
+                              {assistR?.matchedUser?.name || assistR?.rawName || '—'}
+                            </Text>
+                            {assistR?.readyAt && (
+                              <View style={styles.activeDot} />
+                            )}
+                          </View>
+                        )}
+
                         {/* Notes / Disputes */}
                         {trip.operationalNote && (
                           <Text style={styles.fullNoteText}>پیام: {trip.operationalNote}</Text>
                         )}
-                        {((h1?.disputed) || (h2?.disputed)) && (
+                        {((h1?.disputed) || (h2?.disputed) || (assistT?.disputed) || (assistR?.disputed)) && (
                           <Text style={styles.fullAlertText}>
-                            ⚠️ مغایرت: {h1?.disputeNote || h2?.disputeNote}
+                            ⚠️ مغایرت: {h1?.disputeNote || h2?.disputeNote || assistT?.disputeNote || assistR?.disputeNote}
                           </Text>
                         )}
                       </View>
@@ -502,7 +540,15 @@ export function RosterScreen() {
                 
                 <View style={styles.cabinTimeRow}>
                   <Text style={styles.cabinTimeLabel}>سمت و نقش شما:</Text>
-                  <Text style={styles.cabinRoleValue}>{currentTrip.assignment.role === 'H1' ? 'راهبر اصلی (H1)' : 'راهبر کمکی (H2)'}</Text>
+                  <Text style={styles.cabinRoleValue}>
+                    {currentTrip.assignment.role === 'H1'
+                      ? 'راهبر اصلی (H1)'
+                      : currentTrip.assignment.role === 'H2'
+                      ? 'راهبر دوم (H2)'
+                      : currentTrip.assignment.role === 'T'
+                      ? 'راهبر کمکی (T)'
+                      : 'راهبر کمکی (R)'}
+                  </Text>
                 </View>
               </View>
 
@@ -612,6 +658,39 @@ export function RosterScreen() {
                 }}
               >
                 <Text style={styles.modalBtnText}>انصراف</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Calendar Sync Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={syncModalVisible}
+        onRequestClose={() => setSyncModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>همگام‌سازی تقویم گوشی</Text>
+            <Text style={styles.modalSubtitle}>
+              لینک زیر را کپی کرده و به برنامه تقویم خود (Google یا Apple Calendar) اضافه کنید تا نوبت سفرهایتان همیشه سینک باشد:
+            </Text>
+            
+            <TextInput
+              style={[styles.textInput, { fontSize: 10, fontFamily: 'monospace', textAlign: 'left' }]}
+              readOnly={true}
+              selectTextOnFocus={true}
+              value={`${API_URL}/me/roster/export?token=${accessToken}`}
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalCancelBtn, { flex: 1 }]}
+                onPress={() => setSyncModalVisible(false)}
+              >
+                <Text style={styles.modalBtnText}>بستن</Text>
               </TouchableOpacity>
             </View>
           </View>

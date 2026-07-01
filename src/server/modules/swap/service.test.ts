@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { validateSwapRules } from './service'
+import { validateSwapRules, validateTripSwapRules } from './service'
 import { prisma } from '@/server/db'
 import { ShiftCode, Shift } from '@/generated/prisma/client'
 
@@ -13,7 +13,21 @@ vi.mock('@/server/db', () => ({
       findUnique: vi.fn(),
       findMany: vi.fn(),
     },
+    tripAssignment: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    trip: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+    },
   },
+}))
+
+vi.mock('@/server/modules/settings', () => ({
+  getSettingValue: vi.fn((key, fallback) => Promise.resolve(fallback)),
 }))
 
 describe('validateSwapRules', () => {
@@ -167,6 +181,43 @@ describe('validateSwapRules', () => {
         rule: 'max_consecutive',
         message: expect.stringContaining('شیفت متوالی مجاز نیست'),
       })
+    )
+  })
+})
+
+describe('validateTripSwapRules', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('fails if assignments are not found', async () => {
+    vi.mocked(prisma.tripAssignment.findUnique).mockResolvedValue(null)
+
+    const violations = await validateTripSwapRules('req-1', 'target-1', 'assign-1', 'assign-2')
+    expect(violations).toContainEqual(
+      expect.objectContaining({ rule: 'invalid_assignment' })
+    )
+  })
+
+  it('fails if roles are not identical', async () => {
+    const assign1 = { id: 'assign-1', matchedUserId: 'req-1', role: 'H1', trip: { id: 't1', rosterVersionId: 'v1' } }
+    const assign2 = { id: 'assign-2', matchedUserId: 'target-1', role: 'H2', trip: { id: 't2', rosterVersionId: 'v1' } }
+
+    vi.mocked(prisma.tripAssignment.findUnique).mockImplementation((async ({ where }: any) => {
+      if (where.id === 'assign-1') return assign1
+      if (where.id === 'assign-2') return assign2
+      return null
+    }) as any)
+
+    vi.mocked(prisma.user.findUnique).mockImplementation((async ({ where }: any) => {
+      if (where.id === 'req-1') return { id: 'req-1', roleId: 'role-1', role: { id: 'role-1', key: 'operator', name: 'راهبر' } }
+      if (where.id === 'target-1') return { id: 'target-1', roleId: 'role-2', role: { id: 'role-2', key: 'admin', name: 'مدیر' } }
+      return null
+    }) as any)
+
+    const violations = await validateTripSwapRules('req-1', 'target-1', 'assign-1', 'assign-2')
+    expect(violations).toContainEqual(
+      expect.objectContaining({ rule: 'role_parity' })
     )
   })
 })

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
-import { createMeetingRequest, getUserMeetings, getManagerMeetings } from '@/server/modules/meetings/service'
+import { createMeetingRequest, getUserMeetings, getManagerMeetings, reviewMeeting } from '@/server/modules/meetings/service'
 
 export async function GET(request: Request) {
   const user = await getSessionUser(request)
@@ -42,4 +42,30 @@ export async function POST(request: Request) {
   })
 
   return NextResponse.json({ data: meeting }, { status: 201 })
+}
+
+export async function PATCH(request: Request) {
+  const user = await getSessionUser(request)
+  if ('error' in user) return authErrorResponse(user)
+
+  if (user.rank < 3) {
+    return NextResponse.json({ error: 'شما دسترسی کافی ندارید' }, { status: 403 })
+  }
+
+  const body = await request.json()
+  const { meetingId, status, note } = body
+
+  if (!meetingId || !status) {
+    return NextResponse.json(
+      { error: 'شناسه جلسه و وضعیت الزامی است' },
+      { status: 400 },
+    )
+  }
+
+  try {
+    await reviewMeeting(meetingId, user.id, status, note)
+    return NextResponse.json({ data: { success: true } })
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || 'خطا در ثبت تغییرات' }, { status: 500 })
+  }
 }

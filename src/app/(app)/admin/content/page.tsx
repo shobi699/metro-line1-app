@@ -48,6 +48,9 @@ interface AdminPost {
   category: string | null
   published: boolean
   mandatory: boolean
+  status: string
+  publishAt: string | null
+  nextReviewAt: string | null
   createdAt: string
   author: { name: string }
   _count: { reads: number }
@@ -66,6 +69,7 @@ interface FormState {
   mediaType: string
   published: boolean
   mandatory: boolean
+  status: string
   targetRoles: string[]
 }
 
@@ -89,6 +93,9 @@ const TYPE_LABELS: Record<string, string> = {
   training: 'دوره آموزشی',
   circular: 'بخش‌نامه ایمنی',
   gallery: 'گالری چندرسانه‌ای',
+  announcement: 'اطلاعیه اداری',
+  directive: 'دستورالعمل عملیاتی',
+  form: 'فرم و فایل',
 }
 
 const EMPTY_FORM: FormState = {
@@ -104,6 +111,7 @@ const EMPTY_FORM: FormState = {
   mediaType: '',
   published: true,
   mandatory: false,
+  status: 'draft',
   targetRoles: ['all'],
 }
 
@@ -340,6 +348,7 @@ function AdminContentPageContent() {
       category: post.category ?? '',
       published: post.published,
       mandatory: post.mandatory,
+      status: post.status ?? 'draft',
     })
     setLastAutosaved(null)
     setEditorTab('visual')
@@ -450,8 +459,9 @@ function AdminContentPageContent() {
         coverUrl: form.coverUrl,
         mediaUrl: form.mediaUrl,
         mediaType: form.mediaType,
-        published: form.published,
+        published: form.status === 'published' || form.published,
         mandatory: form.mandatory,
+        status: form.status,
       }
       const url = form.id ? `/api/posts/${form.id}` : '/api/posts'
       const method = form.id ? 'PATCH' : 'POST'
@@ -729,10 +739,14 @@ function AdminContentPageContent() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setForm((f) => ({ ...f, published: !f.published }))}
+              onClick={() => setForm((f) => ({
+                ...f,
+                status: f.status === 'published' ? 'draft' : 'published',
+                published: f.status !== 'published',
+              }))}
               className="h-8 text-xs gap-1.5 cursor-pointer text-foreground-muted hover:bg-surface-hover hover:text-foreground border border-transparent hover:border-border rounded-lg"
             >
-              {form.published ? (
+              {form.status === 'published' ? (
                 <>
                   <Globe className="size-3.5 text-success" />
                   <span>انتشار عمومی زنده</span>
@@ -793,6 +807,79 @@ function AdminContentPageContent() {
               </div>
             </div>
 
+            {/* PDF Upload for Form Type */}
+            {form.type === 'form' ? (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-dashed border-accent/30 bg-accent/5 p-8 text-center space-y-3">
+                  <FileText className="size-10 mx-auto text-accent/60" />
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-bold text-foreground">بارگذاری فایل PDF فرم یا مستند</h3>
+                    <p className="text-xs text-foreground-muted">فایل PDF فرم مورد نظر را آپلود کنید تا پرسنل بتوانند آن را مشاهده و دانلود کنند.</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    className="hidden"
+                    id="pdf-upload"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file || !accessToken) return
+                      const fd = new FormData()
+                      fd.append('file', file)
+                      try {
+                        const res = await fetch('/api/uploads', {
+                          method: 'POST',
+                          headers: { Authorization: `Bearer ${accessToken}` },
+                          body: fd,
+                        })
+                        if (res.ok) {
+                          const data = await res.json()
+                          setForm((f) => ({
+                            ...f,
+                            mediaUrl: data.data.url,
+                            mediaType: 'application/pdf',
+                            body: `دانلود فایل: ${file.name}`,
+                          }))
+                        }
+                      } catch {
+                        alert('خطا در بارگذاری فایل')
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById('pdf-upload')?.click()}
+                    className="h-9 text-xs gap-1.5 cursor-pointer border-accent/30 hover:bg-accent/10 text-accent"
+                  >
+                    <Upload className="size-4" />
+                    <span>انتخاب فایل PDF</span>
+                  </Button>
+                </div>
+
+                {form.mediaUrl && form.mediaType === 'application/pdf' && (
+                  <Card className="border border-border bg-surface">
+                    <CardContent className="p-4 flex items-center gap-3">
+                      <FileText className="size-8 text-accent" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-foreground truncate">{form.mediaUrl.split('/').pop()}</p>
+                        <p className="text-[10px] text-foreground-muted">فایل PDF بارگذاری شده</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setForm((f) => ({ ...f, mediaUrl: '', mediaType: '', body: '' }))}
+                        className="size-8 text-critical hover:bg-critical/10 rounded-lg cursor-pointer"
+                      >
+                        <Trash className="size-4" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ) : (
+            <>
             {/* TAB CONTENT 1: VISUAL BLOCK EDITOR (Gutenberg) */}
             {editorTab === 'visual' && (
               <div className="space-y-4">
@@ -1168,6 +1255,8 @@ function AdminContentPageContent() {
                 />
               </div>
             )}
+            </>
+            )}
 
             {/* Excerpt Section (WordPress Style Summary) */}
             <Card className="border border-border-subtle bg-surface-container-low/30">
@@ -1399,12 +1488,27 @@ function AdminContentPageContent() {
               </CardHeader>
               <CardContent className="p-4 space-y-4 text-xs">
                 
-                {/* Publish status toggler */}
-                <div className="flex items-center justify-between">
-                  <span className="text-foreground-muted">وضعیت سند:</span>
-                  <Badge className={form.published ? 'bg-success/15 text-success border-transparent' : 'bg-neutral-800 text-neutral-400'}>
-                    {form.published ? 'منتشر عمومی' : 'پیش‌نویس'}
-                  </Badge>
+                {/* Workflow Status Selector */}
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-foreground-muted font-semibold">وضعیت انتشار:</Label>
+                  <select
+                    value={form.status ?? 'draft'}
+                    onChange={(e) => {
+                      const newStatus = e.target.value
+                      setForm((f) => ({
+                        ...f,
+                        status: newStatus,
+                        published: newStatus === 'published',
+                      }))
+                    }}
+                    className="h-9 rounded-lg border border-border bg-surface px-2.5 text-xs outline-none focus:border-accent cursor-pointer font-semibold"
+                  >
+                    <option value="draft">پیش‌نویس</option>
+                    <option value="review">در بازبینی</option>
+                    <option value="approved">تأیید شده</option>
+                    <option value="published">انتشار</option>
+                    <option value="archived">آرشیو</option>
+                  </select>
                 </div>
 
                 {/* Estimate time */}
@@ -1420,7 +1524,15 @@ function AdminContentPageContent() {
                   <Label className="text-foreground-muted font-semibold">نوع و قالب نوشته:</Label>
                   <select
                     value={form.type}
-                    onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
+                    onChange={(e) => {
+                      const newType = e.target.value
+                      setForm((f) => ({
+                        ...f,
+                        type: newType,
+                        // اطلاعیه اداری همیشه خواندن اجباری است
+                        mandatory: newType === 'announcement' ? true : f.mandatory,
+                      }))
+                    }}
                     className="h-9 rounded-lg border border-border bg-surface px-2.5 text-xs outline-none focus:border-accent cursor-pointer font-semibold"
                   >
                     {Object.entries(TYPE_LABELS).map(([k, v]) => (
@@ -1714,8 +1826,18 @@ function AdminContentPageContent() {
                     <td className="p-4 text-foreground-muted">{post.author?.name || 'مدیر سیستم'}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-1.5">
-                        <Badge className={post.published ? 'bg-success/15 text-success border-transparent text-[10px] font-semibold' : 'bg-neutral-800 text-neutral-400 text-[10px] font-semibold'}>
-                          {post.published ? 'منتشر شده' : 'پیش‌نویس'}
+                        <Badge className={
+                          post.status === 'published' ? 'bg-success/15 text-success border-transparent text-[10px] font-semibold' :
+                          post.status === 'review' ? 'bg-warning/15 text-warning border-transparent text-[10px] font-semibold' :
+                          post.status === 'approved' ? 'bg-info/15 text-info border-transparent text-[10px] font-semibold' :
+                          post.status === 'archived' ? 'bg-neutral-700 text-neutral-400 border-transparent text-[10px] font-semibold' :
+                          'bg-neutral-800 text-neutral-400 text-[10px] font-semibold'
+                        }>
+                          {post.status === 'published' ? 'منتشر شده' :
+                           post.status === 'review' ? 'در بازبینی' :
+                           post.status === 'approved' ? 'تأیید شده' :
+                           post.status === 'archived' ? 'آرشیو' :
+                           'پیش‌نویس'}
                         </Badge>
                         {post.mandatory && (
                           <Badge className="bg-critical/15 text-critical border-transparent text-[10px] font-bold animate-pulse">

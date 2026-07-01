@@ -72,10 +72,10 @@ export async function GET(request: Request) {
     // Sort trips by departureTime
     trips.sort((a, b) => (a.departureTime || '').localeCompare(b.departureTime || ''))
 
-    const issues = validateRoster(trips, trips.flatMap(t => t.assignments))
+    const issues = await validateRoster(trips, trips.flatMap(t => t.assignments))
 
     // Calculate metrics
-    let totalTrips = trips.length
+    const totalTrips = trips.length
     let acknowledgedCount = 0
     let readyCount = 0
     let disputeCount = 0

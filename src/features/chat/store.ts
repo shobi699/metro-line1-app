@@ -1,6 +1,18 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+/** سطح اولویت پیام — بخش ۵.۳ سند tosee.md */
+export type MessagePriority = 'normal' | 'important' | 'urgent' | 'emergency' | 'critical'
+
+/** رسید قانونی خواندن پیام — بخش ۵.۲ */
+export interface ReadReceipt {
+  userId: string
+  userName: string
+  seenAt: string
+  device?: string
+  ipAddress?: string
+}
+
 export interface ChatMessage {
   id: string
   roomId: string
@@ -11,13 +23,33 @@ export interface ChatMessage {
   attachmentType: string | null
   pinned: boolean
   createdAt: string
+  /** اولویت پیام — بخش ۵.۳ */
+  priority?: MessagePriority
+  /** تگ‌های پیام — بخش ۵.۴ */
+  tags?: string[]
+  /** رسیدهای قانونی خواندن — بخش ۵.۲ */
+  readReceipts?: ReadReceipt[]
 }
+
+/** نوع کانال رسمی — بخش ۵.۱ */
+export type ChannelKind =
+  | 'direct'       // چت شخصی
+  | 'shift'        // گروه شیفت
+  | 'station'      // روم ایستگاه
+  | 'announcement' // کانال اطلاعیه رسمی
+  | 'emergency'    // کانال اضطراری
+  | 'occ'          // کانال OCC
+  | 'training'     // کانال آموزش
+  | 'management'   // کانال مدیران
+  | 'general'
+  | 'operators'
+  | 'custom'
 
 export interface ChatRoom {
   id: string
   name: string
   type: 'direct' | 'group'
-  kind: string
+  kind: ChannelKind
   memberCount: number
   unreadCount: number
   lastMessage: {
@@ -39,6 +71,8 @@ interface ChatState {
   loadingRooms: boolean
   loadingMessages: boolean
   connected: boolean
+  /** حالت ارتباط اضطراری — بخش ۵.۵ */
+  emergencyMode: boolean
   loadRooms: (token: string) => Promise<void>
   selectRoom: (token: string, roomId: string) => Promise<void>
   sendMessage: (
@@ -46,11 +80,14 @@ interface ChatState {
     roomId: string,
     body: string,
     attachment?: { url: string; type: string },
+    priority?: MessagePriority,
   ) => Promise<boolean>
   openDirect: (token: string, userId: string) => Promise<string | null>
   markRead: (token: string, roomId: string) => Promise<void>
   toggleReaction: (token: string, roomId: string, messageId: string, emoji: string) => Promise<void>
   updateSettings: (token: string, roomId: string, settings: { readOnly: boolean; blockAttachments: boolean; maxLength: number }) => Promise<void>
+  acknowledgeMessage: (token: string, messageId: string) => Promise<void>
+  setEmergencyMode: (active: boolean) => void
   connect: (token: string) => void
   disconnect: () => void
   reset: () => void
@@ -75,6 +112,7 @@ export const useChatStore = create<ChatState>()(
       loadingRooms: false,
       loadingMessages: false,
       connected: false,
+      emergencyMode: false,
 
       async loadRooms(token) {
         set({ loadingRooms: true })
@@ -132,7 +170,7 @@ export const useChatStore = create<ChatState>()(
         await get().markRead(token, roomId)
       },
 
-      async sendMessage(token, roomId, body, attachment) {
+      async sendMessage(token, roomId, body, attachment, priority) {
         try {
           const res = await fetch(`/api/chat/rooms/${roomId}/messages`, {
             method: 'POST',
@@ -141,6 +179,7 @@ export const useChatStore = create<ChatState>()(
               body,
               attachmentUrl: attachment?.url,
               attachmentType: attachment?.type,
+              priority: priority ?? 'normal',
             }),
           })
           if (!res.ok) return false
@@ -224,6 +263,18 @@ export const useChatStore = create<ChatState>()(
         }
       },
 
+      async acknowledgeMessage(token, messageId) {
+        try {
+          await fetch(`/api/chat/messages/${messageId}/acknowledge`, {
+            method: 'POST',
+            headers: authHeaders(token),
+            body: JSON.stringify({}),
+          })
+        } catch {
+          // silent
+        }
+      },
+
       connect(token) {
         if (ws) return
 
@@ -266,6 +317,10 @@ export const useChatStore = create<ChatState>()(
         ws = socket
       },
 
+      setEmergencyMode(active) {
+        set({ emergencyMode: active })
+      },
+
       disconnect() {
         ws?.close()
         ws = null
@@ -280,6 +335,7 @@ export const useChatStore = create<ChatState>()(
           activeRoomId: null,
           messagesByRoom: {},
           connected: false,
+          emergencyMode: false,
         })
       },
     }),
@@ -350,6 +406,30 @@ function handleIncoming(
           [message.roomId]: settings,
         },
       }))
+    } catch {
+      // silent
+    }
+    return
+  }
+
+  if (message.attachmentType === 'event/receipt_updated') {
+    try {
+      const payload = JSON.parse(message.body || '{}') as {
+        messageId: string
+        receipts: any[]
+      }
+      set((s) => {
+        const existing = s.messagesByRoom[message.roomId] ?? []
+        const updated = existing.map((m) =>
+          m.id === payload.messageId ? { ...m, readReceipts: payload.receipts } : m
+        )
+        return {
+          messagesByRoom: {
+            ...s.messagesByRoom,
+            [message.roomId]: updated,
+          },
+        }
+      })
     } catch {
       // silent
     }

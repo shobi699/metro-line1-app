@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState, useMemo } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
-import { useChatStore } from '@/features/chat'
+import { useChatStore, type MessagePriority, type ChannelKind } from '@/features/chat'
 import { ChatRoomList } from '@/components/shared/chat-room-list'
 import { ChatThread } from '@/components/shared/chat-thread'
 import { MessageComposer } from '@/components/shared/message-composer'
@@ -30,15 +30,45 @@ import {
   Lock,
   Volume2,
   Activity,
-  MessageCircle
+  MessageCircle,
+  ShieldAlert,
+  Siren,
+  AlertTriangle,
+  Zap,
+  Tag,
+  Radio
 } from 'lucide-react'
+
+// ── نگاشت نوع کانال به برچسب فارسی — بخش ۵.۱
+const CHANNEL_KIND_META: Record<string, { label: string; icon: React.ElementType; color: string }> = {
+  direct:       { label: 'خصوصی',       icon: User,         color: 'text-foreground-muted' },
+  shift:        { label: 'گروه شیفت',   icon: Users,        color: 'text-accent' },
+  station:      { label: 'ایستگاه',     icon: Radio,        color: 'text-primary' },
+  announcement: { label: 'اطلاعیه رسمی',icon: Hash,         color: 'text-warning' },
+  emergency:    { label: 'اضطراری',     icon: ShieldAlert,  color: 'text-critical' },
+  occ:          { label: 'OCC',         icon: Zap,          color: 'text-blue-400' },
+  training:     { label: 'آموزش',       icon: Tag,          color: 'text-success' },
+  management:   { label: 'مدیران',      icon: Lock,         color: 'text-purple-400' },
+  general:      { label: 'عمومی',       icon: MessageCircle,color: 'text-foreground-muted' },
+  operators:    { label: 'راهبران',     icon: Users,        color: 'text-accent' },
+  custom:       { label: 'سفارشی',      icon: Hash,         color: 'text-foreground-muted' },
+}
+
+// ── سطح اولویت پیام — بخش ۵.۳
+const PRIORITY_META: Record<MessagePriority, { label: string; color: string; ringColor: string }> = {
+  normal:    { label: 'عادی',        color: 'text-foreground-muted', ringColor: '' },
+  important: { label: 'مهم',         color: 'text-warning',          ringColor: 'ring-warning/50' },
+  urgent:    { label: 'فوری',        color: 'text-orange-400',       ringColor: 'ring-orange-400/50' },
+  emergency: { label: 'اضطراری',     color: 'text-critical',         ringColor: 'ring-critical/50' },
+  critical:  { label: 'بحرانی 🔴',   color: 'text-red-500',          ringColor: 'ring-red-500/60' },
+}
 
 interface UserOption {
   id: string
   name: string
   nationalId: string
   role: { name: string; key: string }
-  customFields?: Record<string, any> | null
+  customFields?: Record<string, unknown> | null
 }
 
 function ChatView() {
@@ -74,6 +104,10 @@ function ChatView() {
   const [msgSearchQuery, setMsgSearchQuery] = useState('')
   const [showMsgSearch, setShowMsgSearch] = useState(false)
   const [showDetailsPanel, setShowDetailsPanel] = useState(false)
+  const [msgPriority, setMsgPriority] = useState<MessagePriority>('normal')
+  const [roomKindFilter, setRoomKindFilter] = useState<string>('all')
+  const emergencyMode = useChatStore((s) => s.emergencyMode)
+  const setEmergencyMode = useChatStore((s) => s.setEmergencyMode)
 
   // Modals
   const [isNewChatOpen, setIsNewChatOpen] = useState(false)
@@ -139,10 +173,9 @@ function ChatView() {
     setShowMsgSearch(false)
   }
 
-  // Send message handler
   async function handleSend(body: string, attachment?: { url: string; type: string }) {
     if (!accessToken || !activeRoomId) return false
-    return sendMessage(accessToken, activeRoomId, body, attachment)
+    return sendMessage(accessToken, activeRoomId, body, attachment, msgPriority)
   }
 
   // Pin/Unpin message handler
@@ -231,15 +264,20 @@ function ChatView() {
   const filteredRooms = useMemo(() => {
     return rooms.filter((r) => {
       const matchesSearch = r.name.toLowerCase().includes(roomSearchQuery.toLowerCase())
-      const matchesFilter =
+      const matchesType =
         roomFilterType === 'all'
           ? true
           : roomFilterType === 'direct'
           ? r.type === 'direct'
           : r.type === 'group'
-      return matchesSearch && matchesFilter
+      const matchesKind = roomKindFilter === 'all' ? true : r.kind === roomKindFilter
+      // In emergency mode, highlight only emergency/occ/management channels
+      if (emergencyMode && roomKindFilter === 'all') {
+        return matchesSearch && matchesType
+      }
+      return matchesSearch && matchesType && matchesKind
     })
-  }, [rooms, roomSearchQuery, roomFilterType])
+  }, [rooms, roomSearchQuery, roomFilterType, roomKindFilter, emergencyMode])
 
   // Filtered messages inside thread search
   const filteredMessages = useMemo(() => {
@@ -285,6 +323,22 @@ function ChatView() {
 
   return (
     <div className="flex min-h-0 flex-1 overflow-hidden bg-background">
+
+      {/* ── بنر حالت اضطراری — بخش ۵.۵ ── */}
+      {emergencyMode && (
+        <div className="fixed top-0 inset-x-0 z-50 bg-critical text-white flex items-center justify-between px-4 py-2 text-xs font-bold shadow-lg">
+          <div className="flex items-center gap-2">
+            <Siren className="size-4 animate-pulse" />
+            حالت ارتباط اضطراری فعال است — فقط پیام‌های OCC، مدیر و مسئول ایمنی اولویت دارند
+          </div>
+          <button
+            onClick={() => setEmergencyMode(false)}
+            className="opacity-70 hover:opacity-100 transition"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
       {/* ──────────────────────────────────────────────────────── */}
       {/* SIDEBAR: ROOM LIST */}
       {/* ──────────────────────────────────────────────────────── */}
@@ -340,7 +394,28 @@ function ChatView() {
             </Button>
           </div>
 
-          {/* Filters pills */}
+          {/* Channel Kind Filter pills — بخش ۵.۱ */}
+          <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-hide text-[10px]">
+            {['all', 'shift', 'station', 'announcement', 'emergency', 'occ', 'training', 'management'].map((kind) => {
+              const meta = kind === 'all' ? { label: 'همه', color: '' } : CHANNEL_KIND_META[kind]
+              return (
+                <button
+                  key={kind}
+                  onClick={() => setRoomKindFilter(kind)}
+                  className={cn(
+                    'shrink-0 px-2 py-0.5 rounded-full border transition-all font-semibold',
+                    roomKindFilter === kind
+                      ? 'bg-accent text-accent-foreground border-accent'
+                      : 'border-border/40 text-foreground-muted hover:border-border'
+                  )}
+                >
+                  {meta?.label || 'همه'}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Filter pills (type) */}
           <div className="flex gap-1.5 p-0.5 bg-neutral-950/30 rounded-lg border border-border-subtle/50 text-[11px]">
             <button
               onClick={() => setRoomFilterType('all')}
@@ -507,7 +582,42 @@ function ChatView() {
                   toggleReaction(accessToken, activeRoomId, messageId, emoji)
                 }
               }}
+              accessToken={accessToken ?? ''}
             />
+
+            {/* Priority Selector Bar — بخش ۵.۳ */}
+            <div className="shrink-0 px-4 py-1.5 border-t border-border/30 bg-surface-container-low/20 flex items-center gap-2">
+              <span className="text-[10px] text-foreground-muted">اولویت:</span>
+              <div className="flex gap-1">
+                {(Object.entries(PRIORITY_META) as [MessagePriority, typeof PRIORITY_META[MessagePriority]][]).map(([key, meta]) => (
+                  <button
+                    key={key}
+                    onClick={() => setMsgPriority(key)}
+                    className={cn(
+                      'text-[9px] px-2 py-0.5 rounded-full border transition-all font-bold cursor-pointer',
+                      msgPriority === key
+                        ? `bg-surface-container-high border-current ${meta.color} shadow ring-1 ${meta.ringColor}`
+                        : 'border-border/30 text-foreground-muted hover:border-border'
+                    )}
+                  >
+                    {meta.label}
+                  </button>
+                ))}
+              </div>
+              {isUserAdmin && (
+                <button
+                  onClick={() => setEmergencyMode(!emergencyMode)}
+                  className={cn(
+                    'mr-auto text-[9px] px-2 py-0.5 rounded-full border font-bold cursor-pointer transition-all',
+                    emergencyMode
+                      ? 'bg-critical/20 border-critical text-critical'
+                      : 'border-border/30 text-foreground-muted hover:border-critical hover:text-critical'
+                  )}
+                >
+                  {emergencyMode ? '🚨 حالت بحران فعال' : 'فعال‌سازی حالت بحران'}
+                </button>
+              )}
+            </div>
 
             {/* Composer */}
             <MessageComposer
