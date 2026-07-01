@@ -4,7 +4,7 @@ import {
   requireRole,
   authErrorResponse,
 } from '@/server/rbac/guard'
-import { commitRosterFile } from '@/server/modules/roster/service'
+import { publishRosterVersion } from '@/server/modules/roster/service'
 
 export async function POST(
   request: Request,
@@ -19,7 +19,7 @@ export async function POST(
   const { id: rosterFileId } = await params
 
   try {
-    const result = await commitRosterFile(rosterFileId, user.id)
+    const result = await publishRosterVersion(rosterFileId, user.id)
 
     return NextResponse.json({
       message: 'لوحه شیفت با موفقیت تأیید و در سیستم منتشر گردید.',
