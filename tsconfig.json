@@ -30,5 +30,13 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "mobile"]
+  "exclude": [
+    "node_modules",
+    "mobile",
+    "**/mobile",
+    "metro-line1-app",
+    "**/metro-line1-app",
+    "metro-line11-app",
+    "stitch_metro_line_1_super_app"
+  ]
 }
