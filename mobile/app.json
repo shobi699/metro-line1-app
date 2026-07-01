@@ -11,6 +11,11 @@
     },
     "android": {
       "package": "com.metro.line1"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "fc31b1a7-577c-4709-b70f-ff9f2c8dd541"
+      }
     }
   }
 }

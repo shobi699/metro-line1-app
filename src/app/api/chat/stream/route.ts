@@ -60,10 +60,21 @@ export async function GET(request: Request) {
 
       send(`event: ready\ndata: ${JSON.stringify({ rooms: roomIds.length })}\n\n`)
 
+      // شنود پیام‌های لایو روی باس نودجی‌اس و ارسال آنی به کلاینت
+      const onMessage = (event: any) => {
+        if (roomIds.includes(event.roomId)) {
+          send(`event: message\ndata: ${JSON.stringify(event.message)}\n\n`)
+        }
+      }
+
+      const { chatBus } = require('@/server/realtime/bus')
+      chatBus.on('message', onMessage)
+
       const heartbeat = setInterval(() => send(': ping\n\n'), 25_000)
 
       request.signal.addEventListener('abort', () => {
         clearInterval(heartbeat)
+        chatBus.off('message', onMessage)
         try {
           controller.close()
         } catch {

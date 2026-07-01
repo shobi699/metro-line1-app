@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { API_URL } from '../shared/config'
+import { useAuthStore } from './auth'
 
 export interface ChatMessage {
   id: string
@@ -166,6 +167,32 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   async sendMessage(token, roomId, body, attachment) {
+    const tempId = `temp-${Date.now()}`
+    const currentUser = useAuthStore.getState().user
+
+    // پیام خوش‌بینانه (Optimistic UI) برای نشان دادن آنی پیام در چت
+    const optimisticMsg: ChatMessage = {
+      id: tempId,
+      roomId,
+      senderId: currentUser?.id ?? 'current-user-id',
+      senderName: currentUser?.name ?? 'من',
+      body: body || null,
+      attachmentUrl: attachment?.url || null,
+      attachmentType: attachment?.type || null,
+      pinned: false,
+      createdAt: new Date().toISOString(),
+    }
+
+    set((s) => {
+      const existing = s.messagesByRoom[roomId] ?? []
+      return {
+        messagesByRoom: {
+          ...s.messagesByRoom,
+          [roomId]: [...existing, optimisticMsg],
+        },
+      }
+    })
+
     try {
       const res = await fetch(`${API_URL}/chat/rooms/${roomId}/messages`, {
         method: 'POST',
@@ -179,14 +206,25 @@ export const useChatStore = create<ChatState>((set, get) => ({
           attachmentType: attachment?.type,
         }),
       })
-      if (!res.ok) return false
+
+      if (!res.ok) {
+        // حذف پیام خوش‌بینانه در صورت بروز خطا
+        set((s) => ({
+          messagesByRoom: {
+            ...s.messagesByRoom,
+            [roomId]: (s.messagesByRoom[roomId] ?? []).filter((m) => m.id !== tempId),
+          },
+        }))
+        return false
+      }
+
       const data = await res.json()
-      
       const newMsg = data.data as ChatMessage
+      
       set((s) => {
         const existing = s.messagesByRoom[roomId] ?? []
-        if (existing.some((m) => m.id === newMsg.id)) return {}
-        const updated = [...existing, newMsg]
+        // جایگزینی پیام خوش‌بینانه با پیام رسمی ثبت شده در سرور
+        const updated = existing.map((m) => (m.id === tempId ? newMsg : m))
         AsyncStorage.setItem(`@chat_messages_${roomId}`, JSON.stringify(updated)).catch((err) => {
           console.error('Failed to write message cache:', err)
         })
@@ -199,6 +237,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
       })
       return true
     } catch {
+      // حذف پیام خوش‌بینانه در صورت بروز خطا
+      set((s) => ({
+        messagesByRoom: {
+          ...s.messagesByRoom,
+          [roomId]: (s.messagesByRoom[roomId] ?? []).filter((m) => m.id !== tempId),
+        },
+      }))
       return false
     }
   },
@@ -328,7 +373,27 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
 
     poll()
-    activeInterval = setInterval(poll, 4000)
+    
+    // شبیه‌ساز پولینگ پویا بر اساس باز بودن چت‌روم (سرعت فرستادن و دریافت به ۱.۵ ثانیه افزایش می‌یابد)
+    let lastActiveRoomId = get().activeRoomId
+    let intervalTime = lastActiveRoomId ? 1500 : 4000
+
+    const resetInterval = () => {
+      if (activeInterval) {
+        clearInterval(activeInterval)
+      }
+      activeInterval = setInterval(async () => {
+        await poll()
+        const currentActiveRoomId = get().activeRoomId
+        if (currentActiveRoomId !== lastActiveRoomId) {
+          lastActiveRoomId = currentActiveRoomId
+          intervalTime = currentActiveRoomId ? 1500 : 4000
+          resetInterval()
+        }
+      }, intervalTime)
+    }
+
+    resetInterval()
   },
 
   disconnect() {

@@ -95,6 +95,7 @@ interface ChatState {
 
 // نگه‌داری اتصال WebSocket خارج از state تا از سریال‌سازی/رندر مجدد جدا بماند.
 let ws: WebSocket | null = null
+let eventSource: EventSource | null = null
 
 function authHeaders(token: string): HeadersInit {
   return { Authorization: `Bearer ${token}` }
@@ -276,45 +277,71 @@ export const useChatStore = create<ChatState>()(
       },
 
       connect(token) {
-        if (ws) return
+        if (ws || eventSource) return
 
-        // Try WebSocket first (Cloudflare Durable Objects)
-        const wsUrl = `/api/chat/stream?token=${encodeURIComponent(token)}`
+        const sseUrl = `/api/chat/stream?token=${encodeURIComponent(token)}`
+        const es = new EventSource(sseUrl)
 
-        // Use standard WebSocket — the endpoint will upgrade or return SSE fallback
-        const socket = new WebSocket(wsUrl.replace(/^http/, 'ws'))
+        es.onopen = () => set({ connected: true })
 
-        socket.onopen = () => set({ connected: true })
-
-        socket.onmessage = (ev) => {
+        es.addEventListener('message', (ev) => {
           try {
-            const payload = JSON.parse(ev.data) as {
-              type: string
-              roomId: string
-              data: ChatMessage
-            }
-            if (payload.type === 'message') {
-              handleIncoming(set, get, payload.data)
-            }
-          } catch {
-            // نادیده گرفتن payload نامعتبر
+            const data = JSON.parse(ev.data) as ChatMessage
+            handleIncoming(set, get, data)
+          } catch (e) {
+            // silent
+          }
+        })
+
+        es.onerror = () => {
+          set({ connected: false })
+          // در صورتی که اتصال EventSource قطع شد یا سرور Cloudflare بود، به WebSocket سوئیچ کن
+          if (es.readyState === EventSource.CLOSED) {
+            es.close()
+            eventSource = null
+            tryWebSocket(token)
           }
         }
 
-        socket.onerror = () => {
-          set({ connected: false })
-        }
+        eventSource = es
 
-        socket.onclose = () => {
-          set({ connected: false })
-          ws = null
-          // Auto-reconnect after 3 seconds
-          setTimeout(() => {
-            if (!ws) get().connect(token)
-          }, 3000)
-        }
+        function tryWebSocket(t: string) {
+          if (ws) return
+          const wsUrl = `/api/chat/stream?token=${encodeURIComponent(t)}`
+          const socket = new WebSocket(wsUrl.replace(/^http/, 'ws'))
 
-        ws = socket
+          socket.onopen = () => set({ connected: true })
+
+          socket.onmessage = (ev) => {
+            try {
+              const payload = JSON.parse(ev.data) as {
+                type: string
+                roomId: string
+                data: ChatMessage
+              }
+              if (payload.type === 'message') {
+                handleIncoming(set, get, payload.data)
+              }
+            } catch {
+              // silent
+            }
+          }
+
+          socket.onerror = () => {
+            set({ connected: false })
+          }
+
+          socket.onclose = () => {
+            set({ connected: false })
+            ws = null
+            // تلاش مجدد بعد از ۳ ثانیه
+            setTimeout(() => {
+              if (!ws && !eventSource) get().connect(t)
+            }, 3000)
+          }
+
+          ws = socket
+        }
       },
 
       setEmergencyMode(active) {
@@ -324,12 +351,16 @@ export const useChatStore = create<ChatState>()(
       disconnect() {
         ws?.close()
         ws = null
+        eventSource?.close()
+        eventSource = null
         set({ connected: false })
       },
 
       reset() {
         ws?.close()
         ws = null
+        eventSource?.close()
+        eventSource = null
         set({
           rooms: [],
           activeRoomId: null,
