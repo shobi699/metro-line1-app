@@ -600,3 +600,7 @@ export async function publishRosterVersion(rosterVersionId: string, publisherId:
     return { success: true }
   })
 }
+
+export async function commitRosterFile(rosterVersionId: string, publisherId: string) {
+  return publishRosterVersion(rosterVersionId, publisherId)
+}
