@@ -12,6 +12,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const user = useAuthStore((s) => s.user)
   const router = useRouter()
+  const [hydrated, setHydrated] = useState(false)
 
   const [config, setConfig] = useState<{
     maintenanceMode?: boolean
@@ -19,7 +20,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   } | null>(null)
   const [showNotice, setShowNotice] = useState(true)
 
+  // منتظر ماندن برای لود شدن وضعیت احراز هویت از LocalStorage
   useEffect(() => {
+    if (useAuthStore.persist.hasHydrated()) {
+      setHydrated(true)
+    } else {
+      const unsub = useAuthStore.persist.onFinishHydration(() => {
+        setHydrated(true)
+      })
+      return () => unsub()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!hydrated) return
+
     if (!isAuthenticated) {
       router.push('/login')
       return
@@ -35,7 +50,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       } catch {}
     }
     void fetchConfig()
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, router, hydrated])
+
+  if (!hydrated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background" dir="rtl">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent"></div>
+          <span className="text-xs text-foreground-muted">در حال بازخوانی نشست کاربری...</span>
+        </div>
+      </div>
+    )
+  }
 
   if (!isAuthenticated) return null
 
@@ -97,9 +123,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           پرش به محتوا
         </a>
         <Sidebar />
-        <div className="flex min-h-screen flex-1 flex-col">
+        <div className="flex min-h-screen flex-1 flex-col min-w-0">
           <MobileHeader />
-          <main id="main-content" className="flex flex-1 flex-col pb-14 md:pb-0">
+          <main id="main-content" className="flex flex-1 flex-col pb-14 md:pb-0 min-w-0 w-full">
             <BulletinGuard>{children}</BulletinGuard>
           </main>
         </div>

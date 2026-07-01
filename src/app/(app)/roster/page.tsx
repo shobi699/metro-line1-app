@@ -740,7 +740,7 @@ export default function FullRosterPage() {
   const filteredRowNos = Array.from(new Set(filteredTrips.map(t => t.rowNo))).sort((a, b) => a - b)
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6 max-w-7xl mx-auto w-full text-right" dir="rtl">
+    <div className="flex flex-1 flex-col gap-6 p-6 max-w-7xl mx-auto w-full min-w-0 text-right" dir="rtl">
       
       {/* Header section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-border pb-4 gap-4">

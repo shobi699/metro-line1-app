@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
@@ -41,6 +42,7 @@ import {
   Clock,
   TrendingUp,
   Vote,
+  Menu,
 } from 'lucide-react'
 
 interface NavItem {
@@ -215,7 +217,7 @@ const roleLabels: Record<string, string> = {
   user: 'راهبر / پرسنل',
 }
 
-export function Sidebar() {
+export function SidebarContent() {
   const pathname = usePathname()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
@@ -249,7 +251,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="hidden w-64 shrink-0 border-s border-border-subtle bg-surface-container-low lg:flex lg:flex-col" dir="rtl">
+    <div className="flex flex-col h-full w-full">
       {/* User Profile Section */}
       <div className="flex flex-col items-center gap-3 border-b border-border-subtle px-5 py-5">
         <div className="flex size-16 items-center justify-center rounded-full border-2 border-accent bg-surface-container-high overflow-hidden">
@@ -375,19 +377,53 @@ export function Sidebar() {
           </Button>
         </div>
       </div>
+    </div>
+  )
+}
+
+export function Sidebar() {
+  return (
+    <aside className="hidden w-64 shrink-0 border-s border-border-subtle bg-surface-container-low lg:flex lg:flex-col" dir="rtl">
+      <SidebarContent />
     </aside>
   )
 }
 
 export function MobileHeader() {
+  const pathname = usePathname()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
+  const [open, setOpen] = useState(false)
+
+  // بستن سایدبار پس از تغییر مسیر
+  useEffect(() => {
+    setOpen(false)
+  }, [pathname])
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border-subtle bg-surface-container px-4 lg:hidden">
-      <span className="font-headline-md text-headline-md font-bold text-accent">
-        مترو خط ۱
-      </span>
+    <header className="flex h-16 items-center justify-between border-b border-border-subtle bg-surface-container px-4 lg:hidden" dir="rtl">
+      <div className="flex items-center gap-2">
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="active:scale-95 transition-all text-foreground-muted hover:text-foreground"
+                aria-label="منوی کاربری"
+              >
+                <Menu className="size-5" />
+              </Button>
+            }
+          />
+          <SheetContent side="right" className="w-64 p-0 bg-surface-container-low border-s border-border-subtle flex flex-col h-full">
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+        <span className="font-headline-md text-headline-md font-bold text-accent">
+          مترو خط ۱
+        </span>
+      </div>
       <div className="flex items-center gap-2">
         <Link
           href="/notifications"
