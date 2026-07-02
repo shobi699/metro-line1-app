@@ -936,6 +936,17 @@ async function seedDefaultSettings(prisma: PrismaClient) {
         category: 'mobile',
         options: JSON.stringify(['dark', 'light', 'system']),
         isEnabled: true,
+      },
+      {
+        key: 'ai.searchPriority',
+        label: 'اولویت سناریوی جستجو',
+        description: 'تعیین اولویت پاسخ‌دهی به پرسنل: جستجو در دیتابیس محلی (آیین‌نامه) یا پردازش با هوش مصنوعی',
+        type: 'select',
+        value: JSON.stringify('database'),
+        defaultValue: JSON.stringify('database'),
+        category: 'general',
+        options: JSON.stringify(['database', 'ai']),
+        isEnabled: true,
       }
     ]
   })
