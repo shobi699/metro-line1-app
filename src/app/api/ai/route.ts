@@ -86,6 +86,57 @@ const RULEBOOK_DATABASE: RulebookItem[] = [
   }
 ]
 
+function escapeRegExp(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+interface Article {
+  title: string
+  body: string
+  category: string | null
+  slug: string
+  tags: string | null
+}
+
+function rankArticles(articles: Article[], keywords: string[]) {
+  return articles.map(art => {
+    let score = 0;
+    const titleLower = art.title.toLowerCase();
+    const bodyLower = art.body.toLowerCase();
+    const tagsLower = (art.tags || '').toLowerCase();
+    
+    for (const kw of keywords) {
+      const kwLower = kw.toLowerCase();
+      
+      // Title match: high weight
+      if (titleLower.includes(kwLower)) {
+        score += 15;
+      }
+      
+      // Tag match: medium weight
+      if (tagsLower.includes(kwLower)) {
+        score += 8;
+      }
+      
+      // Body occurrences count: 1 point per match
+      try {
+        const escaped = kwLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const matches = bodyLower.match(new RegExp(escaped, 'g'));
+        if (matches) {
+          score += matches.length;
+        }
+      } catch (e) {
+        if (bodyLower.includes(kwLower)) {
+          score += 1;
+        }
+      }
+    }
+    
+    return { ...art, score };
+  })
+  .filter(art => art.score > 0)
+  .sort((a, b) => b.score - a.score);
+}
 
 export async function POST(request: Request) {
   const user = await getSessionUser(request)
@@ -258,7 +309,7 @@ export async function POST(request: Request) {
         })
       }
 
-      // ج. جستجو در پایگاه دانش دیتابیس (Knowledge Base) و بازگرداندن بهترین مقاله به صورت مستقیم
+      // ج. جستجو در پایگاه دانش دیتابیس (Knowledge Base)
       const cleanPrompt = rawPrompt.replace(/[?؟.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
       const stopWords = ['در', 'به', 'با', 'از', 'تا', 'چقدر', 'است', 'چیست', 'کردن', 'چگونه', 'و', 'یا', 'یک', 'این', 'آن', 'ها', 'های', 'را', 'که', 'چه', 'چند', 'کدام', 'من', 'شما', 'لطفا', 'لطفاً']
       const keywords = cleanPrompt
@@ -272,56 +323,65 @@ export async function POST(request: Request) {
           { tags: { contains: kw } }
         ])
 
-        const knowledgeArticles = await prisma.knowledgeArticle.findMany({
+        const rawArticles = await prisma.knowledgeArticle.findMany({
           where: { OR: searchConditions },
-          take: 1,
+          take: 15,
           select: {
             title: true,
             body: true,
             category: true,
             slug: true,
+            tags: true,
           },
         })
 
-        if (knowledgeArticles.length > 0) {
-          const article = knowledgeArticles[0]
-          const dbReply = `**[پاسخ مستقیم دیتابیس: ${article.title}]**\n\n${article.body}`
+        const ranked = rankArticles(rawArticles, keywords)
 
-          await prisma.aiMessage.create({
-            data: { conversationId, role: 'user', text: rawPrompt }
-          })
-          const aiMsg = await prisma.aiMessage.create({
-            data: {
-              conversationId,
-              role: 'model',
-              text: dbReply,
-              source: 'knowledge',
-              confidence: 100,
-              handbookSection: article.category ?? 'دانش‌نامه محلی'
-            }
-          })
+        if (ranked.length > 0) {
+          // بررسی اینکه آیا پروایدر فعال و واقعی هوش مصنوعی وجود دارد
+          const activeProvider = await prisma.aiProvider.findFirst({ where: { isActive: true } })
+          const hasRealAI = activeProvider && (activeProvider.providerType === 'ollama' || (activeProvider.apiKey && activeProvider.apiKey !== 'fake-key'))
 
-          await prisma.auditLog.create({
-            data: {
-              actorId: user.id,
-              entity: 'AI_QUERY',
-              entityId: 'knowledge',
-              action: 'create',
-              after: { prompt: rawPrompt, type: 'KNOWLEDGE_DIRECT' },
-            }
-          }).catch(() => {})
+          if (!hasRealAI) {
+            const article = ranked[0]
+            const dbReply = `**[پاسخ مستقیم دیتابیس (بهترین تطبیق): ${article.title}]**\n\n${article.body}`
 
-          return NextResponse.json({
-            data: {
-              id: aiMsg.id,
-              reply: dbReply,
-              source: 'knowledge',
-              matched: true,
-              confidence: 100,
-              handbookSection: article.category ?? 'دانش‌نامه محلی',
-              conversationId
-            }
-          })
+            await prisma.aiMessage.create({
+              data: { conversationId, role: 'user', text: rawPrompt }
+            })
+            const aiMsg = await prisma.aiMessage.create({
+              data: {
+                conversationId,
+                role: 'model',
+                text: dbReply,
+                source: 'knowledge',
+                confidence: 100,
+                handbookSection: article.category ?? 'دانش‌نامه محلی'
+              }
+            })
+
+            await prisma.auditLog.create({
+              data: {
+                actorId: user.id,
+                entity: 'AI_QUERY',
+                entityId: 'knowledge',
+                action: 'create',
+                after: { prompt: rawPrompt, type: 'KNOWLEDGE_DIRECT' },
+              }
+            }).catch(() => {})
+
+            return NextResponse.json({
+              data: {
+                id: aiMsg.id,
+                reply: dbReply,
+                source: 'knowledge',
+                matched: true,
+                confidence: 100,
+                handbookSection: article.category ?? 'دانش‌نامه محلی',
+                conversationId
+              }
+            })
+          }
         }
       }
     } else {
@@ -390,6 +450,8 @@ export async function POST(request: Request) {
       .filter(w => w.length > 1 && !stopWords.includes(w))
 
     let knowledgeContext = ''
+    let matchedArticles: Article[] = []
+
     if (keywords.length > 0) {
       const searchConditions = keywords.flatMap(kw => [
         { title: { contains: kw } },
@@ -397,20 +459,24 @@ export async function POST(request: Request) {
         { tags: { contains: kw } }
       ])
 
-      const knowledgeArticles = await prisma.knowledgeArticle.findMany({
+      const rawArticles = await prisma.knowledgeArticle.findMany({
         where: { OR: searchConditions },
-        take: 3,
+        take: 15,
         select: {
           title: true,
           body: true,
           category: true,
           slug: true,
+          tags: true,
         },
       })
 
-      if (knowledgeArticles.length > 0) {
-        knowledgeContext = knowledgeArticles.map((a, i) =>
-          `${i + 1}. **${a.title}** (${a.category ?? 'عمومی'})\n${a.body.substring(0, 500)}`
+      matchedArticles = rankArticles(rawArticles, keywords)
+
+      if (matchedArticles.length > 0) {
+        // استفاده از ۳ مقاله با بالاترین میزان تطابق به عنوان متن زمینه
+        knowledgeContext = matchedArticles.slice(0, 3).map((a, i) =>
+          `${i + 1}. **${a.title}** (${a.category ?? 'عمومی'})\n${a.body.substring(0, 800)}`
         ).join('\n\n')
       }
     }
@@ -443,60 +509,109 @@ ${knowledgeContext}
 ${rawPrompt}
 `
 
-    // ۶. ارسال به AI Gateway
-    const aiResponse = await AIGateway.routeRequest(promptForAI)
+    try {
+      // ۶. ارسال به AI Gateway
+      const aiResponse = await AIGateway.routeRequest(promptForAI)
 
-    // ۷. ذخیره پاسخ جدید در Semantic Cache
-    if (questionEmbedding.length > 0) {
-      await prisma.aiKnowledgeCache.create({
+      // ۷. ذخیره پاسخ جدید در Semantic Cache
+      if (questionEmbedding.length > 0) {
+        await prisma.aiKnowledgeCache.create({
+          data: {
+            questionText: rawPrompt,
+            questionEmbedding: JSON.stringify(questionEmbedding),
+            answerText: aiResponse.text,
+            source: 'ai_generated',
+            providerUsed: aiResponse.usedProvider,
+            confidenceScore: aiResponse.confidence || 90
+          }
+        }).catch(() => {})
+      }
+
+      // ذخیره در تاریخچه مکالمه
+      await prisma.aiMessage.create({
+        data: { conversationId, role: 'user', text: rawPrompt }
+      })
+      const aiMsg = await prisma.aiMessage.create({
         data: {
-          questionText: rawPrompt,
-          questionEmbedding: JSON.stringify(questionEmbedding),
-          answerText: aiResponse.text,
-          source: 'ai_generated',
-          providerUsed: aiResponse.usedProvider,
-          confidenceScore: aiResponse.confidence || 90
+          conversationId,
+          role: 'model',
+          text: aiResponse.text,
+          source: aiResponse.usedProvider,
+          confidence: aiResponse.confidence || 90,
+          handbookSection: knowledgeContext ? 'دانش‌نامه محلی پرسنل' : 'هوش مصنوعی'
         }
       })
+
+      // لاگ سؤالات
+      await prisma.auditLog.create({
+        data: {
+          actorId: user.id,
+          entity: 'AI_QUERY',
+          entityId: aiResponse.usedProvider,
+          action: 'create',
+          after: { prompt: rawPrompt, source: aiResponse.usedProvider, hasContext: !!knowledgeContext },
+        }
+      }).catch(() => {})
+
+      return NextResponse.json({
+        data: {
+          id: aiMsg.id,
+          reply: aiResponse.text,
+          source: aiResponse.usedProvider,
+          matched: true,
+          confidence: aiResponse.confidence || 90,
+          handbookSection: knowledgeContext ? 'دانش‌نامه محلی پرسنل' : 'هوش مصنوعی',
+          conversationId
+        }
+      })
+    } catch (aiError: any) {
+      console.warn('AI Gateway call failed. Attempting database fallback:', aiError)
+
+      // ۸. پیاده‌سازی مکانیزم زاپاس دیتابیس (Database Fallback) در صورت شکست هوش مصنوعی
+      if (matchedArticles.length > 0) {
+        const article = matchedArticles[0]
+        const dbReply = `⚠️ **[پاسخ از پایگاه دانش دیتابیس (حالت زاپاس): ${article.title}]**\n\n${article.body}`
+
+        await prisma.aiMessage.create({
+          data: { conversationId, role: 'user', text: rawPrompt }
+        })
+        const aiMsg = await prisma.aiMessage.create({
+          data: {
+            conversationId,
+            role: 'model',
+            text: dbReply,
+            source: 'knowledge',
+            confidence: 90,
+            handbookSection: article.category ?? 'دانش‌نامه محلی'
+          }
+        })
+
+        await prisma.auditLog.create({
+          data: {
+            actorId: user.id,
+            entity: 'AI_QUERY',
+            entityId: 'knowledge_fallback',
+            action: 'create',
+            after: { prompt: rawPrompt, type: 'KNOWLEDGE_FALLBACK', error: aiError.message },
+          }
+        }).catch(() => {})
+
+        return NextResponse.json({
+          data: {
+            id: aiMsg.id,
+            reply: dbReply,
+            source: 'knowledge',
+            matched: true,
+            confidence: 90,
+            handbookSection: article.category ?? 'دانش‌نامه محلی',
+            conversationId
+          }
+        })
+      }
+
+      // در صورتی که دیتابیس هم هیچ تطبیقی پیدا نکند، خطای اصلی را باز می‌گردانیم
+      throw aiError
     }
-
-    // ذخیره در تاریخچه مکالمه
-    await prisma.aiMessage.create({
-      data: { conversationId, role: 'user', text: rawPrompt }
-    })
-    const aiMsg = await prisma.aiMessage.create({
-      data: {
-        conversationId,
-        role: 'model',
-        text: aiResponse.text,
-        source: aiResponse.usedProvider,
-        confidence: aiResponse.confidence || 90,
-        handbookSection: knowledgeContext ? 'دانش‌نامه محلی پرسنل' : 'هوش مصنوعی'
-      }
-    })
-
-    // لاگ سؤالات
-    await prisma.auditLog.create({
-      data: {
-        actorId: user.id,
-        entity: 'AI_QUERY',
-        entityId: aiResponse.usedProvider,
-        action: 'create',
-        after: { prompt: rawPrompt, source: aiResponse.usedProvider, hasContext: !!knowledgeContext },
-      }
-    }).catch(() => {})
-
-    return NextResponse.json({
-      data: {
-        id: aiMsg.id,
-        reply: aiResponse.text,
-        source: aiResponse.usedProvider,
-        matched: true,
-        confidence: aiResponse.confidence || 90,
-        handbookSection: knowledgeContext ? 'دانش‌نامه محلی پرسنل' : 'هوش مصنوعی',
-        conversationId
-      }
-    })
 
   } catch (err: any) {
     console.error('AI route error:', err)
