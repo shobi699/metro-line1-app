@@ -52,6 +52,7 @@ export function HomeScreen({ navigation }: any) {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [showMoreModal, setShowMoreModal] = useState(false)
+  const [showHamburgerMenu, setShowHamburgerMenu] = useState(false)
 
   // Fetch logic omitted for brevity in design, keeping identical logic:
   async function loadData() {
@@ -274,9 +275,143 @@ export function HomeScreen({ navigation }: any) {
       color: theme.colors.onSurface,
       textAlign: 'center',
     },
+    drawerOverlay: {
+      flex: 1,
+      flexDirection: 'row-reverse',
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    },
+    drawerBackgroundDismiss: {
+      flex: 1,
+    },
+    drawerContent: {
+      width: Dimensions.get('window').width * 0.78,
+      backgroundColor: theme.colors.background,
+      height: '100%',
+      paddingTop: 40,
+      paddingBottom: 20,
+      paddingHorizontal: 16,
+      borderLeftWidth: 1,
+      borderLeftColor: theme.colors.surfaceVariant,
+      justifyContent: 'space-between',
+    },
+    drawerProfileHeader: {
+      flexDirection: 'row-reverse',
+      alignItems: 'center',
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.surfaceVariant,
+      paddingBottom: 16,
+      marginBottom: 16,
+    },
+    drawerAvatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      borderWidth: 2,
+      borderColor: theme.colors.primary,
+    },
+    drawerProfileInfo: {
+      flex: 1,
+      marginRight: 12,
+      alignItems: 'flex-start',
+    },
+    drawerUserName: {
+      fontFamily: theme.typography.screenTitle.fontFamily,
+      fontSize: 14,
+      fontWeight: '700',
+      color: theme.colors.onSurface,
+      textAlign: 'right',
+    },
+    drawerUserRole: {
+      fontFamily: theme.typography.captionSm.fontFamily,
+      fontSize: 11,
+      color: theme.colors.primary,
+      fontWeight: '600',
+      marginTop: 2,
+      textAlign: 'right',
+    },
+    drawerUserPhone: {
+      fontFamily: theme.typography.captionSm.fontFamily,
+      fontSize: 10,
+      color: theme.colors.secondary,
+      marginTop: 1,
+      textAlign: 'right',
+    },
+    drawerCloseBtn: {
+      padding: 6,
+      borderRadius: 9999,
+      backgroundColor: theme.colors.surfaceContainer,
+    },
+    drawerScroll: {
+      flexGrow: 1,
+    },
+    drawerList: {
+      gap: 4,
+    },
+    drawerItem: {
+      flexDirection: 'row-reverse',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 8,
+      borderRadius: theme.borderRadius.md,
+      backgroundColor: 'transparent',
+    },
+    drawerItemRight: {
+      flexDirection: 'row-reverse',
+      alignItems: 'center',
+      gap: 12,
+    },
+    drawerItemIconContainer: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    drawerItemText: {
+      fontFamily: theme.typography.bodyMd.fontFamily,
+      fontSize: 13,
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+    },
+    drawerFooter: {
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.surfaceVariant,
+      paddingTop: 12,
+      alignItems: 'center',
+    },
+    drawerFooterText: {
+      fontFamily: theme.typography.captionSm.fontFamily,
+      fontSize: 10,
+      color: theme.colors.secondary,
+    },
+    drawerVersionText: {
+      fontFamily: theme.typography.captionSm.fontFamily,
+      fontSize: 9,
+      color: theme.colors.secondary,
+      opacity: 0.7,
+      marginTop: 2,
+    },
   })
 
   const widgets = useUIBuilderStore((s) => s.widgets)
+  const menuItems = useUIBuilderStore((s) => s.menuItems)
+
+  const mapMenuIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'home': return 'home'
+      case 'calendar': return 'calendar-today'
+      case 'chat': return 'chat'
+      case 'tickets': return 'report-problem'
+      case 'profile': return 'person'
+      case 'announcements': return 'description'
+      case 'radio': return 'radio'
+      case 'checklist': return 'done-all'
+      case 'settings': return 'settings'
+      case 'info': return 'info'
+      default: return 'menu-open'
+    }
+  }
 
   const componentsToRender = widgets
     .filter(w => w.isVisible)
@@ -387,14 +522,17 @@ export function HomeScreen({ navigation }: any) {
             </View>
           </View>
           <View style={styles.headerRight}>
-            <View style={styles.syncBadge}>
-              <MaterialIcons name="cloud-done" size={12} color="#166534" />
-              <Text style={styles.syncText}>همگام‌سازی شده</Text>
-            </View>
+            <TouchableOpacity onPress={() => setShowHamburgerMenu(true)} style={{ padding: 4, marginRight: 6 }}>
+              <MaterialIcons name="menu" size={24} color={theme.colors.onSurfaceVariant} />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.notificationBtn}>
               <MaterialIcons name="notifications" size={20} color={theme.colors.onSurfaceVariant} />
               <View style={styles.notificationDot} />
             </TouchableOpacity>
+            <View style={styles.syncBadge}>
+              <MaterialIcons name="cloud-done" size={12} color="#166534" />
+              <Text style={styles.syncText}>همگام‌سازی شده</Text>
+            </View>
           </View>
         </View>
 
@@ -524,6 +662,72 @@ export function HomeScreen({ navigation }: any) {
                 ))}
               </View>
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Hamburger Drawer Modal */}
+      <Modal
+        visible={showHamburgerMenu}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowHamburgerMenu(false)}
+      >
+        <View style={styles.drawerOverlay}>
+          <TouchableOpacity 
+            style={styles.drawerBackgroundDismiss} 
+            activeOpacity={1} 
+            onPress={() => setShowHamburgerMenu(false)} 
+          />
+          <View style={styles.drawerContent}>
+            <View>
+              {/* Drawer Header Profile */}
+              <View style={styles.drawerProfileHeader}>
+                <Image 
+                  source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB3-83sYQfLES0gmvDO5q2w28Raab5S1KepqfdSRMpxZnef78ytjqK2n-NdvYbNjQS_ca544VkccdbSdSpqgoRryJucwTRlS5GxTmUFbVKeezJ1QkeNGF0xe6zNAU4TXydoyFGGOhEl5FdxzcPCCHoPZT84FY-8OQlEniA0nZHCon-Db2rkNuNlkkufryldM1drCGtAjfTeaYeTT-yhX3Cp1zI12skUoqT9lhAWWGomB57lbAnzwP0gimpOjbQlw6053Iws6FeBdLtL' }} 
+                  style={styles.drawerAvatar} 
+                />
+                <View style={styles.drawerProfileInfo}>
+                  <Text style={styles.drawerUserName}>{user?.name || 'کاربر سیستم'}</Text>
+                  <Text style={styles.drawerUserRole}>{user?.roleKey === 'admin' ? 'مدیر حرکت (ادمین)' : user?.roleKey === 'super_admin' ? 'مدیر کل سیستم' : 'راهبر قطار'}</Text>
+                  <Text style={styles.drawerUserPhone}>{user?.phone || ''}</Text>
+                </View>
+                <TouchableOpacity onPress={() => setShowHamburgerMenu(false)} style={styles.drawerCloseBtn}>
+                  <MaterialIcons name="close" size={20} color={theme.colors.onSurface} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Drawer Menu List */}
+              <ScrollView contentContainerStyle={styles.drawerScroll} showsVerticalScrollIndicator={false}>
+                <View style={styles.drawerList}>
+                  {menuItems.filter(item => item.isVisible).map((item, i) => (
+                    <TouchableOpacity 
+                      key={i} 
+                      style={styles.drawerItem} 
+                      onPress={() => {
+                        setShowHamburgerMenu(false)
+                        handleDynamicNavigation(navigation, item.route)
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.drawerItemRight}>
+                        <View style={[styles.drawerItemIconContainer, { backgroundColor: theme.colors.surfaceContainerHighest }]}>
+                          <MaterialIcons name={mapMenuIcon(item.icon) as any} size={20} color={theme.colors.primary} />
+                        </View>
+                        <Text style={styles.drawerItemText}>{item.label}</Text>
+                      </View>
+                      <MaterialIcons name="keyboard-arrow-left" size={20} color={theme.colors.secondary} />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+
+            {/* Drawer Footer */}
+            <View style={styles.drawerFooter}>
+              <Text style={styles.drawerFooterText}>سیر و حرکت خط ۱ مترو تهران</Text>
+              <Text style={styles.drawerVersionText}>نسخه ۱.۱.۰</Text>
+            </View>
           </View>
         </View>
       </Modal>
