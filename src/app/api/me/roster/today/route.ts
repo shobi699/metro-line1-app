@@ -12,14 +12,19 @@ export async function GET(request: Request) {
     const url = new URL(request.url)
     const dateParam = url.searchParams.get('date')
     
-    let targetDate = new Date()
-    if (dateParam) {
-      targetDate = new Date(dateParam)
+    let targetDateStr = dateParam
+    if (!targetDateStr) {
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      targetDateStr = `${year}-${month}-${day}`
+    } else if (targetDateStr.includes('T')) {
+      targetDateStr = targetDateStr.split('T')[0]
     }
 
-    // SQLite date matching requires start and end of day comparison
-    const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate())
-    const endOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59, 999)
+    const startOfDay = new Date(`${targetDateStr}T00:00:00.000Z`)
+    const endOfDay = new Date(`${targetDateStr}T23:59:59.999Z`)
 
     // Find the roster day
     const rosterDay = await prisma.rosterDay.findFirst({

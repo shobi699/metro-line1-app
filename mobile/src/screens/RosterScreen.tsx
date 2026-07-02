@@ -9,11 +9,14 @@ import {
   Alert,
   TextInput,
   Modal,
+  RefreshControl,
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTheme } from '../shared/ThemeProvider'
 import { useAuthStore } from '../stores/auth'
 import { API_URL } from '../shared/config'
+import { cachedFetch } from '../shared/cached-fetch'
+import { getJalaliDateLabel } from '../shared/jalali'
 import {
   Calendar,
   Clock,
@@ -26,7 +29,9 @@ import {
   FileText,
   User,
   HelpCircle,
-  Users
+  Users,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react-native'
 
 interface TripAssignment {
@@ -79,6 +84,7 @@ function toPersianDigits(num: number | string): string {
 
 export function RosterScreen() {
   const accessToken = useAuthStore((s) => s.accessToken)
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   
   const [loading, setLoading] = useState(false)
   const [allLoading, setAllLoading] = useState(false)
@@ -109,22 +115,11 @@ export function RosterScreen() {
     if (showLoader) setLoading(true)
     
     try {
-      const res = await fetch(`${API_URL}/me/roster/today`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      })
-      
-      if (res.ok) {
-        const json = await res.json()
-        if (json.data) {
-          setRosterDay(json.data.rosterDay)
-          setTrips(json.data.trips)
-          
-          // Save to offline cache
-          await AsyncStorage.setItem(
-            '@driver_roster_today',
-            JSON.stringify(json.data)
-          )
-        }
+      const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
+      const data = await cachedFetch<any>(`/me/roster/today?date=${dateStr}`)
+      if (data) {
+        setRosterDay(data.rosterDay)
+        setTrips(data.trips)
       } else {
         await loadOfflineCache()
       }
@@ -141,19 +136,12 @@ export function RosterScreen() {
     if (showLoader) setAllLoading(true)
     
     try {
-      const res = await fetch(`${API_URL}/supervisor/roster/today`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      })
-      if (res.ok) {
-        const json = await res.json()
-        if (json.data?.trips) {
-          setAllTrips(json.data.trips)
-          
-          // Save to offline cache
-          await AsyncStorage.setItem(
-            '@all_roster_today',
-            JSON.stringify(json.data.trips)
-          )
+      const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
+      const data = await cachedFetch<any>(`/supervisor/roster/today?date=${dateStr}`)
+      if (data) {
+        setAllTrips(data.trips)
+        if (data.rosterDay) {
+          setRosterDay(data.rosterDay)
         }
       } else {
         await loadAllOfflineCache()
@@ -195,7 +183,7 @@ export function RosterScreen() {
       void fetchRoster()
       void fetchAllRoster()
     }
-  }, [accessToken])
+  }, [accessToken, selectedDate])
 
   // Refreshes based on current tab
   function handleRefresh() {
@@ -265,6 +253,8 @@ export function RosterScreen() {
   const activeTrip = trips.find(t => t.assignment && !t.assignment.handoverAt) || trips[0]
   const currentTrip = activeTrip
 
+  const isToday = selectedDate.toDateString() === new Date().toDateString()
+
   return (
     <View style={styles.container}>
       {/* Header Info */}
@@ -273,24 +263,62 @@ export function RosterScreen() {
           <Calendar size={20} color={theme.colors.primary} />
           <Text style={styles.headerTitle}>لوحه و برنامه‌ریزی</Text>
         </View>
-        <View style={styles.headerRight}>
-          <Clock size={20} color={theme.colors.primary} />
-          {rosterDay ? (
-            <Text style={styles.headerSubtitle}>
-              تاریخ: {toPersianDigits(rosterDay.jalaliDate)} | نسخه: {toPersianDigits(rosterDay.versionNo)}
-            </Text>
-          ) : (
-            <Text style={styles.headerSubtitle}>لوحه امروز بارگذاری نشده است</Text>
-          )}
-        </View>
         <View style={{ flexDirection: 'row-reverse', gap: 8 }}>
           <TouchableOpacity style={styles.refreshButton} onPress={() => setSyncModalVisible(true)}>
-            <Calendar size={20} color={theme.colors.primary} />
+            <Calendar size={18} color={theme.colors.primary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh}>
-            <Clock size={20} color={theme.colors.primary} />
+            <Clock size={18} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
+      </View>
+
+      {/* Date Navigator (RTL correct navigation) */}
+      <View style={styles.dateNavigator}>
+        <TouchableOpacity
+          style={styles.dateNavBtn}
+          onPress={() => {
+            const next = new Date(selectedDate)
+            next.setDate(next.getDate() + 1)
+            setSelectedDate(next)
+          }}
+        >
+          <ChevronRight size={18} color={theme.colors.primary} />
+          <Text style={styles.dateNavBtnText}>روز بعد</Text>
+        </TouchableOpacity>
+
+        <View style={styles.dateLabelContainer}>
+          <Text style={styles.dateLabelText}>
+            {getJalaliDateLabel(selectedDate)}
+          </Text>
+          {rosterDay ? (
+            <Text style={styles.versionLabelText}>
+              نسخه {toPersianDigits(rosterDay.versionNo)}
+            </Text>
+          ) : (
+            <Text style={styles.versionLabelText}>فاقد لوحه منتشر شده</Text>
+          )}
+          {!isToday && (
+            <TouchableOpacity
+              style={styles.todayPill}
+              onPress={() => setSelectedDate(new Date())}
+            >
+              <Text style={styles.todayPillText}>بازگشت به امروز</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <TouchableOpacity
+          style={styles.dateNavBtn}
+          onPress={() => {
+            const prev = new Date(selectedDate)
+            prev.setDate(prev.getDate() - 1)
+            setSelectedDate(prev)
+          }}
+        >
+          <Text style={styles.dateNavBtnText}>روز قبل</Text>
+          <ChevronLeft size={18} color={theme.colors.primary} />
+        </TouchableOpacity>
       </View>
 
       {/* Tabs - 3 options */}
@@ -355,90 +383,108 @@ export function RosterScreen() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-              {allTrips
-                .filter(t => t.direction === allDirectionFilter)
-                .map((trip) => {
-                  const h1 = trip.assignments.find(a => a.role === 'H1')
-                  const h2 = trip.assignments.find(a => a.role === 'H2')
-                  const assistT = trip.assignments.find(a => a.role === 'T')
-                  const assistR = trip.assignments.find(a => a.role === 'R')
-                  
-                  return (
-                    <View key={trip.id} style={styles.fullTripCard}>
-                      <View style={styles.fullCardHeader}>
-                        <Text style={styles.fullTrainText}>قطار {toPersianDigits(trip.trainNumber || '—')}</Text>
-                        <Text style={styles.fullTimeText}>
-                          {toPersianDigits(trip.departureTime || '')} ← {toPersianDigits(trip.arrivalTime || '')}
-                        </Text>
-                      </View>
-                      
-                      <View style={styles.fullCardBody}>
-                        {/* H1 Row */}
-                        <View style={styles.driverRow}>
-                          <User size={13} color={theme.colors.secondary} />
-                          <Text style={styles.driverLabel}>H1 (اصلی):</Text>
-                          <Text style={styles.driverName}>
-                            {h1?.matchedUser?.name || h1?.rawName || 'تخصیص نیافته'}
+            <ScrollView
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollContent}
+              refreshControl={
+                <RefreshControl
+                  refreshing={allLoading}
+                  onRefresh={handleRefresh}
+                  colors={[theme.colors.primary]}
+                  tintColor={theme.colors.primary}
+                />
+              }
+            >
+              {allTrips.filter(t => t.direction === allDirectionFilter).length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <HelpCircle size={48} color={theme.colors.secondary} />
+                  <Text style={styles.emptyText}>هیچ سفری در این مسیر برای امروز ثبت نشده است.</Text>
+                </View>
+              ) : (
+                allTrips
+                  .filter(t => t.direction === allDirectionFilter)
+                  .map((trip) => {
+                    const h1 = trip.assignments.find(a => a.role === 'H1')
+                    const h2 = trip.assignments.find(a => a.role === 'H2')
+                    const assistT = trip.assignments.find(a => a.role === 'T')
+                    const assistR = trip.assignments.find(a => a.role === 'R')
+                    
+                    return (
+                      <View key={trip.id} style={styles.fullTripCard}>
+                        <View style={styles.fullCardHeader}>
+                          <Text style={styles.fullTrainText}>قطار {toPersianDigits(trip.trainNumber || '—')}</Text>
+                          <Text style={styles.fullTimeText}>
+                            {toPersianDigits(trip.departureTime || '')} ← {toPersianDigits(trip.arrivalTime || '')}
                           </Text>
-                          {h1?.readyAt && (
-                            <View style={styles.activeDot} />
-                          )}
                         </View>
- 
-                        {/* H2 Row */}
-                        <View style={styles.driverRow}>
-                          <User size={13} color={theme.colors.secondary} />
-                          <Text style={styles.driverLabel}>H2 (دوم):</Text>
-                          <Text style={styles.driverName}>
-                            {h2?.matchedUser?.name || h2?.rawName || 'کابین تک راهبر'}
-                          </Text>
-                          {h2?.readyAt && (
-                            <View style={styles.activeDot} />
-                          )}
-                        </View>
-
-                        {/* Assistant T Row */}
-                        {assistT && (
+                        
+                        <View style={styles.fullCardBody}>
+                          {/* H1 Row */}
                           <View style={styles.driverRow}>
                             <User size={13} color={theme.colors.secondary} />
-                            <Text style={styles.driverLabel}>کمکی T:</Text>
+                            <Text style={styles.driverLabel}>H1 (اصلی):</Text>
                             <Text style={styles.driverName}>
-                              {assistT?.matchedUser?.name || assistT?.rawName || '—'}
+                              {h1?.matchedUser?.name || h1?.rawName || 'تخصیص نیافته'}
                             </Text>
-                            {assistT?.readyAt && (
+                            {h1?.readyAt && (
                               <View style={styles.activeDot} />
                             )}
                           </View>
-                        )}
-
-                        {/* Assistant R Row */}
-                        {assistR && (
+    
+                          {/* H2 Row */}
                           <View style={styles.driverRow}>
                             <User size={13} color={theme.colors.secondary} />
-                            <Text style={styles.driverLabel}>کمکی R:</Text>
+                            <Text style={styles.driverLabel}>H2 (دوم):</Text>
                             <Text style={styles.driverName}>
-                              {assistR?.matchedUser?.name || assistR?.rawName || '—'}
+                              {h2?.matchedUser?.name || h2?.rawName || 'کابین تک راهبر'}
                             </Text>
-                            {assistR?.readyAt && (
+                            {h2?.readyAt && (
                               <View style={styles.activeDot} />
                             )}
                           </View>
-                        )}
-
-                        {/* Notes / Disputes */}
-                        {trip.operationalNote && (
-                          <Text style={styles.fullNoteText}>پیام: {trip.operationalNote}</Text>
-                        )}
-                        {((h1?.disputed) || (h2?.disputed) || (assistT?.disputed) || (assistR?.disputed)) && (
-                          <Text style={styles.fullAlertText}>
-                            ⚠️ مغایرت: {h1?.disputeNote || h2?.disputeNote || assistT?.disputeNote || assistR?.disputeNote}
-                          </Text>
-                        )}
+  
+                          {/* Assistant T Row */}
+                          {assistT && (
+                            <View style={styles.driverRow}>
+                              <User size={13} color={theme.colors.secondary} />
+                              <Text style={styles.driverLabel}>کمکی T:</Text>
+                              <Text style={styles.driverName}>
+                                {assistT?.matchedUser?.name || assistT?.rawName || '—'}
+                              </Text>
+                              {assistT?.readyAt && (
+                                <View style={styles.activeDot} />
+                              )}
+                            </View>
+                          )}
+  
+                          {/* Assistant R Row */}
+                          {assistR && (
+                            <View style={styles.driverRow}>
+                              <User size={13} color={theme.colors.secondary} />
+                              <Text style={styles.driverLabel}>کمکی R:</Text>
+                              <Text style={styles.driverName}>
+                                {assistR?.matchedUser?.name || assistR?.rawName || '—'}
+                              </Text>
+                              {assistR?.readyAt && (
+                                <View style={styles.activeDot} />
+                              )}
+                            </View>
+                          )}
+  
+                          {/* Notes / Disputes */}
+                          {trip.operationalNote && (
+                            <Text style={styles.fullNoteText}>پیام: {trip.operationalNote}</Text>
+                          )}
+                          {((h1?.disputed) || (h2?.disputed) || (assistT?.disputed) || (assistR?.disputed)) && (
+                            <Text style={styles.fullAlertText}>
+                              ⚠️ مغایرت: {h1?.disputeNote || h2?.disputeNote || assistT?.disputeNote || assistR?.disputeNote}
+                            </Text>
+                          )}
+                        </View>
                       </View>
-                    </View>
-                  )
-                })}
+                    )
+                  })
+              )}
             </ScrollView>
           </View>
         )
@@ -455,7 +501,18 @@ export function RosterScreen() {
             <Text style={styles.emptyText}>هیچ سفری در لوحه امروز برای شما ثبت نشده است.</Text>
           </View>
         ) : (
-          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={loading}
+                onRefresh={handleRefresh}
+                colors={[theme.colors.primary]}
+                tintColor={theme.colors.primary}
+              />
+            }
+          >
             {trips.map((trip) => (
               <View key={trip.id} style={styles.tripCard}>
                 <View style={styles.cardHeader}>
@@ -527,7 +584,18 @@ export function RosterScreen() {
             <Text style={styles.loaderText}>در حال بارگذاری سفر...</Text>
           </View>
         ) : activeTrip ? (
-          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={loading}
+                onRefresh={handleRefresh}
+                colors={[theme.colors.primary]}
+                tintColor={theme.colors.primary}
+              />
+            }
+          >
             <View style={styles.cabinContainer}>
               
               {/* Trip Highlight details */}
@@ -729,6 +797,69 @@ const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  dateNavigator: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surfaceContainerLow,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginHorizontal: 16,
+    marginTop: 12,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  dateNavBtn: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: theme.colors.surfaceContainerHighest,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  dateNavBtnText: {
+    fontSize: 11,
+    color: theme.colors.onSurface,
+    fontWeight: 'bold',
+    fontFamily: theme.typography.bodyMd.fontFamily,
+  },
+  dateLabelContainer: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  dateLabelText: {
+    fontSize: 13,
+    color: theme.colors.primary,
+    fontWeight: 'bold',
+    fontFamily: theme.typography.bodyMd.fontFamily,
+    textAlign: 'center',
+  },
+  versionLabelText: {
+    fontSize: 9,
+    color: theme.colors.secondary,
+    marginTop: 2,
+    fontFamily: theme.typography.captionSm.fontFamily,
+    textAlign: 'center',
+  },
+  todayPill: {
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    backgroundColor: theme.colors.primaryContainer + '20',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '30',
+  },
+  todayPillText: {
+    fontSize: 9,
+    color: theme.colors.primary,
+    fontWeight: 'bold',
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   header: {
     flexDirection: 'row-reverse',
