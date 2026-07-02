@@ -55,3 +55,7 @@ metro-line11-app/
 mobile/.expo/
 mobile/android/
 mobile/ios/
+
+# local pdf manuals data directory
+/lohe
+/lohe/docs
