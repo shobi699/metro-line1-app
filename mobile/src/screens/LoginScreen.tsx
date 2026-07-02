@@ -11,6 +11,7 @@ import {
   ScrollView,
   Modal,
   Alert,
+  Image,
 } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { useAuthStore } from '../stores/auth'
@@ -263,7 +264,7 @@ export function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.container}
     >
       {/* دکمه تنظیمات سرور */}
@@ -275,6 +276,11 @@ export function LoginScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
+          <Image
+            source={require('../../assets/logo.png')}
+            style={{ width: 84, height: 84, marginBottom: 16, borderRadius: 42, backgroundColor: '#ffffff', borderWidth: 2, borderColor: theme.colors.border }}
+            resizeMode="contain"
+          />
           <Text style={styles.title}>مترو تهران</Text>
           <Text style={styles.subtitle}>سیر و حرکت خط یک</Text>
         </View>

@@ -100,10 +100,9 @@ export default function LoginPage() {
           {/* Header */}
           <div className="flex flex-col items-center justify-center gap-2 text-center">
             <div
-              className="mb-2 flex size-14 items-center justify-center rounded-full shadow-md transition-transform duration-300 hover:scale-105"
-              style={brandColor ? { backgroundColor: brandColor } : undefined}
+              className="mb-2 flex size-14 items-center justify-center rounded-full shadow-md transition-transform duration-300 hover:scale-105 overflow-hidden bg-background"
             >
-              <Train className="size-7 text-accent-foreground" />
+              <img src="/logo.png" className="size-11 object-contain" alt="Logo" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               {appName}

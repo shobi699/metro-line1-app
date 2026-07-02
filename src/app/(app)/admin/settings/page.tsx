@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Save, RotateCcw, Check, AlertCircle } from 'lucide-react'
 import { toFa } from '@/lib/fa'
+import { ImageUploader } from '@/components/shared/image-uploader'
 
 interface Setting {
   id: string
@@ -48,6 +49,7 @@ const CATEGORY_MAP: Record<string, { label: string; icon: string }> = {
   mobile: { label: 'تنظیمات اپلیکیشن موبایل', icon: '📱' },
   comms: { label: 'ارتباطات صوتی و بی‌سیم', icon: '🎙️' },
   performance: { label: 'ارزیابی عملکرد و گیمیفیکیشن', icon: '🏆' },
+  download: { label: 'تنظیمات صفحه دانلود', icon: '📥' },
   audit: { label: 'تاریخچه تغییرات', icon: '📝' },
 }
 
@@ -503,6 +505,22 @@ export default function AdminSettingsPage() {
                               rows={2}
                               className="w-48 md:w-64 rounded-lg border border-border bg-background/50 p-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-accent resize-y min-h-[60px]"
                             />
+                          ) : (
+                            ((setting.key.toLowerCase().includes('url') || setting.key.toLowerCase().includes('logo') || setting.key.toLowerCase().includes('banner')) && 
+                             !setting.key.toLowerCase().includes('link') &&
+                             setting.key !== 'download.android.value' &&
+                             setting.key !== 'download.ios.value') ||
+                            (setting.key === 'download.android.value' && localValues['download.android.type'] === 'file') ||
+                            (setting.key === 'download.ios.value' && localValues['download.ios.type'] === 'file')
+                          ) ? (
+                            <div className="w-48 md:w-64">
+                              <ImageUploader 
+                                value={String(currentValue ?? '')}
+                                onChange={(url) => handleValueChange(setting.key, url)}
+                                accept={setting.key === 'download.android.value' ? '.apk' : setting.key === 'download.ios.value' ? '.ipa,.plist' : 'image/*'}
+                                placeholder={setting.key.includes('download') ? 'آپلود فایل نصب' : 'آپلود تصویر'}
+                              />
+                            </div>
                           ) : (
                             <Input
                               type="text"

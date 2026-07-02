@@ -9,6 +9,7 @@ import {
   SafeAreaView
 } from 'react-native'
 import { useTheme } from '../shared/ThemeProvider'
+import { ScreenWrapper } from '../shared/ScreenWrapper'
 import { useAuthStore } from '../stores/auth'
 import { API_URL } from '../shared/config'
 import { DynamicRenderer, ComponentSchema } from '../shared/DynamicRenderer'
@@ -66,23 +67,27 @@ export function CustomPageScreen({ route, navigation }: any) {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
+      <ScreenWrapper title="صفحه سفارشی" navigation={navigation}>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      </ScreenWrapper>
     )
   }
 
   if (error || !pageData) {
     return (
-      <View style={styles.center}>
-        <AlertTriangle size={40} color={theme.colors.error} />
-        <Text style={styles.errorText}>{error || 'صفحه یافت نشد'}</Text>
-      </View>
+      <ScreenWrapper title="صفحه سفارشی" navigation={navigation}>
+        <View style={styles.center}>
+          <AlertTriangle size={40} color={theme.colors.error} />
+          <Text style={styles.errorText}>{error || 'صفحه یافت نشد'}</Text>
+        </View>
+      </ScreenWrapper>
     )
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenWrapper title={pageData.title} navigation={navigation}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={
@@ -105,7 +110,7 @@ export function CustomPageScreen({ route, navigation }: any) {
           }}
         />
       </ScrollView>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

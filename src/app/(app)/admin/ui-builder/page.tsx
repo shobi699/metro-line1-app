@@ -102,7 +102,7 @@ const AVAILABLE_ICONS = [
 export default function WebUiBuilderPage() {
   const accessToken = useAuthStore((s) => s.accessToken)
   
-  const [activeTab, setActiveTab] = useState<'theme' | 'menu' | 'dashboard' | 'pages'>('theme')
+  const [activeTab, setActiveTab] = useState<'theme' | 'menu' | 'dashboard' | 'pages' | 'system'>('theme')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -112,6 +112,12 @@ export default function WebUiBuilderPage() {
   const [menuItems, setMenuItems] = useState<UiMenuItem[]>([])
   const [widgets, setWidgets] = useState<UiDashboardWidget[]>([])
   const [pages, setPages] = useState<UiPage[]>([])
+  interface SystemSettingItem {
+    key: string
+    label: string
+    value: boolean
+  }
+  const [systemSettings, setSystemSettings] = useState<SystemSettingItem[]>([])
 
   // Selection states
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null)
@@ -158,6 +164,28 @@ export default function WebUiBuilderPage() {
         if (dataPages.data.length > 0 && !selectedPageId) {
           setSelectedPageId(dataPages.data[0].id)
         }
+      }
+
+      // Fetch System Settings
+      const resSettings = await fetch('/api/admin/settings', { headers: { Authorization: `Bearer ${accessToken}` } })
+      const dataSettings = await resSettings.json()
+      if (resSettings.ok && dataSettings.data) {
+        const keysToExpose = ['mobile.enableSos', 'mobile.offlineCacheEnabled', 'tickets.allowNoWagon', 'meetings.autoApprove']
+        const exposed = dataSettings.data
+          .filter((s: any) => keysToExpose.includes(s.key))
+          .map((s: any) => ({
+            key: s.key,
+            label: s.label,
+            value: JSON.parse(s.value) === true
+          }))
+        if (!exposed.some((s: any) => s.key === 'meetings.autoApprove')) {
+          exposed.push({
+            key: 'meetings.autoApprove',
+            label: 'تایید خودکار رزرو جلسات پرسنل',
+            value: true
+          })
+        }
+        setSystemSettings(exposed)
       }
     } catch {
       setNotification({ type: 'error', text: 'خطا در بارگذاری داده‌ها از سرور' })
@@ -335,6 +363,33 @@ export default function WebUiBuilderPage() {
     return nextList
   }
 
+  async function handleSaveSystemSettings() {
+    if (!accessToken) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({
+          updates: systemSettings.map(s => ({
+            key: s.key,
+            value: JSON.stringify(s.value)
+          }))
+        })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setNotification({ type: 'success', text: 'تنظیمات عمومی سیستم با موفقیت به‌روزرسانی و در تمامی کلاینت‌ها اعمال شد.' })
+      } else {
+        setNotification({ type: 'error', text: data.error || 'خطا در ذخیره‌سازی تنظیمات' })
+      }
+    } catch {
+      setNotification({ type: 'error', text: 'خطا در ارتباط با سرور' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 bg-background" dir="rtl">
@@ -426,6 +481,17 @@ export default function WebUiBuilderPage() {
           >
             <FileText className="size-4" />
             <span>صفحات سفارشی و صفحه‌ساز</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('system')}
+            className={cn(
+              "flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold rounded-lg transition-all text-start whitespace-nowrap cursor-pointer",
+              activeTab === 'system' ? 'bg-accent/10 text-accent border border-accent/20' : 'text-foreground-muted hover:bg-surface-hover hover:text-foreground'
+            )}
+          >
+            <Sliders className="size-4" />
+            <span>تنظیمات عمومی سیستم</span>
           </button>
         </div>
 
@@ -1521,6 +1587,62 @@ export default function WebUiBuilderPage() {
                 </div>
               )}
             </div>
+          )}
+
+          {/* TAB 5: System Settings */}
+          {activeTab === 'system' && (
+            <Card className="border-border/60 bg-surface-container-low/30 backdrop-blur-md">
+              <CardHeader className="border-b border-border/40 pb-4">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Sliders className="size-4 text-accent" />
+                  <span>تنظیمات عمومی سیستم و شخصی‌سازی مدیر</span>
+                </CardTitle>
+                <CardDescription className="text-xs font-sans">
+                  عملکرد و مجوزهای دسترسی کلی به بخش‌های مختلف اپلیکیشن موبایل پرسنل خط ۱ مترو تهران را به صورت متمرکز پیکربندی کنید.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                <div className="space-y-4 divide-y divide-border/30">
+                  {systemSettings.map((setting, idx) => (
+                    <div key={setting.key} className={cn("flex items-center justify-between pt-4", idx === 0 && "pt-0")}>
+                      <div className="space-y-0.5">
+                        <Label className="text-xs font-bold text-foreground">{setting.label}</Label>
+                        <p className="text-[10px] text-foreground-muted font-sans max-w-xl">
+                          {setting.key === 'mobile.enableSos' && 'دکمه اعلام وضعیت اضطراری و SOS در هدر اپلیکیشن فعال خواهد شد.'}
+                          {setting.key === 'mobile.offlineCacheEnabled' && 'اطلاعات لوحه‌های کاری و چت‌ها در حافظه محلی گوشی‌ها جهت دسترسی آفلاین ذخیره می‌گردند.'}
+                          {setting.key === 'tickets.allowNoWagon' && 'امکان ثبت گزارش خرابی و تیکتینگ توسط راهبران بدون وارد کردن شماره واگن قطار خط ۱.'}
+                          {setting.key === 'meetings.autoApprove' && 'رزرو سالن‌ها و وقت جلسه پرسنل با مدیران به صورت خودکار تایید گردیده و نیازی به تایید دستی ندارد.'}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={cn("text-[10px] font-semibold font-sans px-2 py-0.5 rounded", setting.value ? "bg-success/15 text-success" : "bg-neutral-800 text-neutral-400")}>
+                          {setting.value ? 'فعال / روشن' : 'غیرفعال / خاموش'}
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={setting.value}
+                          onChange={(e) => {
+                             setSystemSettings(prev => prev.map(s => s.key === setting.key ? { ...s, value: e.target.checked } : s))
+                          }}
+                          className="w-9 h-5 bg-neutral-800 checked:bg-accent rounded-full appearance-none cursor-pointer relative before:content-[''] before:absolute before:size-4 before:bg-white before:rounded-full before:top-0.5 before:start-0.5 checked:before:translate-x-4 before:transition-transform duration-200"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-end border-t border-border/30 pt-4 mt-6">
+                  <Button
+                    onClick={handleSaveSystemSettings}
+                    disabled={saving}
+                    className="bg-accent hover:bg-accent-hover text-accent-foreground flex items-center gap-2 font-medium"
+                  >
+                    {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                    <span>ذخیره تنظیمات سیستم</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
         </div>

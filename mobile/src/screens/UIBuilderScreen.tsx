@@ -1,19 +1,46 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   StyleSheet,
   View,
   Text,
-  TouchableOpacity,
   ScrollView,
+  TouchableOpacity,
   Switch,
   ActivityIndicator,
   Alert,
-  SafeAreaView
+  Dimensions,
+  SafeAreaView,
+  Modal,
+  TextInput
 } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useUIBuilderStore } from '../stores/ui-builder'
 import { useTheme } from '../shared/ThemeProvider'
-import { useUIBuilderStore, MenuItem, DashboardWidget } from '../stores/ui-builder'
+import { API_URL } from '../shared/config'
 import { DynamicRenderer } from '../shared/DynamicRenderer'
+
+const DEFAULT_WIDGETS = [
+  { id: '1', widgetType: 'stat_card', title: 'آمار شیفت امروز', size: 'md', orderIndex: 0, isVisible: true, configJson: { source: 'shift' } },
+  { id: '2', widgetType: 'chart', title: 'عملکرد کیلومتر رانندگی', size: 'md', orderIndex: 1, isVisible: true, configJson: { type: 'bar' } },
+  { id: '3', widgetType: 'list', title: 'آخرین بخشنامه‌های ایمنی', size: 'lg', orderIndex: 2, isVisible: true, configJson: { limit: 3, source: 'bulletins' } },
+  { id: '4', widgetType: 'banner', title: 'اطلاعیه مهم ایمنی خط ۱', size: 'lg', orderIndex: 3, isVisible: true, configJson: { content: 'رعایت دستورالعمل فاصله ایمن از سکو الزامی است.' } },
+]
+
+const DEFAULT_MENU_ITEMS = [
+  { id: '1', label: 'داشبورد', icon: 'home', route: 'HomeScreen', orderIndex: 0, isVisible: true },
+  { id: '2', label: 'شیفت‌ها', icon: 'calendar', route: 'CalendarScreen', orderIndex: 1, isVisible: true },
+  { id: '3', label: 'اعلان‌ها', icon: 'announcements', route: 'NotificationsScreen', orderIndex: 2, isVisible: true },
+  { id: '4', label: 'گفتگو', icon: 'chat', route: 'ChatScreen', orderIndex: 3, isVisible: true },
+  { id: '5', label: 'پروفایل', icon: 'profile', route: 'ProfileScreen', orderIndex: 4, isVisible: true },
+]
+
+const DEFAULT_SYSTEM_SETTINGS = [
+  { key: 'mobile.enableSos', label: 'تلفن اضطراری SOS راهبران', value: true },
+  { key: 'mobile.offlineCacheEnabled', label: 'ذخیره‌سازی لوحه به صورت آفلاین', value: true },
+  { key: 'tickets.allowNoWagon', label: 'ثبت تیکت بدون شماره واگن', value: false },
+  { key: 'meetings.autoApprove', label: 'تایید خودکار رزرو جلسات پرسنل', value: true }
+]
 
 export function UIBuilderScreen({ navigation }: any) {
   const { theme } = useTheme()
@@ -31,8 +58,108 @@ export function UIBuilderScreen({ navigation }: any) {
   const saveWidgetsToServer = useUIBuilderStore((s) => s.saveWidgetsToServer)
 
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState<'theme' | 'menu' | 'dashboard'>('theme')
+  const [activeTab, setActiveTab] = useState<'theme' | 'menu' | 'dashboard' | 'system'>('theme')
   const [previewVisible, setPreviewVisible] = useState(false)
+
+  // Local state fallbacks to prevent empty arrays from 401 unauth
+  const [localMenuItems, setLocalMenuItems] = useState<any[]>([])
+  const [localWidgets, setLocalWidgets] = useState<any[]>([])
+  const [systemSettings, setSystemSettings] = useState<any[]>([])
+  const [loadingSettings, setLoadingSettings] = useState(false)
+
+  // Widget config editor state
+  const [editingWidget, setEditingWidget] = useState<any | null>(null)
+  const [editingWidgetIndex, setEditingWidgetIndex] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (storeMenuItems && storeMenuItems.length > 0) {
+      setLocalMenuItems(storeMenuItems)
+    } else {
+      setLocalMenuItems(DEFAULT_MENU_ITEMS)
+    }
+  }, [storeMenuItems])
+
+  useEffect(() => {
+    if (storeWidgets && storeWidgets.length > 0) {
+      setLocalWidgets(storeWidgets)
+    } else {
+      setLocalWidgets(DEFAULT_WIDGETS)
+    }
+  }, [storeWidgets])
+
+  useEffect(() => {
+    void loadSystemSettings()
+  }, [])
+
+  const loadSystemSettings = async () => {
+    setLoadingSettings(true)
+    try {
+      const token = await AsyncStorage.getItem('@auth_accessToken')
+      const res = await fetch(`${API_URL}/admin/settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.ok) {
+        const json = await res.json()
+        const fetched = json.data || []
+        const keysToExpose = ['mobile.enableSos', 'mobile.offlineCacheEnabled', 'tickets.allowNoWagon', 'meetings.autoApprove']
+        
+        const exposed = fetched
+          .filter((s: any) => keysToExpose.includes(s.key))
+          .map((s: any) => ({
+            key: s.key,
+            label: s.label,
+            value: JSON.parse(s.value) === true
+          }))
+        
+        if (!exposed.some((s: any) => s.key === 'meetings.autoApprove')) {
+          exposed.push({
+            key: 'meetings.autoApprove',
+            label: 'تایید خودکار رزرو جلسات پرسنل',
+            value: true
+          })
+        }
+        
+        setSystemSettings(exposed)
+      } else {
+        setSystemSettings(DEFAULT_SYSTEM_SETTINGS)
+      }
+    } catch (err) {
+      console.error('Error fetching system settings:', err)
+      setSystemSettings(DEFAULT_SYSTEM_SETTINGS)
+    } finally {
+      setLoadingSettings(false)
+    }
+  }
+
+  const toggleSystemSetting = (key: string, val: boolean) => {
+    setSystemSettings(prev => prev.map(s => s.key === key ? { ...s, value: val } : s))
+  }
+
+  const saveSystemSettings = async () => {
+    try {
+      const token = await AsyncStorage.getItem('@auth_accessToken')
+      const updates = systemSettings.map(s => ({
+        key: s.key,
+        value: JSON.stringify(s.value)
+      }))
+
+      const res = await fetch(`${API_URL}/admin/settings`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ updates })
+      })
+
+      if (!res.ok) {
+        throw new Error('خطا در ذخیره تنظیمات داینامیک سیستم')
+      }
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }
 
   const colors = [
     { label: 'قرمز (خط ۱)', hex: '#ae0011' },
@@ -47,12 +174,17 @@ export function UIBuilderScreen({ navigation }: any) {
   const handleSave = async () => {
     setSaving(true)
     try {
+      // Sync local edits back to zustand stores before publishing
+      updateMenuLocal(localMenuItems)
+      updateWidgetsLocal(localWidgets)
+
       await Promise.all([
         saveThemeToServer(),
         saveMenuToServer(),
         saveWidgetsToServer(),
+        saveSystemSettings(),
       ])
-      Alert.alert('موفقیت', 'تغییرات چیدمان و ظاهر با موفقیت ذخیره و منتشر شد.')
+      Alert.alert('موفقیت', 'تغییرات چیدمان و تنظیمات با موفقیت ذخیره و منتشر شد.')
       navigation.goBack()
     } catch (err: any) {
       Alert.alert('خطا', 'ثبت تغییرات با خطا مواجه شد: ' + err.message)
@@ -62,7 +194,7 @@ export function UIBuilderScreen({ navigation }: any) {
   }
 
   const moveMenu = (index: number, direction: 'up' | 'down') => {
-    const updated = [...storeMenuItems]
+    const updated = [...localMenuItems]
     const targetIdx = direction === 'up' ? index - 1 : index + 1
     if (targetIdx < 0 || targetIdx >= updated.length) return
 
@@ -70,22 +202,23 @@ export function UIBuilderScreen({ navigation }: any) {
     updated[index] = updated[targetIdx]
     updated[targetIdx] = temp
 
-    // Update orderIndex
     updated.forEach((item, idx) => {
       item.orderIndex = idx
     })
 
+    setLocalMenuItems(updated)
     updateMenuLocal(updated)
   }
 
   const toggleMenuVisibility = (index: number, val: boolean) => {
-    const updated = [...storeMenuItems]
+    const updated = [...localMenuItems]
     updated[index] = { ...updated[index], isVisible: val }
+    setLocalMenuItems(updated)
     updateMenuLocal(updated)
   }
 
   const moveWidget = (index: number, direction: 'up' | 'down') => {
-    const updated = [...storeWidgets]
+    const updated = [...localWidgets]
     const targetIdx = direction === 'up' ? index - 1 : index + 1
     if (targetIdx < 0 || targetIdx >= updated.length) return
 
@@ -93,59 +226,111 @@ export function UIBuilderScreen({ navigation }: any) {
     updated[index] = updated[targetIdx]
     updated[targetIdx] = temp
 
-    updated.forEach((w, idx) => {
-      w.orderIndex = idx
+    updated.forEach((item, idx) => {
+      item.orderIndex = idx
     })
 
+    setLocalWidgets(updated)
     updateWidgetsLocal(updated)
   }
 
   const toggleWidgetVisibility = (index: number, val: boolean) => {
-    const updated = [...storeWidgets]
+    const updated = [...localWidgets]
     updated[index] = { ...updated[index], isVisible: val }
+    setLocalWidgets(updated)
     updateWidgetsLocal(updated)
   }
 
   const cycleWidgetSize = (index: number) => {
-    const sizes: ('sm' | 'md' | 'lg')[] = ['sm', 'md', 'lg']
-    const updated = [...storeWidgets]
-    const currentSize = updated[index].size
-    const nextIdx = (sizes.indexOf(currentSize) + 1) % sizes.length
-    updated[index] = { ...updated[index], size: sizes[nextIdx] }
+    const updated = [...localWidgets]
+    const current = updated[index].size
+    const next = current === 'sm' ? 'md' : current === 'md' ? 'lg' : 'sm'
+    updated[index] = { ...updated[index], size: next }
+    setLocalWidgets(updated)
     updateWidgetsLocal(updated)
   }
 
-  // Generate widgets mock components schema for the live preview modal
-  const previewComponents = storeWidgets
-    .filter(w => w.isVisible)
-    .map(w => {
-      let type = 'StatRow'
-      let props = {}
-      if (w.widgetType === 'stat_card') {
-        type = 'StatRow'
-        props = {
-          items: [{ label: w.title || 'آمار', value: '۱۲.۵' }]
-        }
-      } else if (w.widgetType === 'chart') {
-        type = 'ChartWidget'
-        props = { title: w.title || 'کارکرد' }
-      } else if (w.widgetType === 'list') {
-        type = 'DataList'
-        props = { title: w.title || 'بخشنامه‌ها' }
-      }
-
-      return {
-        id: w.id,
-        type,
-        props,
-        layout: {
-          colSpan: w.size === 'sm' ? 4 : w.size === 'md' ? 6 : 12
-        }
-      }
+  // Open configurations edit modal for a widget
+  const openWidgetEditor = (index: number) => {
+    const widget = localWidgets[index]
+    setEditingWidgetIndex(index)
+    setEditingWidget({
+      title: widget.title || '',
+      size: widget.size,
+      widgetType: widget.widgetType,
+      configJson: widget.configJson ? { ...widget.configJson } : {}
     })
+  }
+
+  const saveWidgetConfig = () => {
+    if (editingWidgetIndex === null || !editingWidget) return
+    const updated = [...localWidgets]
+    updated[editingWidgetIndex] = {
+      ...updated[editingWidgetIndex],
+      title: editingWidget.title,
+      size: editingWidget.size,
+      configJson: editingWidget.configJson
+    }
+    setLocalWidgets(updated)
+    updateWidgetsLocal(updated)
+    setEditingWidget(null)
+    setEditingWidgetIndex(null)
+  }
+
+  const previewComponents = useMemo(() => {
+    return localWidgets
+      .filter((w) => w.isVisible)
+      .map((w) => {
+        let type = 'StatRow'
+        let props = {}
+        if (w.widgetType === 'stat_card') {
+          type = 'StatRow'
+          props = {
+            items: [
+              { label: w.title || 'آمار', value: '۵' }
+            ]
+          }
+        } else if (w.widgetType === 'chart') {
+          type = 'ChartWidget'
+          props = {
+            title: w.title || 'نمودار عملکرد',
+            data: [
+              { label: 'شنبه', value: 80 },
+              { label: 'یکشنبه', value: 65 },
+              { label: 'دوشنبه', value: 95 }
+            ]
+          }
+        } else if (w.widgetType === 'list') {
+          type = 'ListWidget'
+          props = {
+            title: w.title || 'لیست رویدادها',
+            items: [
+              { id: '1', title: 'جلسه با مدیریت خط ۱', date: 'امروز' },
+              { id: '2', title: 'بررسی ایمنی ناوگان', date: 'فردا' }
+            ]
+          }
+        } else {
+          type = 'BannerWidget'
+          props = {
+            title: w.title || 'اطلاعیه مهم',
+            content: w.configJson?.content || 'رعایت دستورالعمل فاصله ایمن از سکو الزامی است.'
+          }
+        }
+
+        return {
+          id: w.id,
+          type,
+          props,
+          layout: { colSpan: w.size === 'sm' ? 4 : w.size === 'md' ? 6 : 12 }
+        }
+      })
+  }, [localWidgets])
 
   const styles = StyleSheet.create({
-    safeArea: { flex: 1, backgroundColor: theme.colors.background },
+    safeArea: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -181,8 +366,8 @@ export function UIBuilderScreen({ navigation }: any) {
     },
     tabText: {
       fontFamily: theme.typography.bodyMd.fontFamily,
-      fontSize: 13,
-      color: theme.colors.textSecondary,
+      fontSize: 12,
+      color: theme.colors.secondary,
     },
     activeTabText: {
       color: theme.colors.primary,
@@ -196,7 +381,6 @@ export function UIBuilderScreen({ navigation }: any) {
       borderWidth: 1,
       borderColor: theme.colors.border,
       marginBottom: 20,
-      ...theme.shadows.level1,
     },
     sectionTitle: {
       fontFamily: theme.typography.cardTitle.fontFamily,
@@ -208,28 +392,31 @@ export function UIBuilderScreen({ navigation }: any) {
     },
     colorOption: {
       flexDirection: 'row-reverse',
-      alignItems: 'center',
-      paddingVertical: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
       justifyContent: 'space-between',
-    },
-    colorBadge: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border + '50',
     },
     colorText: {
       fontFamily: theme.typography.bodyMd.fontFamily,
+      fontSize: 13,
       color: theme.colors.text,
     },
+    colorBadge: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: '#ffffff50',
+    },
     itemRow: {
-      flexDirection: 'row-reverse',
-      alignItems: 'center',
+      flexDirection: 'row',
       justifyContent: 'space-between',
+      alignItems: 'center',
       paddingVertical: 12,
       borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
+      borderBottomColor: theme.colors.border + '40',
     },
     itemInfo: {
       flexDirection: 'row-reverse',
@@ -238,6 +425,7 @@ export function UIBuilderScreen({ navigation }: any) {
     },
     itemText: {
       fontFamily: theme.typography.bodyMd.fontFamily,
+      fontSize: 13.5,
       color: theme.colors.text,
     },
     controls: {
@@ -247,30 +435,36 @@ export function UIBuilderScreen({ navigation }: any) {
     },
     controlBtn: {
       padding: 6,
+      borderRadius: theme.borderRadius.md,
       backgroundColor: theme.colors.surfaceContainerLow,
-      borderRadius: theme.borderRadius.sm,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     sizeBadge: {
       paddingHorizontal: 8,
       paddingVertical: 4,
-      backgroundColor: theme.colors.primaryContainer + '30',
       borderRadius: theme.borderRadius.sm,
+      backgroundColor: theme.colors.primaryContainer + '20',
+      borderWidth: 0.5,
+      borderColor: theme.colors.primary,
     },
     sizeText: {
-      fontFamily: theme.typography.captionSm.fontFamily,
-      fontSize: 11,
+      fontSize: 9.5,
       color: theme.colors.primary,
       fontWeight: 'bold',
+      fontFamily: theme.typography.captionSm.fontFamily,
     },
     footer: {
-      flexDirection: 'row-reverse',
       padding: 16,
-      gap: 12,
       borderTopWidth: 1,
       borderTopColor: theme.colors.border,
+      flexDirection: 'column',
+      gap: 10,
+      backgroundColor: theme.colors.background,
     },
     saveButton: {
-      flex: 2,
       backgroundColor: theme.colors.primary,
       borderRadius: theme.borderRadius.lg,
       paddingVertical: 14,
@@ -280,11 +474,11 @@ export function UIBuilderScreen({ navigation }: any) {
     saveButtonText: {
       color: '#ffffff',
       fontFamily: theme.typography.cardTitle.fontFamily,
+      fontSize: 14,
       fontWeight: 'bold',
     },
     previewButton: {
-      flex: 1,
-      backgroundColor: theme.colors.surfaceContainerLowest,
+      backgroundColor: theme.colors.surfaceContainerLow,
       borderWidth: 1,
       borderColor: theme.colors.border,
       borderRadius: theme.borderRadius.lg,
@@ -296,8 +490,6 @@ export function UIBuilderScreen({ navigation }: any) {
       color: theme.colors.text,
       fontFamily: theme.typography.cardTitle.fontFamily,
     },
-
-    // Preview Modal styles
     modalContainer: {
       flex: 1,
       backgroundColor: theme.colors.background,
@@ -315,6 +507,64 @@ export function UIBuilderScreen({ navigation }: any) {
       color: theme.colors.text,
       fontWeight: 'bold',
     },
+    settingDesc: {
+      fontFamily: theme.typography.captionSm.fontFamily,
+      fontSize: 11,
+      color: theme.colors.secondary,
+      textAlign: 'right',
+      marginTop: 2,
+    },
+    helperText: {
+      fontFamily: theme.typography.captionSm.fontFamily,
+      color: theme.colors.secondary,
+      fontSize: 11.5,
+      textAlign: 'right',
+      marginTop: 10,
+    },
+    // Config modal elements
+    configLabel: {
+      fontFamily: theme.typography.captionSm.fontFamily,
+      fontSize: 11.5,
+      color: theme.colors.secondary,
+      textAlign: 'right',
+      marginBottom: 6,
+      marginTop: 12,
+    },
+    configInput: {
+      fontFamily: theme.typography.bodyMd.fontFamily,
+      fontSize: 13,
+      color: theme.colors.text,
+      backgroundColor: theme.colors.surfaceContainerLow,
+      borderRadius: theme.borderRadius.md,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      textAlign: 'right',
+    },
+    sizeSelectorRow: {
+      flexDirection: 'row-reverse',
+      gap: 8,
+      marginVertical: 4,
+    },
+    sizeSelectBtn: {
+      flex: 1,
+      paddingVertical: 8,
+      alignItems: 'center',
+      borderRadius: theme.borderRadius.md,
+      backgroundColor: theme.colors.surfaceContainerLow,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    sizeSelectActive: {
+      backgroundColor: theme.colors.primaryContainer + '30',
+      borderColor: theme.colors.primary,
+    },
+    sizeSelectText: {
+      fontFamily: theme.typography.captionSm.fontFamily,
+      fontSize: 11.5,
+      color: theme.colors.text,
+    }
   })
 
   return (
@@ -330,10 +580,16 @@ export function UIBuilderScreen({ navigation }: any) {
       {/* Tabs */}
       <View style={styles.tabBar}>
         <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'theme' && styles.activeTabButton]}
-          onPress={() => setActiveTab('theme')}
+          style={[styles.tabButton, activeTab === 'system' && styles.activeTabButton]}
+          onPress={() => setActiveTab('system')}
         >
-          <Text style={[styles.tabText, activeTab === 'theme' && styles.activeTabText]}>تنظیمات تم</Text>
+          <Text style={[styles.tabText, activeTab === 'system' && styles.activeTabText]}>تنظیمات سیستم</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === 'dashboard' && styles.activeTabButton]}
+          onPress={() => setActiveTab('dashboard')}
+        >
+          <Text style={[styles.tabText, activeTab === 'dashboard' && styles.activeTabText]}>داشبورد</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tabButton, activeTab === 'menu' && styles.activeTabButton]}
@@ -342,10 +598,10 @@ export function UIBuilderScreen({ navigation }: any) {
           <Text style={[styles.tabText, activeTab === 'menu' && styles.activeTabText]}>منوی اصلی</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'dashboard' && styles.activeTabButton]}
-          onPress={() => setActiveTab('dashboard')}
+          style={[styles.tabButton, activeTab === 'theme' && styles.activeTabButton]}
+          onPress={() => setActiveTab('theme')}
         >
-          <Text style={[styles.tabText, activeTab === 'dashboard' && styles.activeTabText]}>داشبورد</Text>
+          <Text style={[styles.tabText, activeTab === 'theme' && styles.activeTabText]}>تنظیمات تم</Text>
         </TouchableOpacity>
       </View>
 
@@ -398,8 +654,8 @@ export function UIBuilderScreen({ navigation }: any) {
         {/* Tab content: Menu */}
         {activeTab === 'menu' && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>ترتیب و نمایش زبانه های منوی پایین</Text>
-            {storeMenuItems.map((item, idx) => (
+            <Text style={styles.sectionTitle}>ترتیب و نمایش زبانه‌های منوی پایین</Text>
+            {localMenuItems.map((item, idx) => (
               <View key={item.id || idx} style={styles.itemRow}>
                 <View style={styles.controls}>
                   <TouchableOpacity
@@ -411,10 +667,10 @@ export function UIBuilderScreen({ navigation }: any) {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.controlBtn}
-                    disabled={idx === storeMenuItems.length - 1}
+                    disabled={idx === localMenuItems.length - 1}
                     onPress={() => moveMenu(idx, 'down')}
                   >
-                    <MaterialIcons name="arrow-downward" size={16} color={idx === storeMenuItems.length - 1 ? '#cccccc' : theme.colors.text} />
+                    <MaterialIcons name="arrow-downward" size={16} color={idx === localMenuItems.length - 1 ? '#cccccc' : theme.colors.text} />
                   </TouchableOpacity>
                   <Switch
                     value={item.isVisible}
@@ -434,9 +690,15 @@ export function UIBuilderScreen({ navigation }: any) {
         {activeTab === 'dashboard' && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>مدیریت ابزارک‌های روی صفحه داشبورد</Text>
-            {storeWidgets.map((item, idx) => (
+            {localWidgets.map((item, idx) => (
               <View key={item.id || idx} style={styles.itemRow}>
                 <View style={styles.controls}>
+                  <TouchableOpacity
+                    style={styles.controlBtn}
+                    onPress={() => openWidgetEditor(idx)}
+                  >
+                    <MaterialIcons name="edit" size={15} color={theme.colors.text} />
+                  </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.controlBtn}
                     disabled={idx === 0}
@@ -446,17 +708,17 @@ export function UIBuilderScreen({ navigation }: any) {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.controlBtn}
-                    disabled={idx === storeWidgets.length - 1}
+                    disabled={idx === localWidgets.length - 1}
                     onPress={() => moveWidget(idx, 'down')}
                   >
-                    <MaterialIcons name="arrow-downward" size={16} color={idx === storeWidgets.length - 1 ? '#cccccc' : theme.colors.text} />
+                    <MaterialIcons name="arrow-downward" size={16} color={idx === localWidgets.length - 1 ? '#cccccc' : theme.colors.text} />
                   </TouchableOpacity>
                   
                   <TouchableOpacity
                     style={styles.sizeBadge}
                     onPress={() => cycleWidgetSize(idx)}
                   >
-                    <Text style={styles.sizeText}>{item.size === 'sm' ? '۱/۳ عرض' : item.size === 'md' ? 'نصف عرض' : 'تمام عرض'}</Text>
+                    <Text style={styles.sizeText}>{item.size === 'sm' ? '۱/۳' : item.size === 'md' ? 'نصف' : 'کامل'}</Text>
                   </TouchableOpacity>
 
                   <Switch
@@ -470,6 +732,41 @@ export function UIBuilderScreen({ navigation }: any) {
                 </View>
               </View>
             ))}
+          </View>
+        )}
+
+        {/* Tab content: System Settings (Manager Personalization) */}
+        {activeTab === 'system' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>تنظیمات سیستمی و شخصی‌سازی مدیر</Text>
+            {loadingSettings ? (
+              <ActivityIndicator size="small" color={theme.colors.primary} style={{ marginVertical: 20 }} />
+            ) : systemSettings.length > 0 ? (
+              systemSettings.map((s, idx) => (
+                <View key={s.key || idx} style={styles.itemRow}>
+                  <Switch
+                    value={s.value}
+                    onValueChange={(val) => toggleSystemSetting(s.key, val)}
+                  />
+                  <View style={[styles.itemInfo, { flex: 1, marginLeft: 16 }]}>
+                    <View style={{ alignItems: 'flex-end', width: '100%' }}>
+                      <Text style={[styles.itemText, { fontWeight: '700' }]}>{s.label}</Text>
+                      <Text style={styles.settingDesc}>
+                        {s.key === 'meetings.autoApprove'
+                          ? 'درخواست جلسات پرسنل بدون نیاز به تایید دستی فوراً تایید می‌شود.'
+                          : s.key === 'mobile.enableSos'
+                          ? 'نمایش دکمه اضطراری SOS در صفحات اپلیکیشن پرسنل.'
+                          : s.key === 'mobile.offlineCacheEnabled'
+                          ? 'ذخیره خودکار شیفت‌ها و اطلاعات در حافظه داخلی برای مواقع قطعی خط.'
+                          : 'امکان ثبت گزارش‌های خرابی ایستگاه بدون نیاز به فیلد شماره واگن.'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.helperText}>تنظیماتی یافت نشد.</Text>
+            )}
           </View>
         )}
       </ScrollView>
@@ -487,6 +784,151 @@ export function UIBuilderScreen({ navigation }: any) {
           <Text style={styles.previewButtonText}>پیش‌نمایش زنده</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Widget Editor Modal */}
+      <Modal
+        visible={editingWidget !== null}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setEditingWidget(null)}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ width: Dimensions.get('window').width * 0.88, backgroundColor: theme.colors.background, borderRadius: theme.borderRadius.xl, borderWidth: 1, borderColor: theme.colors.border, padding: 20 }}>
+            <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: theme.colors.border + '50', paddingBottom: 10 }}>
+              <Text style={{ fontFamily: theme.typography.screenTitle.fontFamily, fontWeight: 'bold', fontSize: 15, color: theme.colors.text }}>تنظیمات ابزارک</Text>
+              <TouchableOpacity onPress={() => setEditingWidget(null)}>
+                <MaterialIcons name="close" size={20} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            {editingWidget && (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <Text style={styles.configLabel}>عنوان ابزارک (فارسی)</Text>
+                <TextInput
+                  value={editingWidget.title}
+                  onChangeText={(val) => setEditingWidget({ ...editingWidget, title: val })}
+                  style={styles.configInput}
+                  placeholder="عنوان نمایشی..."
+                />
+
+                <Text style={styles.configLabel}>اندازه ستون‌ها</Text>
+                <View style={styles.sizeSelectorRow}>
+                  {['sm', 'md', 'lg'].map((sz) => (
+                    <TouchableOpacity
+                      key={sz}
+                      onPress={() => setEditingWidget({ ...editingWidget, size: sz })}
+                      style={[styles.sizeSelectBtn, editingWidget.size === sz && styles.sizeSelectActive]}
+                    >
+                      <Text style={styles.sizeSelectText}>
+                        {sz === 'sm' ? '۱/۳ عرض' : sz === 'md' ? 'نصف عرض' : 'تمام عرض'}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {editingWidget.widgetType === 'stat_card' && (
+                  <>
+                    <Text style={styles.configLabel}>منبع آمار (Source)</Text>
+                    <View style={styles.sizeSelectorRow}>
+                      {['shift', 'performance', 'tickets'].map((src) => (
+                        <TouchableOpacity
+                          key={src}
+                          onPress={() => setEditingWidget({
+                            ...editingWidget,
+                            configJson: { ...editingWidget.configJson, source: src }
+                          })}
+                          style={[styles.sizeSelectBtn, editingWidget.configJson?.source === src && styles.sizeSelectActive]}
+                        >
+                          <Text style={styles.sizeSelectText}>
+                            {src === 'shift' ? 'شیفت‌ها' : src === 'performance' ? 'کارنامه' : 'تیکت‌ها'}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </>
+                )}
+
+                {editingWidget.widgetType === 'chart' && (
+                  <>
+                    <Text style={styles.configLabel}>نوع نمودار (Type)</Text>
+                    <View style={styles.sizeSelectorRow}>
+                      {['bar', 'line'].map((t) => (
+                        <TouchableOpacity
+                          key={t}
+                          onPress={() => setEditingWidget({
+                            ...editingWidget,
+                            configJson: { ...editingWidget.configJson, type: t }
+                          })}
+                          style={[styles.sizeSelectBtn, editingWidget.configJson?.type === t && styles.sizeSelectActive]}
+                        >
+                          <Text style={styles.sizeSelectText}>
+                            {t === 'bar' ? 'میله‌ای' : 'خطی'}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </>
+                )}
+
+                {editingWidget.widgetType === 'list' && (
+                  <>
+                    <Text style={styles.configLabel}>منبع لیست (Source)</Text>
+                    <View style={styles.sizeSelectorRow}>
+                      {['bulletins', 'tasks'].map((src) => (
+                        <TouchableOpacity
+                          key={src}
+                          onPress={() => setEditingWidget({
+                            ...editingWidget,
+                            configJson: { ...editingWidget.configJson, source: src }
+                          })}
+                          style={[styles.sizeSelectBtn, editingWidget.configJson?.source === src && styles.sizeSelectActive]}
+                        >
+                          <Text style={styles.sizeSelectText}>
+                            {src === 'bulletins' ? 'بخشنامه‌ها' : 'وظایف'}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    <Text style={styles.configLabel}>تعداد سطرها (Limit)</Text>
+                    <TextInput
+                      value={String(editingWidget.configJson?.limit || 3)}
+                      keyboardType="numeric"
+                      onChangeText={(val) => setEditingWidget({
+                        ...editingWidget,
+                        configJson: { ...editingWidget.configJson, limit: Number(val) || 3 }
+                      })}
+                      style={styles.configInput}
+                    />
+                  </>
+                )}
+
+                {editingWidget.widgetType === 'banner' && (
+                  <>
+                    <Text style={styles.configLabel}>متن داخل بنر</Text>
+                    <TextInput
+                      value={editingWidget.configJson?.content || ''}
+                      onChangeText={(val) => setEditingWidget({
+                        ...editingWidget,
+                        configJson: { ...editingWidget.configJson, content: val }
+                      })}
+                      style={styles.configInput}
+                      placeholder="متن پیام ایمنی..."
+                    />
+                  </>
+                )}
+
+                <TouchableOpacity
+                  style={[styles.saveButton, { marginTop: 20 }]}
+                  onPress={saveWidgetConfig}
+                >
+                  <Text style={styles.saveButtonText}>ذخیره و ثبت موقت</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
 
       {/* Live Preview Modal */}
       {previewVisible && (
@@ -515,4 +957,5 @@ export function UIBuilderScreen({ navigation }: any) {
     </SafeAreaView>
   )
 }
-export default UIBuilderScreen;
+
+export default UIBuilderScreen

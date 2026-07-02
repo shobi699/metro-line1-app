@@ -11,6 +11,7 @@ import {
 } from 'react-native'
 import { useAuthStore } from '../stores/auth'
 import { useTheme } from '../shared/ThemeProvider'
+import { ScreenWrapper } from '../shared/ScreenWrapper'
 import { API_URL } from '../shared/config'
 import { MessageSquare, Send, ThumbsUp, Star, AlertTriangle } from 'lucide-react-native'
 
@@ -24,7 +25,7 @@ interface FeedbackItem {
   createdAt: string
 }
 
-export function FeedbackScreen() {
+export function FeedbackScreen({ navigation }: any) {
   const accessToken = useAuthStore((s) => s.accessToken)
   const [items, setItems] = useState<FeedbackItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -128,7 +129,8 @@ export function FeedbackScreen() {
   })
 
   return (
-    <View style={styles.container}>
+    <ScreenWrapper title="انتقادات و پیشنهادات" navigation={navigation}>
+      <View style={styles.container}>
       <TouchableOpacity style={styles.newButton} onPress={() => setShowForm(!showForm)} activeOpacity={0.7}>
         <Send size={16} color={theme.colors.onPrimary} style={{ transform: [{ scaleX: -1 }] }} />
         <Text style={styles.newButtonText}>پیام جدید</Text>
@@ -214,7 +216,8 @@ export function FeedbackScreen() {
           }
         />
       )}
-    </View>
+      </View>
+    </ScreenWrapper>
   )
 }
 

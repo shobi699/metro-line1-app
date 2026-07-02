@@ -22,7 +22,9 @@ interface Message {
 
 import { useTheme } from '../shared/ThemeProvider'
 
-export function AIAssistantScreen() {
+import { ScreenWrapper } from '../shared/ScreenWrapper'
+
+export function AIAssistantScreen({ navigation }: any) {
   const accessToken = useAuthStore((s) => s.accessToken)
   const [inputText, setInputText] = useState('')
   const [messages, setMessages] = useState<Message[]>([
@@ -98,23 +100,6 @@ export function AIAssistantScreen() {
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-    },
-    header: {
-      height: 56,
-      flexDirection: 'row-reverse',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
-      gap: 8,
-      backgroundColor: theme.colors.surface,
-      ...theme.shadows.level1,
-    },
-    headerTitle: {
-      fontSize: 15,
-      color: theme.colors.primary,
-      fontWeight: 'bold',
-      fontFamily: theme.typography.screenTitle.fontFamily,
     },
     messagesList: {
       padding: 16,
@@ -207,60 +192,57 @@ export function AIAssistantScreen() {
   })
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      style={styles.container}
-    >
-      <View style={styles.header}>
-        <Bot size={24} color={theme.colors.primary} />
-        <Text style={styles.headerTitle}>دستیار هوشمند قوانین و عیب‌یابی</Text>
-      </View>
-
-      <ScrollView
-        contentContainerStyle={styles.messagesList}
-        ref={(ref) => ref?.scrollToEnd({ animated: true })}
+    <ScreenWrapper title="دستیار هوشمند قوانین و عیب‌یابی" navigation={navigation}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        style={styles.container}
       >
-        {messages.map((item) => (
-          <View
-            key={item.id}
-            style={[
-              styles.messageBubble,
-              item.isUser ? styles.userBubble : styles.botBubble,
-            ]}
-          >
-            {!item.isUser && (
-              <View style={styles.botBadge}>
-                <Bot size={12} color={theme.colors.primary} style={{ marginLeft: 4 }} />
-                <Text style={styles.botBadgeText}>هوش مصنوعی</Text>
-              </View>
-            )}
-            <Text style={styles.messageText}>{item.text}</Text>
-          </View>
-        ))}
-        {loading && (
-          <View style={[styles.messageBubble, styles.botBubble, styles.loadingBubble]}>
-            <ActivityIndicator size="small" color={theme.colors.primary} />
-          </View>
-        )}
-      </ScrollView>
+        <ScrollView
+          contentContainerStyle={styles.messagesList}
+          ref={(ref) => ref?.scrollToEnd({ animated: true })}
+        >
+          {messages.map((item) => (
+            <View
+              key={item.id}
+              style={[
+                styles.messageBubble,
+                item.isUser ? styles.userBubble : styles.botBubble,
+              ]}
+            >
+              {!item.isUser && (
+                <View style={styles.botBadge}>
+                  <Bot size={12} color={theme.colors.primary} style={{ marginLeft: 4 }} />
+                  <Text style={styles.botBadgeText}>هوش مصنوعی</Text>
+                </View>
+              )}
+              <Text style={styles.messageText}>{item.text}</Text>
+            </View>
+          ))}
+          {loading && (
+            <View style={[styles.messageBubble, styles.botBubble, styles.loadingBubble]}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+            </View>
+          )}
+        </ScrollView>
 
-      {/* باکس ارسال پیام */}
-      <View style={styles.inputBar}>
-        <TextInput
-          style={styles.messageInput}
-          value={inputText}
-          onChangeText={setInputText}
-          placeholder="شرح عیب یا کد خطا را وارد کنید..."
-          placeholderTextColor={theme.colors.secondary}
-          textAlign="right"
-          onSubmitEditing={handleSend}
-        />
-        <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={loading}>
-          <Send size={18} color={theme.colors.onPrimary} style={styles.sendIconFlipped} />
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+        {/* باکس ارسال پیام */}
+        <View style={styles.inputBar}>
+          <TextInput
+            style={styles.messageInput}
+            value={inputText}
+            onChangeText={setInputText}
+            placeholder="شرح عیب یا کد خطا را وارد کنید..."
+            placeholderTextColor={theme.colors.secondary}
+            textAlign="right"
+            onSubmitEditing={handleSend}
+          />
+          <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={loading}>
+            <Send size={18} color={theme.colors.onPrimary} style={styles.sendIconFlipped} />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </ScreenWrapper>
   )
 }
 

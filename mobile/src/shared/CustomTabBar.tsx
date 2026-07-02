@@ -5,26 +5,30 @@ import { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import { MaterialIcons } from '@expo/vector-icons'
 // Context provider for theme
 import { useTheme } from '@/shared/ThemeProvider'
+import { BlurView } from 'expo-blur'
 import { useUIBuilderStore } from '../stores/ui-builder'
 
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-  const { theme } = useTheme()
+  const { theme, isDark } = useTheme()
 
   const styles = StyleSheet.create({
+    containerWrapper: {
+      overflow: 'hidden',
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      elevation: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+    },
     container: {
       flexDirection: 'row-reverse',
       justifyContent: 'space-around',
       alignItems: 'center',
-      backgroundColor: theme.colors.surface,
       paddingHorizontal: theme.spacing.containerMargin,
-      paddingVertical: 8,
-      borderTopLeftRadius: theme.borderRadius.xl,
-      borderTopRightRadius: theme.borderRadius.xl,
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      ...theme.shadows.level1,
+      paddingVertical: 6,
+      backgroundColor: isDark ? 'rgba(30, 30, 30, 0.75)' : 'rgba(255, 255, 255, 0.85)',
     },
     tabButton: {
       flex: 1,
@@ -34,7 +38,7 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
       borderRadius: theme.borderRadius.xl,
     },
     activeTabButton: {
-      backgroundColor: `${theme.colors.primaryContainer}1A`, // 10% opacity hex
+      backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
       transform: [{ scale: 0.95 }],
     },
     icon: {
@@ -48,85 +52,87 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
   })
 
   return (
-    <SafeAreaView edges={['bottom']} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'transparent' }}>
-      <View style={styles.container}>
-        {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key]
-          const label =
-            options.tabBarLabel !== undefined
-              ? options.tabBarLabel
-              : options.title !== undefined
-              ? options.title
-              : route.name
+    <SafeAreaView edges={['bottom']} style={{ backgroundColor: isDark ? 'rgba(30, 30, 30, 0.75)' : 'rgba(255, 255, 255, 0.85)' }}>
+      <View style={styles.containerWrapper}>
+        <BlurView tint={isDark ? "dark" : "light"} intensity={80} style={styles.container}>
+          {state.routes.map((route, index) => {
+            const { options } = descriptors[route.key]
+            const label =
+              options.tabBarLabel !== undefined
+                ? options.tabBarLabel
+                : options.title !== undefined
+                ? options.title
+                : route.name
 
-          const isFocused = state.index === index
+            const isFocused = state.index === index
 
-          const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            })
+            const onPress = () => {
+              const event = navigation.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+              })
 
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name)
+              if (!isFocused && !event.defaultPrevented) {
+                navigation.navigate(route.name)
+              }
             }
-          }
 
-          const menuItems = useUIBuilderStore.getState().menuItems
-          const menuItem = menuItems.find(item => item.label === route.name)
-          let iconName: keyof typeof MaterialIcons.glyphMap = 'help'
-          
-          if (menuItem) {
-            const iconMap: Record<string, keyof typeof MaterialIcons.glyphMap> = {
-              LayoutDashboard: 'home',
-              Calendar: 'schedule',
-              Bell: 'notifications',
-              MessageSquare: 'chat',
-              User: 'person',
-              home: 'home',
-              calendar: 'schedule',
-              chat: 'chat',
-              tickets: 'confirmation-number',
-              profile: 'person',
-              announcements: 'notifications',
-              radio: 'radio',
-              checklist: 'rule',
-              settings: 'settings',
-              info: 'info',
+            const menuItems = useUIBuilderStore.getState().menuItems
+            const menuItem = menuItems.find(item => item.label === route.name)
+            let iconName: keyof typeof MaterialIcons.glyphMap = 'help'
+            
+            if (menuItem) {
+              const iconMap: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+                LayoutDashboard: 'home',
+                Calendar: 'schedule',
+                Bell: 'notifications',
+                MessageSquare: 'chat',
+                User: 'person',
+                home: 'home',
+                calendar: 'schedule',
+                chat: 'chat',
+                tickets: 'confirmation-number',
+                profile: 'person',
+                announcements: 'notifications',
+                radio: 'radio',
+                checklist: 'rule',
+                settings: 'settings',
+                info: 'info',
+              }
+              iconName = iconMap[menuItem.icon] || (menuItem.icon as any) || 'help'
+            } else {
+              if (route.name === 'داشبورد') iconName = 'home'
+              if (route.name === 'شیفت‌ها') iconName = 'schedule'
+              if (route.name === 'گفتگو') iconName = 'chat'
+              if (route.name === 'اعلان‌ها') iconName = 'notifications'
+              if (route.name === 'پروفایل') iconName = 'person'
             }
-            iconName = iconMap[menuItem.icon] || (menuItem.icon as any) || 'help'
-          } else {
-            if (route.name === 'داشبورد') iconName = 'home'
-            if (route.name === 'شیفت‌ها') iconName = 'schedule'
-            if (route.name === 'گفتگو') iconName = 'chat'
-            if (route.name === 'اعلان‌ها') iconName = 'notifications'
-            if (route.name === 'پروفایل') iconName = 'person'
-          }
 
-          return (
-            <TouchableOpacity
-              key={route.key}
-              accessibilityRole="button"
-              accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={options.tabBarAccessibilityLabel}
-              testID={options.tabBarTestID}
-              onPress={onPress}
-              style={[styles.tabButton, isFocused && styles.activeTabButton]}
-              activeOpacity={0.7}
-            >
-              <MaterialIcons
-                name={iconName}
-                size={24}
-                color={isFocused ? theme.colors.primary : theme.colors.secondary}
-                style={styles.icon}
-              />
-              <Text style={[styles.label, { color: isFocused ? theme.colors.primary : theme.colors.secondary }]}>
-                {label as string}
-              </Text>
-            </TouchableOpacity>
-          )
-        })}
+            return (
+              <TouchableOpacity
+                key={route.key}
+                accessibilityRole="button"
+                accessibilityState={isFocused ? { selected: true } : {}}
+                accessibilityLabel={options.tabBarAccessibilityLabel}
+                testID={options.tabBarTestID}
+                onPress={onPress}
+                style={[styles.tabButton, isFocused && styles.activeTabButton]}
+                activeOpacity={0.7}
+              >
+                <MaterialIcons
+                  name={iconName}
+                  size={24}
+                  color={isFocused ? theme.colors.primary : theme.colors.secondary}
+                  style={styles.icon}
+                />
+                <Text style={[styles.label, { color: isFocused ? theme.colors.primary : theme.colors.secondary }]}>
+                  {label as string}
+                </Text>
+              </TouchableOpacity>
+            )
+          })}
+        </BlurView>
       </View>
     </SafeAreaView>
   )

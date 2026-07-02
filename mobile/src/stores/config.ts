@@ -7,6 +7,9 @@ export interface MobileConfig {
   brandColor: string
   chatMaxMessageLength: number
   allowNoWagon: boolean
+  appVersion?: string
+  developerText?: string
+  socialLinks?: Array<{ platform: string; url: string; icon: string }>
   mobile: {
     enableSos: boolean
     geofencingEnabled: boolean
@@ -15,6 +18,11 @@ export interface MobileConfig {
     sosRecipientPhone: string
     activeTheme: 'dark' | 'light' | 'system'
     locationTrackingInterval: number
+    dashboardBanner?: {
+      enabled: boolean
+      url: string
+      link: string
+    }
   }
   comms?: {
     voiceChatEnabled: boolean

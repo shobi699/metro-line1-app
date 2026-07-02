@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSettingValue } from '@/server/modules/settings/service'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const appName = await getSettingValue('general.appName', 'سیر و حرکت خط یک مترو')
     const brandColor = await getSettingValue('general.brandColor', '#e53935')
@@ -10,6 +10,46 @@ export async function GET() {
     const allowRegistration = await getSettingValue('general.allowRegistration', true)
     const passwordPolicyMinLength = await getSettingValue('general.passwordPolicyMinLength', 8)
     const directoryVisibleFields = await getSettingValue('directory.visible_fields', 'phone,email,personnelNo,post,shift,shiftType,group,startLocation,vehicles')
+    
+    // New mobile branding settings
+    const appVersion = await getSettingValue('general.appVersion', 'نسخه ۱.۵.۰')
+    const developerText = await getSettingValue('general.developerText', 'توسعه داده شده توسط بخش فناوری سیر و حرکت')
+    const socialLinksRaw = await getSettingValue('general.socialLinks', '[]')
+    let socialLinks = []
+    try {
+      socialLinks = JSON.parse(socialLinksRaw)
+    } catch {
+      socialLinks = []
+    }
+
+    // Mobile banner settings
+    const bannerEnabled = await getSettingValue('mobile.dashboard.banner.enabled', true)
+    let bannerUrl = await getSettingValue('mobile.dashboard.banner.url', 'https://picsum.photos/id/1050/800/250')
+    const bannerLink = await getSettingValue('mobile.dashboard.banner.link', 'https://metro.tehran.ir')
+
+    // App Download settings
+    const downloadTitle = await getSettingValue('download.title', 'دانلود اپلیکیشن پرسنلی خط ۱')
+    const downloadDescription = await getSettingValue('download.description', 'نسخه‌های رسمی اندروید، آیفون و وب‌اپلیکیشن برای استفاده پرسنل و راهبران خط یک متروی تهران')
+    const downloadAndroidType = await getSettingValue('download.android.type', 'url')
+    let downloadAndroidValue = await getSettingValue('download.android.value', 'https://metro.tehran.ir')
+    const downloadIosType = await getSettingValue('download.ios.type', 'url')
+    let downloadIosValue = await getSettingValue('download.ios.value', 'https://metro.tehran.ir')
+    const downloadWebUrl = await getSettingValue('download.web.url', 'https://metro.tehran.ir')
+
+    const host = request.headers.get('host') || 'localhost:3000'
+    const protocol = request.headers.get('x-forwarded-proto') || 'http'
+    const baseUrl = `${protocol}://${host}`
+
+    // Convert relative URL to absolute
+    if (bannerUrl.startsWith('/')) {
+      bannerUrl = `${baseUrl}${bannerUrl}`
+    }
+    if (downloadAndroidValue.startsWith('/')) {
+      downloadAndroidValue = `${baseUrl}${downloadAndroidValue}`
+    }
+    if (downloadIosValue.startsWith('/')) {
+      downloadIosValue = `${baseUrl}${downloadIosValue}`
+    }
 
     return NextResponse.json({
       data: {
@@ -22,6 +62,25 @@ export async function GET() {
         directory: {
           visibleFields: directoryVisibleFields,
         },
+        appVersion,
+        developerText,
+        socialLinks,
+        mobile: {
+          dashboardBanner: {
+            enabled: bannerEnabled,
+            url: bannerUrl,
+            link: bannerLink
+          }
+        },
+        download: {
+          title: downloadTitle,
+          description: downloadDescription,
+          androidType: downloadAndroidType,
+          androidValue: downloadAndroidValue,
+          iosType: downloadIosType,
+          iosValue: downloadIosValue,
+          webUrl: downloadWebUrl
+        }
       },
     })
   } catch {

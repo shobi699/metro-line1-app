@@ -35,6 +35,7 @@ import { useNetworkStore } from '../stores/network'
 import { API_URL } from '../shared/config'
 import { toFa } from '../shared/jalali'
 import { useTheme } from '../shared/ThemeProvider'
+import { ScreenWrapper } from '../shared/ScreenWrapper'
 
 interface ChecklistItem {
   label: string
@@ -277,15 +278,8 @@ export function ChecklistsScreen({ navigation }: any) {
   }, [activeTemplate, checkedItems])
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ChevronRight size={20} color={theme.colors.onSurface} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>چک‌لیست‌های فنی قطار (خط ۱)</Text>
-        <View style={{ width: 24 }} />
-      </View>
+    <ScreenWrapper title="چک‌لیست‌های فنی قطار (خط ۱)" navigation={navigation}>
+      <View style={styles.container}>
 
       {/* Admin Simulation Toggle Bar */}
       <View style={styles.adminSimulationBar}>
@@ -642,7 +636,8 @@ export function ChecklistsScreen({ navigation }: any) {
 
         </ScrollView>
       )}
-    </View>
+      </View>
+    </ScreenWrapper>
   )
 }
 

@@ -10,18 +10,20 @@ import {
   Image,
   SafeAreaView,
   Modal,
-  Dimensions
+  Dimensions,
+  Linking
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { MaterialIcons } from '@expo/vector-icons'
 import { useAuthStore } from '../stores/auth'
 import { useConfigStore } from '../stores/config'
 import { useNetworkStore } from '../stores/network'
-import { API_URL } from '../shared/config'
+import { API_URL, BASE_URL } from '../shared/config'
 import { useTheme } from '../shared/ThemeProvider'
 import { useUIBuilderStore } from '../stores/ui-builder'
 import { DynamicRenderer } from '../shared/DynamicRenderer'
 import { handleDynamicNavigation } from '../shared/navigation-helper'
+import { ScreenWrapper } from '../shared/ScreenWrapper'
 
 interface DashboardStats {
   users: number
@@ -143,55 +145,55 @@ export function HomeScreen({ navigation }: any) {
   }, [navigation])
 
   const styles = StyleSheet.create({
+    bannerSection: { paddingHorizontal: 16, marginTop: 8, marginBottom: 8 },
+    bannerImage: { width: '100%', height: 75, borderRadius: 12, backgroundColor: theme.colors.surface },
     safeArea: { flex: 1, backgroundColor: theme.colors.background },
-    container: { flex: 1, paddingBottom: 20 },
+    container: { flex: 1, paddingBottom: 10 },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background },
-    header: {
+    
+    // Greeting
+    greetingCard: {
       flexDirection: 'row-reverse',
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: theme.spacing.containerMargin,
-      paddingVertical: 10,
-      backgroundColor: theme.colors.background,
+      marginTop: 8,
+      marginBottom: 10,
     },
-    headerProfile: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10 },
-    avatar: { width: 42, height: 42, borderRadius: 21, borderWidth: 2, borderColor: theme.colors.surfaceContainer },
-    greeting: { fontFamily: theme.typography.screenTitle.fontFamily, fontSize: 16, fontWeight: '700', color: theme.colors.primary, textAlign: 'right' },
-    dateText: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: 11, color: theme.colors.secondary, textAlign: 'right' },
-    headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    syncBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 9999 },
-    syncText: { fontFamily: theme.typography.captionSm.fontFamily, fontSize: 10, color: '#166534' },
-    notificationBtn: { padding: 6, borderRadius: 9999 },
-    notificationDot: { position: 'absolute', top: 4, right: 4, width: 8, height: 8, backgroundColor: theme.colors.primary, borderRadius: 4, borderWidth: 2, borderColor: theme.colors.background },
-    
+    greetingTextContainer: { alignItems: 'flex-start' },
+    greetingName: { fontSize: 16, fontWeight: 'bold', color: theme.colors.onSurface, fontFamily: theme.typography.screenTitle.fontFamily },
+    greetingDate: { fontSize: 11, color: theme.colors.secondary, marginTop: 2, fontFamily: theme.typography.captionSm.fontFamily },
+    greetingAvatar: { width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: theme.colors.primary },
+
     section: { paddingHorizontal: theme.spacing.containerMargin, marginBottom: 10 },
-    sectionTitle: { fontFamily: theme.typography.sectionTitle.fontFamily, fontSize: 13, fontWeight: '700', color: theme.colors.onSurface, marginBottom: 6, textAlign: 'right' },
+    sectionTitle: { fontFamily: theme.typography.sectionTitle.fontFamily, fontSize: 13, fontWeight: '700', color: theme.colors.onSurface, marginBottom: 8, textAlign: 'right' },
     
+    // Hero Card (Compact)
     heroCard: { backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.xl, padding: 12, ...theme.shadows.level1, borderColor: theme.colors.surfaceVariant, borderWidth: 1, overflow: 'hidden' },
-    heroIndicator: { position: 'absolute', right: 0, top: 0, bottom: 0, width: 5, backgroundColor: '#f59e0b' },
-    heroHeader: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },
+    heroIndicator: { position: 'absolute', right: 0, top: 0, bottom: 0, width: 4, backgroundColor: '#f59e0b' },
+    heroHeader: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+    heroTitleRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
     heroTitle: { fontFamily: theme.typography.sectionTitle.fontFamily, fontSize: 13, color: theme.colors.onSurface, fontWeight: '700' },
-    shiftBadge: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, backgroundColor: '#fffbeb', borderColor: '#fef3c7', borderWidth: 1, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 9999 },
-    shiftBadgeText: { color: '#d97706', fontFamily: theme.typography.captionSm.fontFamily, fontSize: 11 },
-    heroContent: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 },
-    heroTime: { fontFamily: theme.typography.numericHero.fontFamily, fontSize: 28, fontWeight: '800', color: theme.colors.onSurface, textAlign: 'left' },
+    shiftBadge: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, backgroundColor: '#fffbeb', borderColor: '#fef3c7', borderWidth: 1, paddingHorizontal: 8, paddingVertical: 2, borderRadius: theme.borderRadius.sm },
+    shiftBadgeText: { color: '#d97706', fontFamily: theme.typography.captionSm.fontFamily, fontSize: 10 },
+    heroContent: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-end' },
+    heroTime: { fontFamily: theme.typography.numericHero.fontFamily, fontSize: 22, fontWeight: '800', color: theme.colors.onSurface, textAlign: 'left' },
     heroLocation: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, marginTop: 4 },
-    heroLocationText: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: 12, color: theme.colors.secondary },
-    heroStatusBadge: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, backgroundColor: theme.colors.surfaceContainer, paddingHorizontal: 10, paddingVertical: 4, borderRadius: theme.borderRadius.md },
-    heroStatusText: { color: theme.colors.primary, fontFamily: theme.typography.captionSm.fontFamily, fontSize: 11 },
-    heroButton: { backgroundColor: theme.colors.primary, borderRadius: theme.borderRadius.lg, paddingVertical: 10, flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', gap: 6, ...theme.shadows.level2 },
-    heroButtonText: { color: theme.colors.onPrimary, fontFamily: theme.typography.cardTitle.fontFamily, fontSize: 13, fontWeight: '600' },
+    heroLocationText: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: 11, color: theme.colors.secondary },
+    heroStatusBadge: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, backgroundColor: theme.colors.surfaceContainer, paddingHorizontal: 8, paddingVertical: 4, borderRadius: theme.borderRadius.md },
+    heroStatusText: { color: theme.colors.primary, fontFamily: theme.typography.captionSm.fontFamily, fontSize: 10 },
 
-    actionsGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between' },
-    actionCard: { width: '48%', alignItems: 'center', backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.lg, padding: 10, ...theme.shadows.level1, borderWidth: 1, borderColor: theme.colors.surfaceVariant },
-    actionIconContainer: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-    actionText: { fontFamily: theme.typography.captionSm.fontFamily, fontSize: 11, color: theme.colors.onSurface, textAlign: 'center', fontWeight: '600' },
+    // Actions Grid (4 columns)
+    actionsGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', justifyContent: 'flex-start' },
+    actionCard: { width: '25%', alignItems: 'center', marginBottom: 10 },
+    actionIconContainer: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 4, ...theme.shadows.level1 },
+    actionText: { fontFamily: theme.typography.captionSm.fontFamily, fontSize: 10, color: theme.colors.onSurface, textAlign: 'center', fontWeight: '600' },
 
-    metricsGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between' },
-    metricCard: { width: '48%', backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.lg, padding: 12, ...theme.shadows.level1, borderWidth: 1, borderColor: theme.colors.surfaceVariant, height: 72, justifyContent: 'space-between' },
+    metricsGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between' },
+    metricCard: { width: '48%', backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.lg, padding: 10, ...theme.shadows.level1, borderWidth: 1, borderColor: theme.colors.surfaceVariant, height: 56, justifyContent: 'space-between' },
     metricHeader: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' },
-    metricLabel: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: 12, color: theme.colors.secondary },
-    metricValue: { fontFamily: theme.typography.numericHero.fontFamily, fontSize: 18, color: theme.colors.onSurface, fontWeight: '800', textAlign: 'right' },
+    metricLabel: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: 11, color: theme.colors.secondary },
+    metricValue: { fontFamily: theme.typography.numericHero.fontFamily, fontSize: 16, color: theme.colors.onSurface, fontWeight: '800', textAlign: 'right' },
 
     modalOverlay: {
       flex: 1,
@@ -274,144 +276,13 @@ export function HomeScreen({ navigation }: any) {
       fontWeight: '700',
       color: theme.colors.onSurface,
       textAlign: 'center',
-    },
-    drawerOverlay: {
-      flex: 1,
-      flexDirection: 'row-reverse',
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    },
-    drawerBackgroundDismiss: {
-      flex: 1,
-    },
-    drawerContent: {
-      width: Dimensions.get('window').width * 0.78,
-      backgroundColor: theme.colors.background,
-      height: '100%',
-      paddingTop: 40,
-      paddingBottom: 20,
-      paddingHorizontal: 16,
-      borderLeftWidth: 1,
-      borderLeftColor: theme.colors.surfaceVariant,
-      justifyContent: 'space-between',
-    },
-    drawerProfileHeader: {
-      flexDirection: 'row-reverse',
-      alignItems: 'center',
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.surfaceVariant,
-      paddingBottom: 16,
-      marginBottom: 16,
-    },
-    drawerAvatar: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      borderWidth: 2,
-      borderColor: theme.colors.primary,
-    },
-    drawerProfileInfo: {
-      flex: 1,
-      marginRight: 12,
-      alignItems: 'flex-start',
-    },
-    drawerUserName: {
-      fontFamily: theme.typography.screenTitle.fontFamily,
-      fontSize: 14,
-      fontWeight: '700',
-      color: theme.colors.onSurface,
-      textAlign: 'right',
-    },
-    drawerUserRole: {
-      fontFamily: theme.typography.captionSm.fontFamily,
-      fontSize: 11,
-      color: theme.colors.primary,
-      fontWeight: '600',
-      marginTop: 2,
-      textAlign: 'right',
-    },
-    drawerUserPhone: {
-      fontFamily: theme.typography.captionSm.fontFamily,
-      fontSize: 10,
-      color: theme.colors.secondary,
-      marginTop: 1,
-      textAlign: 'right',
-    },
-    drawerCloseBtn: {
-      padding: 6,
-      borderRadius: 9999,
-      backgroundColor: theme.colors.surfaceContainer,
-    },
-    drawerScroll: {
-      flexGrow: 1,
-    },
-    drawerList: {
-      gap: 4,
-    },
-    drawerItem: {
-      flexDirection: 'row-reverse',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: 10,
-      paddingHorizontal: 8,
-      borderRadius: theme.borderRadius.md,
-      backgroundColor: 'transparent',
-    },
-    drawerItemRight: {
-      flexDirection: 'row-reverse',
-      alignItems: 'center',
-      gap: 12,
-    },
-    drawerItemIconContainer: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    drawerItemText: {
-      fontFamily: theme.typography.bodyMd.fontFamily,
-      fontSize: 13,
-      fontWeight: '600',
-      color: theme.colors.onSurface,
-    },
-    drawerFooter: {
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.surfaceVariant,
-      paddingTop: 12,
-      alignItems: 'center',
-    },
-    drawerFooterText: {
-      fontFamily: theme.typography.captionSm.fontFamily,
-      fontSize: 10,
-      color: theme.colors.secondary,
-    },
-    drawerVersionText: {
-      fontFamily: theme.typography.captionSm.fontFamily,
-      fontSize: 9,
-      color: theme.colors.secondary,
-      opacity: 0.7,
-      marginTop: 2,
-    },
+    }
   })
 
   const widgets = useUIBuilderStore((s) => s.widgets)
   const menuItems = useUIBuilderStore((s) => s.menuItems)
-
-  const mapMenuIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'home': return 'home'
-      case 'calendar': return 'calendar-today'
-      case 'chat': return 'chat'
-      case 'tickets': return 'report-problem'
-      case 'profile': return 'person'
-      case 'announcements': return 'description'
-      case 'radio': return 'radio'
-      case 'checklist': return 'done-all'
-      case 'settings': return 'settings'
-      case 'info': return 'info'
-      default: return 'menu-open'
-    }
-  }
+  const shiftLabelMap: Record<string, string> = { morning: 'روزکار', evening: 'عصرکار', night: 'شب‌کار', off: 'آف' }
+  const todayLabel = todayShift ? (shiftLabelMap[todayShift.code] ?? todayShift.code) : 'نامشخص'
 
   const componentsToRender = widgets
     .filter(w => w.isVisible)
@@ -466,27 +337,30 @@ export function HomeScreen({ navigation }: any) {
     )
   }
 
-  const shiftLabelMap: Record<string, string> = { morning: 'روزکار', evening: 'عصرکار', night: 'شب‌کار', off: 'آف' }
-  const todayLabel = todayShift ? (shiftLabelMap[todayShift.code] ?? todayShift.code) : 'نامشخص'
-
+  // Expanded Dashboard Actions to 8 items for a 4-column compact layout
   const dashboardActions = [
-    { label: 'اعلام\nخرابی', icon: 'report-problem', color: theme.colors.error, bg: theme.colors.errorContainer, screen: 'تیکت‌ها' },
-    { label: 'لوحه\nکاربر', icon: 'calendar-today', color: theme.colors.primary, bg: theme.colors.surfaceContainerHighest, screen: 'لوحه' },
-    { label: 'دفتر\nتلفن', icon: 'contacts', color: theme.colors.secondary, bg: theme.colors.surfaceContainer, screen: 'دفتر تلفن' },
-    { label: 'سایر\nخدمات', icon: 'apps', color: theme.colors.primary, bg: theme.colors.surfaceContainerLowest, action: 'more' },
+    { label: 'لوحه شیفت', icon: 'calendar-today', color: '#0284c7', bg: '#e0f2fe', screen: 'لوحه' },
+    { label: 'اعلام خرابی', icon: 'report-problem', color: '#dc2626', bg: '#fee2e2', screen: 'تیکت‌ها' },
+    { label: 'حضور و غیاب', icon: 'pin-drop', color: '#16a34a', bg: '#dcfce7', screen: 'حضور و غیاب' },
+    { label: 'دستیار AI', icon: 'assistant', color: '#7c3aed', bg: '#ede9fe', screen: 'دستیار AI' },
+    { label: 'بخشنامه‌ها', icon: 'description', color: '#ea580c', bg: '#ffedd5', screen: 'بخشنامه‌ها' },
+    { label: 'دفتر تلفن', icon: 'contacts', color: '#0d9488', bg: '#ccfbf1', screen: 'دفتر تلفن' },
+    { label: 'بی‌سیم', icon: 'radio', color: '#2563eb', bg: '#dbeafe', screen: 'بی‌سیم راهبری' },
+    { label: 'سایر خدمات', icon: 'apps', color: theme.colors.onSurface, bg: theme.colors.surfaceContainerHighest, action: 'more' },
   ]
 
   const allServices = [
-    { label: 'اعلام خرابی (تیکت)', icon: 'report-problem', color: theme.colors.error, bg: theme.colors.errorContainer, screen: 'تیکت‌ها' },
-    { label: 'لوحه هفتگی (شیفت)', icon: 'calendar-today', color: theme.colors.primary, bg: theme.colors.surfaceContainerHighest, screen: 'لوحه' },
-    { label: 'دفترچه تلفن پرسنل', icon: 'contacts', color: theme.colors.secondary, bg: theme.colors.surfaceContainer, screen: 'دفتر تلفن' },
-    { label: 'بخشنامه‌های ایمنی', icon: 'description', color: theme.colors.primary, bg: theme.colors.surfaceContainerLowest, screen: 'بخشنامه‌ها' },
-    { label: 'دستیار هوشمند AI', icon: 'assistant', color: '#0d9488', bg: '#ccfbf1', screen: 'دستیار AI' },
+    { label: 'اعلام خرابی (تیکت)', icon: 'report-problem', color: '#dc2626', bg: '#fee2e2', screen: 'تیکت‌ها' },
+    { label: 'لوحه هفتگی (شیفت)', icon: 'calendar-today', color: '#0284c7', bg: '#e0f2fe', screen: 'لوحه' },
+    { label: 'دفترچه تلفن پرسنل', icon: 'contacts', color: '#0d9488', bg: '#ccfbf1', screen: 'دفتر تلفن' },
+    { label: 'بخشنامه‌های ایمنی', icon: 'description', color: '#ea580c', bg: '#ffedd5', screen: 'بخشنامه‌ها' },
+    { label: 'دستیار هوشمند AI', icon: 'assistant', color: '#7c3aed', bg: '#ede9fe', screen: 'دستیار AI' },
     { label: 'بی‌سیم راهبری', icon: 'radio', color: '#2563eb', bg: '#dbeafe', screen: 'بی‌سیم راهبری' },
     { label: 'چک‌لیست قبل از حرکت', icon: 'done-all', color: '#16a34a', bg: '#dcfce7', screen: 'چک‌لیست‌ها' },
-    { label: 'اعلام اضطراری (SOS)', icon: 'warning', color: '#dc2626', bg: '#fee2e2', screen: 'SOS' },
-    { label: 'ثبت حضور و غیاب', icon: 'pin-drop', color: '#7c3aed', bg: '#ede9fe', screen: 'حضور و غیاب' },
-    { label: 'کارنامه عملکرد', icon: 'emoji-events', color: '#ea580c', bg: '#ffedd5', screen: 'عملکرد' },
+    { label: 'اعلام اضطراری (SOS)', icon: 'warning', color: '#b91c1c', bg: '#fef2f2', screen: 'SOS' },
+    { label: 'ثبت حضور و غیاب', icon: 'pin-drop', color: '#059669', bg: '#d1fae5', screen: 'حضور و غیاب' },
+    { label: 'سامانه آموزش پرسنل', icon: 'school', color: '#6d28d9', bg: '#f3e8ff', screen: 'آموزش' },
+    { label: 'کارنامه عملکرد', icon: 'emoji-events', color: '#c2410c', bg: '#ffedd5', screen: 'عملکرد' },
   ]
 
   const metrics = [
@@ -495,7 +369,7 @@ export function HomeScreen({ navigation }: any) {
   ]
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <ScreenWrapper title="داشبورد پرسنلی" navigation={navigation}>
       <ScrollView
         style={styles.container}
         refreshControl={
@@ -510,39 +384,32 @@ export function HomeScreen({ navigation }: any) {
           />
         }
       >
-        <View style={styles.header}>
-          <View style={styles.headerProfile}>
-            <Image 
-              source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB3-83sYQfLES0gmvDO5q2w28Raab5S1KepqfdSRMpxZnef78ytjqK2n-NdvYbNjQS_ca544VkccdbSdSpqgoRryJucwTRlS5GxTmUFbVKeezJ1QkeNGF0xe6zNAU4TXydoyFGGOhEl5FdxzcPCCHoPZT84FY-8OQlEniA0nZHCon-Db2rkNuNlkkufryldM1drCGtAjfTeaYeTT-yhX3Cp1zI12skUoqT9lhAWWGomB57lbAnzwP0gimpOjbQlw6053Iws6FeBdLtL' }} 
-              style={styles.avatar} 
-            />
-            <View>
-              <Text style={styles.greeting}>سلام، {user?.name?.split(' ')[0] ?? 'کاربر'} عزیز</Text>
-              <Text style={styles.dateText}>{new Date().toLocaleDateString('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</Text>
-            </View>
+        {/* Compact Premium Greeting */}
+        <View style={styles.greetingCard}>
+          <View style={styles.greetingTextContainer}>
+            <Text style={styles.greetingName}>
+              سلام، {user?.name?.split(' ')[0] ?? 'کاربر'} عزیز
+            </Text>
+            <Text style={styles.greetingDate}>
+              {new Date().toLocaleDateString('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </Text>
           </View>
-          <View style={styles.headerRight}>
-            <TouchableOpacity onPress={() => setShowHamburgerMenu(true)} style={{ padding: 4, marginRight: 6 }}>
-              <MaterialIcons name="menu" size={24} color={theme.colors.onSurfaceVariant} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.notificationBtn}>
-              <MaterialIcons name="notifications" size={20} color={theme.colors.onSurfaceVariant} />
-              <View style={styles.notificationDot} />
-            </TouchableOpacity>
-            <View style={styles.syncBadge}>
-              <MaterialIcons name="cloud-done" size={12} color="#166534" />
-              <Text style={styles.syncText}>همگام‌سازی شده</Text>
-            </View>
-          </View>
+          <Image 
+            source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB3-83sYQfLES0gmvDO5q2w28Raab5S1KepqfdSRMpxZnef78ytjqK2n-NdvYbNjQS_ca544VkccdbSdSpqgoRryJucwTRlS5GxTmUFbVKeezJ1QkeNGF0xe6zNAU4TXydoyFGGOhEl5FdxzcPCCHoPZT84FY-8OQlEniA0nZHCon-Db2rkNuNlkkufryldM1drCGtAjfTeaYeTT-yhX3Cp1zI12skUoqT9lhAWWGomB57lbAnzwP0gimpOjbQlw6053Iws6FeBdLtL' }} 
+            style={styles.greetingAvatar} 
+          />
         </View>
 
         <View style={styles.section}>
-          <View style={styles.heroCard}>
+          <TouchableOpacity style={styles.heroCard} activeOpacity={0.7} onPress={() => navigation.navigate('شیفت‌ها')}>
             <View style={styles.heroIndicator} />
             <View style={styles.heroHeader}>
-              <Text style={styles.heroTitle}>شیفت امروز</Text>
+              <View style={styles.heroTitleRow}>
+                <Text style={styles.heroTitle}>شیفت امروز</Text>
+                <MaterialIcons name="chevron-left" size={16} color={theme.colors.secondary} />
+              </View>
               <View style={styles.shiftBadge}>
-                <MaterialIcons name="light-mode" size={14} color="#d97706" />
+                <MaterialIcons name="light-mode" size={12} color="#d97706" />
                 <Text style={styles.shiftBadgeText}>{todayLabel}</Text>
               </View>
             </View>
@@ -555,15 +422,11 @@ export function HomeScreen({ navigation }: any) {
                 </View>
               </View>
               <View style={styles.heroStatusBadge}>
-                <MaterialIcons name="pending" size={14} color={theme.colors.primary} />
+                <MaterialIcons name="pending" size={12} color={theme.colors.primary} />
                 <Text style={styles.heroStatusText}>در انتظار حضور</Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.heroButton} activeOpacity={0.8} onPress={() => navigation.navigate('شیفت‌ها')}>
-              <Text style={styles.heroButtonText}>مشاهده جزئیات</Text>
-              <MaterialIcons name="arrow-back" size={16} color={theme.colors.onPrimary} />
-            </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
@@ -583,7 +446,7 @@ export function HomeScreen({ navigation }: any) {
                 activeOpacity={0.7}
               >
                 <View style={[styles.actionIconContainer, { backgroundColor: action.bg }]}>
-                  <MaterialIcons name={action.icon as any} size={22} color={action.color} />
+                  <MaterialIcons name={action.icon as any} size={24} color={action.color} />
                 </View>
                 <Text style={styles.actionText}>{action.label}</Text>
               </TouchableOpacity>
@@ -593,7 +456,7 @@ export function HomeScreen({ navigation }: any) {
 
         {componentsToRender.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>ابزارک‌های پویا (داشبورد)</Text>
+            <Text style={styles.sectionTitle}>ابزارک‌های پویا</Text>
             <DynamicRenderer components={componentsToRender} onAction={(action) => {
               if (action?.type === 'navigate') {
                 handleDynamicNavigation(navigation, action.target)
@@ -616,6 +479,29 @@ export function HomeScreen({ navigation }: any) {
             ))}
           </View>
         </View>
+
+        {config?.mobile?.dashboardBanner?.enabled && config?.mobile?.dashboardBanner?.url && (
+          <View style={styles.bannerSection}>
+            <TouchableOpacity 
+              activeOpacity={0.8}
+              onPress={() => {
+                if (config.mobile.dashboardBanner?.link) {
+                  Linking.openURL(config.mobile.dashboardBanner.link).catch(() => {})
+                }
+              }}
+            >
+              <Image 
+                source={{ 
+                  uri: config.mobile.dashboardBanner.url.startsWith('/') 
+                    ? `${BASE_URL}${config.mobile.dashboardBanner.url}` 
+                    : config.mobile.dashboardBanner.url 
+                }} 
+                style={styles.bannerImage}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
 
       {/* Premium All Services Bottom Sheet Modal */}
@@ -666,72 +552,7 @@ export function HomeScreen({ navigation }: any) {
         </View>
       </Modal>
 
-      {/* Hamburger Drawer Modal */}
-      <Modal
-        visible={showHamburgerMenu}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setShowHamburgerMenu(false)}
-      >
-        <View style={styles.drawerOverlay}>
-          <TouchableOpacity 
-            style={styles.drawerBackgroundDismiss} 
-            activeOpacity={1} 
-            onPress={() => setShowHamburgerMenu(false)} 
-          />
-          <View style={styles.drawerContent}>
-            <View>
-              {/* Drawer Header Profile */}
-              <View style={styles.drawerProfileHeader}>
-                <Image 
-                  source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB3-83sYQfLES0gmvDO5q2w28Raab5S1KepqfdSRMpxZnef78ytjqK2n-NdvYbNjQS_ca544VkccdbSdSpqgoRryJucwTRlS5GxTmUFbVKeezJ1QkeNGF0xe6zNAU4TXydoyFGGOhEl5FdxzcPCCHoPZT84FY-8OQlEniA0nZHCon-Db2rkNuNlkkufryldM1drCGtAjfTeaYeTT-yhX3Cp1zI12skUoqT9lhAWWGomB57lbAnzwP0gimpOjbQlw6053Iws6FeBdLtL' }} 
-                  style={styles.drawerAvatar} 
-                />
-                <View style={styles.drawerProfileInfo}>
-                  <Text style={styles.drawerUserName}>{user?.name || 'کاربر سیستم'}</Text>
-                  <Text style={styles.drawerUserRole}>{user?.roleKey === 'admin' ? 'مدیر حرکت (ادمین)' : user?.roleKey === 'super_admin' ? 'مدیر کل سیستم' : 'راهبر قطار'}</Text>
-                  <Text style={styles.drawerUserPhone}>{user?.phone || ''}</Text>
-                </View>
-                <TouchableOpacity onPress={() => setShowHamburgerMenu(false)} style={styles.drawerCloseBtn}>
-                  <MaterialIcons name="close" size={20} color={theme.colors.onSurface} />
-                </TouchableOpacity>
-              </View>
-
-              {/* Drawer Menu List */}
-              <ScrollView contentContainerStyle={styles.drawerScroll} showsVerticalScrollIndicator={false}>
-                <View style={styles.drawerList}>
-                  {menuItems.filter(item => item.isVisible).map((item, i) => (
-                    <TouchableOpacity 
-                      key={i} 
-                      style={styles.drawerItem} 
-                      onPress={() => {
-                        setShowHamburgerMenu(false)
-                        handleDynamicNavigation(navigation, item.route)
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <View style={styles.drawerItemRight}>
-                        <View style={[styles.drawerItemIconContainer, { backgroundColor: theme.colors.surfaceContainerHighest }]}>
-                          <MaterialIcons name={mapMenuIcon(item.icon) as any} size={20} color={theme.colors.primary} />
-                        </View>
-                        <Text style={styles.drawerItemText}>{item.label}</Text>
-                      </View>
-                      <MaterialIcons name="keyboard-arrow-left" size={20} color={theme.colors.secondary} />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
-
-            {/* Drawer Footer */}
-            <View style={styles.drawerFooter}>
-              <Text style={styles.drawerFooterText}>سیر و حرکت خط ۱ مترو تهران</Text>
-              <Text style={styles.drawerVersionText}>نسخه ۱.۱.۰</Text>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

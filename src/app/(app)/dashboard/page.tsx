@@ -319,6 +319,8 @@ export default function DashboardPage() {
   const [emergencyMode, setEmergencyMode] = useState(false)
   const [audioEnabled, setAudioEnabled] = useState(true)
   const [marqueeIndex, setMarqueeIndex] = useState(0)
+  
+  const [bannerConfig, setBannerConfig] = useState<{ enabled: boolean; url: string; link: string } | null>(null)
 
   // Interactive Live Dispatcher Console States
   const [broadcastInput, setBroadcastInput] = useState('')
@@ -379,6 +381,18 @@ export default function DashboardPage() {
       })
       .catch(() => {})
   }, [accessToken])
+  
+  // Fetch banner configuration
+  useEffect(() => {
+    fetch('/api/config')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json?.data?.mobile?.dashboardBanner) {
+          setBannerConfig(json.data.mobile.dashboardBanner)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // Sync Station Status with Emergency Mode
   useEffect(() => {
@@ -876,8 +890,133 @@ export default function DashboardPage() {
       )}
       dir="rtl"
     >
-      {/* ── Dispatcher Live Announcement Ticker ─────────────────────────── */}
-      <div className="w-full bg-surface-container-low/60 border border-border-subtle/50 rounded-xl p-3 flex items-center justify-between gap-3 overflow-hidden backdrop-blur">
+      {/* ── Mobile PWA Dashboard (matches mobile app experience) ─────────── */}
+      <div className="flex md:hidden flex-col gap-5 w-full">
+        {/* Compact greeting card */}
+        <div className="flex items-center justify-between p-2">
+          <div className="flex items-center gap-3">
+            <img 
+              src={user?.customFields?.avatar || 'https://lh3.googleusercontent.com/aida-public/AB6AXuB3-83sYQfLES0gmvDO5q2w28Raab5S1KepqfdSRMpxZnef78ytjqK2n-NdvYbNjQS_ca544VkccdbSdSpqgoRryJucwTRlS5GxTmUFbVKeezJ1QkeNGF0xe6zNAU4TXydoyFGGOhEl5FdxzcPCCHoPZT84FY-8OQlEniA0nZHCon-Db2rkNuNlkkufryldM1drCGtAjfTeaYeTT-yhX3Cp1zI12skUoqT9lhAWWGomB57lbAnzwP0gimpOjbQlw6053Iws6FeBdLtL'} 
+              alt="Avatar" 
+              className="size-11 rounded-full border-2 border-accent object-cover" 
+            />
+            <div className="text-right">
+              <h2 className="text-sm font-black text-foreground">سلام، {user?.name?.split(' ')[0] || 'همکار'} عزیز</h2>
+              <span className="text-[10px] text-foreground-muted mt-0.5 block">{jalali(new Date())}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Shift Card */}
+        <Link href="/shifts">
+          <div className="relative overflow-hidden bg-surface-container-low/60 border border-border-subtle/50 rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-all">
+            <div className="absolute right-0 top-0 bottom-0 w-1 bg-amber-500" />
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Clock className="size-4 text-amber-500" />
+                <span>شیفت امروز</span>
+              </span>
+              <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold">
+                {todayShift ? (shiftLabel[todayShift.code] ?? todayShift.code) : 'نامشخص'}
+              </span>
+            </div>
+            <div className="flex items-end justify-between">
+              <div>
+                <span className="text-lg font-black text-foreground font-mono">۰۷:۰۰ - ۱۹:۰۰</span>
+                <div className="flex items-center gap-1 text-[10px] text-foreground-muted mt-1">
+                  <MapPin className="size-3.5" />
+                  <span>ایستگاه امام خمینی</span>
+                </div>
+              </div>
+              <span className="text-[10px] text-accent font-bold flex items-center gap-1 bg-accent/10 px-2.5 py-1 rounded-full border border-accent/20">
+                <span className="size-1.5 bg-accent rounded-full animate-ping" />
+                در انتظار حضور
+              </span>
+            </div>
+          </div>
+        </Link>
+
+        {/* Quick Access Grid */}
+        <div className="space-y-3">
+          <h3 className="text-xs font-black text-foreground text-right px-1">دسترسی سریع</h3>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: 'اعلام خرابی', href: '/tickets', icon: AlertTriangle, iconColor: 'text-red-500', bgClass: 'bg-red-500/10', borderClass: 'border-red-500/20' },
+              { label: 'لوحه شیفت', href: '/shifts', icon: Calendar, iconColor: 'text-sky-500', bgClass: 'bg-sky-500/10', borderClass: 'border-sky-500/20' },
+              { label: 'دفتر تلفن', href: '/directory', icon: Users, iconColor: 'text-teal-500', bgClass: 'bg-teal-500/10', borderClass: 'border-teal-500/20' },
+              { label: 'بخشنامه‌ها', href: '/content', icon: Newspaper, iconColor: 'text-orange-500', bgClass: 'bg-orange-500/10', borderClass: 'border-orange-500/20' },
+              { label: 'دستیار AI', href: '/ai', icon: Bot, iconColor: 'text-violet-500', bgClass: 'bg-violet-500/10', borderClass: 'border-violet-500/20' },
+              { label: 'بی‌سیم', href: '/comms/radio', icon: Radio, iconColor: 'text-blue-500', bgClass: 'bg-blue-500/10', borderClass: 'border-blue-500/20' },
+              { label: 'چک‌لیست‌ها', href: '/checklists', icon: ClipboardCheck, iconColor: 'text-green-500', bgClass: 'bg-green-500/10', borderClass: 'border-green-500/20' },
+              { label: 'SOS اضطراری', href: '/crisis', icon: ShieldAlert, iconColor: 'text-red-600', bgClass: 'bg-red-600/10', borderClass: 'border-red-600/20' },
+              { label: 'حضور و غیاب', href: '/attendance', icon: MapPin, iconColor: 'text-emerald-500', bgClass: 'bg-emerald-500/10', borderClass: 'border-emerald-500/20' },
+              { label: 'آموزش پرسنل', href: '/learning/exams', icon: Trophy, iconColor: 'text-indigo-500', bgClass: 'bg-indigo-500/10', borderClass: 'border-indigo-500/20' },
+              { label: 'کارنامه عملکرد', href: '/performance', icon: TrendingUp, iconColor: 'text-orange-600', bgClass: 'bg-orange-600/10', borderClass: 'border-orange-600/20' },
+              { label: 'اعلان‌ها', href: '/notifications', icon: BellRing, iconColor: 'text-pink-500', bgClass: 'bg-pink-500/10', borderClass: 'border-pink-500/20' },
+            ].map((service, index) => (
+              <Link href={service.href} key={index}>
+                <div className="bg-surface-container-low/60 border border-border-subtle/50 rounded-2xl p-3 flex flex-col items-center justify-center text-center gap-2 active:scale-95 transition-all min-h-[90px] hover:bg-surface-container-high/40">
+                  <div className={cn("size-10 rounded-xl flex items-center justify-center border", service.bgClass, service.borderClass)}>
+                    <service.icon className={cn("size-5", service.iconColor)} />
+                  </div>
+                  <span className="text-[10px] font-bold text-foreground leading-tight">{service.label}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Dynamic Banner (if enabled) */}
+        {bannerConfig?.enabled && (
+          <a 
+            href={bannerConfig.link || '#'} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="w-full relative h-24 rounded-2xl overflow-hidden shadow-sm border border-border/20 block active:scale-[0.98] transition-all"
+          >
+            <img 
+              src={bannerConfig.url || "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1200&q=80"} 
+              alt="Dashboard Banner" 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+            <div className="absolute bottom-3 right-4 text-white text-right">
+              <h2 className="text-xs font-black text-white">شرکت بهره‌برداری راه‌آهن شهری حومه و تهران</h2>
+              <p className="text-[9px] text-white/80 mt-0.5">پیشخوان مدیریت و کنترل عملیات - خط ۱</p>
+            </div>
+          </a>
+        )}
+
+        {/* Monthly Overview metrics */}
+        <div className="space-y-3">
+          <h3 className="text-xs font-black text-foreground text-right px-1 font-sans">نمای کلی ماه</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-surface-container-low/60 border border-border-subtle/50 rounded-2xl p-4 flex items-center justify-between">
+              <div className="text-right">
+                <span className="text-[10px] text-foreground-muted block font-sans">تیکت‌های باز</span>
+                <span className="text-lg font-black text-foreground font-mono mt-1 block">{toFa(stats.openTickets)}</span>
+              </div>
+              <div className="size-9 rounded-lg bg-[#dc2626]/10 flex items-center justify-center border border-[#dc2626]/20">
+                <AlertTriangle className="size-4.5 text-[#dc2626]" />
+              </div>
+            </div>
+            <div className="bg-surface-container-low/60 border border-border-subtle/50 rounded-2xl p-4 flex items-center justify-between">
+              <div className="text-right">
+                <span className="text-[10px] text-foreground-muted block font-sans">اعلان جدید</span>
+                <span className="text-lg font-black text-foreground font-mono mt-1 block">{toFa(stats.unreadBulletins)}</span>
+              </div>
+              <div className="size-9 rounded-lg bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
+                <Newspaper className="size-4.5 text-orange-500" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Desktop Command Dashboard ────────────────────────────────────── */}
+      <div className="hidden md:flex flex-col gap-5 w-full">
+        {/* ── Dispatcher Live Announcement Ticker ─────────────────────────── */}
+        <div className="w-full bg-surface-container-low/60 border border-border-subtle/50 rounded-xl p-3 flex items-center justify-between gap-3 overflow-hidden backdrop-blur">
         <div className="flex items-center gap-2 shrink-0">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
@@ -988,6 +1127,27 @@ export default function DashboardPage() {
             </Link>
           </div>
         </div>
+      )}
+
+      {/* ── Web Dashboard Banner ───────────────────────────────────────── */}
+      {!emergencyMode && bannerConfig?.enabled && (
+        <a 
+          href={bannerConfig.link || '#'} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="w-full relative h-32 md:h-48 rounded-2xl overflow-hidden mb-2 shadow-sm border border-border/20 block hover:opacity-95 transition-opacity"
+        >
+          <img 
+            src={bannerConfig.url || "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1200&q=80"} 
+            alt="Dashboard Banner" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+          <div className="absolute bottom-4 right-6 text-white text-right">
+            <h2 className="text-lg font-black text-white">شرکت بهره‌برداری راه‌آهن شهری حومه و تهران</h2>
+            <p className="text-xs text-white/80 mt-1">پیشخوان مدیریت و کنترل عملیات - خط ۱</p>
+          </div>
+        </a>
       )}
 
       {activeTab === 'overview' ? (
@@ -1702,6 +1862,7 @@ export default function DashboardPage() {
           )}
         </div>
       )}
+      </div>
     </div>
   )
 }

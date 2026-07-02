@@ -249,8 +249,60 @@ export const defaultTheme: Theme = {
   }
 }
 
-export const darkTheme: Theme = defaultTheme
-export const Theme = defaultTheme // export value for unedited screens
+export const darkTheme: Theme = {
+  ...defaultTheme,
+  colors: {
+    ...defaultTheme.colors,
+    surface: '#121318',
+    surfaceDim: '#0a0b0d',
+    surfaceBright: '#1d1e24',
+    surfaceContainerLowest: '#0d0e12',
+    surfaceContainerLow: '#181920',
+    surfaceContainer: '#202128',
+    surfaceContainerHigh: '#282a32',
+    surfaceContainerHighest: '#30323c',
+    onSurface: '#e2e2e9',
+    onSurfaceVariant: '#c4c6d0',
+    inverseSurface: '#e2e2e9',
+    inverseOnSurface: '#121318',
+    outline: '#8e9099',
+    outlineVariant: '#44474f',
+    surfaceTint: '#c00014',
+    
+    primary: '#ae0011',
+    onPrimary: '#ffffff',
+    primaryContainer: '#d71920',
+    onPrimaryContainer: '#ffece9',
+    inversePrimary: '#ffb4ab',
+    primaryFixed: '#ffdad6',
+    primaryFixedDim: '#ffb4ab',
+    onPrimaryFixed: '#410002',
+    onPrimaryFixedVariant: '#93000d',
+    
+    secondary: '#c0c6db',
+    onSecondary: '#292f40',
+    secondaryContainer: '#404658',
+    onSecondaryContainer: '#dce2f7',
+    
+    background: '#0d0e12',
+    onBackground: '#e2e2e9',
+    surfaceVariant: '#282a32',
+    
+    danger: '#ffb4ab',
+    text: '#e2e2e9',
+    textSecondary: '#c0c6db',
+    border: '#44474f',
+    card: '#181920',
+    
+    accent: '#ae0011',
+    textMuted: '#8e8e93',
+    borderSubtle: '#44474f',
+    info: '#38bdf8',
+    warning: '#fbbf24',
+    success: '#4ade80'
+  }
+}
+export const Theme = defaultTheme
 export const cycleColors = {
   morning: '#F59E0B', // Amber
   morningBg: '#FEF3C7',

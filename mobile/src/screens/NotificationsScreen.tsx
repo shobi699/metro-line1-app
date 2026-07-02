@@ -9,6 +9,7 @@ import {
 } from 'react-native'
 import { useAuthStore } from '../stores/auth'
 import { useTheme } from '../shared/ThemeProvider'
+import { ScreenWrapper } from '../shared/ScreenWrapper'
 import { API_URL } from '../shared/config'
 import { Bell, Info, AlertTriangle, AlertCircle } from 'lucide-react-native'
 
@@ -21,7 +22,7 @@ interface Notification {
   createdAt: string
 }
 
-export function NotificationsScreen() {
+export function NotificationsScreen({ navigation }: any) {
   const accessToken = useAuthStore((s) => s.accessToken)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
@@ -36,7 +37,7 @@ export function NotificationsScreen() {
   }
 
   useEffect(() => {
-    loadNotifications()
+    void loadNotifications()
   }, [accessToken, filter])
 
   async function loadNotifications() {
@@ -89,63 +90,65 @@ export function NotificationsScreen() {
   })
 
   return (
-    <View style={styles.container}>
-      <View style={styles.filterBar}>
-        <TouchableOpacity
-          style={[styles.filterButton, filter === 'all' && styles.filterActive]}
-          onPress={() => setFilter('all')}
-        >
-          <Text style={[styles.filterText, filter === 'all' && styles.filterTextActive]}>همه</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.filterButton, filter === 'unread' && styles.filterActive]}
-          onPress={() => setFilter('unread')}
-        >
-          <Text style={[styles.filterText, filter === 'unread' && styles.filterTextActive]}>خوانده‌نشده</Text>
-        </TouchableOpacity>
-      </View>
-
-      {loading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+    <ScreenWrapper title="اعلان‌های سیستم" navigation={navigation}>
+      <View style={styles.container}>
+        <View style={styles.filterBar}>
+          <TouchableOpacity
+            style={[styles.filterButton, filter === 'all' && styles.filterActive]}
+            onPress={() => setFilter('all')}
+          >
+            <Text style={[styles.filterText, filter === 'all' && styles.filterTextActive]}>همه</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterButton, filter === 'unread' && styles.filterActive]}
+            onPress={() => setFilter('unread')}
+          >
+            <Text style={[styles.filterText, filter === 'unread' && styles.filterTextActive]}>خوانده‌نشده</Text>
+          </TouchableOpacity>
         </View>
-      ) : (
-        <FlatList
-          data={notifications}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContainer}
-          renderItem={({ item }) => {
-            const config = TYPE_CONFIG[item.type] ?? TYPE_CONFIG.info
-            const Icon = config.icon
-            return (
-              <TouchableOpacity
-                style={[styles.card, !item.isRead && styles.cardUnread]}
-                onPress={() => !item.isRead && markAsRead(item.id)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.iconContainer, { backgroundColor: `${config.color}1A` }]}>
-                  <Icon size={18} color={config.color} />
-                </View>
-                <View style={styles.cardContent}>
-                  <View style={styles.cardHeader}>
-                    <Text style={styles.cardTitle}>{item.title}</Text>
-                    {!item.isRead && <View style={styles.unreadDot} />}
+
+        {loading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+          </View>
+        ) : (
+          <FlatList
+            data={notifications}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContainer}
+            renderItem={({ item }) => {
+              const config = TYPE_CONFIG[item.type] ?? TYPE_CONFIG.info
+              const Icon = config.icon
+              return (
+                <TouchableOpacity
+                  style={[styles.card, !item.isRead && styles.cardUnread]}
+                  onPress={() => !item.isRead && markAsRead(item.id)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.iconContainer, { backgroundColor: `${config.color}1A` }]}>
+                    <Icon size={18} color={config.color} />
                   </View>
-                  {item.body && <Text style={styles.cardBody} numberOfLines={2}>{item.body}</Text>}
-                  <Text style={styles.cardTime}>{new Date(item.createdAt).toLocaleDateString('fa-IR')}</Text>
-                </View>
-              </TouchableOpacity>
-            )
-          }}
-          ListEmptyComponent={
-            <View style={styles.centerContainer}>
-              <Bell size={40} color={theme.colors.secondary} />
-              <Text style={styles.emptyText}>اعلانی وجود ندارد</Text>
-            </View>
-          }
-        />
-      )}
-    </View>
+                  <View style={styles.cardContent}>
+                    <View style={styles.cardHeader}>
+                      <Text style={styles.cardTitle}>{item.title}</Text>
+                      {!item.isRead && <View style={styles.unreadDot} />}
+                    </View>
+                    {item.body && <Text style={styles.cardBody} numberOfLines={2}>{item.body}</Text>}
+                    <Text style={styles.cardTime}>{new Date(item.createdAt).toLocaleDateString('fa-IR')}</Text>
+                  </View>
+                </TouchableOpacity>
+              )
+            }}
+            ListEmptyComponent={
+              <View style={styles.centerContainer}>
+                <Bell size={40} color={theme.colors.secondary} />
+                <Text style={styles.emptyText}>اعلانی وجود ندارد</Text>
+              </View>
+            }
+          />
+        )}
+      </View>
+    </ScreenWrapper>
   )
 }
 

@@ -13,7 +13,7 @@ import {
 } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { useAuthStore } from '../stores/auth'
-import { useShiftsStore } from '../stores/shifts'
+import { useShiftsStore, DailyTask } from '../stores/shifts'
 import {
   gregorianToJalali,
   jalaliToGregorian,
@@ -23,12 +23,13 @@ import {
   toFa
 } from '../shared/jalali'
 import { useTheme } from '../shared/ThemeProvider'
+import { ScreenWrapper } from '../shared/ScreenWrapper'
 import { getShiftForUserAndDate } from '../shared/cycle-math'
 
 const SHIFT_MAPPING: Record<string, { label: string; color: string; bg: string }> = {
   morning: { label: 'روزکار', color: '#f97316', bg: '#fff7ed' },
   evening: { label: 'عصرکار', color: '#0ea5e9', bg: '#f0f9ff' },
-  night: { label: 'شب‌کار', color: '#4f46e5', bg: '#eef2ff' },
+  night: { label: 'شب‌کار', color: '#4f46e5', bg: '#e0e7ff' },
   office: { label: 'اداری', color: '#a855f7', bg: '#faf5ff' },
   off: { label: 'استراحت', color: '#9ca3af', bg: '#f9fafb' },
 }
@@ -40,7 +41,7 @@ const JALALI_MONTHS = [
   'دی', 'بهمن', 'اسفند'
 ]
 
-export function CalendarScreen() {
+export function CalendarScreen({ navigation }: any) {
   const { user } = useAuthStore()
   const {
     assignments,
@@ -68,21 +69,21 @@ export function CalendarScreen() {
   // Personal task input states
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [newTaskTime, setNewTaskTime] = useState('08:00')
-  const [newTaskPriority, setNewTaskPriority] = useState<'low' | 'medium' | 'high'>('medium')
+  const [newTaskPriority, setNewTaskPriority] = useState('medium')
 
-  // System task input states
+  // OCC Task inject states (Admin only)
   const [systemTitle, setSystemTitle] = useState('')
+  const [systemTime, setSystemTime] = useState('08:00')
+  const [systemPriority, setSystemPriority] = useState('high')
   const [systemOvertime, setSystemOvertime] = useState('0')
   const [systemKahrizak, setSystemKahrizak] = useState('0')
-  const [systemTime, setSystemTime] = useState('12:00')
-  const [systemPriority, setSystemPriority] = useState<'low' | 'medium' | 'high'>('medium')
 
   // Note input state
   const [noteText, setNoteText] = useState('')
 
   // Load persisted store data on mount
   useEffect(() => {
-    loadPersistedData()
+    void loadPersistedData()
   }, [])
 
   // Resolve user work group from profile settings
@@ -138,16 +139,29 @@ export function CalendarScreen() {
         key: `day-${d}`,
         dayNumber: d,
         dateStr: cellDateStr,
-        isToday: currentYear === todayJy && currentMonth === todayJm && d === todayJd,
-        isFriday: cellGregDate.getDay() === 5,
+        gregDate: cellGregDate,
         resolvedShift: resolved,
         hasTasks: dayTasks.length > 0,
-        allTasksDone: dayTasks.length > 0 && dayTasks.every(t => t.status === 'done'),
-        hasNote: !!dayNote
+        hasNote: !!dayNote?.content,
+        isToday: currentYear === todayJy && currentMonth === todayJm && d === todayJd,
+        isFriday: cellGregDate.getDay() === 5
       })
     }
     return cells
-  }, [currentYear, currentMonth, daysCount, startWeekday, assignments, templates, tasks, notes, userGroup])
+  }, [currentYear, currentMonth, daysCount, startWeekday, assignments, templates, tasks, notes, userGroup, todayJy, todayJm, todayJd])
+
+  const selectedDayData = useMemo(() => {
+    const resolved = getShiftForUserAndDate('current', selectedGregDate, assignments, templates, userGroup)
+    const dayTasks = tasks.filter((t) => t.userId === 'current' && t.date === selectedDateStr)
+    const dayNote = notes.find((n) => n.userId === 'current' && n.date === selectedDateStr)
+
+    return {
+      dateLabel: getJalaliDateLabel(selectedGregDate),
+      resolved: resolved,
+      tasks: dayTasks,
+      note: dayNote
+    }
+  }, [selectedGregDate, selectedDateStr, assignments, templates, tasks, notes, userGroup])
 
   // Monthly Performance Summary
   const monthlyMetrics = useMemo(() => {
@@ -186,18 +200,6 @@ export function CalendarScreen() {
       completionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100
     }
   }, [currentYear, currentMonth, daysCount, assignments, templates, tasks, userGroup])
-
-  // Selected Day Metadata
-  const selectedDayData = useMemo(() => {
-    const resolved = getShiftForUserAndDate('current', selectedGregDate, assignments, templates, userGroup)
-    const dayTasks = tasks.filter((t) => t.userId === 'current' && t.date === selectedDateStr)
-    const dayNote = notes.find((n) => n.userId === 'current' && n.date === selectedDateStr)
-    return {
-      resolved,
-      tasks: dayTasks,
-      note: dayNote
-    }
-  }, [selectedGregDate, selectedDateStr, assignments, templates, tasks, notes, userGroup])
 
   // Handlers
   function nextMonth() {
@@ -238,7 +240,7 @@ export function CalendarScreen() {
       date: selectedDateStr,
       title: newTaskTitle,
       time: newTaskTime,
-      priority: newTaskPriority,
+      priority: newTaskPriority as 'low' | 'medium' | 'high',
       status: 'todo',
       type: 'personal'
     })
@@ -252,7 +254,7 @@ export function CalendarScreen() {
       date: selectedDateStr,
       title: systemTitle,
       time: systemTime,
-      priority: systemPriority,
+      priority: systemPriority as 'low' | 'medium' | 'high',
       status: 'todo',
       type: 'system',
       overtime: Number(systemOvertime) || 0,
@@ -289,7 +291,6 @@ export function CalendarScreen() {
   const styles = StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: theme.colors.background },
     container: { flex: 1 },
-    header: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: theme.spacing.containerMargin, paddingVertical: 16, backgroundColor: theme.colors.background },
     headerBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20, backgroundColor: theme.colors.surfaceContainerLow },
     monthSelectorBtn: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4 },
     monthSelectorText: { fontFamily: theme.typography.screenTitle.fontFamily, fontSize: 18, fontWeight: '700', color: theme.colors.primary },
@@ -298,19 +299,19 @@ export function CalendarScreen() {
     
     content: { paddingHorizontal: theme.spacing.containerMargin, paddingBottom: 80, gap: theme.spacing.stackSpace },
     viewSwitcher: { flexDirection: 'row-reverse', backgroundColor: theme.colors.surfaceContainerLow, padding: 4, borderRadius: 9999, marginVertical: 8 },
-    viewTabActive: { flex: 1, paddingVertical: 6, backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: 9999, ...theme.shadows.level1, alignItems: 'center' },
-    viewTabInactive: { flex: 1, paddingVertical: 6, alignItems: 'center' },
-    viewTabTextActive: { color: theme.colors.primary, fontFamily: theme.typography.cardTitle.fontFamily, fontSize: theme.typography.cardTitle.fontSize },
-    viewTabTextInactive: { color: theme.colors.secondary, fontFamily: theme.typography.cardTitle.fontFamily, fontSize: theme.typography.cardTitle.fontSize },
+    viewTabActive: { flex: 1, backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: 9999, paddingVertical: 8, alignItems: 'center', ...theme.shadows.level1 },
+    viewTabInactive: { flex: 1, paddingVertical: 8, alignItems: 'center' },
+    viewTabTextActive: { fontFamily: theme.typography.cardTitle.fontFamily, fontSize: 13, color: theme.colors.primary, fontWeight: 'bold' },
+    viewTabTextInactive: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: 13, color: theme.colors.secondary },
     
-    legend: { backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.xl, padding: 12, ...theme.shadows.level1, flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: theme.colors.surfaceVariant },
-    legendItemsRow: { flexDirection: 'row-reverse', gap: 16 },
+    legend: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
+    legendItemsRow: { flexDirection: 'row-reverse', gap: 12 },
     legendItem: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
-    legendDot: { width: 10, height: 10, borderRadius: 5 },
-    legendText: { fontFamily: theme.typography.captionSm.fontFamily, fontSize: theme.typography.captionSm.fontSize, color: theme.colors.secondary },
+    legendDot: { width: 8, height: 8, borderRadius: 4 },
+    legendText: { fontFamily: theme.typography.captionSm.fontFamily, fontSize: 11, color: theme.colors.secondary },
     
-    calendarCard: { backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.xl, padding: 16, ...theme.shadows.level1, borderWidth: 1, borderColor: theme.colors.surfaceVariant },
-    weekDaysRow: { flexDirection: 'row-reverse', marginBottom: 8 },
+    calendarCard: { backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.xl, padding: 10, borderWidth: 1, borderColor: theme.colors.surfaceVariant, ...theme.shadows.level1 },
+    weekDaysRow: { flexDirection: 'row-reverse', borderBottomWidth: 1, borderBottomColor: theme.colors.surfaceVariant, paddingBottom: 8, marginBottom: 8 },
     weekDayHeader: { flex: 1, textAlign: 'center', fontFamily: theme.typography.captionSm.fontFamily, fontSize: theme.typography.captionSm.fontSize, color: theme.colors.secondary },
     weekDayHeaderFriday: { flex: 1, textAlign: 'center', fontFamily: theme.typography.captionSm.fontFamily, fontSize: theme.typography.captionSm.fontSize, color: theme.colors.primary },
     
@@ -397,17 +398,16 @@ export function CalendarScreen() {
   })
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+    <ScreenWrapper title={`${JALALI_MONTHS[currentMonth - 1]} ${toFa(currentYear)}`} navigation={navigation} scrollable={true}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        style={styles.container}
+      >
         {/* Top App Bar (Header) */}
-        <View style={styles.header}>
+        <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 }}>
           <TouchableOpacity style={styles.headerBtn}>
             <MaterialIcons name="settings" size={24} color={theme.colors.secondary} />
           </TouchableOpacity>
-          <View style={styles.monthSelectorBtn}>
-            <Text style={styles.monthSelectorText}>{JALALI_MONTHS[currentMonth - 1]} {toFa(currentYear)}</Text>
-            <MaterialIcons name="expand-more" size={24} color={theme.colors.primary} />
-          </View>
           <TouchableOpacity style={styles.todayBtn} onPress={jumpToToday}>
             <Text style={styles.todayBtnText}>امروز</Text>
           </TouchableOpacity>
@@ -589,7 +589,7 @@ export function CalendarScreen() {
                 {selectedDayData.tasks.length === 0 ? (
                   <Text style={styles.emptyTasksText}>هیچ تسک یا مأموریتی ثبت نشده است.</Text>
                 ) : (
-                  selectedDayData.tasks.map((task) => {
+                  selectedDayData.tasks.map((task: DailyTask) => {
                     const isDone = task.status === 'done'
                     return (
                       <View key={task.id} style={[styles.taskItem, isDone && styles.taskItemDone]}>
@@ -721,7 +721,7 @@ export function CalendarScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

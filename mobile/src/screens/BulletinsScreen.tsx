@@ -21,8 +21,9 @@ interface Bulletin {
 }
 
 import { useTheme } from '../shared/ThemeProvider'
+import { ScreenWrapper } from '../shared/ScreenWrapper'
 
-export function BulletinsScreen() {
+export function BulletinsScreen({ navigation }: any) {
   const accessToken = useAuthStore((s) => s.accessToken)
   const [bulletins, setBulletins] = useState<Bulletin[]>([])
   const [loading, setLoading] = useState(true)
@@ -96,7 +97,8 @@ export function BulletinsScreen() {
   })
 
   return (
-    <View style={styles.container}>
+    <ScreenWrapper title="بخشنامه‌های ایمنی" navigation={navigation}>
+      <View style={styles.container}>
       {loading ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -140,7 +142,8 @@ export function BulletinsScreen() {
           />
         </>
       )}
-    </View>
+      </View>
+    </ScreenWrapper>
   )
 }
 

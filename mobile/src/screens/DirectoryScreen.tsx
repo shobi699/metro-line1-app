@@ -17,6 +17,7 @@ import { useConfigStore } from '../stores/config'
 import { useNetworkStore } from '../stores/network'
 import { API_URL } from '../shared/config'
 import { useTheme } from '../shared/ThemeProvider'
+import { ScreenWrapper } from '../shared/ScreenWrapper'
 
 interface DirectoryUser {
   id: string
@@ -339,7 +340,7 @@ export function DirectoryScreen({ navigation }: any) {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <ScreenWrapper title="دفتر تلفن پرسنل" navigation={navigation}>
       <View style={styles.container}>
         <View style={styles.searchContainer}>
           <MaterialIcons name="search" size={20} color={theme.colors.secondary} style={styles.searchIcon} />
@@ -386,7 +387,7 @@ export function DirectoryScreen({ navigation }: any) {
           />
         )}
       </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

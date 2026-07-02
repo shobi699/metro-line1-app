@@ -644,6 +644,36 @@ async function main() {
         category: 'mobile',
         options: JSON.stringify(['dark', 'light', 'system']),
         isEnabled: true,
+      },
+      {
+        key: 'mobile.dashboard.banner.enabled',
+        label: 'نمایش بنر داشبورد',
+        description: 'فعال یا غیرفعال بودن بنر تصویری در پایین داشبورد اپلیکیشن موبایل',
+        type: 'boolean',
+        value: JSON.stringify(true),
+        defaultValue: JSON.stringify(false),
+        category: 'mobile',
+        isEnabled: true,
+      },
+      {
+        key: 'mobile.dashboard.banner.url',
+        label: 'لینک تصویر بنر داشبورد',
+        description: 'آدرس اینترنتی (URL) تصویر بنر. برای نمایش بهتر از نسبت ابعاد مستطیل افقی استفاده کنید.',
+        type: 'text',
+        value: JSON.stringify('https://picsum.photos/id/1050/800/250'),
+        defaultValue: JSON.stringify(''),
+        category: 'mobile',
+        isEnabled: true,
+      },
+      {
+        key: 'mobile.dashboard.banner.link',
+        label: 'لینک هدف بنر داشبورد',
+        description: 'آدرس وب‌سایتی که با کلیک روی بنر باز می‌شود.',
+        type: 'text',
+        value: JSON.stringify('https://metro.tehran.ir'),
+        defaultValue: JSON.stringify(''),
+        category: 'mobile',
+        isEnabled: true,
       }
     ]
   })

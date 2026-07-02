@@ -15,6 +15,7 @@ import { toFa } from '../shared/jalali'
 import { API_URL } from '../shared/config'
 import { LogIn, LogOut, MapPin, CheckCircle, Clock, Navigation } from 'lucide-react-native'
 import { useConfigStore } from '../stores/config'
+import { ScreenWrapper } from '../shared/ScreenWrapper'
 
 
 interface AttendanceRecord {
@@ -62,7 +63,7 @@ function getDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: num
 
 import { useTheme } from '../shared/ThemeProvider'
 
-export function AttendanceScreen() {
+export function AttendanceScreen({ navigation }: any) {
   const accessToken = useAuthStore((s) => s.accessToken)
   const config = useConfigStore((s) => s.config)
   const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null)
@@ -379,7 +380,8 @@ export function AttendanceScreen() {
   })
 
   return (
-    <View style={styles.container}>
+    <ScreenWrapper title="حضور و غیاب هوشمند" navigation={navigation}>
+      <View style={styles.container}>
       {/* Geofencing Indicator */}
       <View style={[styles.geofenceCard, activeStation ? styles.geofenceCardActive : styles.geofenceCardInactive]}>
         <View style={styles.geofenceHeader}>
@@ -511,6 +513,7 @@ export function AttendanceScreen() {
         }
       />
     </View>
+  </ScreenWrapper>
   )
 }
 

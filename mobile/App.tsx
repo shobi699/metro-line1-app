@@ -31,6 +31,9 @@ import { ContentScreen } from './src/screens/ContentScreen'
 import { RosterScreen } from './src/screens/RosterScreen'
 import { UIBuilderScreen } from './src/screens/UIBuilderScreen'
 import { CustomPageScreen } from './src/screens/CustomPageScreen'
+import { LearningScreen } from './src/screens/LearningScreen'
+import { MeetingsScreen } from './src/screens/MeetingsScreen'
+import { PlateSearchScreen } from './src/screens/PlateSearchScreen'
 import { OfflineBanner } from './src/shared/OfflineBanner'
 import { BulletinGuard } from './src/shared/BulletinGuard'
 import { CustomTabBar } from './src/shared/CustomTabBar'
@@ -59,8 +62,13 @@ export type RootStackParamList = {
   'عملکرد': undefined
   'محتوا': undefined
   'لوحه': undefined
+  'آموزش': undefined
   UIBuilder: undefined
   CustomPage: { slug: string }
+  MeetingsScreen: undefined
+  ProfileScreen: undefined
+  CalendarScreen: undefined
+  PlateSearch: undefined
 }
 
 const Tab = createBottomTabNavigator()
@@ -92,8 +100,13 @@ function HomeStackScreen() {
       <Stack.Screen name="عملکرد" component={PerformanceScreen} />
       <Stack.Screen name="محتوا" component={ContentScreen} />
       <Stack.Screen name="لوحه" component={RosterScreen} />
+      <Stack.Screen name="آموزش" component={LearningScreen} />
       <Stack.Screen name="UIBuilder" component={UIBuilderScreen} />
       <Stack.Screen name="CustomPage" component={CustomPageScreen} />
+      <Stack.Screen name="MeetingsScreen" component={MeetingsScreen} />
+      <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+      <Stack.Screen name="CalendarScreen" component={CalendarScreen} />
+      <Stack.Screen name="PlateSearch" component={PlateSearchScreen} />
     </Stack.Navigator>
   )
 }
@@ -220,7 +233,7 @@ export function AppContent() {
   const loadPersistedAuth = useAuthStore((s) => s.loadPersistedAuth)
   const fetchConfig = useConfigStore((s) => s.fetchConfig)
   const loadPersistedConfig = useConfigStore((s) => s.loadPersistedConfig)
-  const { theme } = useTheme()
+  const { theme, isDark } = useTheme()
 
   let [fontsLoaded] = useFonts({
     Vazirmatn: Vazirmatn_400Regular,
@@ -251,6 +264,7 @@ export function AppContent() {
 
   return (
     <NavigationContainer theme={MetroTheme}>
+      <StatusBar style={isDark ? "light" : "dark"} />
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
         <OfflineBanner />
         <BulletinGuard>
@@ -265,7 +279,6 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <StatusBar style="dark" />
         <AppContent />
       </ThemeProvider>
     </SafeAreaProvider>

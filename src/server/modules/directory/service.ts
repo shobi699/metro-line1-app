@@ -80,12 +80,16 @@ export async function listUsers(params: UserSearchParams): Promise<PaginatedUser
 
       // 2. Specific Plate search
       if (normalizedPlate) {
+        // Check vehicles array
         const vehicleMatch = vehicles.some((v: Record<string, unknown>) => {
           const plateStr = `${v.plateNum1 || ''}${v.plateLetter || ''}${v.plateNum2 || ''}${v.plateCity || ''}`.toLowerCase()
           const carPlate = ((v.carPlate as string) || '').toLowerCase()
           return plateStr.includes(normalizedPlate) || carPlate.includes(normalizedPlate)
         })
-        if (!vehicleMatch) return false
+        // Also check legacy flat carPlate field
+        const legacyPlate = ((customFields.carPlate as string) || '').toLowerCase().replace(/\s+/g, '')
+        const legacyMatch = legacyPlate.includes(normalizedPlate.replace(/\s+/g, ''))
+        if (!vehicleMatch && !legacyMatch) return false
       }
 
       return true

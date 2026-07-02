@@ -9,14 +9,18 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView
+  SafeAreaView,
+  Animated,
+  PanResponder
 } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { useAuthStore } from '../stores/auth'
 import { useChatStore, ChatRoom, ChatMessage } from '../stores/chat'
 import { useConfigStore } from '../stores/config'
 import { useTheme } from '../shared/ThemeProvider'
+import { ScreenWrapper } from '../shared/ScreenWrapper'
 import { toFa } from '../shared/jalali'
+import { pickAndUploadDocument } from '../shared/uploader'
 
 export function ChatScreen({ route, navigation }: any) {
   const accessToken = useAuthStore((s) => s.accessToken)
@@ -49,6 +53,8 @@ export function ChatScreen({ route, navigation }: any) {
 
   const [inputText, setInputText] = useState('')
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
+  const [attachment, setAttachment] = useState<{ url: string; type: string; name: string } | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
   const flatListRef = useRef<FlatList>(null)
 
   // Voice recording states
@@ -146,14 +152,35 @@ export function ChatScreen({ route, navigation }: any) {
   }, [route?.params?.dm])
 
   async function handleSend() {
-    if (!inputText.trim() || !accessToken || !activeRoomId) return
-    const success = await sendMessage(accessToken, activeRoomId, inputText.trim())
-    if (success) {
+    if (!activeRoomId || !accessToken) return
+    const body = inputText.trim()
+    if (!body && !attachment) return
+
+    const ok = await sendMessage(
+      accessToken, 
+      activeRoomId, 
+      body, 
+      attachment ? { url: attachment.url, type: attachment.type } : undefined
+    )
+    if (ok) {
       setInputText('')
-      // اسکرول به انتهای پیام‌ها
+      setAttachment(null)
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true })
       }, 100)
+    }
+  }
+
+  const handlePickFile = async () => {
+    if (!accessToken) return
+    setIsUploading(true)
+    try {
+      const file = await pickAndUploadDocument()
+      if (file) setAttachment({ ...file, name: file.url.split('/').pop() || 'file' })
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -528,11 +555,8 @@ export function ChatScreen({ route, navigation }: any) {
   // رندر لیست روم‌ها
   if (!activeRoomId) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <ScreenWrapper title="گفتگوها و اتاق‌ها" navigation={navigation}>
         <View style={styles.container}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>گفتگوها و اتاق‌ها</Text>
-          </View>
 
           {loadingRooms ? (
             <View style={styles.centerContainer}>
@@ -578,25 +602,18 @@ export function ChatScreen({ route, navigation }: any) {
             />
           )}
         </View>
-      </SafeAreaView>
+      </ScreenWrapper>
     )
   }
 
   // رندر پیام‌های داخل یک روم
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <ScreenWrapper title={activeRoom?.name || 'گفتگو'} navigation={navigation} onBack={handleBack}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        keyboardVerticalOffset={90}
         style={styles.container}
       >
-        <View style={styles.chatHeader}>
-          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-            <MaterialIcons name="arrow-forward" size={24} color={theme.colors.onSurface} />
-          </TouchableOpacity>
-          <Text style={styles.chatHeaderTitle}>{activeRoom?.name}</Text>
-          <View style={{ width: 40 }} />
-        </View>
 
         {loadingMessages ? (
           <View style={styles.centerContainer}>
@@ -743,48 +760,82 @@ export function ChatScreen({ route, navigation }: any) {
             </View>
           </View>
         ) : (
-          <View style={styles.inputBar}>
-            {voiceChatEnabled && !(activeSettings.readOnly && !isRoomAdmin) && (
+          <View>
+            {attachment && (
+              <View style={styles.attachmentPreview}>
+                <TouchableOpacity onPress={() => setAttachment(null)} style={{ padding: 4 }}>
+                  <MaterialIcons name="close" size={20} color={theme.colors.error} />
+                </TouchableOpacity>
+                <Text style={styles.attachmentPreviewText} numberOfLines={1}>{attachment.name}</Text>
+                <MaterialIcons name="attach-file" size={20} color={theme.colors.secondary} />
+              </View>
+            )}
+            <View style={styles.inputBar}>
+              {voiceChatEnabled && !(activeSettings.readOnly && !isRoomAdmin) && (
+                <TouchableOpacity
+                  style={styles.micButton}
+                  onPress={startRecording}
+                  disabled={isUploading}
+                >
+                  <MaterialIcons name="mic" size={24} color={theme.colors.secondary} />
+                </TouchableOpacity>
+              )}
+              
+              {!(activeSettings.readOnly && !isRoomAdmin) && !activeSettings.blockAttachments && (
+                <TouchableOpacity
+                  style={[styles.micButton, { marginRight: 4 }]}
+                  onPress={async () => {
+                    setIsUploading(true)
+                    const res = await pickAndUploadDocument()
+                    setIsUploading(false)
+                    if (res) {
+                      setAttachment({ url: res.url, type: res.type, name: res.url.split('/').pop() || 'file' })
+                    }
+                  }}
+                  disabled={isUploading}
+                >
+                  {isUploading ? (
+                    <ActivityIndicator size="small" color={theme.colors.secondary} />
+                  ) : (
+                    <MaterialIcons name="attach-file" size={24} color={theme.colors.secondary} />
+                  )}
+                </TouchableOpacity>
+              )}
+
+              <TextInput
+                style={[
+                  styles.messageInput,
+                  (activeSettings.readOnly && !isRoomAdmin) && styles.messageInputDisabled
+                ]}
+                value={inputText}
+                onChangeText={setInputText}
+                editable={!(activeSettings.readOnly && !isRoomAdmin) && !isUploading}
+                placeholder={activeSettings.readOnly && !isRoomAdmin ? "فقط مدیر گروه مجاز به ارسال پیام است." : "پیام خود را بنویسید..."}
+                placeholderTextColor={theme.colors.secondary}
+                textAlign="right"
+                maxLength={activeSettings.maxLength || 1000}
+                multiline
+              />
+              {inputText.length > 0 && !(activeSettings.readOnly && !isRoomAdmin) && (
+                <Text style={styles.charCounter}>
+                  {toFa(`${inputText.length}/${activeSettings.maxLength || 1000}`)}
+                </Text>
+              )}
               <TouchableOpacity
-                style={styles.micButton}
-                onPress={startRecording}
+                style={[
+                  styles.sendButton,
+                  (!inputText.trim() && !attachment) && styles.sendButtonDisabled
+                ]}
+                onPress={handleSend}
+                disabled={(!inputText.trim() && !attachment) || isUploading}
               >
-                <MaterialIcons name="mic" size={24} color={theme.colors.secondary} />
+                <MaterialIcons name="send" size={20} color={theme.colors.onPrimary} style={styles.sendIconFlipped} />
               </TouchableOpacity>
-            )}
-            
-            <TextInput
-              style={[
-                styles.messageInput,
-                (activeSettings.readOnly && !isRoomAdmin) && styles.messageInputDisabled
-              ]}
-              value={inputText}
-              onChangeText={setInputText}
-              editable={!(activeSettings.readOnly && !isRoomAdmin)}
-              placeholder={activeSettings.readOnly && !isRoomAdmin ? "فقط مدیر گروه مجاز به ارسال پیام است." : "پیام خود را بنویسید..."}
-              placeholderTextColor={theme.colors.secondary}
-              textAlign="right"
-              maxLength={activeSettings.maxLength || 1000}
-            />
-            {inputText.length > 0 && !(activeSettings.readOnly && !isRoomAdmin) && (
-              <Text style={styles.charCounter}>
-                {toFa(`${inputText.length}/${activeSettings.maxLength || 1000}`)}
-              </Text>
-            )}
-            <TouchableOpacity
-              style={[
-                styles.sendButton,
-                !inputText.trim() && styles.sendButtonDisabled
-              ]}
-              onPress={handleSend}
-              disabled={!inputText.trim()}
-            >
-              <MaterialIcons name="send" size={20} color={theme.colors.onPrimary} style={styles.sendIconFlipped} />
-            </TouchableOpacity>
+            </View>
           </View>
         )}
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

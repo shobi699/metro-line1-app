@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 import { useTheme } from '../shared/ThemeProvider'
 import { useAuthStore } from '../stores/auth'
+import { ScreenWrapper } from '../shared/ScreenWrapper'
 import {
   Radio,
   Wifi,
@@ -329,26 +330,8 @@ export function RadioSimulatorScreen({ navigation }: any) {
   })
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <ChevronRight size={24} color={theme.colors.primary} />
-        </TouchableOpacity>
-        <View style={styles.headerTitleBox}>
-          <Radio size={20} color={theme.colors.primary} />
-          <Text style={styles.headerTitle}>شبیه‌ساز بی‌سیم TETRA</Text>
-        </View>
-        <TouchableOpacity
-          onPress={() => setMuted(!muted)}
-          style={styles.volumeButton}
-        >
-          {muted ? <VolumeX size={20} color={theme.colors.primary} /> : <Volume2 size={20} color={theme.colors.success} />}
-        </TouchableOpacity>
-      </View>
+    <ScreenWrapper title="شبیه‌ساز بی‌سیم TETRA" navigation={navigation}>
+      <View style={styles.container}>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Device Wrapper */}
@@ -382,6 +365,9 @@ export function RadioSimulatorScreen({ navigation }: any) {
                   <Wifi size={10} color={theme.colors.success} />
                   <Text style={styles.lcdStatusText}>آنلاین</Text>
                 </View>
+                <TouchableOpacity onPress={() => setMuted(!muted)} style={{ paddingHorizontal: 6 }}>
+                  {muted ? <VolumeX size={12} color="#ff3b30" /> : <Volume2 size={12} color="#34c759" />}
+                </TouchableOpacity>
                 <Text style={styles.lcdFreqText}>
                   {dialedCode ? `${formatFarsiNumber(dialedCode)}.۰۰ MHz` : '۳۸۵.۱۲۵ MHz'}
                 </Text>
@@ -572,7 +558,8 @@ export function RadioSimulatorScreen({ navigation }: any) {
           </View>
         </View>
       </ScrollView>
-    </View>
+      </View>
+    </ScreenWrapper>
   )
 }
 

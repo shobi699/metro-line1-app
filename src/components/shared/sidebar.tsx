@@ -384,6 +384,12 @@ export function SidebarContent() {
 export function Sidebar() {
   return (
     <aside className="hidden w-64 shrink-0 border-s border-border-subtle bg-surface-container-low lg:flex lg:flex-col" dir="rtl">
+      <div className="flex h-16 items-center gap-2.5 border-b border-border-subtle px-6 select-none">
+        <img src="/logo.png" className="size-8 object-contain rounded-full bg-background p-0.5 border border-border" alt="Logo" />
+        <span className="font-headline-md text-headline-md font-bold text-accent">
+          مترو خط ۱
+        </span>
+      </div>
       <SidebarContent />
     </aside>
   )
@@ -420,6 +426,7 @@ export function MobileHeader() {
             <SidebarContent />
           </SheetContent>
         </Sheet>
+        <img src="/logo.png" className="size-8 object-contain rounded-full bg-background p-0.5 border border-border" alt="Logo" />
         <span className="font-headline-md text-headline-md font-bold text-accent">
           مترو خط ۱
         </span>
