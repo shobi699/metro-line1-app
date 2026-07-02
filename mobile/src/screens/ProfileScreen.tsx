@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
+  TextInput
 } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { useAuthStore } from '../stores/auth'

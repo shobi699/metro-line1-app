@@ -50,7 +50,8 @@ const CATEGORY_MAP: Record<string, { label: string; icon: string }> = {
   comms: { label: 'ارتباطات صوتی و بی‌سیم', icon: '🎙️' },
   performance: { label: 'ارزیابی عملکرد و گیمیفیکیشن', icon: '🏆' },
   download: { label: 'تنظیمات صفحه دانلود', icon: '📥' },
-  audit: { label: 'تاریخچه تغییرات', icon: '📝' },
+  requests: { label: 'درخواست‌های پرسنلی', icon: '📝' },
+  audit: { label: 'تاریخچه تغییرات', icon: '🕒' },
 }
 
 export default function AdminSettingsPage() {
@@ -498,7 +499,15 @@ export default function AdminSettingsPage() {
                       <div className="flex items-center gap-3 shrink-0 self-end md:self-center">
                         {/* Custom Inputs based on type */}
                         {setting.type === 'text' && (
-                          setting.key.includes('Notice') || setting.key.includes('message') ? (
+                          setting.key === 'requests.types' ? (
+                            <textarea
+                              value={String(currentValue ?? '')}
+                              onChange={(e) => handleValueChange(setting.key, e.target.value)}
+                              rows={10}
+                              dir="ltr"
+                              className="w-full md:w-[400px] rounded-lg border border-border bg-background/50 p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-ring focus:border-accent resize-y"
+                            />
+                          ) : setting.key.includes('Notice') || setting.key.includes('message') ? (
                             <textarea
                               value={String(currentValue ?? '')}
                               onChange={(e) => handleValueChange(setting.key, e.target.value)}

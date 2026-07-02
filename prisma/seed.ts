@@ -674,6 +674,16 @@ async function main() {
         defaultValue: JSON.stringify(''),
         category: 'mobile',
         isEnabled: true,
+      },
+      {
+        key: 'shifts.showHolidays',
+        label: 'نمایش تعطیلات در تقویم موبایل',
+        description: 'آیا تعطیلات رسمی و مناسبت‌ها در تقویم موبایل پرسنل نمایش داده شود؟',
+        type: 'boolean',
+        value: JSON.stringify(true),
+        defaultValue: JSON.stringify(true),
+        category: 'shifts',
+        isEnabled: true,
       }
     ]
   })

@@ -23,6 +23,7 @@ interface ScreenWrapperProps {
   children: React.ReactNode
   scrollable?: boolean
   onBack?: () => void
+  showBack?: boolean
 }
 
 interface NavItem {
@@ -138,7 +139,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
   }
 ]
 
-export function ScreenWrapper({ title, navigation, children, scrollable = false, onBack }: ScreenWrapperProps) {
+export function ScreenWrapper({ title, navigation, children, scrollable = false, onBack, showBack }: ScreenWrapperProps) {
   const { theme, toggleTheme, isDark } = useTheme()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
@@ -276,7 +277,7 @@ export function ScreenWrapper({ title, navigation, children, scrollable = false,
     return roles.includes(user?.roleKey ?? '')
   }
 
-  const showBackButton = !!onBack || !!(navigation && navigation.canGoBack && navigation.canGoBack())
+  const showBackButton = showBack ?? (!!onBack || !!(navigation && navigation.canGoBack && navigation.canGoBack()))
 
   const styles = StyleSheet.create({
     safeArea: {

@@ -153,6 +153,9 @@ model User {
   rosterVersionsPublished   RosterVersion[]     @relation("RosterVersionPublisher")
   tripAssignmentsMatched    TripAssignment[]    @relation("TripAssignmentUser")
   tripAssignmentsConfirmed  TripAssignment[]    @relation("TripAssignmentConfirmer")
+  leaveRequests             LeaveRequest[]      @relation("LeaveRequester")
+  reviewedLeaves            LeaveRequest[]      @relation("LeaveReviewer")
+  aiConversations           AiConversation[]
 
   @@index([roleId])
   @@index([status])
@@ -442,6 +445,28 @@ model ChatRoom {
   messages Message[]
 
   @@index([type])
+}
+
+model AiConversation {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  messages  AiMessage[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model AiMessage {
+  id              String         @id @default(uuid())
+  conversationId  String
+  conversation    AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role            String         // 'user' | 'model'
+  text            String
+  source          String?        // 'rulebook' | 'gemini' | 'system'
+  confidence      Int?
+  handbookSection String?
+  feedback        Int?           // 1 for thumbs up, -1 for thumbs down
+  createdAt       DateTime       @default(now())
 }
 
 model ChatMember {
@@ -1136,5 +1161,78 @@ model UiTheme {
   updatedAt         DateTime @updatedAt
 
   @@map("ui_themes")
+}
+
+// ── Leave & Mission Management ─────────────────────────
+
+enum LeaveRequestStatus {
+  pending
+  approved
+  rejected
+  cancelled
+}
+
+model LeaveRequest {
+  id          String             @id @default(cuid())
+  userId      String
+  type        String             // e.g., 'annual_leave', 'sick_leave', 'mission', 'overtime', 'on_call'
+  fromDate    DateTime
+  toDate      DateTime
+  reason      String?
+  amount      Float?             // e.g., 4.5 hours or 2 days
+  unit        String?            // 'hours', 'days', 'count'
+  calculatedAmount Float?        // After admin multiplier logic
+  status      LeaveRequestStatus @default(pending)
+  reviewedById String?
+  reviewedAt  DateTime?
+  reviewNote  String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  user       User  @relation("LeaveRequester", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy User? @relation("LeaveReviewer", fields: [reviewedById], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([fromDate])
+}
+
+// ── AI Gateway & Semantic Cache ─────────────────────────
+
+model AiProvider {
+  id                  String    @id @default(cuid())
+  name                String    // e.g., "Gemini Flash", "Ollama Local"
+  providerType        String    // gemini, openrouter, ollama, grok, custom
+  baseUrl             String
+  apiKey              String?   // Store encrypted or raw depending on implementation
+  modelName           String?
+  requestFormat       String    @default("openai_compatible")
+  priority            Int       @default(100)
+  isActive            Boolean   @default(true)
+  maxRetries          Int       @default(2)
+  timeoutMs           Int       @default(8000)
+  costPer1kTokens     Float     @default(0)
+  healthStatus        String    @default("healthy") // healthy, degraded, down
+  lastFailureAt       DateTime?
+  consecutiveFailures Int       @default(0)
+  extraHeaders        String?   // JSON string
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([priority])
+}
+
+model AiKnowledgeCache {
+  id                 String   @id @default(cuid())
+  questionText       String
+  questionEmbedding  String   // JSON array of floats as string for SQLite compatibility
+  answerText         String
+  source             String   // 'ai_generated', 'admin_manual', 'database'
+  providerUsed       String?
+  hitCount           Int      @default(0)
+  confidenceScore    Float?
+  isVerified         Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  lastUsedAt         DateTime @default(now())
 }
 

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
 import { prisma } from '@/server/db'
 import { aiQuerySchema } from '@/lib/zod/ai'
+import { getEmbedding, cosineSimilarity } from '@/server/modules/ai/embedding'
+import { AIGateway } from '@/server/modules/ai/gateway'
 
 interface RulebookItem {
   keywords: string[]
@@ -83,6 +85,7 @@ const RULEBOOK_DATABASE: RulebookItem[] = [
   }
 ]
 
+
 export async function POST(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
@@ -100,13 +103,23 @@ export async function POST(request: Request) {
 
     const rawPrompt = parsed.data.prompt.trim()
     const prompt = rawPrompt.toLowerCase()
+    const conversationId = parsed.data.conversationId || `${user.id}-${Date.now()}`
 
-    // ۱. بررسی کلمات کلیدی بحرانی و اضطراری — بخش ۱۲.۷ الزامات ایمنی
+    // Ensure conversation exists in DB
+    await prisma.aiConversation.upsert({
+      where: { id: conversationId },
+      update: {},
+      create: {
+        id: conversationId,
+        userId: user.id
+      }
+    })
+
+    // ۱. بررسی کلمات کلیدی بحرانی و اضطراری
     const isCritical = CRITICAL_KEYWORDS.some(kw => prompt.includes(kw))
     if (isCritical) {
       const emergencyResponse = `🚨 **هشدار بحران فوری و خطر حادثه:**\n\nدرخواست شما حاوی واژه‌های ایمنی حساس است. طبق بند ۷-۱۲ آیین‌نامه فنی دیسپاچینگ، در این شرایط هوش مصنوعی مجاز به صدور دستورالعمل خودسرانه نیست.\n\n**اقدام فوری:** لطفاً بلافاصله از طریق بی‌سیم یا خط تلفن مستقیم با **مرکز فرمان (OCC) یا سرشیفت خط ۱** تماس بگیرید!`
       
-      // لاگ کردن درخواست حساس جهت ممیزی ایمنی ادمین
       await prisma.auditLog.create({
         data: {
           actorId: user.id,
@@ -117,14 +130,27 @@ export async function POST(request: Request) {
         }
       }).catch(() => {})
 
+      const aiMsg = await prisma.aiMessage.create({
+        data: {
+          conversationId,
+          role: 'model',
+          text: emergencyResponse,
+          source: 'OCC_EMERGENCY',
+          confidence: 100,
+          handbookSection: 'بند ۱-۷ قوانین اضطراری خط ۱'
+        }
+      })
+
       return NextResponse.json({
         data: {
+          id: aiMsg.id,
           reply: emergencyResponse,
           source: 'OCC_EMERGENCY',
           matched: true,
           confidence: 100,
           handbookSection: 'بند ۱-۷ قوانین اضطراری خط ۱',
-          isCritical: true
+          isCritical: true,
+          conversationId
         }
       })
     }
@@ -135,7 +161,6 @@ export async function POST(request: Request) {
     )
 
     if (rulebookMatch) {
-      // لاگ سوالات برای بهبود آموزش
       await prisma.auditLog.create({
         data: {
           actorId: user.id,
@@ -146,82 +171,202 @@ export async function POST(request: Request) {
         }
       }).catch(() => {})
 
-      return NextResponse.json({
+      await prisma.aiMessage.create({
+        data: { conversationId, role: 'user', text: rawPrompt }
+      })
+      const aiMsg = await prisma.aiMessage.create({
         data: {
-          reply: `**دستورالعمل استخراج شده: ${rulebookMatch.title}**\n\n${rulebookMatch.resolution}\n\n${rulebookMatch.safetyAlert}`,
+          conversationId,
+          role: 'model',
+          text: `**${rulebookMatch.title}**\n\n${rulebookMatch.resolution}\n\n${rulebookMatch.safetyAlert}`,
           source: 'rulebook',
-          matched: true,
           confidence: rulebookMatch.confidence,
           handbookSection: rulebookMatch.handbookSection
         }
       })
-    }
-
-    // ۳. جستجو در دانش‌نامه (RAG با توکنایز کردن کلمات کلیدی فارسی)
-    const cleanPrompt = rawPrompt.replace(/[?؟.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
-    const stopWords = ['در', 'به', 'با', 'از', 'تا', 'چقدر', 'است', 'چیست', 'کردن', 'چگونه', 'و', 'یا', 'یک', 'این', 'آن', 'ها', 'های', 'را', 'که', 'چه', 'چند', 'کدام']
-    const keywords = cleanPrompt
-      .split(/\s+/)
-      .filter(w => w.length > 1 && !stopWords.includes(w))
-
-    const searchConditions = keywords.length > 0
-      ? keywords.flatMap(kw => [
-          { title: { contains: kw } },
-          { body: { contains: kw } },
-          { tags: { contains: kw } }
-        ])
-      : [
-          { title: { contains: rawPrompt } },
-          { body: { contains: rawPrompt } },
-          { tags: { contains: rawPrompt } }
-        ]
-
-    const knowledgeArticles = await prisma.knowledgeArticle.findMany({
-      where: {
-        OR: searchConditions
-      },
-      take: 3,
-      select: {
-        title: true,
-        body: true,
-        category: true,
-        slug: true,
-      },
-    })
-
-    if (knowledgeArticles.length > 0) {
-      const articlesText = knowledgeArticles.map((a, i) =>
-        `${i + 1}. **${a.title}** (${a.category ?? 'عمومی'})\n${a.body.substring(0, 200)}...`
-      ).join('\n\n')
 
       return NextResponse.json({
         data: {
-          reply: `**مقالات مرتبط یافت شد:**\n\n${articlesText}\n\nبرای مشاهده کامل مقالات به بخش دانش‌نامه مراجعه کنید.`,
-          source: 'knowledge',
+          id: aiMsg.id,
+          reply: aiMsg.text,
+          source: 'rulebook',
           matched: true,
-          articles: knowledgeArticles.map(a => ({ slug: a.slug, title: a.title })),
-          confidence: 85,
-          handbookSection: 'دانش‌نامه محلی پرسنل خط ۱'
+          confidence: rulebookMatch.confidence,
+          handbookSection: rulebookMatch.handbookSection,
+          conversationId
         }
       })
     }
 
-    // ۴. پاسخ پیش‌فرض
-    const fallbackReply = `درخواست شما: "${parsed.data.prompt}" بررسی شد.\n\nمن کدهای خطای خط ۱ مترو تهران را می‌شناسم:\n• **E102** — درب واگن\n• **E205** — صدای موتور\n• **E303** — اعلام حریق\n• **E404** — افت کشش\n• **V301** — تهویه\n• **S301** — سیگنالینگ\n• **ترمز** — سیستم ترمز\n\nلطفاً کد خطا یا موضوع مورد نظر را وارد کنید.\n\nدر صورت وجود موارد اضطراری، دکمه **SOS** را بفشارید.`
+    // ۳. تولید Embedding و جستجو در Semantic Cache
+    let questionEmbedding: number[] = []
+    let cachedAnswer = null
+    let maxSim = 0
 
-    return NextResponse.json({
+    try {
+      questionEmbedding = await getEmbedding(rawPrompt)
+      const caches = await prisma.aiKnowledgeCache.findMany()
+      for (const cache of caches) {
+        try {
+          const vec = JSON.parse(cache.questionEmbedding)
+          const sim = cosineSimilarity(questionEmbedding, vec)
+          if (sim > maxSim && sim > 0.90) { // Threshold 90%
+            maxSim = sim
+            cachedAnswer = cache
+          }
+        } catch (e) {}
+      }
+    } catch (err) {
+      console.warn('Embedding error (ignoring cache):', err)
+    }
+
+    if (cachedAnswer) {
+      await prisma.aiKnowledgeCache.update({
+        where: { id: cachedAnswer.id },
+        data: { hitCount: { increment: 1 }, lastUsedAt: new Date() }
+      })
+
+      // Save user prompt in history
+      await prisma.aiMessage.create({
+        data: { conversationId, role: 'user', text: rawPrompt }
+      })
+      const aiMsg = await prisma.aiMessage.create({
+        data: {
+          conversationId,
+          role: 'model',
+          text: cachedAnswer.answerText,
+          source: 'semantic_cache',
+          confidence: maxSim * 100,
+          handbookSection: 'پاسخ کش شده'
+        }
+      })
+
+      return NextResponse.json({
+        data: {
+          id: aiMsg.id,
+          reply: cachedAnswer.answerText,
+          source: 'semantic_cache',
+          matched: true,
+          confidence: maxSim * 100,
+          handbookSection: 'پاسخ کش شده',
+          conversationId
+        }
+      })
+    }
+
+    // ۴. اگر در کش نبود: جستجو در دانش‌نامه (RAG)
+    const cleanPrompt = rawPrompt.replace(/[?؟.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+    const stopWords = ['در', 'به', 'با', 'از', 'تا', 'چقدر', 'است', 'چیست', 'کردن', 'چگونه', 'و', 'یا', 'یک', 'این', 'آن', 'ها', 'های', 'را', 'که', 'چه', 'چند', 'کدام', 'من', 'شما', 'لطفا', 'لطفاً']
+    const keywords = cleanPrompt
+      .split(/\s+/)
+      .filter(w => w.length > 1 && !stopWords.includes(w))
+
+    let knowledgeContext = ''
+    if (keywords.length > 0) {
+      const searchConditions = keywords.flatMap(kw => [
+        { title: { contains: kw } },
+        { body: { contains: kw } },
+        { tags: { contains: kw } }
+      ])
+
+      const knowledgeArticles = await prisma.knowledgeArticle.findMany({
+        where: { OR: searchConditions },
+        take: 3,
+        select: {
+          title: true,
+          body: true,
+          category: true,
+          slug: true,
+        },
+      })
+
+      if (knowledgeArticles.length > 0) {
+        knowledgeContext = knowledgeArticles.map((a, i) =>
+          `${i + 1}. **${a.title}** (${a.category ?? 'عمومی'})\n${a.body.substring(0, 500)}`
+        ).join('\n\n')
+      }
+    }
+
+    // ۵. دریافت تاریخچه و ساخت Prompt برای Gateway
+    const historyRecords = await prisma.aiMessage.findMany({
+      where: { conversationId },
+      orderBy: { createdAt: 'asc' },
+      take: 20
+    })
+    
+    const promptForAI = `
+تو دستیار هوشمند عملیاتی خط ۱ مترو تهران هستی.
+قوانین: همیشه فارسی پاسخ بده. اعداد فارسی باشند. در شرایط بحرانی بگو با OCC تماس بگیرند.
+
+تاریخچه مکالمه:
+${historyRecords.map(h => `${h.role}: ${h.text}`).join('\n')}
+
+اطلاعات دیتابیس (در صورت وجود):
+${knowledgeContext}
+
+سؤال کاربر:
+${rawPrompt}
+`
+
+    // ۶. ارسال به AI Gateway
+    const aiResponse = await AIGateway.routeRequest(promptForAI)
+
+    // ۷. ذخیره پاسخ جدید در Semantic Cache
+    if (questionEmbedding.length > 0) {
+      await prisma.aiKnowledgeCache.create({
+        data: {
+          questionText: rawPrompt,
+          questionEmbedding: JSON.stringify(questionEmbedding),
+          answerText: aiResponse.text,
+          source: 'ai_generated',
+          providerUsed: aiResponse.usedProvider,
+          confidenceScore: aiResponse.confidence || 90
+        }
+      })
+    }
+
+    // ذخیره در تاریخچه مکالمه
+    await prisma.aiMessage.create({
+      data: { conversationId, role: 'user', text: rawPrompt }
+    })
+    const aiMsg = await prisma.aiMessage.create({
       data: {
-        reply: fallbackReply,
-        source: 'fallback',
-        matched: false,
-        confidence: 50,
-        handbookSection: 'راهنمای عمومی هوش مصنوعی'
+        conversationId,
+        role: 'model',
+        text: aiResponse.text,
+        source: aiResponse.usedProvider,
+        confidence: aiResponse.confidence || 90,
+        handbookSection: knowledgeContext ? 'دانش‌نامه محلی پرسنل' : 'هوش مصنوعی'
       }
     })
 
-  } catch {
+    // لاگ سؤالات
+    await prisma.auditLog.create({
+      data: {
+        actorId: user.id,
+        entity: 'AI_QUERY',
+        entityId: aiResponse.usedProvider,
+        action: 'create',
+        after: { prompt: rawPrompt, source: aiResponse.usedProvider, hasContext: !!knowledgeContext },
+      }
+    }).catch(() => {})
+
+    return NextResponse.json({
+      data: {
+        id: aiMsg.id,
+        reply: aiResponse.text,
+        source: aiResponse.usedProvider,
+        matched: true,
+        confidence: aiResponse.confidence || 90,
+        handbookSection: knowledgeContext ? 'دانش‌نامه محلی پرسنل' : 'هوش مصنوعی',
+        conversationId
+      }
+    })
+
+  } catch (err: any) {
+    console.error('AI route error:', err)
     return NextResponse.json(
-      { error: 'خطای غیرمنتظره در سرور' },
+      { error: err.message || 'خطای غیرمنتظره در سرور' },
       { status: 500 }
     )
   }

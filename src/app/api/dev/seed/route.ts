@@ -42,7 +42,60 @@ export async function GET() {
       ]
     })
 
-    return NextResponse.json({ success: true, message: 'UI Builder Seeding successful' })
+    // 5. Seed Leave Settings
+    await prisma.setting.deleteMany({ where: { category: 'leaves' } }).catch(() => {})
+    
+    await prisma.setting.createMany({
+      data: [
+        {
+          key: 'leave.type.annual',
+          label: 'مرخصی استحقاقی',
+          description: 'مرخصی استحقاقی سالانه',
+          category: 'leaves',
+          type: 'number',
+          value: JSON.stringify({ maxDaysPerMonth: 2.5, requiresApproval: true }),
+          defaultValue: JSON.stringify({ maxDaysPerMonth: 2.5, requiresApproval: true }),
+        },
+        {
+          key: 'leave.type.sick',
+          label: 'مرخصی استعلاجی',
+          description: 'مرخصی استعلاجی با تایید پزشک',
+          category: 'leaves',
+          type: 'number',
+          value: JSON.stringify({ maxDaysPerMonth: 3, requiresApproval: true }),
+          defaultValue: JSON.stringify({ maxDaysPerMonth: 3, requiresApproval: true }),
+        },
+        {
+          key: 'leave.type.mission',
+          label: 'مأموریت',
+          description: 'مأموریت کاری',
+          category: 'leaves',
+          type: 'number',
+          value: JSON.stringify({ maxDaysPerMonth: 30, requiresApproval: true }),
+          defaultValue: JSON.stringify({ maxDaysPerMonth: 30, requiresApproval: true }),
+        },
+        {
+          key: 'leave.type.overtime',
+          label: 'اضافه کار',
+          description: 'ساعات اضافه کار ثبت شده',
+          category: 'leaves',
+          type: 'number',
+          value: JSON.stringify({ maxDaysPerMonth: 30, requiresApproval: true }),
+          defaultValue: JSON.stringify({ maxDaysPerMonth: 30, requiresApproval: true }),
+        },
+        {
+          key: 'leave.type.oncall',
+          label: 'کشیک',
+          description: 'شیفت کشیک',
+          category: 'leaves',
+          type: 'number',
+          value: JSON.stringify({ maxDaysPerMonth: 10, requiresApproval: true }),
+          defaultValue: JSON.stringify({ maxDaysPerMonth: 10, requiresApproval: true }),
+        }
+      ]
+    })
+
+    return NextResponse.json({ success: true, message: 'UI Builder & Leaves Seeding successful' })
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }

@@ -793,6 +793,16 @@ async function seedDefaultSettings(prisma: PrismaClient) {
         isEnabled: true,
       },
       {
+        key: 'shifts.show_holidays',
+        label: 'نمایش تعطیلات رسمی',
+        description: 'آیا تعطیلات رسمی در تقویم شیفت‌ها پرسنل (در موبایل و پنل) نمایش داده شود؟',
+        type: 'boolean',
+        value: JSON.stringify(true),
+        defaultValue: JSON.stringify(true),
+        category: 'shifts',
+        isEnabled: true,
+      },
+      {
         key: 'tickets.allowNoWagon',
         label: 'امکان ثبت تیکت بدون شماره واگن',
         description: 'آیا کاربران می‌توانند خرابی‌هایی را ثبت کنند که مربوط به واگن خاصی نباشد؟',

@@ -240,7 +240,7 @@ export function TicketsScreen({ navigation }: any) {
     fab: { position: 'absolute', bottom: 24, left: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: theme.colors.primary, justifyContent: 'center', alignItems: 'center', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84 },
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 16 },
     modalContent: { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, padding: 20 },
-    modalTitle: { fontFamily: theme.typography.titleMd.fontFamily, fontSize: 18, fontWeight: 'bold', color: theme.colors.onSurface, marginBottom: 16, textAlign: 'center' },
+    modalTitle: { fontFamily: theme.typography.sectionTitle.fontFamily, fontSize: 18, fontWeight: 'bold', color: theme.colors.onSurface, marginBottom: 16, textAlign: 'center' },
     input: { borderWidth: 1, borderColor: theme.colors.outlineVariant, borderRadius: theme.borderRadius.sm, padding: 12, marginBottom: 12, fontFamily: 'Vazirmatn-Regular', color: theme.colors.onSurface, backgroundColor: theme.colors.surfaceVariant, textAlign: 'right' },
     modalButtons: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16, gap: 12 },
     modalBtn: { flex: 1, paddingVertical: 12, borderRadius: theme.borderRadius.sm, alignItems: 'center' },

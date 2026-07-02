@@ -169,6 +169,29 @@ const DEFAULT_SETTINGS = [
     min: 100,
     max: 5000,
   },
+  {
+    key: 'requests.types',
+    label: 'انواع درخواست‌های پرسنلی',
+    description: 'تنظیمات ضرایب و انواع مرخصی، اضافه‌کار، کشیک و ماموریت مجاز',
+    type: 'text',
+    value: [
+      { id: 'annual_leave', label: 'مرخصی استحقاقی', category: 'leave', unit: 'days', multiplier: 1, requiresApproval: true, isEnabled: true },
+      { id: 'sick_leave', label: 'مرخصی استعلاجی', category: 'leave', unit: 'days', multiplier: 1, requiresApproval: true, isEnabled: true },
+      { id: 'overtime_normal', label: 'اضافه‌کار عادی', category: 'overtime', unit: 'hours', multiplier: 1.4, requiresApproval: true, isEnabled: true },
+      { id: 'overtime_holiday', label: 'اضافه‌کار تعطیل', category: 'overtime', unit: 'hours', multiplier: 1.8, requiresApproval: true, isEnabled: true },
+      { id: 'on_call', label: 'کشیک آماده‌به‌کار', category: 'duty', unit: 'hours', multiplier: 0.5, requiresApproval: true, isEnabled: true },
+      { id: 'mission_city', label: 'ماموریت درون‌شهری', category: 'mission', unit: 'hours', multiplier: 1, requiresApproval: true, isEnabled: true }
+    ],
+    defaultValue: [
+      { id: 'annual_leave', label: 'مرخصی استحقاقی', category: 'leave', unit: 'days', multiplier: 1, requiresApproval: true, isEnabled: true },
+      { id: 'sick_leave', label: 'مرخصی استعلاجی', category: 'leave', unit: 'days', multiplier: 1, requiresApproval: true, isEnabled: true },
+      { id: 'overtime_normal', label: 'اضافه‌کار عادی', category: 'overtime', unit: 'hours', multiplier: 1.4, requiresApproval: true, isEnabled: true },
+      { id: 'overtime_holiday', label: 'اضافه‌کار تعطیل', category: 'overtime', unit: 'hours', multiplier: 1.8, requiresApproval: true, isEnabled: true },
+      { id: 'on_call', label: 'کشیک آماده‌به‌کار', category: 'duty', unit: 'hours', multiplier: 0.5, requiresApproval: true, isEnabled: true },
+      { id: 'mission_city', label: 'ماموریت درون‌شهری', category: 'mission', unit: 'hours', multiplier: 1, requiresApproval: true, isEnabled: true }
+    ],
+    category: 'requests',
+  },
   // Mobile settings
   {
     key: 'mobile.enableSos',
@@ -765,5 +788,78 @@ export async function resetAllSettings(actorId: string) {
   }
 
   return results
+}
+
+export async function createSetting(data: {
+  key: string
+  label: string
+  description?: string
+  type: 'text' | 'number' | 'boolean' | 'select' | 'color'
+  value: any
+  category: string
+  isEnabled?: boolean
+}, actorId: string) {
+  const existing = await prisma.setting.findUnique({
+    where: { key: data.key },
+  })
+
+  if (existing) {
+    throw new Error(`تنظیم با کلید ${data.key} از قبل وجود دارد.`)
+  }
+
+  const serializedValue = JSON.stringify(data.value)
+
+  const created = await prisma.setting.create({
+    data: {
+      key: data.key,
+      label: data.label,
+      description: data.description,
+      type: data.type,
+      value: serializedValue,
+      defaultValue: serializedValue,
+      category: data.category,
+      isEnabled: data.isEnabled ?? true,
+    },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      actorId,
+      entity: 'Setting',
+      entityId: created.id,
+      action: 'create',
+      before: {},
+      after: { key: data.key, value: serializedValue },
+    },
+  })
+
+  return created
+}
+
+export async function deleteSetting(key: string, actorId: string) {
+  const setting = await prisma.setting.findUnique({
+    where: { key },
+  })
+
+  if (!setting) {
+    throw new Error(`تنظیم با کلید ${key} یافت نشد.`)
+  }
+
+  const deleted = await prisma.setting.delete({
+    where: { key },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      actorId,
+      entity: 'Setting',
+      entityId: setting.id,
+      action: 'delete',
+      before: { key, value: setting.value },
+      after: {},
+    },
+  })
+
+  return deleted
 }
 

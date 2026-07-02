@@ -169,16 +169,17 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         ]
       },
       {
-        id: 'admin-roster',
-        label: 'برنامه‌ریزی و شیفت',
+        id: 'admin',
+        label: 'مدیریت کل',
         icon: Calendar,
         roles: ['admin', 'super_admin'],
         items: [
+          { label: 'مدیریت درخواست‌ها', href: '/admin/requests', icon: FileSpreadsheet },
           { label: 'مدیریت شیفت‌ها', href: '/admin/shifts', icon: Calendar },
           { label: 'بارگذاری اکسل لوحه', href: '/roster/upload', icon: FileSpreadsheet },
           { label: 'نمای گانت لوحه', href: '/roster?view=gantt', icon: TrendingUp },
           { label: 'آمار و تحلیل اعزام‌ها', href: '/roster/analytics', icon: BarChart3 },
-          { label: 'مدیریت چک‌لیست‌ها', href: '/checklists', icon: ClipboardCheck },
+          { label: 'مدیریت چک‌لیست‌ها', href: '/admin/checklists', icon: ClipboardCheck },
         ]
       },
       {
@@ -198,9 +199,10 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         roles: ['admin', 'super_admin'],
         items: [
           { label: 'فرم‌ساز سازمانی', href: '/admin/form-builder', icon: Settings },
+          { label: 'مدیریت تیکت‌های خرابی', href: '/admin/tickets', icon: AlertTriangle },
           { label: 'داشبورد تحلیلی', href: '/admin/analytics', icon: BarChart3 },
           { label: 'پیکربندی کاتالوگ عملکرد', href: '/admin/performance-config', icon: Award },
-          { label: 'اعتراضات ارزیابی عملکرد', href: '/admin/performance-appeals', icon: FileSpreadsheet },
+          { label: 'ثبت و بررسی عملکرد', href: '/admin/performance', icon: FileSpreadsheet },
           { label: 'سیگنالینگ و شبکه برق', href: '/admin/infrastructure', icon: HardDrive },
           { label: 'ثبت خودروها و پلاک‌خوان', href: '/admin/license-plates', icon: Settings },
           { label: 'صلاحیت و گواهی راهبران', href: '/admin/operator-licenses', icon: ShieldCheck },

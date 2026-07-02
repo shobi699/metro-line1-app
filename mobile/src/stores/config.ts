@@ -10,6 +10,9 @@ export interface MobileConfig {
   appVersion?: string
   developerText?: string
   socialLinks?: Array<{ platform: string; url: string; icon: string }>
+  shifts?: {
+    showHolidays: boolean
+  }
   mobile: {
     enableSos: boolean
     geofencingEnabled: boolean
@@ -24,6 +27,7 @@ export interface MobileConfig {
       link: string
     }
   }
+  leaveTypes?: Array<{ label: string; value: string; maxDaysPerMonth: number; requiresApproval: boolean }>
   comms?: {
     voiceChatEnabled: boolean
     maxRecordingTime: number
@@ -38,6 +42,7 @@ export interface MobileConfig {
 }
 
 interface ConfigState {
+
   config: MobileConfig | null
   isLoading: boolean
   fetchConfig: () => Promise<void>

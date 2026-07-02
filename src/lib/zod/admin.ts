@@ -59,6 +59,25 @@ export const resetSettingSchema = z.object({
 
 export type ResetSettingInput = z.infer<typeof resetSettingSchema>
 
+export const createSettingSchema = z.object({
+  key: z.string().min(1, 'کلید تنظیم الزامی است'),
+  label: z.string().min(1, 'عنوان تنظیم الزامی است'),
+  description: z.string().optional(),
+  type: z.enum(['text', 'number', 'boolean', 'select', 'color']),
+  value: z.any(),
+  category: z.string().default('general'),
+  isEnabled: z.boolean().default(true),
+})
+
+export type CreateSettingInput = z.infer<typeof createSettingSchema>
+
+export const deleteSettingSchema = z.object({
+  key: z.string().min(1, 'کلید تنظیم الزامی است'),
+})
+
+export type DeleteSettingInput = z.infer<typeof deleteSettingSchema>
+
+
 export const createActionTypeSchema = z.object({
   competencyId: z.string().min(1, 'انتخاب محور شایستگی الزامی است'),
   title: z.string().min(1, 'عنوان عملکرد الزامی است'),

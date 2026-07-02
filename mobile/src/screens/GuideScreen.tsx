@@ -178,15 +178,15 @@ export function GuideScreen({ navigation }: any) {
   })
 
   return (
-    <ScreenWrapper>
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]} dir="rtl">
+    <ScreenWrapper title="راهنما">
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]} >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <ChevronLeft size={24} color={theme.colors.foreground} />
+            <ChevronLeft size={24} color={theme.colors.onSurface} />
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
-            <Text style={[styles.headerTitle, { color: theme.colors.foreground }]}>راهنمای کاربری و آموزش</Text>
+            <Text style={[styles.headerTitle, { color: theme.colors.onSurface }]}>راهنمای کاربری و آموزش</Text>
             <Text style={styles.headerSubtitle}>آموزش جامع استفاده از امکانات سوپراپ</Text>
           </View>
         </View>
@@ -195,7 +195,7 @@ export function GuideScreen({ navigation }: any) {
         <View style={[styles.searchContainer, { backgroundColor: theme.colors.surfaceContainerLow }]}>
           <Search size={18} color="#a1a1aa" style={styles.searchIcon} />
           <TextInput
-            style={[styles.searchInput, { color: theme.colors.foreground }]}
+            style={[styles.searchInput, { color: theme.colors.onSurface }]}
             placeholder="جستجو در سرفصل‌های راهنما..."
             placeholderTextColor="#71717a"
             value={search}
@@ -216,7 +216,7 @@ export function GuideScreen({ navigation }: any) {
                   category === cat ? { backgroundColor: theme.colors.accent } : { backgroundColor: theme.colors.surfaceContainerLow }
                 ]}
               >
-                <Text style={[styles.categoryText, category === cat ? styles.categoryTextActive : { color: theme.colors.foregroundMuted }]}>
+                <Text style={[styles.categoryText, category === cat ? styles.categoryTextActive : { color: theme.colors.onSurfaceVariant }]}>
                   {cat}
                 </Text>
               </TouchableOpacity>
@@ -244,7 +244,7 @@ export function GuideScreen({ navigation }: any) {
                   <View style={styles.cardTitleRow}>
                     <BookOpen size={16} color={theme.colors.accent} style={styles.titleIcon} />
                     <View style={styles.cardTitleText}>
-                      <Text style={[styles.cardTitle, { color: theme.colors.foreground }]}>{item.title}</Text>
+                      <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>{item.title}</Text>
                       <Text style={styles.cardBadge}>{item.category}</Text>
                     </View>
                   </View>
@@ -256,11 +256,11 @@ export function GuideScreen({ navigation }: any) {
                     <Text style={styles.description}>{item.description}</Text>
 
                     {/* Steps */}
-                    <Text style={[styles.sectionHeading, { color: theme.colors.foreground }]}>مراحل و راهنما:</Text>
+                    <Text style={[styles.sectionHeading, { color: theme.colors.onSurface }]}>مراحل و راهنما:</Text>
                     {item.steps.map((step, idx) => (
                       <View key={idx} style={styles.bulletRow}>
                         <View style={[styles.bulletNumber, { backgroundColor: theme.colors.accent }]} />
-                        <Text style={[styles.bulletText, { color: theme.colors.foregroundMuted }]}>{step}</Text>
+                        <Text style={[styles.bulletText, { color: theme.colors.onSurfaceVariant }]}>{step}</Text>
                       </View>
                     ))}
 
@@ -268,7 +268,7 @@ export function GuideScreen({ navigation }: any) {
                     <View style={[styles.rulesContainer, { backgroundColor: theme.colors.surfaceContainerHigh }]}>
                       <View style={styles.rulesTitleRow}>
                         <Info size={14} color={theme.colors.accent} style={{ marginLeft: 6 }} />
-                        <Text style={[styles.rulesTitle, { color: theme.colors.foreground }]}>نکته عملیاتی</Text>
+                        <Text style={[styles.rulesTitle, { color: theme.colors.onSurface }]}>نکته عملیاتی</Text>
                       </View>
                       {item.rules.map((rule, idx) => (
                         <Text key={idx} style={styles.ruleText}>• {rule}</Text>

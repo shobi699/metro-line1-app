@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSettingValue } from '@/server/modules/settings/service'
+import { prisma } from '@/server/db'
 
 export async function GET(request: Request) {
   try {
@@ -11,6 +12,9 @@ export async function GET(request: Request) {
     const passwordPolicyMinLength = await getSettingValue('general.passwordPolicyMinLength', 8)
     const directoryVisibleFields = await getSettingValue('directory.visible_fields', 'phone,email,personnelNo,post,shift,shiftType,group,startLocation,vehicles')
     
+    // Shifts settings
+    const showHolidays = await getSettingValue('shifts.show_holidays', true)
+
     // New mobile branding settings
     const appVersion = await getSettingValue('general.appVersion', 'نسخه ۱.۵.۰')
     const developerText = await getSettingValue('general.developerText', 'توسعه داده شده توسط بخش فناوری سیر و حرکت')
@@ -20,6 +24,40 @@ export async function GET(request: Request) {
       socialLinks = JSON.parse(socialLinksRaw)
     } catch {
       socialLinks = []
+    }
+
+    // Leave types dynamically fetched
+    const leaveTypeSettings = await prisma.setting.findMany({
+      where: { key: { startsWith: 'leave.type.' }, isEnabled: true }
+    })
+    
+    const leaveTypes = leaveTypeSettings.map(s => {
+      let maxDaysPerMonth = 0
+      let requiresApproval = false
+      try {
+        const parsed = JSON.parse(s.value)
+        maxDaysPerMonth = parsed.maxDaysPerMonth || 0
+        requiresApproval = parsed.requiresApproval ?? false
+      } catch {
+        // ignore parse errors
+      }
+      return {
+        label: s.label,
+        value: s.key.replace('leave.type.', ''),
+        maxDaysPerMonth,
+        requiresApproval
+      }
+    })
+
+    // If no leave types exist, fallback to defaults
+    if (leaveTypes.length === 0) {
+      leaveTypes.push(
+        { label: 'استحقاقی', value: 'annual', maxDaysPerMonth: 0, requiresApproval: false },
+        { label: 'استعلاجی', value: 'sick', maxDaysPerMonth: 0, requiresApproval: false },
+        { label: 'مأموریت', value: 'mission', maxDaysPerMonth: 0, requiresApproval: false },
+        { label: 'اضافه کار', value: 'overtime', maxDaysPerMonth: 0, requiresApproval: false },
+        { label: 'کشیک', value: 'oncall', maxDaysPerMonth: 0, requiresApproval: false }
+      )
     }
 
     // Mobile banner settings
@@ -62,9 +100,13 @@ export async function GET(request: Request) {
         directory: {
           visibleFields: directoryVisibleFields,
         },
+        shifts: {
+          showHolidays,
+        },
         appVersion,
         developerText,
         socialLinks,
+        leaveTypes,
         mobile: {
           dashboardBanner: {
             enabled: bannerEnabled,
@@ -83,7 +125,7 @@ export async function GET(request: Request) {
         }
       },
     })
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'خطا در دریافت پیکربندی عمومی' },
       { status: 500 }

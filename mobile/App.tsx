@@ -23,10 +23,11 @@ import { AttendanceScreen } from './src/screens/AttendanceScreen'
 import { FeedbackScreen } from './src/screens/FeedbackScreen'
 import { TicketsScreen } from './src/screens/TicketsScreen'
 import { BulletinsScreen } from './src/screens/BulletinsScreen'
-import { ChecklistsScreen } from './src/screens/ChecklistsScreen'
+import ChecklistsScreen from './src/screens/ChecklistsScreen'
+import { LeaveReportScreen } from './src/screens/LeaveReportScreen'
 import { VoiceConferenceScreen } from './src/screens/VoiceConferenceScreen'
 import { RadioSimulatorScreen } from './src/screens/RadioSimulatorScreen'
-import { PerformanceScreen } from './src/screens/PerformanceScreen'
+import PerformanceScreen from './src/screens/PerformanceScreen'
 import { ContentScreen } from './src/screens/ContentScreen'
 import { RosterScreen } from './src/screens/RosterScreen'
 import { UIBuilderScreen } from './src/screens/UIBuilderScreen'
@@ -35,6 +36,8 @@ import { LearningScreen } from './src/screens/LearningScreen'
 import { GuideScreen } from './src/screens/GuideScreen'
 import { MeetingsScreen } from './src/screens/MeetingsScreen'
 import { PlateSearchScreen } from './src/screens/PlateSearchScreen'
+import { SubmitRequestScreen } from './src/screens/requests/SubmitRequestScreen'
+import { MonthlyReportScreen } from './src/screens/requests/MonthlyReportScreen'
 import { OfflineBanner } from './src/shared/OfflineBanner'
 import { BulletinGuard } from './src/shared/BulletinGuard'
 import { CustomTabBar } from './src/shared/CustomTabBar'
@@ -68,9 +71,14 @@ export type RootStackParamList = {
   CustomPage: { slug: string }
   MeetingsScreen: undefined
   ProfileScreen: undefined
+  SubmitRequestScreen: undefined
+  MonthlyReportScreen: undefined
   CalendarScreen: undefined
+  LeaveReportScreen: undefined
   PlateSearch: undefined
   'راهنمای کاربری': undefined
+  DirectoryScreen: undefined
+  ChecklistsScreen: undefined
 }
 
 const Tab = createBottomTabNavigator()
@@ -107,9 +115,14 @@ function HomeStackScreen() {
       <Stack.Screen name="CustomPage" component={CustomPageScreen} />
       <Stack.Screen name="MeetingsScreen" component={MeetingsScreen} />
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+      <Stack.Screen name="SubmitRequestScreen" component={SubmitRequestScreen} />
+      <Stack.Screen name="MonthlyReportScreen" component={MonthlyReportScreen} />
       <Stack.Screen name="CalendarScreen" component={CalendarScreen} />
+      <Stack.Screen name="LeaveReportScreen" component={LeaveReportScreen} />
       <Stack.Screen name="PlateSearch" component={PlateSearchScreen} />
       <Stack.Screen name="راهنمای کاربری" component={GuideScreen} />
+      <Stack.Screen name="DirectoryScreen" component={DirectoryScreen} />
+      <Stack.Screen name="ChecklistsScreen" component={ChecklistsScreen} />
     </Stack.Navigator>
   )
 }

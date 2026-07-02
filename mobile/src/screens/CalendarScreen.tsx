@@ -9,18 +9,22 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  SafeAreaView
+  SafeAreaView,
+  Modal
 } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { useAuthStore } from '../stores/auth'
 import { useShiftsStore, DailyTask } from '../stores/shifts'
+import { useLeaveStore } from '../stores/leaves'
+import { useConfigStore } from '../stores/config'
 import {
   gregorianToJalali,
   jalaliToGregorian,
   getJalaliMonthLength,
   getJalaliDateString,
   getJalaliDateLabel,
-  toFa
+  toFa,
+  getJalaliHoliday
 } from '../shared/jalali'
 import { useTheme } from '../shared/ThemeProvider'
 import { ScreenWrapper } from '../shared/ScreenWrapper'
@@ -58,6 +62,12 @@ export function CalendarScreen({ navigation }: any) {
     deleteTask
   } = useShiftsStore()
 
+  const { leaves, fetchLeaves, addLeave } = useLeaveStore()
+  const accessToken = useAuthStore(s => s.accessToken)
+  const isAuthLoading = useAuthStore(s => s.isLoading)
+  const config = useConfigStore(s => s.config)
+  const showHolidays = config?.shifts?.showHolidays ?? true
+
   // Determine current Jalali date to initialize the navigation
   const today = new Date()
   const [todayJy, todayJm, todayJd] = gregorianToJalali(today.getFullYear(), today.getMonth() + 1, today.getDate())
@@ -65,6 +75,8 @@ export function CalendarScreen({ navigation }: any) {
   const [currentMonth, setCurrentMonth] = useState(todayJm)
   const [currentYear, setCurrentYear] = useState(todayJy)
   const [selectedDay, setSelectedDay] = useState(todayJd)
+  
+  const [currentView, setCurrentView] = useState<'month' | 'week' | 'list'>('month')
 
   // Personal task input states
   const [newTaskTitle, setNewTaskTitle] = useState('')
@@ -81,10 +93,22 @@ export function CalendarScreen({ navigation }: any) {
   // Note input state
   const [noteText, setNoteText] = useState('')
 
+  // Modal state for day details
+  const [isDetailsVisible, setIsDetailsVisible] = useState(false)
+
   // Load persisted store data on mount
   useEffect(() => {
     void loadPersistedData()
   }, [])
+
+  useEffect(() => {
+    if (accessToken) {
+      // Fetch leaves for the current month. Format: YYYY-MM
+      const yyyy = String(selectedGregDate.getFullYear())
+      const mm = String(selectedGregDate.getMonth() + 1).padStart(2, '0')
+      fetchLeaves(accessToken, `${yyyy}-${mm}`)
+    }
+  }, [accessToken, currentMonth, currentYear])
 
   // Resolve user work group from profile settings
   const userGroup = user?.customFields?.group || 'A'
@@ -133,6 +157,15 @@ export function CalendarScreen({ navigation }: any) {
       const resolved = getShiftForUserAndDate('current', cellGregDate, assignments, templates, userGroup)
       const dayTasks = tasks.filter((t) => t.userId === 'current' && t.date === cellDateStr)
       const dayNote = notes.find((n) => n.userId === 'current' && n.date === cellDateStr)
+      const dayLeaves = leaves.filter((l) => {
+        const from = new Date(l.fromDate)
+        const to = new Date(l.toDate)
+        // Set hours to 0 to compare dates purely
+        from.setHours(0,0,0,0)
+        to.setHours(23,59,59,999)
+        const cellDt = new Date(cellGregDate)
+        return cellDt >= from && cellDt <= to
+      })
 
       cells.push({
         isOffset: false,
@@ -143,25 +176,42 @@ export function CalendarScreen({ navigation }: any) {
         resolvedShift: resolved,
         hasTasks: dayTasks.length > 0,
         hasNote: !!dayNote?.content,
+        leaves: dayLeaves,
         isToday: currentYear === todayJy && currentMonth === todayJm && d === todayJd,
-        isFriday: cellGregDate.getDay() === 5
+        isFriday: cellGregDate.getDay() === 5,
+        holidayName: getJalaliHoliday(currentYear, currentMonth, d)
       })
     }
     return cells
-  }, [currentYear, currentMonth, daysCount, startWeekday, assignments, templates, tasks, notes, userGroup, todayJy, todayJm, todayJd])
+  }, [currentYear, currentMonth, daysCount, startWeekday, assignments, templates, tasks, notes, leaves, userGroup, todayJy, todayJm, todayJd])
+
+  const weekGrid = useMemo(() => {
+    const selectedIndex = startWeekday + selectedDay - 1
+    const weekStart = Math.floor(selectedIndex / 7) * 7
+    return daysGrid.slice(weekStart, weekStart + 7)
+  }, [daysGrid, startWeekday, selectedDay])
 
   const selectedDayData = useMemo(() => {
     const resolved = getShiftForUserAndDate('current', selectedGregDate, assignments, templates, userGroup)
     const dayTasks = tasks.filter((t) => t.userId === 'current' && t.date === selectedDateStr)
     const dayNote = notes.find((n) => n.userId === 'current' && n.date === selectedDateStr)
+    const dayLeaves = leaves.filter((l) => {
+      const from = new Date(l.fromDate)
+      const to = new Date(l.toDate)
+      from.setHours(0,0,0,0)
+      to.setHours(23,59,59,999)
+      const cellDt = new Date(selectedGregDate)
+      return cellDt >= from && cellDt <= to
+    })
 
     return {
       dateLabel: getJalaliDateLabel(selectedGregDate),
       resolved: resolved,
       tasks: dayTasks,
-      note: dayNote
+      note: dayNote,
+      leaves: dayLeaves
     }
-  }, [selectedGregDate, selectedDateStr, assignments, templates, tasks, notes, userGroup])
+  }, [selectedGregDate, selectedDateStr, assignments, templates, tasks, notes, leaves, userGroup])
 
   // Monthly Performance Summary
   const monthlyMetrics = useMemo(() => {
@@ -266,18 +316,62 @@ export function CalendarScreen({ navigation }: any) {
     Alert.alert('تزریق تسک', 'تسک سیستمی با مقادیر اضافه‌کار و مأموریت ثبت شد.')
   }
 
+  const dynamicLeaveOptions = config?.leaveTypes || [
+    { label: 'استحقاقی', value: 'annual' },
+    { label: 'استعلاجی', value: 'sick' },
+    { label: 'مأموریت', value: 'mission' },
+    { label: 'اضافه کار', value: 'overtime' },
+    { label: 'کشیک', value: 'oncall' },
+  ]
+
+  // Leave Form States
+  const [leaveType, setLeaveType] = useState(dynamicLeaveOptions[0]?.value || 'annual')
+  const [leaveReason, setLeaveReason] = useState('')
+  const [leaveAmount, setLeaveAmount] = useState('')
+  const [leaveUnit, setLeaveUnit] = useState('hours')
+  const [isSubmittingLeave, setIsSubmittingLeave] = useState(false)
+
+
+  async function handleAddLeave() {
+    if (!accessToken) return
+    setIsSubmittingLeave(true)
+    
+    // We set both fromDate and toDate to the selected date since we are picking single day on the calendar
+    const dateStr = selectedGregDate.toISOString()
+    const success = await addLeave(accessToken, {
+      type: leaveType,
+      fromDate: dateStr,
+      toDate: dateStr,
+      reason: leaveReason,
+      amount: leaveAmount ? parseFloat(leaveAmount) : undefined,
+      unit: leaveAmount ? leaveUnit : undefined
+    })
+    
+    setIsSubmittingLeave(false)
+    if (success) {
+      setLeaveReason('')
+      setLeaveAmount('')
+      Alert.alert('موفقیت', 'درخواست شما با موفقیت ثبت شد.')
+    } else {
+      Alert.alert('خطا', 'مشکلی در ثبت درخواست به وجود آمد.')
+    }
+  }
+
   const { theme } = useTheme()
 
   const shiftCounts = useMemo(() => {
-    let day = 0, night = 0, off = 0
+    let day = 0, night = 0, off = 0, leaveCount = 0
     daysGrid.forEach(cell => {
       if (!cell.isOffset && cell.resolvedShift?.shift) {
         if (cell.resolvedShift.shift.code === 'morning') day++
         else if (cell.resolvedShift.shift.code === 'night') night++
         else if (cell.resolvedShift.shift.code === 'off') off++
       }
+      if (!cell.isOffset && cell.leaves && cell.leaves.length > 0) {
+        leaveCount++
+      }
     })
-    return { day, night, off }
+    return { day, night, off, leaveCount }
   }, [daysGrid])
 
   function jumpToToday() {
@@ -297,7 +391,7 @@ export function CalendarScreen({ navigation }: any) {
     todayBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 9999, backgroundColor: theme.colors.primaryContainer + '20' },
     todayBtnText: { color: theme.colors.primary, fontFamily: theme.typography.captionSm.fontFamily, fontSize: theme.typography.captionSm.fontSize, fontWeight: '700' },
     
-    content: { paddingHorizontal: theme.spacing.containerMargin, paddingBottom: 80, gap: theme.spacing.stackSpace },
+    content: { flex: 1, paddingHorizontal: theme.spacing.containerMargin, gap: theme.spacing.stackSpace, paddingBottom: 16 },
     viewSwitcher: { flexDirection: 'row-reverse', backgroundColor: theme.colors.surfaceContainerLow, padding: 4, borderRadius: 9999, marginVertical: 8 },
     viewTabActive: { flex: 1, backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: 9999, paddingVertical: 8, alignItems: 'center', ...theme.shadows.level1 },
     viewTabInactive: { flex: 1, paddingVertical: 8, alignItems: 'center' },
@@ -321,19 +415,42 @@ export function CalendarScreen({ navigation }: any) {
     gridCell: { flex: 1, borderRadius: theme.borderRadius.lg, backgroundColor: theme.colors.surface, padding: 6, justifyContent: 'space-between' },
     gridCellSelected: { backgroundColor: theme.colors.primaryContainer + '10', borderWidth: 2, borderColor: theme.colors.primary, ...theme.shadows.level1 },
     gridCellTodayMarker: { position: 'absolute', top: 4, left: 4, width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.primary },
+    gridCellLeaveMarker: { position: 'absolute', top: 4, right: 4, width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.error },
     gridCellNum: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: theme.typography.bodyMd.fontSize, color: theme.colors.onSurface, textAlign: 'right' },
     gridCellNumSelected: { color: theme.colors.primary, fontWeight: 'bold' },
     gridCellNumFriday: { color: theme.colors.primary },
+    gridCellNumHoliday: { color: theme.colors.error },
     shiftBar: { width: '100%', height: 6, borderRadius: 3 },
     
+    // List view styles
+    listViewContainer: { flex: 1, paddingVertical: 4 },
+    listItemWrapper: { flexDirection: 'row-reverse', alignItems: 'center', backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.lg, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: theme.colors.surfaceVariant, ...theme.shadows.level1 },
+    listItemDateBox: { width: 60, alignItems: 'center', justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: theme.colors.surfaceVariant, paddingLeft: 8, marginLeft: 8 },
+    listItemDayName: { fontSize: 11, color: theme.colors.secondary, fontFamily: theme.typography.captionSm.fontFamily },
+    listItemDayNum: { fontSize: 20, color: theme.colors.onSurface, fontFamily: theme.typography.numericHero.fontFamily, fontWeight: 'bold' },
+    listItemDayNumToday: { color: theme.colors.primary },
+    listItemDayNumFriday: { color: theme.colors.primary },
+    listItemDayNumHoliday: { color: theme.colors.error },
+    listItemContent: { flex: 1, gap: 4 },
+    listItemHoliday: { color: theme.colors.error, fontSize: 11, fontFamily: theme.typography.captionSm.fontFamily },
+    listItemTasksBox: { flexDirection: 'row-reverse', gap: 6, marginTop: 4 },
+    listTaskBadge: { backgroundColor: theme.colors.surfaceContainerHighest, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+    listTaskBadgeText: { fontSize: 10, color: theme.colors.primary, fontFamily: theme.typography.captionSm.fontFamily },
+
     summaryRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', gap: 12, marginTop: 8 },
     summaryCard: { flex: 1, backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.xl, padding: 12, ...theme.shadows.level1, alignItems: 'center', gap: 4, borderBottomWidth: 3 },
     summaryCardLabel: { fontFamily: theme.typography.captionSm.fontFamily, fontSize: theme.typography.captionSm.fontSize, color: theme.colors.secondary },
     summaryCardValue: { fontFamily: theme.typography.numericHero.fontFamily, fontSize: 20, color: theme.colors.onSurface, fontWeight: '800' },
     
     // Bottom sections
-    agendaContainer: { marginTop: 16 },
-    agendaTitle: { fontFamily: theme.typography.sectionTitle.fontFamily, fontSize: theme.typography.sectionTitle.fontSize, fontWeight: '700', color: theme.colors.onSurface, textAlign: 'right', marginBottom: 12 },
+    modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+    modalContent: { backgroundColor: theme.colors.background, borderTopLeftRadius: theme.borderRadius.xl, borderTopRightRadius: theme.borderRadius.xl, padding: 20, maxHeight: '90%' },
+    modalHeader: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottomWidth: 1, borderBottomColor: theme.colors.surfaceVariant, paddingBottom: 12 },
+    modalTitleContainer: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8 },
+    modalTitle: { fontFamily: theme.typography.sectionTitle.fontFamily, fontSize: theme.typography.sectionTitle.fontSize, fontWeight: '700', color: theme.colors.onSurface },
+    modalHolidayText: { fontFamily: theme.typography.captionSm.fontFamily, color: theme.colors.error, fontSize: 12, marginTop: 4, textAlign: 'right' },
+    closeModalBtn: { padding: 4 },
+    
     shiftDetailsBox: { backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.xl, padding: 16, borderWidth: 1, borderColor: theme.colors.surfaceVariant, marginBottom: 16, ...theme.shadows.level1 },
     shiftDetailsRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' },
     shiftDetailsLabel: { color: theme.colors.secondary, fontFamily: theme.typography.bodyMd.fontFamily, fontWeight: '700' },
@@ -395,10 +512,21 @@ export function CalendarScreen({ navigation }: any) {
     systemFieldInputLabel: { color: theme.colors.secondary, fontSize: 12, marginBottom: 6, textAlign: 'right', fontWeight: '600', fontFamily: theme.typography.captionSm.fontFamily },
     systemNumericInput: { backgroundColor: theme.colors.background, borderColor: theme.colors.surfaceVariant, borderWidth: 1, borderRadius: theme.borderRadius.md, paddingHorizontal: 12, height: 48, color: theme.colors.onSurface, textAlign: 'center', fontFamily: theme.typography.bodyMd.fontFamily },
     addSystemTaskBtn: { backgroundColor: theme.colors.primary, flexDirection: 'row-reverse', alignItems: 'center', paddingHorizontal: 16, height: 40, borderRadius: theme.borderRadius.lg, gap: 6 },
+    
+    // Leave Select 
+    leaveTypeOptions: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
+    leaveTypeBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 9999, borderWidth: 1, borderColor: theme.colors.surfaceVariant, backgroundColor: theme.colors.surfaceContainerLowest },
+    leaveTypeBtnActive: { borderColor: theme.colors.primary, backgroundColor: theme.colors.primaryContainer },
+    leaveTypeBtnText: { fontFamily: theme.typography.captionSm.fontFamily, color: theme.colors.secondary },
+    leaveTypeBtnTextActive: { color: theme.colors.primary, fontWeight: 'bold' },
+    leaveRequestItem: { backgroundColor: theme.colors.surfaceContainerLowest, borderWidth: 1, borderColor: theme.colors.surfaceVariant, borderRadius: theme.borderRadius.md, padding: 12, marginTop: 8 },
+    leaveRequestTitle: { fontFamily: theme.typography.bodyMd.fontFamily, fontWeight: 'bold', color: theme.colors.onSurface },
+    leaveRequestStatus: { fontSize: 11, fontFamily: theme.typography.captionSm.fontFamily, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, overflow: 'hidden' },
+    leaveSubmitBtn: { backgroundColor: theme.colors.primary, borderRadius: theme.borderRadius.lg, paddingVertical: 12, alignItems: 'center', marginTop: 8 },
   })
 
   return (
-    <ScreenWrapper title={`${JALALI_MONTHS[currentMonth - 1]} ${toFa(currentYear)}`} navigation={navigation} scrollable={true}>
+    <ScreenWrapper title={`${JALALI_MONTHS[currentMonth - 1]} ${toFa(currentYear)}`} navigation={navigation} scrollable={false}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
         style={styles.container}
@@ -413,13 +541,15 @@ export function CalendarScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <View style={styles.content}>
           
           {/* Admin Simulation Toggle Bar */}
-          <View style={styles.adminSimulationBar}>
+          <View style={[styles.adminSimulationBar, { marginBottom: 8 }]}>
             <View style={styles.adminSimLabelContainer}>
-              <MaterialIcons name="lock" size={16} color={isAdminSimulated ? "#e53935" : "#8e8e93"} />
-              <Text style={styles.adminSimLabel}>شبیه‌ساز نقش مدیریت (ادمین):</Text>
+              <MaterialIcons name="lock" size={16} color={showHolidays ? "#2e7d32" : "#8e8e93"} />
+              <Text style={styles.adminSimLabel}>
+                {showHolidays ? 'تعطیلات: روشن' : 'تعطیلات: خاموش'}
+              </Text>
             </View>
             <TouchableOpacity style={[styles.adminSimButton, isAdminSimulated && styles.adminSimButtonActive]} onPress={toggleAdminSimulation}>
               <Text style={[styles.adminSimButtonText, isAdminSimulated && styles.adminSimButtonTextActive]}>
@@ -430,14 +560,14 @@ export function CalendarScreen({ navigation }: any) {
 
           {/* View Switcher */}
           <View style={styles.viewSwitcher}>
-            <TouchableOpacity style={styles.viewTabActive}>
-              <Text style={styles.viewTabTextActive}>ماهانه</Text>
+            <TouchableOpacity style={currentView === 'month' ? styles.viewTabActive : styles.viewTabInactive} onPress={() => setCurrentView('month')}>
+              <Text style={currentView === 'month' ? styles.viewTabTextActive : styles.viewTabTextInactive}>ماهانه</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.viewTabInactive}>
-              <Text style={styles.viewTabTextInactive}>هفتگی</Text>
+            <TouchableOpacity style={currentView === 'week' ? styles.viewTabActive : styles.viewTabInactive} onPress={() => setCurrentView('week')}>
+              <Text style={currentView === 'week' ? styles.viewTabTextActive : styles.viewTabTextInactive}>هفتگی</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.viewTabInactive}>
-              <Text style={styles.viewTabTextInactive}>لیست</Text>
+            <TouchableOpacity style={currentView === 'list' ? styles.viewTabActive : styles.viewTabInactive} onPress={() => setCurrentView('list')}>
+              <Text style={currentView === 'list' ? styles.viewTabTextActive : styles.viewTabTextInactive}>لیست</Text>
             </TouchableOpacity>
           </View>
 
@@ -463,47 +593,118 @@ export function CalendarScreen({ navigation }: any) {
           </View>
 
           {/* Calendar Grid */}
-          <View style={styles.calendarCard}>
-            <View style={styles.weekDaysRow}>
-              {['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'].map((dayName, idx) => (
-                <Text key={idx} style={idx === 6 ? styles.weekDayHeaderFriday : styles.weekDayHeader}>{dayName}</Text>
-              ))}
+          {currentView !== 'list' && (
+            <View style={styles.calendarCard}>
+              <View style={styles.weekDaysRow}>
+                {['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'].map((dayName, idx) => (
+                  <Text key={idx} style={idx === 6 ? styles.weekDayHeaderFriday : styles.weekDayHeader}>{dayName}</Text>
+                ))}
+              </View>
+              
+              <View style={styles.gridContainer}>
+                {(currentView === 'month' ? daysGrid : weekGrid).map((cell) => {
+                  if (cell.isOffset) {
+                    return <View key={cell.key} style={styles.gridCellWrapper}><View style={styles.gridCellEmpty} /></View>
+                  }
+                  
+                  const isSel = cell.dayNumber === selectedDay
+                  const shiftCode = cell.resolvedShift?.shift?.code || 'off'
+                  const shiftStyle = SHIFT_MAPPING[shiftCode] || SHIFT_MAPPING.off
+                  const isHoliday = showHolidays && (cell.isFriday || !!cell.holidayName)
+
+                  return (
+                    <TouchableOpacity
+                      key={cell.key}
+                      style={styles.gridCellWrapper}
+                      onPress={() => {
+                        setSelectedDay(cell.dayNumber!)
+                        setIsDetailsVisible(true)
+                      }}
+                    >
+                      <View style={[styles.gridCell, isSel && styles.gridCellSelected, isHoliday && { backgroundColor: theme.colors.errorContainer + '40', borderColor: theme.colors.error + '40', borderWidth: 1 }]}>
+                        {cell.isToday && <View style={styles.gridCellTodayMarker} />}
+                        {cell.leaves && cell.leaves.length > 0 && <View style={styles.gridCellLeaveMarker} />}
+                        <Text style={[
+                          styles.gridCellNum, 
+                          isSel ? styles.gridCellNumSelected : (isHoliday ? styles.gridCellNumHoliday : (cell.isFriday ? styles.gridCellNumFriday : {}))
+                        ]}>
+                          {toFa(cell.dayNumber!)}
+                        </Text>
+                        <View style={[styles.shiftBar, { backgroundColor: shiftStyle.color }]} />
+                      </View>
+                    </TouchableOpacity>
+                  )
+                })}
+              </View>
             </View>
-            
-            <View style={styles.gridContainer}>
-              {daysGrid.map((cell) => {
-                if (cell.isOffset) {
-                  return <View key={cell.key} style={styles.gridCellWrapper}><View style={styles.gridCellEmpty} /></View>
-                }
-                
-                const isSel = cell.dayNumber === selectedDay
+          )}
+
+          {/* List View */}
+          {currentView === 'list' && (
+            <ScrollView style={styles.listViewContainer} showsVerticalScrollIndicator={false}>
+              {daysGrid.filter(c => !c.isOffset).map(cell => {
                 const shiftCode = cell.resolvedShift?.shift?.code || 'off'
                 const shiftStyle = SHIFT_MAPPING[shiftCode] || SHIFT_MAPPING.off
+                const isHoliday = showHolidays && (cell.isFriday || !!cell.holidayName)
+                const dayTasks = tasks.filter((t) => t.userId === 'current' && t.date === cell.dateStr)
+                const dayNote = notes.find((n) => n.userId === 'current' && n.date === cell.dateStr)
+                
+                const weekdays = ['یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه', 'شنبه']
+                const dayName = cell.gregDate ? weekdays[cell.gregDate.getDay()] : ''
 
                 return (
-                  <TouchableOpacity
-                    key={cell.key}
-                    style={styles.gridCellWrapper}
-                    onPress={() => setSelectedDay(cell.dayNumber!)}
+                  <TouchableOpacity 
+                    key={cell.key} 
+                    style={styles.listItemWrapper}
+                    onPress={() => {
+                      setSelectedDay(cell.dayNumber!)
+                      setIsDetailsVisible(true)
+                    }}
                   >
-                    <View style={[styles.gridCell, isSel && styles.gridCellSelected]}>
-                      {cell.isToday && <View style={styles.gridCellTodayMarker} />}
+                    <View style={styles.listItemDateBox}>
+                      <Text style={styles.listItemDayName}>{dayName}</Text>
                       <Text style={[
-                        styles.gridCellNum, 
-                        isSel ? styles.gridCellNumSelected : (cell.isFriday ? styles.gridCellNumFriday : {})
+                        styles.listItemDayNum,
+                        cell.isToday ? styles.listItemDayNumToday : (isHoliday ? styles.listItemDayNumHoliday : (cell.isFriday ? styles.listItemDayNumFriday : {}))
                       ]}>
                         {toFa(cell.dayNumber!)}
                       </Text>
-                      <View style={[styles.shiftBar, { backgroundColor: shiftStyle.color }]} />
+                    </View>
+                    <View style={styles.listItemContent}>
+                      <View style={[styles.shiftBadge, { alignSelf: 'flex-start', backgroundColor: shiftStyle.bg }]}>
+                        <Text style={[styles.shiftBadgeText, { color: shiftStyle.color }]}>{shiftStyle.label}</Text>
+                      </View>
+                      {showHolidays && cell.holidayName && (
+                        <Text style={styles.listItemHoliday}>{cell.holidayName}</Text>
+                      )}
+                      {(dayTasks.length > 0 || dayNote) && (
+                        <View style={styles.listItemTasksBox}>
+                          {dayTasks.length > 0 && (
+                            <View style={styles.listTaskBadge}>
+                              <Text style={styles.listTaskBadgeText}>{toFa(dayTasks.length)} تسک</Text>
+                            </View>
+                          )}
+                          {dayNote && (
+                            <View style={styles.listTaskBadge}>
+                              <Text style={styles.listTaskBadgeText}>یادداشت</Text>
+                            </View>
+                          )}
+                          {cell.leaves && cell.leaves.length > 0 && (
+                            <View style={[styles.listTaskBadge, { backgroundColor: '#fee2e2' }]}>
+                              <Text style={[styles.listTaskBadgeText, { color: '#ef4444' }]}>مرخصی/مأموریت</Text>
+                            </View>
+                          )}
+                        </View>
+                      )}
                     </View>
                   </TouchableOpacity>
                 )
               })}
-            </View>
-          </View>
+            </ScrollView>
+          )}
 
           {/* Monthly Summary Cards */}
-          <View style={styles.summaryRow}>
+          <View style={[styles.summaryRow, { flexWrap: 'wrap' }]}>
             <View style={[styles.summaryCard, { borderBottomColor: '#f97316' }]}>
               <Text style={styles.summaryCardLabel}>روزکار</Text>
               <Text style={styles.summaryCardValue}>{toFa(shiftCounts.day)}</Text>
@@ -516,12 +717,36 @@ export function CalendarScreen({ navigation }: any) {
               <Text style={styles.summaryCardLabel}>آف</Text>
               <Text style={styles.summaryCardValue}>{toFa(shiftCounts.off)}</Text>
             </View>
+            <View style={[styles.summaryCard, { borderBottomColor: '#dc2626' }]}>
+              <Text style={styles.summaryCardLabel}>مرخصی‌ها</Text>
+              <Text style={styles.summaryCardValue}>{toFa(shiftCounts.leaveCount)}</Text>
+            </View>
           </View>
 
-          {/* Agenda Selected Day Details */}
-          <View style={styles.agendaContainer}>
-            <Text style={styles.agendaTitle}>{getJalaliDateLabel(selectedGregDate)}</Text>
+          <TouchableOpacity style={{ backgroundColor: theme.colors.primaryContainer, borderRadius: theme.borderRadius.md, padding: 12, marginTop: 16, flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center' }} onPress={() => navigation.navigate('LeaveReportScreen')}>
+            <MaterialIcons name="assessment" size={20} color={theme.colors.onPrimaryContainer} style={{ marginLeft: 8 }} />
+            <Text style={{ fontFamily: theme.typography.bodyMd.fontFamily, color: theme.colors.onPrimaryContainer, fontWeight: 'bold' }}>جزئیات گزارش مرخصی‌ها</Text>
+          </TouchableOpacity>
 
+        </View>
+      </KeyboardAvoidingView>
+      
+      {/* Modal for Day Details */}
+      <Modal visible={isDetailsVisible} animationType="slide" transparent={true} onRequestClose={() => setIsDetailsVisible(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>{getJalaliDateLabel(selectedGregDate)}</Text>
+                {showHolidays && getJalaliHoliday(currentYear, currentMonth, selectedDay) && (
+                  <Text style={styles.modalHolidayText}>{getJalaliHoliday(currentYear, currentMonth, selectedDay)}</Text>
+                )}
+              </View>
+              <TouchableOpacity style={styles.closeModalBtn} onPress={() => setIsDetailsVisible(false)}>
+                <MaterialIcons name="close" size={24} color={theme.colors.onSurface} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             {/* Shift Details Box */}
             <View style={styles.shiftDetailsBox}>
               <View style={styles.shiftDetailsRow}>
@@ -657,9 +882,113 @@ export function CalendarScreen({ navigation }: any) {
                   </TouchableOpacity>
                 </View>
               </View>
+            </View>
 
-              {/* Inject System Task Form */}
-              {isAdminSimulated && (
+            {/* Leave / Mission Card */}
+            <View style={styles.detailsCard}>
+              <View style={styles.cardHeader}>
+                <MaterialIcons name="event-available" size={24} color={theme.colors.primary} />
+                <Text style={styles.cardTitle}>ثبت مرخصی، مأموریت و اضافه‌کار</Text>
+              </View>
+
+              {/* View Existing Requests */}
+              {selectedDayData.leaves.length > 0 && (
+                <View style={{ marginBottom: 16 }}>
+                  <Text style={{ fontSize: 12, color: theme.colors.secondary, fontFamily: theme.typography.captionSm.fontFamily, marginBottom: 8 }}>
+                    درخواست‌های ثبت شده:
+                  </Text>
+                  {selectedDayData.leaves.map(l => {
+                    const typeLabel = dynamicLeaveOptions.find(o => o.value === l.type)?.label || l.type
+                    let statusColor = theme.colors.secondary
+                    let statusBg = theme.colors.surfaceVariant
+                    let statusText = 'در انتظار'
+                    
+                    if (l.status === 'approved') {
+                      statusColor = '#16a34a'
+                      statusBg = '#dcfce7'
+                      statusText = 'تایید شده'
+                    } else if (l.status === 'rejected') {
+                      statusColor = '#dc2626'
+                      statusBg = '#fee2e2'
+                      statusText = 'رد شده'
+                    }
+
+                    return (
+                      <View key={l.id} style={styles.leaveRequestItem}>
+                        <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Text style={styles.leaveRequestTitle}>{typeLabel}</Text>
+                          <Text style={[styles.leaveRequestStatus, { color: statusColor, backgroundColor: statusBg }]}>
+                            {statusText}
+                          </Text>
+                        </View>
+                        {l.reason ? (
+                          <Text style={{ fontSize: 12, color: theme.colors.secondary, marginTop: 4, textAlign: 'right' }}>{l.reason}</Text>
+                        ) : null}
+                      </View>
+                    )
+                  })}
+                </View>
+              )}
+
+              {/* Create New Request */}
+              <Text style={{ fontSize: 12, color: theme.colors.secondary, fontFamily: theme.typography.captionSm.fontFamily, marginBottom: 8, textAlign: 'right' }}>
+                نوع درخواست جدید:
+              </Text>
+              <View style={styles.leaveTypeOptions}>
+                {dynamicLeaveOptions.map(opt => (
+                  <TouchableOpacity 
+                    key={opt.value} 
+                    style={[styles.leaveTypeBtn, leaveType === opt.value && styles.leaveTypeBtnActive]}
+                    onPress={() => setLeaveType(opt.value)}
+                  >
+                    <Text style={[styles.leaveTypeBtnText, leaveType === opt.value && styles.leaveTypeBtnTextActive]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <View style={{ flexDirection: 'row-reverse', gap: 8 }}>
+                <TextInput
+                  style={[styles.taskInput, { flex: 2 }]}
+                  placeholder="مقدار (اختیاری، مثلا ۴)"
+                  placeholderTextColor={theme.colors.onSurfaceVariant}
+                  keyboardType="numeric"
+                  value={leaveAmount}
+                  onChangeText={setLeaveAmount}
+                />
+                
+                <View style={{ flex: 1, flexDirection: 'row-reverse', backgroundColor: theme.colors.surfaceVariant, borderRadius: 8, overflow: 'hidden' }}>
+                   <TouchableOpacity 
+                     style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: leaveUnit === 'hours' ? theme.colors.primary : 'transparent' }} 
+                     onPress={() => setLeaveUnit('hours')}
+                   >
+                     <Text style={{ color: leaveUnit === 'hours' ? '#fff' : theme.colors.onSurfaceVariant, fontSize: 12 }}>ساعت</Text>
+                   </TouchableOpacity>
+                   <TouchableOpacity 
+                     style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: leaveUnit === 'days' ? theme.colors.primary : 'transparent' }} 
+                     onPress={() => setLeaveUnit('days')}
+                   >
+                     <Text style={{ color: leaveUnit === 'days' ? '#fff' : theme.colors.onSurfaceVariant, fontSize: 12 }}>روز</Text>
+                   </TouchableOpacity>
+                </View>
+              </View>
+
+              <TextInput
+                style={styles.taskInput}
+                placeholder="توضیحات (اختیاری)..."
+                placeholderTextColor={theme.colors.onSurfaceVariant}
+                value={leaveReason}
+                onChangeText={setLeaveReason}
+              />
+              <TouchableOpacity style={styles.leaveSubmitBtn} onPress={handleAddLeave} disabled={isSubmittingLeave}>
+                <Text style={{ color: '#fff', fontWeight: 'bold', fontFamily: theme.typography.cardTitle.fontFamily }}>
+                  {isSubmittingLeave ? 'در حال ثبت...' : 'ثبت درخواست'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Inject System Task Form */}
+            {isAdminSimulated && (
                 <View style={styles.systemTaskCreatorBox}>
                   <View style={styles.systemCreatorHeader}>
                     <MaterialIcons name="lock" size={18} color={theme.colors.primary} />
@@ -717,10 +1046,10 @@ export function CalendarScreen({ navigation }: any) {
                   </View>
                 </View>
               )}
-            </View>
+            </ScrollView>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </Modal>
     </ScreenWrapper>
   )
 }

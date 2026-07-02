@@ -18,7 +18,7 @@ function createAdapter() {
   return new PrismaLibSql({ url: `file:${dbPath}` })
 }
 
-export const prisma = globalForPrisma.prisma || new PrismaClient({
+export const prisma = new PrismaClient({
   adapter: createAdapter(),
   transactionOptions: {
     timeout: 30000,

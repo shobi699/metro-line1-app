@@ -356,6 +356,8 @@ export function HomeScreen({ navigation }: any) {
     { label: 'بخشنامه‌های ایمنی', icon: 'description', color: '#ea580c', bg: '#ffedd5', screen: 'بخشنامه‌ها' },
     { label: 'دستیار هوشمند AI', icon: 'assistant', color: '#7c3aed', bg: '#ede9fe', screen: 'دستیار AI' },
     { label: 'بی‌سیم راهبری', icon: 'radio', color: '#2563eb', bg: '#dbeafe', screen: 'بی‌سیم راهبری' },
+    { label: 'ثبت مرخصی/اضافه‌کار', icon: 'assignment-add', color: '#c026d3', bg: '#fdf4ff', screen: 'SubmitRequestScreen' },
+    { label: 'گزارش درخواست‌ها', icon: 'assessment', color: '#8b5cf6', bg: '#f5f3ff', screen: 'MonthlyReportScreen' },
     { label: 'چک‌لیست قبل از حرکت', icon: 'done-all', color: '#16a34a', bg: '#dcfce7', screen: 'چک‌لیست‌ها' },
     { label: 'اعلام اضطراری (SOS)', icon: 'warning', color: '#b91c1c', bg: '#fef2f2', screen: 'SOS' },
     { label: 'ثبت حضور و غیاب', icon: 'pin-drop', color: '#059669', bg: '#d1fae5', screen: 'حضور و غیاب' },

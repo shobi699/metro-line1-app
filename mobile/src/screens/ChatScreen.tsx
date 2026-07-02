@@ -550,6 +550,23 @@ export function ChatScreen({ route, navigation }: any) {
     playIconFlipped: {
       transform: [{ scaleX: -1 }],
     },
+    attachmentPreview: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.colors.surfaceContainerHighest,
+      padding: 8,
+      borderRadius: theme.borderRadius.md,
+      marginBottom: 8,
+      marginHorizontal: theme.spacing.containerMargin,
+    },
+    attachmentPreviewText: {
+      flex: 1,
+      fontFamily: theme.typography.bodyMd.fontFamily,
+      fontSize: theme.typography.bodyMd.fontSize,
+      color: theme.colors.onSurface,
+      textAlign: 'right',
+      marginRight: 8,
+    },
   })
 
   // رندر لیست روم‌ها
