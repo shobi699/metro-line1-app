@@ -120,26 +120,23 @@ export default function DownloadPage() {
           </div>
 
           {/* iOS Card */}
-          <div className="bg-[#121214]/60 backdrop-blur-xl border border-white/5 rounded-3xl p-6 flex flex-col justify-between min-h-[260px] shadow-2xl relative overflow-hidden group hover:border-[#e53935]/30 transition-all duration-300">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl pointer-events-none group-hover:bg-blue-500/10 transition-colors" />
+          <div className="bg-[#121214]/60 backdrop-blur-xl border border-white/5 rounded-3xl p-6 flex flex-col justify-between min-h-[260px] shadow-2xl relative overflow-hidden group transition-all duration-300 opacity-80">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
             <div>
-              <div className="size-12 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-5 border border-blue-500/20">
-                <Apple className="size-6 text-blue-400" />
+              <div className="size-12 rounded-2xl bg-blue-500/5 flex items-center justify-center mb-5 border border-blue-500/10">
+                <Apple className="size-6 text-neutral-500" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">نسخه آیفون (iOS)</h3>
-              <p className="text-xs text-[#a1a1aa] leading-relaxed mb-6">
-                نصب مستقیم نسخه آیفون از طریق پکیج یا مراجعه به آدرس اختصاصی اپ‌ستور پرسنلی سازمان.
+              <h3 className="text-lg font-bold text-neutral-400 mb-2">نسخه آیفون (iOS)</h3>
+              <p className="text-xs text-neutral-500 leading-relaxed mb-6 font-medium">
+                در حال توسعه و بهینه‌سازی نهایی. جهت استفاده در آیفون، از لینک وب‌اپلیکیشن (PWA) زیر استفاده کنید.
               </p>
             </div>
-            <a 
-              href={iosLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-3.5 bg-white text-black hover:bg-neutral-200 active:scale-[0.98] rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg"
+            <button 
+              disabled
+              className="w-full py-3.5 bg-neutral-800 text-neutral-500 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed border border-neutral-700/50"
             >
-              <Download className="size-4" />
-              <span>دانلود نسخه iOS</span>
-            </a>
+              <span>در حال توسعه (به زودی)</span>
+            </button>
           </div>
 
           {/* Web App Card */}
@@ -151,29 +148,57 @@ export default function DownloadPage() {
               </div>
               <h3 className="text-lg font-bold text-white mb-2">وب‌اپلیکیشن (PWA)</h3>
               <p className="text-xs text-[#a1a1aa] leading-relaxed mb-6">
-                استفاده مستقیم روی مرورگر بدون نیاز به نصب. سازگار با تمامی سیستم‌عامل‌ها و تبلت‌ها.
+                استفاده مستقیم روی تمام مرورگرها. بدون نیاز به نصب، سازگار با آیفون، آیپد و تبلت‌ها.
               </p>
             </div>
             <a 
               href={webLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-3.5 bg-[#e53935] hover:bg-[#e53935]/90 text-white active:scale-[0.98] rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#e53935]/10"
+              className="w-full py-3.5 bg-[#e53935] hover:bg-[#e53935]/90 text-white active:scale-[0.98] rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#e53935]/10 animate-pulse"
             >
               <Globe className="size-4" />
-              <span>ورود به وب‌اپلیکیشن</span>
+              <span>ورود به وب‌اپلیکیشن PWA</span>
             </a>
           </div>
 
         </div>
 
+        {/* iOS PWA Add to Screen Tutorial */}
+        <div className="mt-10 bg-[#121214]/40 border border-white/5 rounded-3xl p-6 w-full max-w-3xl space-y-4">
+          <h4 className="text-sm font-black text-white flex items-center gap-2 justify-start">
+            <Apple className="size-4 text-blue-400" />
+            <span>راهنمای نصب وب‌اپلیکیشن (PWA) روی آیفون (iOS)</span>
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-right">
+            <div className="bg-white/[0.01] border border-white/5 p-4 rounded-2xl space-y-2">
+              <span className="size-6 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-bold flex items-center justify-center font-mono">۱</span>
+              <p className="text-[11px] text-[#a1a1aa] leading-relaxed">
+                لینک وب‌اپلیکیشن را در مرورگر <strong>Safari</strong> گوشی آیفون خود باز کنید.
+              </p>
+            </div>
+            <div className="bg-white/[0.01] border border-white/5 p-4 rounded-2xl space-y-2">
+              <span className="size-6 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-bold flex items-center justify-center font-mono">۲</span>
+              <p className="text-[11px] text-[#a1a1aa] leading-relaxed">
+                دکمه <strong>Share</strong> (فلش رو به بالا در منوی پایین سافاری) را لمس کنید.
+              </p>
+            </div>
+            <div className="bg-white/[0.01] border border-white/5 p-4 rounded-2xl space-y-2">
+              <span className="size-6 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-bold flex items-center justify-center font-mono">۳</span>
+              <p className="text-[11px] text-[#a1a1aa] leading-relaxed">
+                منو را به پایین کشیده و گزینه <strong>Add to Home Screen</strong> (افزودن به صفحه اصلی) را انتخاب کنید.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Informational Tips */}
-        <div className="mt-12 bg-white/[0.02] border border-white/5 rounded-2xl p-4 max-w-xl flex items-start gap-3 text-right">
+        <div className="mt-8 bg-white/[0.02] border border-white/5 rounded-2xl p-4 max-w-xl flex items-start gap-3 text-right">
           <Info className="size-5 text-[#e53935] shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <span className="text-[11px] font-bold text-white block">راهنمای نصب نسخه‌های موبایل:</span>
+            <span className="text-[11px] font-bold text-white block">راهنمای نصب نسخه اندروید:</span>
             <p className="text-[10px] text-[#a1a1aa] leading-relaxed">
-              برای نصب نسخه اندروید، پس از دانلود فایل APK، در تنظیمات گوشی اجازه نصب از منابع ناشناخته (Allow from this source) را صادر کنید. برای کاربران iOS، جهت پایداری بیشتر پیشنهاد می‌شود از آدرس وب‌اپلیکیشن استفاده کرده و آن را به صفحه اصلی خود (Add to Home Screen) اضافه نمایند.
+              برای نصب نسخه اندروید، پس از دانلود فایل APK، در تنظیمات گوشی اجازه نصب از منابع ناشناخته (Allow from this source) را برای مرورگر یا مدیریت فایل خود صادر کنید.
             </p>
           </div>
         </div>
