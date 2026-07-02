@@ -8,7 +8,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
-  SafeAreaView
+  SafeAreaView,
+  Alert
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { MaterialIcons } from '@expo/vector-icons'
@@ -127,12 +128,57 @@ export function DirectoryScreen({ navigation }: any) {
   }, [search, accessToken])
 
   function handleCall(phone: string) {
-    Linking.openURL(`tel:${phone}`)
+    Alert.alert(
+      'انتخاب روش تماس',
+      `لطفاً روش تماس با شماره ${phone} را انتخاب کنید:`,
+      [
+        {
+          text: '📞 تماس تلفنی معمولی (سیم‌کارت)',
+          onPress: () => Linking.openURL(`tel:${phone}`)
+        },
+        {
+          text: '🌐 کنفرانس صوتی خط ۱ (VoIP)',
+          onPress: () => navigation.navigate('کنفرانس صوتی')
+        },
+        {
+          text: '📡 شبیه‌ساز بی‌سیم راهبری',
+          onPress: () => navigation.navigate('بی‌سیم راهبری')
+        },
+        {
+          text: 'انصراف',
+          style: 'cancel'
+        }
+      ],
+      { cancelable: true }
+    )
   }
 
-  function handleMessage(userId: string) {
-    // ناوبری به تب چت و بازکردن چت مستقیم
-    navigation.navigate('چت', { dm: userId })
+  function handleMessage(userId: string, phone?: string | null) {
+    const buttons = [
+      {
+        text: '💬 چت داخلی اپلیکیشن (بلادرنگ)',
+        onPress: () => navigation.navigate('چت', { dm: userId })
+      }
+    ]
+
+    if (phone) {
+      buttons.push({
+        text: '✉️ ارسال پیامک معمولی (SMS)',
+        onPress: () => Linking.openURL(`sms:${phone}`)
+      })
+    }
+
+    buttons.push({
+      text: 'انصراف',
+      style: 'cancel'
+    } as any)
+
+    Alert.alert(
+      'انتخاب روش ارسال پیام',
+      'لطفاً روش ارسال پیام را انتخاب کنید:',
+      buttons,
+      { cancelable: true }
+    )
   }
 
   const styles = StyleSheet.create({
@@ -327,7 +373,7 @@ export function DirectoryScreen({ navigation }: any) {
 
             <TouchableOpacity
               style={[styles.actionButton, styles.chatButton]}
-              onPress={() => handleMessage(item.id)}
+              onPress={() => handleMessage(item.id, item.phone)}
               activeOpacity={0.7}
             >
               <MaterialIcons name="chat" size={16} color="#ffffff" />
