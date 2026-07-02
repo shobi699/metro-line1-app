@@ -361,6 +361,7 @@ export function HomeScreen({ navigation }: any) {
     { label: 'ثبت حضور و غیاب', icon: 'pin-drop', color: '#059669', bg: '#d1fae5', screen: 'حضور و غیاب' },
     { label: 'سامانه آموزش پرسنل', icon: 'school', color: '#6d28d9', bg: '#f3e8ff', screen: 'آموزش' },
     { label: 'کارنامه عملکرد', icon: 'emoji-events', color: '#c2410c', bg: '#ffedd5', screen: 'عملکرد' },
+    { label: 'راهنمای کاربری', icon: 'import-contacts', color: '#0f766e', bg: '#f0fdfa', screen: 'راهنمای کاربری' },
   ]
 
   const metrics = [

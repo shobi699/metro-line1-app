@@ -32,6 +32,7 @@ import { RosterScreen } from './src/screens/RosterScreen'
 import { UIBuilderScreen } from './src/screens/UIBuilderScreen'
 import { CustomPageScreen } from './src/screens/CustomPageScreen'
 import { LearningScreen } from './src/screens/LearningScreen'
+import { GuideScreen } from './src/screens/GuideScreen'
 import { MeetingsScreen } from './src/screens/MeetingsScreen'
 import { PlateSearchScreen } from './src/screens/PlateSearchScreen'
 import { OfflineBanner } from './src/shared/OfflineBanner'
@@ -69,6 +70,7 @@ export type RootStackParamList = {
   ProfileScreen: undefined
   CalendarScreen: undefined
   PlateSearch: undefined
+  'راهنمای کاربری': undefined
 }
 
 const Tab = createBottomTabNavigator()
@@ -107,6 +109,7 @@ function HomeStackScreen() {
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
       <Stack.Screen name="CalendarScreen" component={CalendarScreen} />
       <Stack.Screen name="PlateSearch" component={PlateSearchScreen} />
+      <Stack.Screen name="راهنمای کاربری" component={GuideScreen} />
     </Stack.Navigator>
   )
 }

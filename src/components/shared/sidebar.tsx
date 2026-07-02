@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   ShieldCheck,
   FileSpreadsheet,
+  FileText,
   MessageCircle,
   Newspaper,
   LogOut,
@@ -146,6 +147,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
           { label: 'گالری ویدیوهای آموزشی', href: '/learning/gallery', icon: Video },
           { label: 'کارنامه و آزمون‌های من', href: '/learning/exams', icon: Award },
           { label: 'دستورالعمل‌ها و دانش‌نامه', href: '/knowledge', icon: BookOpen },
+          { label: 'راهنمای جامع سوپراپ', href: '/docs', icon: FileText },
         ]
       }
     ]

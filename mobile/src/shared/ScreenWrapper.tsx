@@ -114,6 +114,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         icon: 'school',
         items: [
           { label: 'آموزش پرسنل و آزمون‌ها', route: 'آموزش', icon: 'school' },
+          { label: 'راهنمای جامع کاربری', route: 'راهنمای کاربری', icon: 'book' },
         ]
       }
     ]
