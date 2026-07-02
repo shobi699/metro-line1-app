@@ -8,7 +8,9 @@ import {
   ActivityIndicator,
   RefreshControl,
   Image,
-  SafeAreaView
+  SafeAreaView,
+  Modal,
+  Dimensions
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { MaterialIcons } from '@expo/vector-icons'
@@ -49,6 +51,7 @@ export function HomeScreen({ navigation }: any) {
   const [todayShift, setTodayShift] = useState<TodayShift | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [showMoreModal, setShowMoreModal] = useState(false)
 
   // Fetch logic omitted for brevity in design, keeping identical logic:
   async function loadData() {
@@ -140,54 +143,137 @@ export function HomeScreen({ navigation }: any) {
 
   const styles = StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: theme.colors.background },
-    container: { flex: 1, paddingBottom: 80 },
+    container: { flex: 1, paddingBottom: 20 },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background },
     header: {
       flexDirection: 'row-reverse',
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: theme.spacing.containerMargin,
-      paddingVertical: 16,
+      paddingVertical: 10,
       backgroundColor: theme.colors.background,
     },
-    headerProfile: { flexDirection: 'row-reverse', alignItems: 'center', gap: 12 },
-    avatar: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, borderColor: theme.colors.surfaceContainer },
-    greeting: { fontFamily: theme.typography.screenTitle.fontFamily, fontSize: 18, fontWeight: '700', color: theme.colors.primary, textAlign: 'right' },
-    dateText: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: theme.typography.bodyMd.fontSize, color: theme.colors.secondary, textAlign: 'right' },
-    headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-    syncBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 9999 },
-    syncText: { fontFamily: theme.typography.captionSm.fontFamily, fontSize: theme.typography.captionSm.fontSize, color: '#166534' },
-    notificationBtn: { padding: 8, borderRadius: 9999 },
-    notificationDot: { position: 'absolute', top: 4, right: 4, width: 10, height: 10, backgroundColor: theme.colors.primary, borderRadius: 5, borderWidth: 2, borderColor: theme.colors.background },
+    headerProfile: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10 },
+    avatar: { width: 42, height: 42, borderRadius: 21, borderWidth: 2, borderColor: theme.colors.surfaceContainer },
+    greeting: { fontFamily: theme.typography.screenTitle.fontFamily, fontSize: 16, fontWeight: '700', color: theme.colors.primary, textAlign: 'right' },
+    dateText: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: 11, color: theme.colors.secondary, textAlign: 'right' },
+    headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    syncBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 9999 },
+    syncText: { fontFamily: theme.typography.captionSm.fontFamily, fontSize: 10, color: '#166534' },
+    notificationBtn: { padding: 6, borderRadius: 9999 },
+    notificationDot: { position: 'absolute', top: 4, right: 4, width: 8, height: 8, backgroundColor: theme.colors.primary, borderRadius: 4, borderWidth: 2, borderColor: theme.colors.background },
     
-    section: { paddingHorizontal: theme.spacing.containerMargin, marginBottom: theme.spacing.sectionPadding },
-    sectionTitle: { fontFamily: theme.typography.sectionTitle.fontFamily, fontSize: theme.typography.sectionTitle.fontSize, fontWeight: '700', color: theme.colors.onSurface, marginBottom: theme.spacing.stackSpace, textAlign: 'right' },
+    section: { paddingHorizontal: theme.spacing.containerMargin, marginBottom: 10 },
+    sectionTitle: { fontFamily: theme.typography.sectionTitle.fontFamily, fontSize: 13, fontWeight: '700', color: theme.colors.onSurface, marginBottom: 6, textAlign: 'right' },
     
-    heroCard: { backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.xl, padding: theme.spacing.sectionPadding, ...theme.shadows.level1, borderColor: theme.colors.surfaceVariant, borderWidth: 1, overflow: 'hidden' },
-    heroIndicator: { position: 'absolute', right: 0, top: 0, bottom: 0, width: 6, backgroundColor: '#f59e0b' },
-    heroHeader: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
-    heroTitle: { fontFamily: theme.typography.sectionTitle.fontFamily, fontSize: theme.typography.sectionTitle.fontSize, color: theme.colors.onSurface, fontWeight: '700' },
-    shiftBadge: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, backgroundColor: '#fffbeb', borderColor: '#fef3c7', borderWidth: 1, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 9999 },
-    shiftBadgeText: { color: '#d97706', fontFamily: theme.typography.captionSm.fontFamily, fontSize: theme.typography.captionSm.fontSize },
-    heroContent: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 },
-    heroTime: { fontFamily: theme.typography.numericHero.fontFamily, fontSize: theme.typography.numericHero.fontSize, fontWeight: '800', color: theme.colors.onSurface, textAlign: 'left' },
-    heroLocation: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, marginTop: 8 },
-    heroLocationText: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: theme.typography.bodyMd.fontSize, color: theme.colors.secondary },
-    heroStatusBadge: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, backgroundColor: theme.colors.surfaceContainer, paddingHorizontal: 12, paddingVertical: 6, borderRadius: theme.borderRadius.md },
-    heroStatusText: { color: theme.colors.primary, fontFamily: theme.typography.captionSm.fontFamily, fontSize: theme.typography.captionSm.fontSize },
-    heroButton: { backgroundColor: theme.colors.primary, borderRadius: theme.borderRadius.lg, paddingVertical: 12, flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', gap: 8, ...theme.shadows.level2 },
-    heroButtonText: { color: theme.colors.onPrimary, fontFamily: theme.typography.cardTitle.fontFamily, fontSize: theme.typography.cardTitle.fontSize, fontWeight: '600' },
+    heroCard: { backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.xl, padding: 12, ...theme.shadows.level1, borderColor: theme.colors.surfaceVariant, borderWidth: 1, overflow: 'hidden' },
+    heroIndicator: { position: 'absolute', right: 0, top: 0, bottom: 0, width: 5, backgroundColor: '#f59e0b' },
+    heroHeader: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },
+    heroTitle: { fontFamily: theme.typography.sectionTitle.fontFamily, fontSize: 13, color: theme.colors.onSurface, fontWeight: '700' },
+    shiftBadge: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, backgroundColor: '#fffbeb', borderColor: '#fef3c7', borderWidth: 1, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 9999 },
+    shiftBadgeText: { color: '#d97706', fontFamily: theme.typography.captionSm.fontFamily, fontSize: 11 },
+    heroContent: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 },
+    heroTime: { fontFamily: theme.typography.numericHero.fontFamily, fontSize: 28, fontWeight: '800', color: theme.colors.onSurface, textAlign: 'left' },
+    heroLocation: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, marginTop: 4 },
+    heroLocationText: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: 12, color: theme.colors.secondary },
+    heroStatusBadge: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, backgroundColor: theme.colors.surfaceContainer, paddingHorizontal: 10, paddingVertical: 4, borderRadius: theme.borderRadius.md },
+    heroStatusText: { color: theme.colors.primary, fontFamily: theme.typography.captionSm.fontFamily, fontSize: 11 },
+    heroButton: { backgroundColor: theme.colors.primary, borderRadius: theme.borderRadius.lg, paddingVertical: 10, flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', gap: 6, ...theme.shadows.level2 },
+    heroButtonText: { color: theme.colors.onPrimary, fontFamily: theme.typography.cardTitle.fontFamily, fontSize: 13, fontWeight: '600' },
 
-    actionsGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
-    actionCard: { width: '48%', alignItems: 'center', backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.lg, padding: 12, ...theme.shadows.level1, borderWidth: 1, borderColor: theme.colors.surfaceVariant },
-    actionIconContainer: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-    actionText: { fontFamily: theme.typography.captionSm.fontFamily, fontSize: theme.typography.captionSm.fontSize, color: theme.colors.onSurface, textAlign: 'center' },
+    actionsGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between' },
+    actionCard: { width: '48%', alignItems: 'center', backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.lg, padding: 10, ...theme.shadows.level1, borderWidth: 1, borderColor: theme.colors.surfaceVariant },
+    actionIconContainer: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+    actionText: { fontFamily: theme.typography.captionSm.fontFamily, fontSize: 11, color: theme.colors.onSurface, textAlign: 'center', fontWeight: '600' },
 
-    metricsGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
-    metricCard: { width: '48%', backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.lg, padding: 16, ...theme.shadows.level1, borderWidth: 1, borderColor: theme.colors.surfaceVariant, height: 96, justifyContent: 'space-between' },
+    metricsGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between' },
+    metricCard: { width: '48%', backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.lg, padding: 12, ...theme.shadows.level1, borderWidth: 1, borderColor: theme.colors.surfaceVariant, height: 72, justifyContent: 'space-between' },
     metricHeader: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' },
-    metricLabel: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: theme.typography.bodyMd.fontSize, color: theme.colors.secondary },
-    metricValue: { fontFamily: theme.typography.numericHero.fontFamily, fontSize: theme.typography.numericHero.fontSize, color: theme.colors.onSurface, fontWeight: '800', textAlign: 'right' }
+    metricLabel: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: 12, color: theme.colors.secondary },
+    metricValue: { fontFamily: theme.typography.numericHero.fontFamily, fontSize: 18, color: theme.colors.onSurface, fontWeight: '800', textAlign: 'right' },
+
+    modalOverlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    },
+    modalBackgroundDismiss: {
+      flex: 1,
+    },
+    modalContent: {
+      backgroundColor: theme.colors.background,
+      borderTopLeftRadius: theme.borderRadius.xl * 1.5,
+      borderTopRightRadius: theme.borderRadius.xl * 1.5,
+      maxHeight: Dimensions.get('window').height * 0.75,
+      paddingHorizontal: 20,
+      paddingBottom: 30,
+      borderWidth: 1,
+      borderColor: theme.colors.surfaceVariant,
+    },
+    modalHeader: {
+      alignItems: 'center',
+      paddingVertical: 12,
+    },
+    modalHeaderIndicator: {
+      width: 40,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: theme.colors.surfaceVariant,
+      marginBottom: 16,
+    },
+    modalHeaderTitleRow: {
+      flexDirection: 'row-reverse',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      width: '100%',
+    },
+    modalTitle: {
+      fontFamily: theme.typography.screenTitle.fontFamily,
+      fontSize: 16,
+      fontWeight: '700',
+      color: theme.colors.onSurface,
+    },
+    modalCloseBtn: {
+      padding: 6,
+      borderRadius: 9999,
+      backgroundColor: theme.colors.surfaceContainer,
+    },
+    modalScroll: {
+      paddingTop: 8,
+      paddingBottom: 20,
+    },
+    modalGrid: {
+      flexDirection: 'row-reverse',
+      flexWrap: 'wrap',
+      gap: 12,
+      justifyContent: 'space-between',
+    },
+    modalServiceCard: {
+      width: '48%',
+      backgroundColor: theme.colors.surfaceContainerLowest,
+      borderRadius: theme.borderRadius.lg,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: theme.colors.surfaceVariant,
+      alignItems: 'center',
+      marginBottom: 4,
+      ...theme.shadows.level1,
+    },
+    modalIconContainer: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 10,
+    },
+    modalServiceText: {
+      fontFamily: theme.typography.captionSm.fontFamily,
+      fontSize: 11,
+      fontWeight: '700',
+      color: theme.colors.onSurface,
+      textAlign: 'center',
+    },
   })
 
   const widgets = useUIBuilderStore((s) => s.widgets)
@@ -248,15 +334,24 @@ export function HomeScreen({ navigation }: any) {
   const shiftLabelMap: Record<string, string> = { morning: 'روزکار', evening: 'عصرکار', night: 'شب‌کار', off: 'آف' }
   const todayLabel = todayShift ? (shiftLabelMap[todayShift.code] ?? todayShift.code) : 'نامشخص'
 
-  const quickActions = [
+  const dashboardActions = [
     { label: 'اعلام\nخرابی', icon: 'report-problem', color: theme.colors.error, bg: theme.colors.errorContainer, screen: 'تیکت‌ها' },
     { label: 'لوحه\nکاربر', icon: 'calendar-today', color: theme.colors.primary, bg: theme.colors.surfaceContainerHighest, screen: 'لوحه' },
     { label: 'دفتر\nتلفن', icon: 'contacts', color: theme.colors.secondary, bg: theme.colors.surfaceContainer, screen: 'دفتر تلفن' },
-    { label: 'بخشنامه‌ها', icon: 'description', color: theme.colors.primary, bg: theme.colors.surfaceContainerLowest, screen: 'بخشنامه‌ها' },
-    { label: 'دستیار\nهوشمند', icon: 'assistant', color: '#0d9488', bg: '#ccfbf1', screen: 'دستیار AI' },
-    { label: 'بی‌سیم\nراهبری', icon: 'radio', color: '#2563eb', bg: '#dbeafe', screen: 'بی‌سیم راهبری' },
-    { label: 'چک‌لیست\nحرکت', icon: 'done-all', color: '#16a34a', bg: '#dcfce7', screen: 'چک‌لیست‌ها' },
-    { label: 'اعلام\nاضطراری (SOS)', icon: 'warning', color: '#dc2626', bg: '#fee2e2', screen: 'SOS' },
+    { label: 'سایر\nخدمات', icon: 'apps', color: theme.colors.primary, bg: theme.colors.surfaceContainerLowest, action: 'more' },
+  ]
+
+  const allServices = [
+    { label: 'اعلام خرابی (تیکت)', icon: 'report-problem', color: theme.colors.error, bg: theme.colors.errorContainer, screen: 'تیکت‌ها' },
+    { label: 'لوحه هفتگی (شیفت)', icon: 'calendar-today', color: theme.colors.primary, bg: theme.colors.surfaceContainerHighest, screen: 'لوحه' },
+    { label: 'دفترچه تلفن پرسنل', icon: 'contacts', color: theme.colors.secondary, bg: theme.colors.surfaceContainer, screen: 'دفتر تلفن' },
+    { label: 'بخشنامه‌های ایمنی', icon: 'description', color: theme.colors.primary, bg: theme.colors.surfaceContainerLowest, screen: 'بخشنامه‌ها' },
+    { label: 'دستیار هوشمند AI', icon: 'assistant', color: '#0d9488', bg: '#ccfbf1', screen: 'دستیار AI' },
+    { label: 'بی‌سیم راهبری', icon: 'radio', color: '#2563eb', bg: '#dbeafe', screen: 'بی‌سیم راهبری' },
+    { label: 'چک‌لیست قبل از حرکت', icon: 'done-all', color: '#16a34a', bg: '#dcfce7', screen: 'چک‌لیست‌ها' },
+    { label: 'اعلام اضطراری (SOS)', icon: 'warning', color: '#dc2626', bg: '#fee2e2', screen: 'SOS' },
+    { label: 'ثبت حضور و غیاب', icon: 'pin-drop', color: '#7c3aed', bg: '#ede9fe', screen: 'حضور و غیاب' },
+    { label: 'کارنامه عملکرد', icon: 'emoji-events', color: '#ea580c', bg: '#ffedd5', screen: 'عملکرد' },
   ]
 
   const metrics = [
@@ -293,11 +388,11 @@ export function HomeScreen({ navigation }: any) {
           </View>
           <View style={styles.headerRight}>
             <View style={styles.syncBadge}>
-              <MaterialIcons name="cloud-done" size={14} color="#166534" />
+              <MaterialIcons name="cloud-done" size={12} color="#166534" />
               <Text style={styles.syncText}>همگام‌سازی شده</Text>
             </View>
             <TouchableOpacity style={styles.notificationBtn}>
-              <MaterialIcons name="notifications" size={24} color={theme.colors.onSurfaceVariant} />
+              <MaterialIcons name="notifications" size={20} color={theme.colors.onSurfaceVariant} />
               <View style={styles.notificationDot} />
             </TouchableOpacity>
           </View>
@@ -309,7 +404,7 @@ export function HomeScreen({ navigation }: any) {
             <View style={styles.heroHeader}>
               <Text style={styles.heroTitle}>شیفت امروز</Text>
               <View style={styles.shiftBadge}>
-                <MaterialIcons name="light-mode" size={16} color="#d97706" />
+                <MaterialIcons name="light-mode" size={14} color="#d97706" />
                 <Text style={styles.shiftBadgeText}>{todayLabel}</Text>
               </View>
             </View>
@@ -317,18 +412,18 @@ export function HomeScreen({ navigation }: any) {
               <View>
                 <Text style={styles.heroTime}>۰۷:۰۰ - ۱۹:۰۰</Text>
                 <View style={styles.heroLocation}>
-                  <MaterialIcons name="location-on" size={18} color={theme.colors.secondary} />
+                  <MaterialIcons name="location-on" size={14} color={theme.colors.secondary} />
                   <Text style={styles.heroLocationText}>ایستگاه امام خمینی</Text>
                 </View>
               </View>
               <View style={styles.heroStatusBadge}>
-                <MaterialIcons name="pending" size={16} color={theme.colors.primary} />
+                <MaterialIcons name="pending" size={14} color={theme.colors.primary} />
                 <Text style={styles.heroStatusText}>در انتظار حضور</Text>
               </View>
             </View>
             <TouchableOpacity style={styles.heroButton} activeOpacity={0.8} onPress={() => navigation.navigate('شیفت‌ها')}>
               <Text style={styles.heroButtonText}>مشاهده جزئیات</Text>
-              <MaterialIcons name="arrow-back" size={20} color={theme.colors.onPrimary} />
+              <MaterialIcons name="arrow-back" size={16} color={theme.colors.onPrimary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -336,10 +431,21 @@ export function HomeScreen({ navigation }: any) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>دسترسی سریع</Text>
           <View style={styles.actionsGrid}>
-            {quickActions.map((action, i) => (
-              <TouchableOpacity key={i} style={styles.actionCard} onPress={() => navigation.navigate(action.screen)} activeOpacity={0.7}>
+            {dashboardActions.map((action, i) => (
+              <TouchableOpacity 
+                key={i} 
+                style={styles.actionCard} 
+                onPress={() => {
+                  if (action.action === 'more') {
+                    setShowMoreModal(true)
+                  } else {
+                    navigation.navigate(action.screen)
+                  }
+                }} 
+                activeOpacity={0.7}
+              >
                 <View style={[styles.actionIconContainer, { backgroundColor: action.bg }]}>
-                  <MaterialIcons name={action.icon as any} size={24} color={action.color} />
+                  <MaterialIcons name={action.icon as any} size={22} color={action.color} />
                 </View>
                 <Text style={styles.actionText}>{action.label}</Text>
               </TouchableOpacity>
@@ -365,15 +471,62 @@ export function HomeScreen({ navigation }: any) {
               <View key={i} style={styles.metricCard}>
                 <View style={styles.metricHeader}>
                   <Text style={styles.metricLabel}>{metric.label}</Text>
-                  <MaterialIcons name={metric.icon as any} size={20} color={theme.colors.secondary} />
+                  <MaterialIcons name={metric.icon as any} size={16} color={theme.colors.secondary} />
                 </View>
                 <Text style={styles.metricValue}>{metric.value}</Text>
               </View>
             ))}
           </View>
         </View>
-
       </ScrollView>
+
+      {/* Premium All Services Bottom Sheet Modal */}
+      <Modal
+        visible={showMoreModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowMoreModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity 
+            style={styles.modalBackgroundDismiss} 
+            activeOpacity={1} 
+            onPress={() => setShowMoreModal(false)} 
+          />
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderIndicator} />
+              <View style={styles.modalHeaderTitleRow}>
+                <Text style={styles.modalTitle}>سایر خدمات و امکانات</Text>
+                <TouchableOpacity onPress={() => setShowMoreModal(false)} style={styles.modalCloseBtn}>
+                  <MaterialIcons name="close" size={20} color={theme.colors.onSurface} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.modalScroll} showsVerticalScrollIndicator={false}>
+              <View style={styles.modalGrid}>
+                {allServices.map((service, i) => (
+                  <TouchableOpacity 
+                    key={i} 
+                    style={styles.modalServiceCard} 
+                    onPress={() => {
+                      setShowMoreModal(false)
+                      navigation.navigate(service.screen)
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.modalIconContainer, { backgroundColor: service.bg }]}>
+                      <MaterialIcons name={service.icon as any} size={24} color={service.color} />
+                    </View>
+                    <Text style={styles.modalServiceText}>{service.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   )
 }
