@@ -5,6 +5,49 @@ import { prisma } from './db'
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PDFParse } = require('pdf-parse')
 
+function isArabicPersian(str: string): boolean {
+  return /[\u0600-\u06FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(str)
+}
+
+function fixVisualLine(line: string): string {
+  const normalized = line.normalize('NFKC')
+  const tokenRegex = /([A-Za-z0-9_\-]+)|([^\sA-Za-z0-9_\-]+)|(\s+)/g
+  const matches = normalized.match(tokenRegex) || []
+  
+  const processedTokens = matches.map(token => {
+    if (isArabicPersian(token)) {
+      return Array.from(token).reverse().join('')
+    }
+    return token
+  })
+
+  return processedTokens.reverse().join('')
+}
+
+function fixTextIfReversed(text: string): string {
+  let standardCount = 0
+  let presentationCount = 0
+
+  for (const c of text) {
+    const code = c.charCodeAt(0)
+    if (code >= 0x0600 && code <= 0x06FF) {
+      standardCount++
+    } else if ((code >= 0xFB50 && code <= 0xFDFF) || (code >= 0xFE70 && code <= 0xFEFF)) {
+      presentationCount++
+    }
+  }
+
+  const total = standardCount + presentationCount
+  if (total > 0 && (presentationCount / total) > 0.1) {
+    return text
+      .split('\n')
+      .map(line => fixVisualLine(line))
+      .join('\n')
+  }
+
+  return text.normalize('NFKC')
+}
+
 // Ingest PDFs from lohe/ and lohe/docs/
 async function main() {
   console.log('🚀 Ingestion process started...')
@@ -50,7 +93,8 @@ async function main() {
       try {
         const parser = new PDFParse({ url: filePath })
         const result = await parser.getText()
-        const fullText = result.text.trim()
+        const rawText = result.text.trim()
+        const fullText = fixTextIfReversed(rawText)
 
         if (!fullText) {
           console.log(`⚠️ Warning: No text content extracted from ${file}. Skipping.`)
