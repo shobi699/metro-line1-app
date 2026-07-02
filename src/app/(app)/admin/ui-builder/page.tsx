@@ -778,7 +778,7 @@ export default function WebUiBuilderPage() {
                                 onChange={(e) => {
                                   const updated = [...widgets]
                                   updated[idx].title = e.target.value || null
-                                  setMenuItems(updated as any)
+                                  setWidgets(updated)
                                 }}
                                 className="h-8 bg-transparent text-xs w-48 font-sans border-border/30 hover:border-border"
                                 placeholder="مثال: آمار شیفت جاری"

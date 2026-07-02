@@ -250,9 +250,13 @@ export function HomeScreen({ navigation }: any) {
 
   const quickActions = [
     { label: 'اعلام\nخرابی', icon: 'report-problem', color: theme.colors.error, bg: theme.colors.errorContainer, screen: 'تیکت‌ها' },
-    { label: 'تعویض\nشیفت', icon: 'swap-horiz', color: theme.colors.onSecondaryContainer, bg: theme.colors.secondaryContainer, screen: 'شیفت‌ها' },
-    { label: 'دفتر\nتلفن', icon: 'contacts', color: theme.colors.primary, bg: theme.colors.surfaceContainerHighest, screen: 'دفتر تلفن' },
-    { label: 'بخشنامه‌ها', icon: 'description', color: theme.colors.secondary, bg: theme.colors.surfaceContainer, screen: 'بخشنامه‌ها' },
+    { label: 'لوحه\nکاربر', icon: 'calendar-today', color: theme.colors.primary, bg: theme.colors.surfaceContainerHighest, screen: 'لوحه' },
+    { label: 'دفتر\nتلفن', icon: 'contacts', color: theme.colors.secondary, bg: theme.colors.surfaceContainer, screen: 'دفتر تلفن' },
+    { label: 'بخشنامه‌ها', icon: 'description', color: theme.colors.primary, bg: theme.colors.surfaceContainerLowest, screen: 'بخشنامه‌ها' },
+    { label: 'دستیار\nهوشمند', icon: 'assistant', color: '#0d9488', bg: '#ccfbf1', screen: 'دستیار AI' },
+    { label: 'بی‌سیم\nراهبری', icon: 'radio', color: '#2563eb', bg: '#dbeafe', screen: 'بی‌سیم راهبری' },
+    { label: 'چک‌لیست\nحرکت', icon: 'done-all', color: '#16a34a', bg: '#dcfce7', screen: 'چک‌لیست‌ها' },
+    { label: 'اعلام\nاضطراری (SOS)', icon: 'warning', color: '#dc2626', bg: '#fee2e2', screen: 'SOS' },
   ]
 
   const metrics = [
@@ -329,7 +333,21 @@ export function HomeScreen({ navigation }: any) {
           </View>
         </View>
 
-        {componentsToRender.length > 0 ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>دسترسی سریع</Text>
+          <View style={styles.actionsGrid}>
+            {quickActions.map((action, i) => (
+              <TouchableOpacity key={i} style={styles.actionCard} onPress={() => navigation.navigate(action.screen)} activeOpacity={0.7}>
+                <View style={[styles.actionIconContainer, { backgroundColor: action.bg }]}>
+                  <MaterialIcons name={action.icon as any} size={24} color={action.color} />
+                </View>
+                <Text style={styles.actionText}>{action.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {componentsToRender.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>ابزارک‌های پویا (داشبورد)</Text>
             <DynamicRenderer components={componentsToRender} onAction={(action) => {
@@ -338,38 +356,22 @@ export function HomeScreen({ navigation }: any) {
               }
             }} />
           </View>
-        ) : (
-          <>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>دسترسی سریع</Text>
-              <View style={styles.actionsGrid}>
-                {quickActions.map((action, i) => (
-                  <TouchableOpacity key={i} style={styles.actionCard} onPress={() => navigation.navigate(action.screen)} activeOpacity={0.7}>
-                    <View style={[styles.actionIconContainer, { backgroundColor: action.bg }]}>
-                      <MaterialIcons name={action.icon as any} size={24} color={action.color} />
-                    </View>
-                    <Text style={styles.actionText}>{action.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>نمای کلی ماه</Text>
-              <View style={styles.metricsGrid}>
-                {metrics.map((metric, i) => (
-                  <View key={i} style={styles.metricCard}>
-                    <View style={styles.metricHeader}>
-                      <Text style={styles.metricLabel}>{metric.label}</Text>
-                      <MaterialIcons name={metric.icon as any} size={20} color={theme.colors.secondary} />
-                    </View>
-                    <Text style={styles.metricValue}>{metric.value}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          </>
         )}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>نمای کلی ماه</Text>
+          <View style={styles.metricsGrid}>
+            {metrics.map((metric, i) => (
+              <View key={i} style={styles.metricCard}>
+                <View style={styles.metricHeader}>
+                  <Text style={styles.metricLabel}>{metric.label}</Text>
+                  <MaterialIcons name={metric.icon as any} size={20} color={theme.colors.secondary} />
+                </View>
+                <Text style={styles.metricValue}>{metric.value}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
 
       </ScrollView>
     </SafeAreaView>
