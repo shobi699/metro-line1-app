@@ -193,6 +193,16 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         ]
       },
       {
+        id: 'admin-ai',
+        label: 'هوش مصنوعی و RAG',
+        icon: Bot,
+        roles: ['admin', 'super_admin'],
+        items: [
+          { label: 'مدیریت پروایدرها', href: '/admin/ai-providers', icon: Bot },
+          { label: 'مدیریت کش معنایی', href: '/admin/ai-cache', icon: HardDrive },
+        ]
+      },
+      {
         id: 'admin-reports',
         label: 'مانیتورینگ و گزارش‌ها',
         icon: BarChart3,
