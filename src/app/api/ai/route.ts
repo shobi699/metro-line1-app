@@ -325,7 +325,7 @@ export async function POST(request: Request) {
 
         const rawArticles = await prisma.knowledgeArticle.findMany({
           where: { OR: searchConditions },
-          take: 15,
+          take: 250,
           select: {
             title: true,
             body: true,
@@ -461,7 +461,7 @@ export async function POST(request: Request) {
 
       const rawArticles = await prisma.knowledgeArticle.findMany({
         where: { OR: searchConditions },
-        take: 15,
+        take: 250,
         select: {
           title: true,
           body: true,

@@ -13,6 +13,7 @@ import {
 } from 'react-native'
 import { useAuthStore } from '../stores/auth'
 import { API_URL } from '../shared/config'
+import { cachedFetch } from '../shared/cached-fetch'
 import { MaterialIcons } from '@expo/vector-icons'
 import { useTheme } from '../shared/ThemeProvider'
 import { ScreenWrapper } from '../shared/ScreenWrapper'
@@ -96,11 +97,10 @@ export function AIAssistantScreen({ navigation }: any) {
     setLoading(true)
 
     try {
-      const res = await fetch(`${API_URL}/ai`, {
+      const data = await cachedFetch<any>('/ai', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           prompt: userText,
@@ -108,23 +108,21 @@ export function AIAssistantScreen({ navigation }: any) {
         }),
       })
 
-      const data = await res.json()
-
-      if (res.ok && data.data) {
-        if (data.data.conversationId) {
-          setConversationId(data.data.conversationId)
+      if (data) {
+        if (data.conversationId) {
+          setConversationId(data.conversationId)
         }
         setMessages((prev) => [
           ...prev,
           {
             id: Date.now() + 1,
-            text: data.data.reply,
+            text: data.reply,
             isUser: false,
-            confidence: data.data.confidence,
-            handbookSection: data.data.handbookSection,
-            source: data.data.source,
-            isCritical: data.data.isCritical,
-            backendId: data.data.id,
+            confidence: data.confidence,
+            handbookSection: data.handbookSection,
+            source: data.source,
+            isCritical: data.isCritical,
+            backendId: data.id,
           },
         ])
       } else {
@@ -173,11 +171,10 @@ export function AIAssistantScreen({ navigation }: any) {
     )
 
     try {
-      await fetch(`${API_URL}/ai/feedback`, {
+      await cachedFetch<any>('/ai/feedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           messageId: backendId,
