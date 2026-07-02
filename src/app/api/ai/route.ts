@@ -4,6 +4,7 @@ import { prisma } from '@/server/db'
 import { aiQuerySchema } from '@/lib/zod/ai'
 import { getEmbedding, cosineSimilarity } from '@/server/modules/ai/embedding'
 import { AIGateway } from '@/server/modules/ai/gateway'
+import { getSettingValue } from '@/server/modules/settings/service'
 
 interface RulebookItem {
   keywords: string[]
@@ -115,6 +116,9 @@ export async function POST(request: Request) {
       }
     })
 
+    const searchPriority = await getSettingValue<string>('ai.searchPriority', 'database')
+    let questionEmbedding: number[] = []
+
     // ۱. بررسی کلمات کلیدی بحرانی و اضطراری
     const isCritical = CRITICAL_KEYWORDS.some(kw => prompt.includes(kw))
     if (isCritical) {
@@ -155,106 +159,230 @@ export async function POST(request: Request) {
       })
     }
 
-    // ۲. جستجو در بانک اطلاعاتی محلی (کدهای خطا)
-    const rulebookMatch = RULEBOOK_DATABASE.find(item =>
-      item.keywords.some(keyword => prompt.includes(keyword))
-    )
+    // ۲. سناریوی اولویت‌دار بر اساس تنظیمات مدیر
+    if (searchPriority === 'database') {
+      // الف. بررسی کدهای خطا و مقررات ثابت محلی (RULEBOOK)
+      const rulebookMatch = RULEBOOK_DATABASE.find(item =>
+        item.keywords.some(keyword => prompt.includes(keyword))
+      )
 
-    if (rulebookMatch) {
-      await prisma.auditLog.create({
-        data: {
-          actorId: user.id,
-          entity: 'AI_QUERY',
-          entityId: 'rulebook',
-          action: 'create',
-          after: { query: rulebookMatch.title, type: 'RULEBOOK' },
-        }
-      }).catch(() => {})
-
-      await prisma.aiMessage.create({
-        data: { conversationId, role: 'user', text: rawPrompt }
-      })
-      const aiMsg = await prisma.aiMessage.create({
-        data: {
-          conversationId,
-          role: 'model',
-          text: `**${rulebookMatch.title}**\n\n${rulebookMatch.resolution}\n\n${rulebookMatch.safetyAlert}`,
-          source: 'rulebook',
-          confidence: rulebookMatch.confidence,
-          handbookSection: rulebookMatch.handbookSection
-        }
-      })
-
-      return NextResponse.json({
-        data: {
-          id: aiMsg.id,
-          reply: aiMsg.text,
-          source: 'rulebook',
-          matched: true,
-          confidence: rulebookMatch.confidence,
-          handbookSection: rulebookMatch.handbookSection,
-          conversationId
-        }
-      })
-    }
-
-    // ۳. تولید Embedding و جستجو در Semantic Cache
-    let questionEmbedding: number[] = []
-    let cachedAnswer = null
-    let maxSim = 0
-
-    try {
-      questionEmbedding = await getEmbedding(rawPrompt)
-      const caches = await prisma.aiKnowledgeCache.findMany()
-      for (const cache of caches) {
-        try {
-          const vec = JSON.parse(cache.questionEmbedding)
-          const sim = cosineSimilarity(questionEmbedding, vec)
-          if (sim > maxSim && sim > 0.90) { // Threshold 90%
-            maxSim = sim
-            cachedAnswer = cache
+      if (rulebookMatch) {
+        await prisma.auditLog.create({
+          data: {
+            actorId: user.id,
+            entity: 'AI_QUERY',
+            entityId: 'rulebook',
+            action: 'create',
+            after: { query: rulebookMatch.title, type: 'RULEBOOK' },
           }
-        } catch (e) {}
+        }).catch(() => {})
+
+        await prisma.aiMessage.create({
+          data: { conversationId, role: 'user', text: rawPrompt }
+        })
+        const aiMsg = await prisma.aiMessage.create({
+          data: {
+            conversationId,
+            role: 'model',
+            text: `**${rulebookMatch.title}**\n\n${rulebookMatch.resolution}\n\n${rulebookMatch.safetyAlert}`,
+            source: 'rulebook',
+            confidence: rulebookMatch.confidence,
+            handbookSection: rulebookMatch.handbookSection
+          }
+        })
+
+        return NextResponse.json({
+          data: {
+            id: aiMsg.id,
+            reply: aiMsg.text,
+            source: 'rulebook',
+            matched: true,
+            confidence: rulebookMatch.confidence,
+            handbookSection: rulebookMatch.handbookSection,
+            conversationId
+          }
+        })
       }
-    } catch (err) {
-      console.warn('Embedding error (ignoring cache):', err)
+
+      // ب. بررسی Semantic Cache (کش معنایی سوالات قبلی)
+      let cachedAnswer = null
+      let maxSim = 0
+
+      try {
+        questionEmbedding = await getEmbedding(rawPrompt)
+        const caches = await prisma.aiKnowledgeCache.findMany()
+        for (const cache of caches) {
+          try {
+            const vec = JSON.parse(cache.questionEmbedding)
+            const sim = cosineSimilarity(questionEmbedding, vec)
+            if (sim > maxSim && sim > 0.90) { // Threshold 90%
+              maxSim = sim
+              cachedAnswer = cache
+            }
+          } catch (e) {}
+        }
+      } catch (err) {
+        console.warn('Embedding error (ignoring cache):', err)
+      }
+
+      if (cachedAnswer) {
+        await prisma.aiKnowledgeCache.update({
+          where: { id: cachedAnswer.id },
+          data: { hitCount: { increment: 1 }, lastUsedAt: new Date() }
+        })
+
+        await prisma.aiMessage.create({
+          data: { conversationId, role: 'user', text: rawPrompt }
+        })
+        const aiMsg = await prisma.aiMessage.create({
+          data: {
+            conversationId,
+            role: 'model',
+            text: cachedAnswer.answerText,
+            source: 'semantic_cache',
+            confidence: maxSim * 100,
+            handbookSection: 'پاسخ کش شده'
+          }
+        })
+
+        return NextResponse.json({
+          data: {
+            id: aiMsg.id,
+            reply: cachedAnswer.answerText,
+            source: 'semantic_cache',
+            matched: true,
+            confidence: maxSim * 100,
+            handbookSection: 'پاسخ کش شده',
+            conversationId
+          }
+        })
+      }
+
+      // ج. جستجو در پایگاه دانش دیتابیس (Knowledge Base) و بازگرداندن بهترین مقاله به صورت مستقیم
+      const cleanPrompt = rawPrompt.replace(/[?؟.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+      const stopWords = ['در', 'به', 'با', 'از', 'تا', 'چقدر', 'است', 'چیست', 'کردن', 'چگونه', 'و', 'یا', 'یک', 'این', 'آن', 'ها', 'های', 'را', 'که', 'چه', 'چند', 'کدام', 'من', 'شما', 'لطفا', 'لطفاً']
+      const keywords = cleanPrompt
+        .split(/\s+/)
+        .filter(w => w.length > 1 && !stopWords.includes(w))
+
+      if (keywords.length > 0) {
+        const searchConditions = keywords.flatMap(kw => [
+          { title: { contains: kw } },
+          { body: { contains: kw } },
+          { tags: { contains: kw } }
+        ])
+
+        const knowledgeArticles = await prisma.knowledgeArticle.findMany({
+          where: { OR: searchConditions },
+          take: 1,
+          select: {
+            title: true,
+            body: true,
+            category: true,
+            slug: true,
+          },
+        })
+
+        if (knowledgeArticles.length > 0) {
+          const article = knowledgeArticles[0]
+          const dbReply = `**[پاسخ مستقیم دیتابیس: ${article.title}]**\n\n${article.body}`
+
+          await prisma.aiMessage.create({
+            data: { conversationId, role: 'user', text: rawPrompt }
+          })
+          const aiMsg = await prisma.aiMessage.create({
+            data: {
+              conversationId,
+              role: 'model',
+              text: dbReply,
+              source: 'knowledge',
+              confidence: 100,
+              handbookSection: article.category ?? 'دانش‌نامه محلی'
+            }
+          })
+
+          await prisma.auditLog.create({
+            data: {
+              actorId: user.id,
+              entity: 'AI_QUERY',
+              entityId: 'knowledge',
+              action: 'create',
+              after: { prompt: rawPrompt, type: 'KNOWLEDGE_DIRECT' },
+            }
+          }).catch(() => {})
+
+          return NextResponse.json({
+            data: {
+              id: aiMsg.id,
+              reply: dbReply,
+              source: 'knowledge',
+              matched: true,
+              confidence: 100,
+              handbookSection: article.category ?? 'دانش‌نامه محلی',
+              conversationId
+            }
+          })
+        }
+      }
+    } else {
+      // سناریوی اولویت هوش مصنوعی (AI First)
+      // در این سناریو ابتدا کش معنایی بررسی می‌شود، اگر پاسخی نبود با کمک RAG به هوش مصنوعی وصل می‌شویم
+      let cachedAnswer = null
+      let maxSim = 0
+
+      try {
+        questionEmbedding = await getEmbedding(rawPrompt)
+        const caches = await prisma.aiKnowledgeCache.findMany()
+        for (const cache of caches) {
+          try {
+            const vec = JSON.parse(cache.questionEmbedding)
+            const sim = cosineSimilarity(questionEmbedding, vec)
+            if (sim > maxSim && sim > 0.90) {
+              maxSim = sim
+              cachedAnswer = cache
+            }
+          } catch (e) {}
+        }
+      } catch (err) {
+        console.warn('Embedding error:', err)
+      }
+
+      if (cachedAnswer) {
+        await prisma.aiKnowledgeCache.update({
+          where: { id: cachedAnswer.id },
+          data: { hitCount: { increment: 1 }, lastUsedAt: new Date() }
+        })
+
+        await prisma.aiMessage.create({
+          data: { conversationId, role: 'user', text: rawPrompt }
+        })
+        const aiMsg = await prisma.aiMessage.create({
+          data: {
+            conversationId,
+            role: 'model',
+            text: cachedAnswer.answerText,
+            source: 'semantic_cache',
+            confidence: maxSim * 100,
+            handbookSection: 'پاسخ کش شده'
+          }
+        })
+
+        return NextResponse.json({
+          data: {
+            id: aiMsg.id,
+            reply: cachedAnswer.answerText,
+            source: 'semantic_cache',
+            matched: true,
+            confidence: maxSim * 100,
+            handbookSection: 'پاسخ کش شده',
+            conversationId
+          }
+        })
+      }
     }
 
-    if (cachedAnswer) {
-      await prisma.aiKnowledgeCache.update({
-        where: { id: cachedAnswer.id },
-        data: { hitCount: { increment: 1 }, lastUsedAt: new Date() }
-      })
-
-      // Save user prompt in history
-      await prisma.aiMessage.create({
-        data: { conversationId, role: 'user', text: rawPrompt }
-      })
-      const aiMsg = await prisma.aiMessage.create({
-        data: {
-          conversationId,
-          role: 'model',
-          text: cachedAnswer.answerText,
-          source: 'semantic_cache',
-          confidence: maxSim * 100,
-          handbookSection: 'پاسخ کش شده'
-        }
-      })
-
-      return NextResponse.json({
-        data: {
-          id: aiMsg.id,
-          reply: cachedAnswer.answerText,
-          source: 'semantic_cache',
-          matched: true,
-          confidence: maxSim * 100,
-          handbookSection: 'پاسخ کش شده',
-          conversationId
-        }
-      })
-    }
-
-    // ۴. اگر در کش نبود: جستجو در دانش‌نامه (RAG)
+    // اگر اولویت با دیتابیس بود ولی چیزی پیدا نشد، یا اولویت با AI بود و کش معنایی خالی بود:
+    // ۳. کوئری RAG روی دیتابیس برای فراهم کردن فکت‌های زمینه هوش مصنوعی
     const cleanPrompt = rawPrompt.replace(/[?؟.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
     const stopWords = ['در', 'به', 'با', 'از', 'تا', 'چقدر', 'است', 'چیست', 'کردن', 'چگونه', 'و', 'یا', 'یک', 'این', 'آن', 'ها', 'های', 'را', 'که', 'چه', 'چند', 'کدام', 'من', 'شما', 'لطفا', 'لطفاً']
     const keywords = cleanPrompt
@@ -285,6 +413,13 @@ export async function POST(request: Request) {
           `${i + 1}. **${a.title}** (${a.category ?? 'عمومی'})\n${a.body.substring(0, 500)}`
         ).join('\n\n')
       }
+    }
+
+    // گرفتن بردار امبدینگ سوال کاربر اگر قبلاً تولید نشده باشد (برای ذخیره در کش بعد از پاسخ AI)
+    if (questionEmbedding.length === 0) {
+      try {
+        questionEmbedding = await getEmbedding(rawPrompt)
+      } catch (e) {}
     }
 
     // ۵. دریافت تاریخچه و ساخت Prompt برای Gateway

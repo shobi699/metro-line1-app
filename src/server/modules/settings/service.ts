@@ -592,6 +592,16 @@ const DEFAULT_SETTINGS = [
     defaultValue: 'https://metro.tehran.ir',
     category: 'download',
   },
+  {
+    key: 'ai.searchPriority',
+    label: 'اولویت سناریوی جستجو',
+    description: 'تعیین اولویت پاسخ‌دهی به پرسنل: جستجو در دیتابیس محلی (آیین‌نامه) یا پردازش با هوش مصنوعی',
+    type: 'select',
+    value: 'database',
+    defaultValue: 'database',
+    category: 'general',
+    options: ['database', 'ai'],
+  },
 ]
 
 
