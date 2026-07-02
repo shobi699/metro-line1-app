@@ -41,6 +41,8 @@ interface Trip {
   }
 }
 
+import { useTheme } from '../shared/ThemeProvider'
+
 export function CabinModeScreen({ navigation }: any) {
   const token = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
@@ -49,6 +51,8 @@ export function CabinModeScreen({ navigation }: any) {
   const [activeTrip, setActiveTrip] = useState<Trip | null>(null)
   const [gpsLocation, setGpsLocation] = useState('در حال دریافت GPS...')
   const [sosActive, setSosActive] = useState(false)
+  const { theme } = useTheme()
+  const styles = getStyles(theme)
 
   // Fetch today's first active/incomplete trip for the cabin
   const fetchActiveTrip = async () => {
@@ -147,7 +151,7 @@ export function CabinModeScreen({ navigation }: any) {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#FF3B30" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     )
   }
@@ -164,7 +168,7 @@ export function CabinModeScreen({ navigation }: any) {
 
       {/* GPS Status */}
       <View style={[styles.card, styles.gpsCard]}>
-        <Navigation size={18} color="#FFD60A" />
+        <Navigation size={18} color={theme.colors.warning} />
         <Text style={styles.gpsText}>{gpsLocation}</Text>
       </View>
 
@@ -193,17 +197,17 @@ export function CabinModeScreen({ navigation }: any) {
           <View style={styles.actionRow}>
             {!activeTrip.assignment.readyAt ? (
               <TouchableOpacity style={styles.readyButton} onPress={() => handleAction('ready')}>
-                <Play size={20} color="#000" />
+                <Play size={20} color="#ffffff" />
                 <Text style={styles.readyButtonText}>اعلام آمادگی حرکت</Text>
               </TouchableOpacity>
             ) : !activeTrip.assignment.handoverAt ? (
               <TouchableOpacity style={styles.handoverButton} onPress={() => handleAction('handover')}>
-                <CheckCircle size={20} color="#FFF" />
+                <CheckCircle size={20} color="#ffffff" />
                 <Text style={styles.handoverButtonText}>ثبت تحویل کابین</Text>
               </TouchableOpacity>
             ) : (
               <View style={styles.completedBlock}>
-                <CheckCircle size={24} color="#30D158" />
+                <CheckCircle size={24} color={theme.colors.success} />
                 <Text style={styles.completedText}>این سفر با موفقیت به پایان رسید</Text>
               </View>
             )}
@@ -218,12 +222,12 @@ export function CabinModeScreen({ navigation }: any) {
       {/* Auxiliary Buttons */}
       <View style={styles.grid}>
         <TouchableOpacity style={styles.gridItem} onPress={() => navigation.navigate('Checklists')}>
-          <ClipboardList size={32} color="#0A84FF" />
+          <ClipboardList size={32} color={theme.colors.info} />
           <Text style={styles.gridText}>چک‌لیست ایمنی</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.gridItem} onPress={() => navigation.navigate('RadioSimulator')}>
-          <Radio size={32} color="#30D158" />
+          <Radio size={32} color={theme.colors.success} />
           <Text style={styles.gridText}>بی‌سیم راهبری</Text>
         </TouchableOpacity>
       </View>
@@ -233,7 +237,7 @@ export function CabinModeScreen({ navigation }: any) {
         style={[styles.sosButton, sosActive && styles.sosActiveButton]} 
         onPress={triggerSOS}
       >
-        <Flame size={40} color="#FFF" />
+        <Flame size={32} color="#ffffff" />
         <Text style={styles.sosButtonText}>
           {sosActive ? 'لغو SOS اضطراری' : 'SOS وضعیت اضطراری'}
         </Text>
@@ -242,15 +246,15 @@ export function CabinModeScreen({ navigation }: any) {
   )
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#000',
-    padding: 16,
+    backgroundColor: theme.colors.background,
+    padding: theme.spacing.containerMargin,
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: theme.colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -259,53 +263,60 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   headerTitle: {
-    color: '#FFF',
-    fontSize: 24,
+    color: theme.colors.onSurface,
+    fontSize: 22,
     fontWeight: 'bold',
+    fontFamily: theme.typography.screenTitle.fontFamily,
   },
   headerSubtitle: {
-    color: '#FF3B30',
+    color: theme.colors.primary,
     fontSize: 14,
     fontWeight: 'bold',
     marginTop: 4,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   card: {
-    backgroundColor: '#1C1C1E',
-    borderRadius: 16,
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderRadius: theme.borderRadius.xl,
     padding: 16,
     marginBottom: 16,
+    ...theme.shadows.level1,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   gpsCard: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
     gap: 8,
-    borderWidth: 1,
-    borderColor: '#FFD60A/30',
   },
   gpsText: {
-    color: '#FFD60A',
+    color: theme.colors.warning,
     fontSize: 12,
     fontWeight: 'bold',
+    fontFamily: 'monospace',
   },
   tripCard: {
-    backgroundColor: '#1C1C1E',
-    borderRadius: 20,
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderRadius: theme.borderRadius.xxl,
     padding: 20,
     marginBottom: 20,
     borderWidth: 2,
-    borderColor: '#FF3B30',
+    borderColor: theme.colors.primary,
+    ...theme.shadows.level2,
   },
   tripLabel: {
-    color: '#FFF',
-    opacity: 0.6,
+    color: theme.colors.secondary,
     fontSize: 12,
     marginBottom: 4,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   directionText: {
-    color: '#FFF',
-    fontSize: 28,
+    color: theme.colors.onSurface,
+    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
+    fontFamily: theme.typography.sectionTitle.fontFamily,
+    textAlign: 'right',
   },
   detailsRow: {
     flexDirection: 'row-reverse',
@@ -317,46 +328,51 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   detailLabel: {
-    color: '#FFF',
-    opacity: 0.5,
+    color: theme.colors.secondary,
     fontSize: 11,
     marginBottom: 6,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   detailValue: {
-    color: '#FFF',
-    fontSize: 20,
+    color: theme.colors.onSurface,
+    fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: theme.typography.cardTitle.fontFamily,
   },
   actionRow: {
     marginTop: 8,
   },
   readyButton: {
-    backgroundColor: '#FFD60A',
+    backgroundColor: theme.colors.warning,
     flexDirection: 'row-reverse',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: 14,
+    borderRadius: theme.borderRadius.lg,
+    ...theme.shadows.level1,
   },
   readyButtonText: {
-    color: '#000',
+    color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: theme.typography.cardTitle.fontFamily,
   },
   handoverButton: {
-    backgroundColor: '#30D158',
+    backgroundColor: theme.colors.success,
     flexDirection: 'row-reverse',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: 14,
+    borderRadius: theme.borderRadius.lg,
+    ...theme.shadows.level1,
   },
   handoverButtonText: {
-    color: '#FFF',
+    color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: theme.typography.cardTitle.fontFamily,
   },
   completedBlock: {
     flexDirection: 'row-reverse',
@@ -365,21 +381,26 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   completedText: {
-    color: '#30D158',
+    color: theme.colors.success,
     fontSize: 14,
     fontWeight: 'bold',
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   emptyCard: {
-    backgroundColor: '#1C1C1E',
-    borderRadius: 16,
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderRadius: theme.borderRadius.xl,
     padding: 24,
     alignItems: 'center',
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    ...theme.shadows.level1,
   },
   emptyText: {
-    color: '#8E8E93',
+    color: theme.colors.secondary,
     fontSize: 14,
     textAlign: 'center',
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   grid: {
     flexDirection: 'row-reverse',
@@ -388,38 +409,40 @@ const styles = StyleSheet.create({
   },
   gridItem: {
     flex: 1,
-    backgroundColor: '#1C1C1E',
-    borderRadius: 16,
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderRadius: theme.borderRadius.xl,
     padding: 16,
     alignItems: 'center',
     gap: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    ...theme.shadows.level1,
   },
   gridText: {
-    color: '#FFF',
+    color: theme.colors.onSurface,
     fontSize: 13,
     fontWeight: 'bold',
+    fontFamily: theme.typography.cardTitle.fontFamily,
   },
   sosButton: {
-    backgroundColor: '#FF3B30',
-    borderRadius: 24,
-    paddingVertical: 24,
+    backgroundColor: theme.colors.error,
+    borderRadius: theme.borderRadius.xl,
+    paddingVertical: 20,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row-reverse',
     gap: 12,
-    shadowColor: '#FF3B30',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
-    elevation: 8,
+    ...theme.shadows.level2,
   },
   sosActiveButton: {
-    backgroundColor: '#8E8E93',
-    shadowColor: '#8E8E93',
+    backgroundColor: theme.colors.secondary,
   },
   sosButtonText: {
-    color: '#FFF',
-    fontSize: 20,
+    color: '#ffffff',
+    fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: theme.typography.cardTitle.fontFamily,
   }
 })
+
+export default CabinModeScreen

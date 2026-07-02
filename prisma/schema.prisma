@@ -1056,3 +1056,85 @@ model RosterTemplate {
   updatedAt    DateTime @updatedAt
 }
 
+// ── UI Builder / Server-Driven UI ─────────────────────
+
+model UiMenuItem {
+  id                 String   @id @default(cuid())
+  parentId           String?
+  label              String
+  icon               String
+  route              String   // target route name or page slug
+  orderIndex         Int      @default(0)
+  isVisible          Boolean  @default(true)
+  requiredPermission String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  parent             UiMenuItem?  @relation("MenuHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children           UiMenuItem[] @relation("MenuHierarchy")
+
+  @@index([parentId])
+  @@index([orderIndex])
+  @@map("ui_menu_items")
+}
+
+model UiPage {
+  id                String          @id @default(cuid())
+  slug              String          @unique
+  title             String
+  layoutType        String          @default("list") // list | detail | dashboard | form
+  status            String          @default("draft") // draft | published
+  currentVersionId  String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  versions          UiPageVersion[]
+
+  @@map("ui_pages")
+}
+
+model UiPageVersion {
+  id            String   @id @default(cuid())
+  pageId        String
+  schemaJson    Json     // JSON representing component tree
+  versionNumber Int
+  createdById   String?
+  createdAt     DateTime @default(now())
+
+  page          UiPage   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId])
+  @@map("ui_page_versions")
+}
+
+model UiDashboardWidget {
+  id                 String   @id @default(cuid())
+  pageId             String?
+  widgetType         String   // stat_card | chart | list | banner
+  title              String?
+  size               String   @default("md") // sm | md | lg
+  orderIndex         Int      @default(0)
+  isVisible          Boolean  @default(true)
+  configJson         Json     // JSON representing configuration
+  requiredPermission String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([orderIndex])
+  @@map("ui_dashboard_widgets")
+}
+
+model UiTheme {
+  id                String   @id @default(cuid())
+  primaryColor      String   @default("#ae0011") // Default Metro Red
+  accentColor       String   @default("#575e70")
+  radius            Int      @default(12)
+  fontSize          String   @default("md")
+  darkModeDefault   Boolean  @default(false)
+  logoUrl           String?
+  apiBaseUrl        String   @default("https://metro.qzz.io")
+  updatedAt         DateTime @updatedAt
+
+  @@map("ui_themes")
+}
+

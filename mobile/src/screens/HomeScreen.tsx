@@ -7,30 +7,19 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Image,
+  SafeAreaView
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { MaterialIcons } from '@expo/vector-icons'
 import { useAuthStore } from '../stores/auth'
 import { useConfigStore } from '../stores/config'
 import { useNetworkStore } from '../stores/network'
 import { API_URL } from '../shared/config'
-import {
-  LayoutDashboard,
-  Users,
-  Calendar,
-  ArrowLeftRight,
-  AlertTriangle,
-  Bell,
-  MessageCircle,
-  Newspaper,
-  Shield,
-  ChevronLeft,
-  Bot,
-  AlertOctagon,
-  ClipboardCheck,
-  ClipboardList,
-  MessageSquare,
-  Radio,
-} from 'lucide-react-native'
+import { useTheme } from '../shared/ThemeProvider'
+import { useUIBuilderStore } from '../stores/ui-builder'
+import { DynamicRenderer } from '../shared/DynamicRenderer'
+import { handleDynamicNavigation } from '../shared/navigation-helper'
 
 interface DashboardStats {
   users: number
@@ -45,6 +34,7 @@ interface TodayShift {
 }
 
 export function HomeScreen({ navigation }: any) {
+  const { theme } = useTheme()
   const accessToken = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
   const config = useConfigStore((s) => s.config)
@@ -60,6 +50,7 @@ export function HomeScreen({ navigation }: any) {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
+  // Fetch logic omitted for brevity in design, keeping identical logic:
   async function loadData() {
     if (!accessToken) return
     try {
@@ -98,7 +89,6 @@ export function HomeScreen({ navigation }: any) {
       setTodayShift(todayShiftData ?? null)
       setGlobalOffline(false)
 
-      // Save to cache if enabled
       if (config?.mobile?.offlineCacheEnabled !== false) {
         await AsyncStorage.multiSet([
           ['@dashboard_stats', JSON.stringify(newStats)],
@@ -107,7 +97,6 @@ export function HomeScreen({ navigation }: any) {
       }
     } catch {
       setGlobalOffline(true)
-      // Load from cache on network failure
       try {
         const keys = ['@dashboard_stats', '@today_shift']
         const cached = await AsyncStorage.multiGet(keys)
@@ -116,16 +105,13 @@ export function HomeScreen({ navigation }: any) {
 
         if (cachedStats) setStats(JSON.parse(cachedStats))
         if (cachedShift) setTodayShift(JSON.parse(cachedShift))
-      } catch (err) {
-        console.error('Error loading cached data on fetch error:', err)
-      }
+      } catch (err) {}
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
   }
 
-  // Load cache immediately on mount
   useEffect(() => {
     async function loadCache() {
       try {
@@ -133,159 +119,261 @@ export function HomeScreen({ navigation }: any) {
         const cached = await AsyncStorage.multiGet(keys)
         const cachedStats = cached.find(([k]) => k === '@dashboard_stats')?.[1]
         const cachedShift = cached.find(([k]) => k === '@today_shift')?.[1]
-
-        if (cachedStats) {
-          setStats(JSON.parse(cachedStats))
-        }
-        if (cachedShift) {
-          setTodayShift(JSON.parse(cachedShift))
-        }
-      } catch (err) {
-        console.error('Error loading initial cache:', err)
-      } finally {
+        if (cachedStats) setStats(JSON.parse(cachedStats))
+        if (cachedShift) setTodayShift(JSON.parse(cachedShift))
+      } catch (err) {} finally {
         setLoading(false)
       }
     }
-    
     if (accessToken) {
-      loadCache().then(() => {
-        loadData()
-      })
+      loadCache().then(() => loadData())
     }
   }, [accessToken])
 
-  const shiftLabel: Record<string, string> = {
-    morning: 'صبح',
-    evening: 'عصر',
-    night: 'شب',
-    off: 'استراحت',
-  }
+  useEffect(() => {
+    if (!navigation) return
+    const unsubscribe = navigation.addListener('focus', () => {
+      void useUIBuilderStore.getState().bootstrap().catch(() => {})
+    })
+    return unsubscribe
+  }, [navigation])
 
-  const shiftColor: Record<string, string> = {
-    morning: '#34c759',
-    evening: '#007aff',
-    night: '#8e8e93',
-    off: '#555860',
-  }
+  const styles = StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: theme.colors.background },
+    container: { flex: 1, paddingBottom: 80 },
+    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background },
+    header: {
+      flexDirection: 'row-reverse',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.containerMargin,
+      paddingVertical: 16,
+      backgroundColor: theme.colors.background,
+    },
+    headerProfile: { flexDirection: 'row-reverse', alignItems: 'center', gap: 12 },
+    avatar: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, borderColor: theme.colors.surfaceContainer },
+    greeting: { fontFamily: theme.typography.screenTitle.fontFamily, fontSize: 18, fontWeight: '700', color: theme.colors.primary, textAlign: 'right' },
+    dateText: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: theme.typography.bodyMd.fontSize, color: theme.colors.secondary, textAlign: 'right' },
+    headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    syncBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 9999 },
+    syncText: { fontFamily: theme.typography.captionSm.fontFamily, fontSize: theme.typography.captionSm.fontSize, color: '#166534' },
+    notificationBtn: { padding: 8, borderRadius: 9999 },
+    notificationDot: { position: 'absolute', top: 4, right: 4, width: 10, height: 10, backgroundColor: theme.colors.primary, borderRadius: 5, borderWidth: 2, borderColor: theme.colors.background },
+    
+    section: { paddingHorizontal: theme.spacing.containerMargin, marginBottom: theme.spacing.sectionPadding },
+    sectionTitle: { fontFamily: theme.typography.sectionTitle.fontFamily, fontSize: theme.typography.sectionTitle.fontSize, fontWeight: '700', color: theme.colors.onSurface, marginBottom: theme.spacing.stackSpace, textAlign: 'right' },
+    
+    heroCard: { backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.xl, padding: theme.spacing.sectionPadding, ...theme.shadows.level1, borderColor: theme.colors.surfaceVariant, borderWidth: 1, overflow: 'hidden' },
+    heroIndicator: { position: 'absolute', right: 0, top: 0, bottom: 0, width: 6, backgroundColor: '#f59e0b' },
+    heroHeader: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
+    heroTitle: { fontFamily: theme.typography.sectionTitle.fontFamily, fontSize: theme.typography.sectionTitle.fontSize, color: theme.colors.onSurface, fontWeight: '700' },
+    shiftBadge: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, backgroundColor: '#fffbeb', borderColor: '#fef3c7', borderWidth: 1, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 9999 },
+    shiftBadgeText: { color: '#d97706', fontFamily: theme.typography.captionSm.fontFamily, fontSize: theme.typography.captionSm.fontSize },
+    heroContent: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 },
+    heroTime: { fontFamily: theme.typography.numericHero.fontFamily, fontSize: theme.typography.numericHero.fontSize, fontWeight: '800', color: theme.colors.onSurface, textAlign: 'left' },
+    heroLocation: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, marginTop: 8 },
+    heroLocationText: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: theme.typography.bodyMd.fontSize, color: theme.colors.secondary },
+    heroStatusBadge: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, backgroundColor: theme.colors.surfaceContainer, paddingHorizontal: 12, paddingVertical: 6, borderRadius: theme.borderRadius.md },
+    heroStatusText: { color: theme.colors.primary, fontFamily: theme.typography.captionSm.fontFamily, fontSize: theme.typography.captionSm.fontSize },
+    heroButton: { backgroundColor: theme.colors.primary, borderRadius: theme.borderRadius.lg, paddingVertical: 12, flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', gap: 8, ...theme.shadows.level2 },
+    heroButtonText: { color: theme.colors.onPrimary, fontFamily: theme.typography.cardTitle.fontFamily, fontSize: theme.typography.cardTitle.fontSize, fontWeight: '600' },
 
-  const statCards = [
-    { title: 'دفتر تلفن', value: `${stats.users}`, icon: Users, color: '#007aff', screen: 'دفتر تلفن' },
-    { title: 'شیفت امروز', value: todayShift ? shiftLabel[todayShift.code] ?? '—' : '—', icon: Calendar, color: '#34c759', screen: 'شیفت' },
-    { title: 'تعویض شیفت', value: `${stats.pendingSwaps}`, icon: ArrowLeftRight, color: '#ff9500', screen: 'شیفت' },
-    { title: 'تیکت‌های باز', value: `${stats.openTickets}`, icon: AlertTriangle, color: '#e53935', screen: 'تیکت‌ها' },
-  ]
+    actionsGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
+    actionCard: { width: '48%', alignItems: 'center', backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.lg, padding: 12, ...theme.shadows.level1, borderWidth: 1, borderColor: theme.colors.surfaceVariant },
+    actionIconContainer: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+    actionText: { fontFamily: theme.typography.captionSm.fontFamily, fontSize: theme.typography.captionSm.fontSize, color: theme.colors.onSurface, textAlign: 'center' },
 
-  const quickActions = [
-    { label: 'لوحه و اعزام روزانه', icon: Calendar, screen: 'لوحه' },
-    { label: 'چک‌لیست فنی قطار', icon: ClipboardList, screen: 'چک‌لیست‌ها' },
-    { label: 'گفت‌وگو', icon: MessageSquare, screen: 'چت' },
-    { label: 'کنفرانس صوتی', icon: Radio, screen: 'کنفرانس صوتی' },
-    { label: 'بی‌سیم راهبری', icon: Radio, screen: 'بی‌سیم راهبری' },
-    { label: 'بخشنامه‌ها', icon: Shield, screen: 'بخشنامه‌ها' },
-    { label: 'حضور و غیاب', icon: ClipboardCheck, screen: 'حضور و غیاب' },
-    { label: 'تیکت خرابی', icon: AlertTriangle, screen: 'تیکت‌ها' },
-    { label: 'دستیار AI', icon: Bot, screen: 'دستیار AI' },
-    { label: 'اضطراری SOS', icon: AlertOctagon, screen: 'SOS' },
-    { label: 'ثبت بازخورد', icon: MessageCircle, screen: 'بازخورد' },
-    { label: 'اعلانات سیستم', icon: Bell, screen: 'اعلانات' },
-  ]
+    metricsGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
+    metricCard: { width: '48%', backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: theme.borderRadius.lg, padding: 16, ...theme.shadows.level1, borderWidth: 1, borderColor: theme.colors.surfaceVariant, height: 96, justifyContent: 'space-between' },
+    metricHeader: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' },
+    metricLabel: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: theme.typography.bodyMd.fontSize, color: theme.colors.secondary },
+    metricValue: { fontFamily: theme.typography.numericHero.fontFamily, fontSize: theme.typography.numericHero.fontSize, color: theme.colors.onSurface, fontWeight: '800', textAlign: 'right' }
+  })
+
+  const widgets = useUIBuilderStore((s) => s.widgets)
+
+  const componentsToRender = widgets
+    .filter(w => w.isVisible)
+    .map(w => {
+      let type = 'StatRow'
+      let props = {}
+      if (w.widgetType === 'stat_card') {
+        type = 'StatRow'
+        props = {
+          items: [
+            { label: w.title || 'آمار', value: w.configJson?.source === 'shift' ? todayLabel : '۵' }
+          ]
+        }
+      } else if (w.widgetType === 'chart') {
+        type = 'ChartWidget'
+        props = {
+          title: w.title || 'نمودار عملکرد',
+          data: [
+            { label: 'شنبه', value: 80 },
+            { label: 'یکشنبه', value: 65 },
+            { label: 'دوشنبه', value: 95 },
+            { label: 'سه‌شنبه', value: 40 },
+            { label: 'چهارشنبه', value: 75 }
+          ]
+        }
+      } else if (w.widgetType === 'list') {
+        type = 'DataList'
+        props = {
+          title: w.title || 'لیست',
+          items: [
+            { title: 'بخشنامه سرعت مطمئنه در محدوده باز', desc: 'مهلت مطالعه: امروز' },
+            { title: 'اعلام حریق ایستگاه شوش', desc: 'وضعیت: برطرف شده' },
+          ]
+        }
+      }
+
+      return {
+        id: w.id,
+        type,
+        props,
+        layout: {
+          colSpan: w.size === 'sm' ? 4 : w.size === 'md' ? 6 : 12
+        }
+      }
+    })
 
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#e53935" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     )
   }
 
+  const shiftLabelMap: Record<string, string> = { morning: 'روزکار', evening: 'عصرکار', night: 'شب‌کار', off: 'آف' }
+  const todayLabel = todayShift ? (shiftLabelMap[todayShift.code] ?? todayShift.code) : 'نامشخص'
+
+  const quickActions = [
+    { label: 'اعلام\nخرابی', icon: 'report-problem', color: theme.colors.error, bg: theme.colors.errorContainer, screen: 'تیکت‌ها' },
+    { label: 'تعویض\nشیفت', icon: 'swap-horiz', color: theme.colors.onSecondaryContainer, bg: theme.colors.secondaryContainer, screen: 'شیفت‌ها' },
+    { label: 'دفتر\nتلفن', icon: 'contacts', color: theme.colors.primary, bg: theme.colors.surfaceContainerHighest, screen: 'دفتر تلفن' },
+    { label: 'بخشنامه‌ها', icon: 'description', color: theme.colors.secondary, bg: theme.colors.surfaceContainer, screen: 'بخشنامه‌ها' },
+  ]
+
+  const metrics = [
+    { label: 'تیکت‌های باز', value: stats.openTickets.toString(), icon: 'confirmation-number' },
+    { label: 'اعلان جدید', value: stats.unreadBulletins.toString(), icon: 'campaign' }
+  ]
+
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadData() }} tintColor="#e53935" />
-      }
-    >
-      {/* Welcome */}
-      <View style={styles.welcomeSection}>
-        <Text style={styles.welcomeName}>{user?.name}</Text>
-        <Text style={styles.welcomeDate}>
-          {new Date().toLocaleDateString('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-        </Text>
-      </View>
-
-      {/* Stats Grid */}
-      <View style={styles.statsGrid}>
-        {statCards.map((card, i) => (
-          <TouchableOpacity
-            key={i}
-            style={styles.statCard}
-            onPress={() => navigation.navigate(card.screen)}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.statIcon, { backgroundColor: `${card.color}20` }]}>
-              <card.icon size={20} color={card.color} />
-            </View>
-            <Text style={styles.statValue}>{card.value}</Text>
-            <Text style={styles.statLabel}>{card.title}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Today's Shift */}
-      {todayShift && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>شیفت امروز</Text>
-          <View style={styles.shiftCard}>
-            <View style={[styles.shiftDot, { backgroundColor: shiftColor[todayShift.code] ?? '#555860' }]} />
-            <View style={styles.shiftInfo}>
-              <Text style={styles.shiftLabel}>{shiftLabel[todayShift.code] ?? todayShift.code}</Text>
-              {todayShift.note && <Text style={styles.shiftNote}>{todayShift.note}</Text>}
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={() => { 
+              setRefreshing(true)
+              void loadData()
+              void useUIBuilderStore.getState().bootstrap().catch(() => {})
+            }} 
+            tintColor={theme.colors.primary} 
+          />
+        }
+      >
+        <View style={styles.header}>
+          <View style={styles.headerProfile}>
+            <Image 
+              source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB3-83sYQfLES0gmvDO5q2w28Raab5S1KepqfdSRMpxZnef78ytjqK2n-NdvYbNjQS_ca544VkccdbSdSpqgoRryJucwTRlS5GxTmUFbVKeezJ1QkeNGF0xe6zNAU4TXydoyFGGOhEl5FdxzcPCCHoPZT84FY-8OQlEniA0nZHCon-Db2rkNuNlkkufryldM1drCGtAjfTeaYeTT-yhX3Cp1zI12skUoqT9lhAWWGomB57lbAnzwP0gimpOjbQlw6053Iws6FeBdLtL' }} 
+              style={styles.avatar} 
+            />
+            <View>
+              <Text style={styles.greeting}>سلام، {user?.name?.split(' ')[0] ?? 'کاربر'} عزیز</Text>
+              <Text style={styles.dateText}>{new Date().toLocaleDateString('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</Text>
             </View>
           </View>
-        </View>
-      )}
-
-      {/* Quick Actions */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>دسترسی سریع</Text>
-        <View style={styles.actionsGrid}>
-          {quickActions.map((action, i) => (
-            <TouchableOpacity
-              key={i}
-              style={styles.actionCard}
-              onPress={() => navigation.navigate(action.screen)}
-              activeOpacity={0.7}
-            >
-              <action.icon size={20} color="#a0a3b0" />
-              <Text style={styles.actionLabel}>{action.label}</Text>
+          <View style={styles.headerRight}>
+            <View style={styles.syncBadge}>
+              <MaterialIcons name="cloud-done" size={14} color="#166534" />
+              <Text style={styles.syncText}>همگام‌سازی شده</Text>
+            </View>
+            <TouchableOpacity style={styles.notificationBtn}>
+              <MaterialIcons name="notifications" size={24} color={theme.colors.onSurfaceVariant} />
+              <View style={styles.notificationDot} />
             </TouchableOpacity>
-          ))}
+          </View>
         </View>
-      </View>
-    </ScrollView>
+
+        <View style={styles.section}>
+          <View style={styles.heroCard}>
+            <View style={styles.heroIndicator} />
+            <View style={styles.heroHeader}>
+              <Text style={styles.heroTitle}>شیفت امروز</Text>
+              <View style={styles.shiftBadge}>
+                <MaterialIcons name="light-mode" size={16} color="#d97706" />
+                <Text style={styles.shiftBadgeText}>{todayLabel}</Text>
+              </View>
+            </View>
+            <View style={styles.heroContent}>
+              <View>
+                <Text style={styles.heroTime}>۰۷:۰۰ - ۱۹:۰۰</Text>
+                <View style={styles.heroLocation}>
+                  <MaterialIcons name="location-on" size={18} color={theme.colors.secondary} />
+                  <Text style={styles.heroLocationText}>ایستگاه امام خمینی</Text>
+                </View>
+              </View>
+              <View style={styles.heroStatusBadge}>
+                <MaterialIcons name="pending" size={16} color={theme.colors.primary} />
+                <Text style={styles.heroStatusText}>در انتظار حضور</Text>
+              </View>
+            </View>
+            <TouchableOpacity style={styles.heroButton} activeOpacity={0.8} onPress={() => navigation.navigate('شیفت‌ها')}>
+              <Text style={styles.heroButtonText}>مشاهده جزئیات</Text>
+              <MaterialIcons name="arrow-back" size={20} color={theme.colors.onPrimary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {componentsToRender.length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>ابزارک‌های پویا (داشبورد)</Text>
+            <DynamicRenderer components={componentsToRender} onAction={(action) => {
+              if (action?.type === 'navigate') {
+                handleDynamicNavigation(navigation, action.target)
+              }
+            }} />
+          </View>
+        ) : (
+          <>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>دسترسی سریع</Text>
+              <View style={styles.actionsGrid}>
+                {quickActions.map((action, i) => (
+                  <TouchableOpacity key={i} style={styles.actionCard} onPress={() => navigation.navigate(action.screen)} activeOpacity={0.7}>
+                    <View style={[styles.actionIconContainer, { backgroundColor: action.bg }]}>
+                      <MaterialIcons name={action.icon as any} size={24} color={action.color} />
+                    </View>
+                    <Text style={styles.actionText}>{action.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>نمای کلی ماه</Text>
+              <View style={styles.metricsGrid}>
+                {metrics.map((metric, i) => (
+                  <View key={i} style={styles.metricCard}>
+                    <View style={styles.metricHeader}>
+                      <Text style={styles.metricLabel}>{metric.label}</Text>
+                      <MaterialIcons name={metric.icon as any} size={20} color={theme.colors.secondary} />
+                    </View>
+                    <Text style={styles.metricValue}>{metric.value}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </>
+        )}
+
+      </ScrollView>
+    </SafeAreaView>
   )
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#13151a', padding: 16 },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#13151a' },
-  welcomeSection: { marginBottom: 24 },
-  welcomeName: { fontSize: 22, fontWeight: 'bold', color: '#f2f2f7', textAlign: 'right' },
-  welcomeDate: { fontSize: 13, color: '#a0a3b0', textAlign: 'right', marginTop: 4 },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
-  statCard: { width: '47%', backgroundColor: '#1c1e24', borderWidth: 1, borderColor: '#262930', borderRadius: 12, padding: 16 },
-  statIcon: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-  statValue: { fontSize: 20, fontWeight: 'bold', color: '#f2f2f7', textAlign: 'right' },
-  statLabel: { fontSize: 12, color: '#a0a3b0', textAlign: 'right', marginTop: 2 },
-  section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 15, fontWeight: 'bold', color: '#f2f2f7', textAlign: 'right', marginBottom: 12 },
-  shiftCard: { flexDirection: 'row-reverse', alignItems: 'center', backgroundColor: '#1c1e24', borderWidth: 1, borderColor: '#262930', borderRadius: 12, padding: 16, gap: 12 },
-  shiftDot: { width: 12, height: 12, borderRadius: 6 },
-  shiftInfo: { flex: 1 },
-  shiftLabel: { fontSize: 15, fontWeight: '600', color: '#f2f2f7', textAlign: 'right' },
-  shiftNote: { fontSize: 12, color: '#a0a3b0', textAlign: 'right', marginTop: 2 },
-  actionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  actionCard: { width: '47%', flexDirection: 'row-reverse', alignItems: 'center', gap: 8, backgroundColor: '#1c1e24', borderWidth: 1, borderColor: '#262930', borderRadius: 8, padding: 14 },
-  actionLabel: { fontSize: 13, color: '#a0a3b0', fontWeight: '500' },
-})
 export default HomeScreen

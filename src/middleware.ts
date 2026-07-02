@@ -7,6 +7,7 @@ const PUBLIC_API_PATHS = [
   '/api/auth/refresh',
   '/api/config',
   '/api/seed',
+  '/api/dev',
 ]
 
 function isPublicPath(pathname: string): boolean {
@@ -17,6 +18,11 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (!pathname.startsWith('/api/')) {
+    return NextResponse.next()
+  }
+
+  // Bypass CORS preflight OPTIONS requests
+  if (request.method === 'OPTIONS') {
     return NextResponse.next()
   }
 

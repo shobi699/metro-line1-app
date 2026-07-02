@@ -4,13 +4,18 @@
     "slug": "metro-line1-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#f8f9ff"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.metro.line1"
     },
     "android": {
-      "package": "com.metro.line1"
+      "package": "com.metro.line1",
+      "usesCleartextTraffic": true
     },
     "extra": {
       "eas": {

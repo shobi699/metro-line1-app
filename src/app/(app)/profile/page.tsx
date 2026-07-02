@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useMemo } from 'react'
+import Link from 'next/link'
 import { useAuthStore } from '@/features/auth'
 import { useShiftsStore } from '@/features/shifts'
 import { getShiftForUserAndDate } from '@/lib/cycle-math'
@@ -208,6 +209,7 @@ export default function ProfilePage() {
 
   async function loadProfile() {
     if (!accessToken) return
+    setError('')
     setLoading(true)
     try {
       const res = await fetch('/api/profile', {
@@ -784,26 +786,38 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Shift status shortcut */}
-          {todayShift && (
-            <div className="shrink-0 flex flex-col items-center md:items-end gap-1.5 pt-4 md:pt-0">
-              <span className="text-xs text-foreground-muted">شیفت کاری امروز شما:</span>
-              <div className="flex items-center gap-2 bg-surface-container-high px-3 py-1.5 rounded-lg border border-border/80">
-                <Clock className="size-4 text-primary" />
-                <Badge variant="outline" className={cn(
-                  "text-xs px-2.5 py-0.5",
-                  todayShift.shift?.code === 'morning' && "bg-amber-500/20 text-amber-300 border-amber-500/30",
-                  todayShift.shift?.code === 'evening' && "bg-sky-500/20 text-sky-300 border-sky-500/30",
-                  todayShift.shift?.code === 'night' && "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
-                  todayShift.shift?.code === 'office' && "bg-purple-500/20 text-purple-300 border-purple-500/30",
-                  todayShift.shift?.code === 'off' && "bg-neutral-800 text-neutral-400 border-neutral-700"
-                )}>
-                  {todayShift.shift?.label || 'نامشخص'}
-                </Badge>
-                <span className="text-xs text-foreground-muted font-sans font-medium">({todayShift.templateName})</span>
+          {/* Shift status shortcut & UI Builder */}
+          <div className="shrink-0 flex flex-col items-center md:items-end gap-3 pt-4 md:pt-0">
+            {todayShift && (
+              <div className="flex flex-col items-center md:items-end gap-1.5">
+                <span className="text-xs text-foreground-muted">شیفت کاری امروز شما:</span>
+                <div className="flex items-center gap-2 bg-surface-container-high px-3 py-1.5 rounded-lg border border-border/80">
+                  <Clock className="size-4 text-primary" />
+                  <Badge variant="outline" className={cn(
+                    "text-xs px-2.5 py-0.5",
+                    todayShift.shift?.code === 'morning' && "bg-amber-500/20 text-amber-300 border-amber-500/30",
+                    todayShift.shift?.code === 'evening' && "bg-sky-500/20 text-sky-300 border-sky-500/30",
+                    todayShift.shift?.code === 'night' && "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
+                    todayShift.shift?.code === 'office' && "bg-purple-500/20 text-purple-300 border-purple-500/30",
+                    todayShift.shift?.code === 'off' && "bg-neutral-800 text-neutral-400 border-neutral-700"
+                  )}>
+                    {todayShift.shift?.label || 'نامشخص'}
+                  </Badge>
+                  <span className="text-xs text-foreground-muted font-sans font-medium">({todayShift.templateName})</span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {(profile.role?.key === 'admin' || profile.role?.key === 'super_admin') && (
+              <Link 
+                href="/admin/ui-builder"
+                className="bg-accent hover:bg-accent-hover text-accent-foreground font-semibold flex items-center gap-2 px-4 py-2.5 rounded-lg cursor-pointer transition-all shadow-lg text-xs"
+              >
+                <Palette className="size-4" />
+                <span>مدیریت صفحه‌ساز و چیدمان (UI Builder)</span>
+              </Link>
+            )}
+          </div>
         </CardContent>
       </Card>
 

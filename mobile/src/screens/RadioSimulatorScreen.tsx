@@ -8,6 +8,7 @@ import {
   Vibration,
   TextInput,
 } from 'react-native'
+import { useTheme } from '../shared/ThemeProvider'
 import { useAuthStore } from '../stores/auth'
 import {
   Radio,
@@ -36,6 +37,8 @@ export function RadioSimulatorScreen({ navigation }: any) {
   const [muted, setMuted] = useState(false)
   const [radioLogs, setRadioLogs] = useState<RadioLog[]>([])
   const [currentTransmittingText, setCurrentTransmittingText] = useState('')
+  const { theme } = useTheme()
+  const styles = React.useMemo(() => getStyles(theme), [theme])
 
   // Web Audio Context for tone synthesis (works on React Native Web)
   const audioCtxRef = useRef<any>(null)
@@ -333,17 +336,17 @@ export function RadioSimulatorScreen({ navigation }: any) {
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <ChevronRight size={24} color="#f2f2f7" />
+          <ChevronRight size={24} color={theme.colors.primary} />
         </TouchableOpacity>
         <View style={styles.headerTitleBox}>
-          <Radio size={20} color="#e53935" />
+          <Radio size={20} color={theme.colors.primary} />
           <Text style={styles.headerTitle}>شبیه‌ساز بی‌سیم TETRA</Text>
         </View>
         <TouchableOpacity
           onPress={() => setMuted(!muted)}
           style={styles.volumeButton}
         >
-          {muted ? <VolumeX size={20} color="#e53935" /> : <Volume2 size={20} color="#34c759" />}
+          {muted ? <VolumeX size={20} color={theme.colors.primary} /> : <Volume2 size={20} color={theme.colors.success} />}
         </TouchableOpacity>
       </View>
 
@@ -376,7 +379,7 @@ export function RadioSimulatorScreen({ navigation }: any) {
               {/* LCD Top Bar */}
               <View style={styles.lcdHeader}>
                 <View style={styles.lcdStatusIconBox}>
-                  <Wifi size={10} color="#34c759" />
+                  <Wifi size={10} color={theme.colors.success} />
                   <Text style={styles.lcdStatusText}>آنلاین</Text>
                 </View>
                 <Text style={styles.lcdFreqText}>
@@ -460,7 +463,7 @@ export function RadioSimulatorScreen({ navigation }: any) {
                 style={styles.clearButton}
                 activeOpacity={0.8}
               >
-                <Delete size={16} color="#e53935" />
+                <Delete size={16} color={theme.colors.primary} />
                 <Text style={styles.clearButtonText}>پاک کردن فرکانس</Text>
               </TouchableOpacity>
             </View>
@@ -531,7 +534,7 @@ export function RadioSimulatorScreen({ navigation }: any) {
         {/* Logs Archive */}
         <View style={styles.logsContainer}>
           <View style={styles.logsHeader}>
-            <Clock size={16} color="#e53935" />
+            <Clock size={16} color={theme.colors.primary} />
             <Text style={styles.logsTitle}>وقایع رادیویی باند فعال ({dialedCode ? `باند ${formatFarsiNumber(dialedCode)}` : channel})</Text>
           </View>
 
@@ -554,7 +557,7 @@ export function RadioSimulatorScreen({ navigation }: any) {
 
             {filteredLogs.length === 0 && (
               <View style={styles.emptyLogsBox}>
-                <Radio size={32} color="#262930" />
+                <Radio size={32} color={theme.colors.border} />
                 <Text style={styles.emptyLogsText}>هیچ پیام رادیویی در این باند مخابره نشده است.</Text>
                 <Text style={styles.emptyLogsSub}>با نگه‌داشتن PTT در فرکانس انتخابی صحبت کنید یا منتظر پیام دیسپاچر باشید.</Text>
               </View>
@@ -562,7 +565,7 @@ export function RadioSimulatorScreen({ navigation }: any) {
           </View>
 
           <View style={styles.disclaimerBox}>
-            <ShieldAlert size={16} color="#ff9500" style={styles.disclaimerIcon} />
+            <ShieldAlert size={16} color={theme.colors.warning} style={styles.disclaimerIcon} />
             <Text style={styles.disclaimerText}>
               این شبیه‌ساز مستقیماً متصل به شبکه دیسپاچینگ خط ۱ مترو تهران است. کلیه ارتباطات ضبط و پایش می‌شود.
             </Text>
@@ -573,10 +576,10 @@ export function RadioSimulatorScreen({ navigation }: any) {
   )
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#13151a',
+    backgroundColor: theme.colors.background,
   },
   header: {
     height: 56,
@@ -585,8 +588,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#262930',
-    backgroundColor: '#1c1e24',
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   backButton: {
     padding: 4,
@@ -599,7 +602,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#f2f2f7',
+    color: theme.colors.primary,
+    fontFamily: theme.typography.screenTitle.fontFamily,
   },
   volumeButton: {
     padding: 6,
@@ -917,35 +921,37 @@ const styles = StyleSheet.create({
   logsContainer: {
     width: '100%',
     maxWidth: 340,
-    backgroundColor: '#1c1e24',
-    borderRadius: 16,
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderRadius: theme.borderRadius.xl,
     borderWidth: 1,
-    borderColor: '#262930',
+    borderColor: theme.colors.border,
     padding: 14,
     marginTop: 24,
+    ...theme.shadows.level1,
   },
   logsHeader: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
     gap: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#262930',
+    borderBottomColor: theme.colors.border,
     paddingBottom: 10,
     marginBottom: 12,
   },
   logsTitle: {
     fontSize: 11.5,
     fontWeight: 'bold',
-    color: '#f2f2f7',
+    color: theme.colors.onSurface,
+    fontFamily: theme.typography.cardTitle.fontFamily,
   },
   logsList: {
     maxHeight: 280,
   },
   logCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.15)',
+    backgroundColor: theme.colors.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 10,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.lg,
     padding: 10,
     marginBottom: 8,
   },
@@ -958,18 +964,20 @@ const styles = StyleSheet.create({
   logSender: {
     fontSize: 9.5,
     fontWeight: 'bold',
-    color: '#e53935',
+    color: theme.colors.primary,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   logTime: {
     fontSize: 8.5,
     fontFamily: 'monospace',
-    color: '#8e8e93',
+    color: theme.colors.secondary,
   },
   logMessage: {
-    fontSize: 10.5,
-    color: '#f2f2f7',
+    fontSize: 11,
+    color: theme.colors.onSurface,
     textAlign: 'right',
-    lineHeight: 15,
+    lineHeight: 16,
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   logCardFooter: {
     flexDirection: 'row-reverse',
@@ -978,24 +986,26 @@ const styles = StyleSheet.create({
     marginTop: 6,
     paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+    borderTopColor: theme.colors.border,
   },
   logMeta: {
     fontSize: 8,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   tetraBadge: {
-    backgroundColor: 'rgba(229, 57, 53, 0.1)',
+    backgroundColor: theme.colors.primaryContainer + '1A',
     borderWidth: 1,
-    borderColor: 'rgba(229, 57, 53, 0.2)',
+    borderColor: theme.colors.primaryContainer + '30',
     borderRadius: 4,
     paddingHorizontal: 5,
     paddingVertical: 1,
   },
   tetraBadgeText: {
     fontSize: 7.5,
-    color: '#e53935',
+    color: theme.colors.primary,
     fontWeight: 'bold',
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   emptyLogsBox: {
     alignItems: 'center',
@@ -1005,23 +1015,25 @@ const styles = StyleSheet.create({
   },
   emptyLogsText: {
     fontSize: 10.5,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     fontWeight: 'bold',
     textAlign: 'center',
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   emptyLogsSub: {
     fontSize: 9,
-    color: '#555860',
+    color: theme.colors.secondary,
     textAlign: 'center',
     paddingHorizontal: 16,
     lineHeight: 13,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   disclaimerBox: {
     flexDirection: 'row-reverse',
-    backgroundColor: 'rgba(255, 149, 0, 0.05)',
+    backgroundColor: theme.colors.warning + '1A',
     borderWidth: 1,
-    borderColor: 'rgba(255, 149, 0, 0.1)',
-    borderRadius: 10,
+    borderColor: theme.colors.warning + '30',
+    borderRadius: theme.borderRadius.lg,
     padding: 10,
     marginTop: 12,
     gap: 8,
@@ -1031,10 +1043,12 @@ const styles = StyleSheet.create({
   },
   disclaimerText: {
     flex: 1,
-    fontSize: 8.5,
-    color: '#ff9500',
+    fontSize: 9,
+    color: theme.colors.warning,
     textAlign: 'right',
-    lineHeight: 13,
+    lineHeight: 14,
+    fontFamily: theme.typography.captionSm.fontFamily,
+    fontWeight: '600',
   },
 })
 

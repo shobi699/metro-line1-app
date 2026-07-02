@@ -49,3 +49,9 @@ next-env.d.ts
 
 # nested workspace clone that should not be tracked by this repo
 metro-line11-app/
+
+# expo and native builds
+.expo/
+mobile/.expo/
+mobile/android/
+mobile/ios/

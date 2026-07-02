@@ -11,6 +11,7 @@ import {
   Switch,
   FlatList,
 } from 'react-native'
+import { useTheme } from '../shared/ThemeProvider'
 import { useAuthStore } from '../stores/auth'
 import {
   Mic,
@@ -62,6 +63,8 @@ export function VoiceConferenceScreen({ navigation }: any) {
   const [myMuted, setMyMuted] = useState(false)
   const [myDeaf, setMyDeaf] = useState(false)
   const [participants, setParticipants] = useState<Participant[]>([])
+  const { theme } = useTheme()
+  const styles = React.useMemo(() => getStyles(theme), [theme])
 
   // Room Creation Modal & Form States
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -309,15 +312,15 @@ export function VoiceConferenceScreen({ navigation }: any) {
           }}
           style={styles.backButton}
         >
-          <ChevronRight size={24} color="#f2f2f7" />
+          <ChevronRight size={24} color={theme.colors.primary} />
         </TouchableOpacity>
         <View style={styles.headerRight}>
-          <Radio size={20} color="#e53935" />
+          <Radio size={20} color={theme.colors.primary} />
           <Text style={styles.headerTitle}>کنفرانس صوتی خط ۱</Text>
         </View>
         {joined && (
           <View style={styles.headerLeft}>
-            <Wifi size={14} color="#34c759" />
+            <Wifi size={14} color={theme.colors.success} />
             <Text style={styles.pingText}>پینگ: {formatFarsiNumber(32)}ms</Text>
           </View>
         )}
@@ -336,7 +339,7 @@ export function VoiceConferenceScreen({ navigation }: any) {
                 style={styles.createRoomBtn}
                 activeOpacity={0.8}
               >
-                <Plus size={16} color="#ffffff" />
+                <Plus size={16} color={theme.colors.onPrimary} />
                 <Text style={styles.createRoomBtnText}>ساخت اتاق</Text>
               </TouchableOpacity>
             )}
@@ -357,7 +360,7 @@ export function VoiceConferenceScreen({ navigation }: any) {
                 >
                   <View style={styles.roomCardHeader}>
                     <View style={styles.roomCardTitleRow}>
-                      {!hasAccess && <Lock size={14} color="#8e8e93" style={styles.lockIcon} />}
+                      {!hasAccess && <Lock size={14} color={theme.colors.secondary} style={styles.lockIcon} />}
                       <Text style={styles.roomCardName}>{room.name}</Text>
                     </View>
                     {(user?.roleKey === 'admin' || user?.roleKey === 'super_admin') && (
@@ -365,7 +368,7 @@ export function VoiceConferenceScreen({ navigation }: any) {
                         onPress={() => handleDeleteRoom(room.id)}
                         style={styles.deleteRoomBtn}
                       >
-                        <Trash2 size={16} color="#e53935" />
+                        <Trash2 size={16} color={theme.colors.primary} />
                       </TouchableOpacity>
                     )}
                   </View>
@@ -455,7 +458,7 @@ export function VoiceConferenceScreen({ navigation }: any) {
                   )}
                 </View>
                 <View style={styles.mineBadgeBox}>
-                  <Sparkles size={10} color="#e53935" />
+                  <Sparkles size={10} color={theme.colors.primary} />
                   <Text style={styles.mineBadgeText}>شما</Text>
                 </View>
                 <Text style={styles.cardName}>{user?.name}</Text>
@@ -466,16 +469,16 @@ export function VoiceConferenceScreen({ navigation }: any) {
                 <View style={styles.statusIcons}>
                   {myMuted || myDeaf ? (
                     <View style={styles.statusMuteBadge}>
-                      <MicOff size={12} color="#e53935" />
+                      <MicOff size={12} color={theme.colors.primary} />
                     </View>
                   ) : (
                     <View style={styles.statusActiveBadge}>
-                      <Mic size={12} color="#34c759" />
+                      <Mic size={12} color={theme.colors.success} />
                     </View>
                   )}
                   {myDeaf && (
                     <View style={styles.statusMuteBadge}>
-                      <VolumeX size={12} color="#e53935" />
+                      <VolumeX size={12} color={theme.colors.primary} />
                     </View>
                   )}
                 </View>
@@ -508,17 +511,17 @@ export function VoiceConferenceScreen({ navigation }: any) {
 
                   <View style={styles.statusIcons}>
                     {p.isMuted ? (
-                      <View style={styles.statusMuteBadge}>
-                        <MicOff size={12} color="#8e8e93" />
-                      </View>
+                       <View style={styles.statusMuteBadge}>
+                         <MicOff size={12} color={theme.colors.secondary} />
+                       </View>
                     ) : (
                       <View
                         style={[
                           styles.statusActiveBadge,
-                          p.isSpeaking && !myDeaf ? { backgroundColor: 'rgba(229,57,53,0.15)' } : null,
+                          p.isSpeaking && !myDeaf ? { backgroundColor: theme.colors.primaryContainer + '1D' } : null,
                         ]}
                       >
-                        <Mic size={12} color={p.isSpeaking && !myDeaf ? '#e53935' : '#8e8e93'} />
+                        <Mic size={12} color={p.isSpeaking && !myDeaf ? theme.colors.primary : theme.colors.secondary} />
                       </View>
                     )}
                   </View>
@@ -544,7 +547,7 @@ export function VoiceConferenceScreen({ navigation }: any) {
                 }}
                 style={[styles.circleButton, myMuted ? styles.buttonActiveRed : styles.buttonOutline]}
               >
-                {myMuted ? <MicOff size={20} color="#ffffff" /> : <Mic size={20} color="#f2f2f7" />}
+                {myMuted ? <MicOff size={20} color="#ffffff" /> : <Mic size={20} color={theme.colors.secondary} />}
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -554,7 +557,7 @@ export function VoiceConferenceScreen({ navigation }: any) {
                 }}
                 style={[styles.circleButton, myDeaf ? styles.buttonActiveRed : styles.buttonOutline]}
               >
-                {myDeaf ? <VolumeX size={20} color="#ffffff" /> : <Volume2 size={20} color="#f2f2f7" />}
+                {myDeaf ? <VolumeX size={20} color="#ffffff" /> : <Volume2 size={20} color={theme.colors.secondary} />}
               </TouchableOpacity>
 
               <TouchableOpacity onPress={handleLeave} style={styles.leaveButton}>
@@ -579,7 +582,7 @@ export function VoiceConferenceScreen({ navigation }: any) {
             {/* Modal Header */}
             <View style={styles.modalHeader}>
               <TouchableOpacity onPress={() => setShowCreateModal(false)}>
-                <X size={20} color="#8e8e93" />
+                <X size={20} color={theme.colors.secondary} />
               </TouchableOpacity>
               <Text style={styles.modalTitle}>ساخت اتاق صوتی جدید</Text>
             </View>
@@ -603,8 +606,8 @@ export function VoiceConferenceScreen({ navigation }: any) {
                 <Switch
                   value={isEmergency}
                   onValueChange={setIsEmergency}
-                  trackColor={{ false: '#262930', true: '#e53935' }}
-                  thumbColor="#f2f2f7"
+                  trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+                  thumbColor={theme.colors.onSurface}
                 />
               </View>
 
@@ -613,8 +616,8 @@ export function VoiceConferenceScreen({ navigation }: any) {
                 <Switch
                   value={isDefaultMuted}
                   onValueChange={setIsDefaultMuted}
-                  trackColor={{ false: '#262930', true: '#e53935' }}
-                  thumbColor="#f2f2f7"
+                  trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+                  thumbColor={theme.colors.onSurface}
                 />
               </View>
 
@@ -669,7 +672,7 @@ export function VoiceConferenceScreen({ navigation }: any) {
                         }}
                         style={styles.checkboxRow}
                       >
-                        {isSelected ? <Check size={16} color="#e53935" /> : <View style={styles.checkboxBox} />}
+                        {isSelected ? <Check size={16} color={theme.colors.primary} /> : <View style={styles.checkboxBox} />}
                         <Text style={styles.checkboxLabel}>{role.label}</Text>
                       </TouchableOpacity>
                     )
@@ -729,7 +732,7 @@ export function VoiceConferenceScreen({ navigation }: any) {
                         activeOpacity={0.8}
                       >
                         <View style={styles.personRight}>
-                          {isSelected ? <Check size={16} color="#e53935" /> : <View style={styles.checkboxBox} />}
+                          {isSelected ? <Check size={16} color={theme.colors.primary} /> : <View style={styles.checkboxBox} />}
                           <Text style={styles.personName}>{person.name}</Text>
                         </View>
                         <Text style={styles.personRole}>{person.role}</Text>
@@ -758,10 +761,10 @@ export function VoiceConferenceScreen({ navigation }: any) {
   )
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#13151a',
+    backgroundColor: theme.colors.background,
   },
   header: {
     height: 56,
@@ -770,8 +773,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#262930',
-    backgroundColor: '#1c1e24',
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   backButton: {
     padding: 4,
@@ -784,7 +787,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#f2f2f7',
+    color: theme.colors.primary,
+    fontFamily: theme.typography.screenTitle.fontFamily,
   },
   headerLeft: {
     flexDirection: 'row-reverse',
@@ -792,7 +796,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   pingText: {
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     fontSize: 11,
     fontFamily: 'monospace',
   },
@@ -812,38 +816,42 @@ const styles = StyleSheet.create({
   lobbyTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#f2f2f7',
+    color: theme.colors.onSurface,
     textAlign: 'right',
+    fontFamily: theme.typography.sectionTitle.fontFamily,
   },
   createRoomBtn: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    backgroundColor: '#e53935',
-    borderRadius: 8,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.md,
     paddingHorizontal: 12,
     paddingVertical: 6,
     gap: 4,
+    ...theme.shadows.level1,
   },
   createRoomBtnText: {
     fontSize: 12,
-    color: '#ffffff',
+    color: theme.colors.onPrimary,
     fontWeight: 'bold',
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   roomsList: {
     gap: 12,
   },
   roomCard: {
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: theme.borderRadius.xl,
     padding: 16,
   },
   roomCardAccessible: {
-    backgroundColor: '#1c1e24',
-    borderColor: '#262930',
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderColor: theme.colors.border,
+    ...theme.shadows.level1,
   },
   roomCardInaccessible: {
-    backgroundColor: 'rgba(28, 30, 36, 0.4)',
-    borderColor: '#1c1e24',
+    backgroundColor: theme.colors.surfaceContainerLow,
+    borderColor: theme.colors.border,
     opacity: 0.55,
   },
   roomCardHeader: {
@@ -862,8 +870,9 @@ const styles = StyleSheet.create({
   roomCardName: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#f2f2f7',
+    color: theme.colors.onSurface,
     textAlign: 'right',
+    fontFamily: theme.typography.cardTitle.fontFamily,
   },
   deleteRoomBtn: {
     padding: 4,
@@ -875,7 +884,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#262930',
+    borderTopColor: theme.colors.border,
   },
   roomBadgeRow: {
     flexDirection: 'row-reverse',
@@ -888,70 +897,73 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   badgeEmergency: {
-    backgroundColor: 'rgba(229, 57, 53, 0.1)',
-    borderColor: 'rgba(229, 57, 53, 0.2)',
+    backgroundColor: theme.colors.primaryContainer + '10',
+    borderColor: theme.colors.primaryContainer + '20',
   },
   badgeEmergencyText: {
     fontSize: 8.5,
-    color: '#e53935',
+    color: theme.colors.primary,
     fontWeight: 'bold',
   },
   badgePublic: {
-    backgroundColor: 'rgba(52, 199, 89, 0.1)',
-    borderColor: 'rgba(52, 199, 89, 0.2)',
+    backgroundColor: theme.colors.success + '10',
+    borderColor: theme.colors.success + '20',
   },
   badgePublicText: {
     fontSize: 8.5,
-    color: '#34c759',
+    color: theme.colors.success,
   },
   badgeRole: {
-    backgroundColor: 'rgba(255, 149, 0, 0.1)',
-    borderColor: 'rgba(255, 149, 0, 0.2)',
+    backgroundColor: theme.colors.warning + '10',
+    borderColor: theme.colors.warning + '20',
   },
   badgeRoleText: {
     fontSize: 8.5,
-    color: '#ff9500',
+    color: theme.colors.warning,
   },
   badgeShift: {
-    backgroundColor: 'rgba(0, 122, 255, 0.1)',
-    borderColor: 'rgba(0, 122, 255, 0.2)',
+    backgroundColor: theme.colors.info + '10',
+    borderColor: theme.colors.info + '20',
   },
   badgeShiftText: {
     fontSize: 8.5,
-    color: '#007aff',
+    color: theme.colors.info,
   },
   badgeManual: {
-    backgroundColor: 'rgba(175, 82, 222, 0.1)',
-    borderColor: 'rgba(175, 82, 222, 0.2)',
+    backgroundColor: theme.colors.secondary + '10',
+    borderColor: theme.colors.secondary + '20',
   },
   badgeManualText: {
     fontSize: 8.5,
-    color: '#af52de',
+    color: theme.colors.secondary,
   },
   roomCardUsers: {
     fontSize: 9.5,
-    color: '#a0a3b0',
+    color: theme.colors.secondary,
   },
   disclaimerCard: {
-    backgroundColor: '#1c1e24',
+    backgroundColor: theme.colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: '#262930',
-    borderRadius: 14,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
     padding: 14,
     marginTop: 20,
+    ...theme.shadows.level1,
   },
   disclaimerTitle: {
     fontSize: 11,
-    color: '#e53935',
+    color: theme.colors.primary,
     fontWeight: 'bold',
     textAlign: 'right',
     marginBottom: 4,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   disclaimerDesc: {
     fontSize: 10,
-    color: '#a0a3b0',
+    color: theme.colors.secondary,
     textAlign: 'right',
     lineHeight: 16,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   conferenceContainer: {
     flex: 1,
@@ -961,27 +973,28 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 12,
-    backgroundColor: '#1c1e24',
+    backgroundColor: theme.colors.surfaceContainerLowest,
     borderBottomWidth: 1,
-    borderBottomColor: '#262930',
+    borderBottomColor: theme.colors.border,
   },
   activeRoomNameText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#e53935',
+    color: theme.colors.primary,
     textAlign: 'right',
+    fontFamily: theme.typography.cardTitle.fontFamily,
   },
   muteAllBtn: {
-    backgroundColor: 'rgba(255, 149, 0, 0.15)',
+    backgroundColor: theme.colors.warning + '10',
     borderWidth: 1,
-    borderColor: 'rgba(255, 149, 0, 0.2)',
+    borderColor: theme.colors.warning + '20',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
   muteAllBtnText: {
     fontSize: 9,
-    color: '#ff9500',
+    color: theme.colors.warning,
     fontWeight: 'bold',
   },
   gridContainer: {
@@ -995,18 +1008,19 @@ const styles = StyleSheet.create({
   },
   participantCard: {
     width: '48%',
-    backgroundColor: 'rgba(28, 30, 36, 0.7)',
+    backgroundColor: theme.colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: '#262930',
-    borderRadius: 16,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
     paddingVertical: 20,
     paddingHorizontal: 10,
     alignItems: 'center',
     marginBottom: 8,
+    ...theme.shadows.level1,
   },
   activeSpeakingCard: {
-    backgroundColor: '#1c1e24',
-    borderColor: '#e53935',
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderColor: theme.colors.primary,
   },
   avatarContainer: {
     position: 'relative',
@@ -1026,17 +1040,17 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   myAvatar: {
-    backgroundColor: 'rgba(229, 57, 53, 0.1)',
-    borderColor: '#e53935',
+    backgroundColor: theme.colors.primaryContainer + '10',
+    borderColor: theme.colors.primary,
   },
   otherAvatar: {
-    backgroundColor: '#13151a',
-    borderColor: '#262930',
+    backgroundColor: theme.colors.surfaceContainerLow,
+    borderColor: theme.colors.border,
   },
   avatarText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#f2f2f7',
+    color: theme.colors.onSurface,
   },
   pulseRing: {
     position: 'absolute',
@@ -1044,15 +1058,15 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 32,
     borderWidth: 1,
-    borderColor: '#e53935',
+    borderColor: theme.colors.primary,
     opacity: 0.4,
     zIndex: 1,
   },
   mineBadgeBox: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    backgroundColor: 'rgba(229, 57, 53, 0.1)',
-    borderColor: 'rgba(229, 57, 53, 0.2)',
+    backgroundColor: theme.colors.primaryContainer + '10',
+    borderColor: theme.colors.primaryContainer + '20',
     borderWidth: 1,
     borderRadius: 4,
     paddingHorizontal: 6,
@@ -1062,30 +1076,32 @@ const styles = StyleSheet.create({
   },
   mineBadgeText: {
     fontSize: 8,
-    color: '#e53935',
+    color: theme.colors.primary,
     fontWeight: 'bold',
   },
   cardName: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#f2f2f7',
+    color: theme.colors.onSurface,
     textAlign: 'center',
     marginBottom: 2,
+    fontFamily: theme.typography.cardTitle.fontFamily,
   },
   cardRole: {
     fontSize: 10,
-    color: '#a0a3b0',
+    color: theme.colors.secondary,
     textAlign: 'center',
     marginBottom: 8,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   statusIcons: {
     flexDirection: 'row',
     gap: 6,
   },
   statusMuteBadge: {
-    backgroundColor: 'rgba(229, 57, 53, 0.1)',
+    backgroundColor: theme.colors.primaryContainer + '10',
     borderWidth: 1,
-    borderColor: 'rgba(229, 57, 53, 0.2)',
+    borderColor: theme.colors.primaryContainer + '20',
     width: 22,
     height: 22,
     borderRadius: 11,
@@ -1093,9 +1109,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statusActiveBadge: {
-    backgroundColor: 'rgba(52, 199, 89, 0.1)',
+    backgroundColor: theme.colors.success + '10',
     borderWidth: 1,
-    borderColor: 'rgba(52, 199, 89, 0.2)',
+    borderColor: theme.colors.success + '20',
     width: 22,
     height: 22,
     borderRadius: 11,
@@ -1103,9 +1119,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   controlBar: {
-    backgroundColor: '#1c1e24',
+    backgroundColor: theme.colors.surface,
     borderTopWidth: 1,
-    borderTopColor: '#262930',
+    borderTopColor: theme.colors.border,
     padding: 16,
     flexDirection: 'column',
     alignItems: 'center',
@@ -1120,12 +1136,12 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#34c759',
+    backgroundColor: theme.colors.success,
   },
   connectedCount: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#f2f2f7',
+    color: theme.colors.onSurface,
   },
   buttonsRow: {
     flexDirection: 'row',
@@ -1142,31 +1158,31 @@ const styles = StyleSheet.create({
   },
   buttonOutline: {
     borderWidth: 1,
-    borderColor: '#262930',
-    backgroundColor: '#13151a',
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surfaceContainerLow,
   },
   buttonActiveRed: {
-    backgroundColor: '#e53935',
+    backgroundColor: theme.colors.primary,
   },
   leaveButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#e53935',
+    backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.85)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     padding: 16,
   },
   modalContent: {
-    backgroundColor: '#1c1e24',
-    borderRadius: 24,
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderRadius: theme.borderRadius.xl,
     borderWidth: 1,
-    borderColor: '#262930',
+    borderColor: theme.colors.border,
     maxHeight: '85%',
     overflow: 'hidden',
   },
@@ -1175,13 +1191,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#262930',
+    borderBottomColor: theme.colors.border,
     padding: 16,
   },
   modalTitle: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#f2f2f7',
+    color: theme.colors.onSurface,
+    fontFamily: theme.typography.cardTitle.fontFamily,
   },
   modalForm: {
     padding: 16,
@@ -1193,33 +1210,33 @@ const styles = StyleSheet.create({
   formLabel: {
     fontSize: 11.5,
     fontWeight: 'bold',
-    color: '#a0a3b0',
+    color: theme.colors.secondary,
     textAlign: 'right',
   },
   formInput: {
-    backgroundColor: '#13151a',
+    backgroundColor: theme.colors.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: '#262930',
-    borderRadius: 12,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 12,
-    color: '#f2f2f7',
+    color: theme.colors.onSurface,
     textAlign: 'right',
   },
   switchRow: {
     flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: theme.colors.surfaceContainerLow,
     padding: 12,
-    borderRadius: 12,
+    borderRadius: theme.borderRadius.md,
     borderWidth: 1,
-    borderColor: '#262930',
+    borderColor: theme.colors.border,
   },
   switchLabel: {
     fontSize: 11.5,
-    color: '#f2f2f7',
+    color: theme.colors.onSurface,
   },
   accessGrid: {
     flexDirection: 'row-reverse',
@@ -1229,37 +1246,37 @@ const styles = StyleSheet.create({
   accessRadio: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: theme.colors.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: '#262930',
-    borderRadius: 8,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
     paddingVertical: 8,
     alignItems: 'center',
   },
   accessRadioActive: {
-    borderColor: '#e53935',
-    backgroundColor: 'rgba(229,57,53,0.1)',
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primaryContainer + '10',
   },
   accessRadioText: {
     fontSize: 11,
-    color: '#a0a3b0',
+    color: theme.colors.secondary,
   },
   accessRadioTextActive: {
-    color: '#e53935',
+    color: theme.colors.primary,
     fontWeight: 'bold',
   },
   optionsBlock: {
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: theme.colors.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: '#262930',
-    borderRadius: 12,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
     padding: 12,
     gap: 10,
   },
   optionsBlockTitle: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: '#a0a3b0',
+    color: theme.colors.secondary,
     textAlign: 'right',
   },
   checkboxRow: {
@@ -1272,12 +1289,12 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderWidth: 1.5,
-    borderColor: '#8e8e93',
+    borderColor: theme.colors.secondary,
     borderRadius: 4,
   },
   checkboxLabel: {
     fontSize: 11.5,
-    color: '#f2f2f7',
+    color: theme.colors.onSurface,
   },
   shiftsGrid: {
     flexDirection: 'row-reverse',
@@ -1287,21 +1304,21 @@ const styles = StyleSheet.create({
   shiftSelectBtn: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: '#262930',
+    backgroundColor: theme.colors.surfaceContainerLow,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#3a3f4b',
+    borderColor: theme.colors.border,
   },
   shiftSelectBtnActive: {
-    backgroundColor: 'rgba(229,57,53,0.1)',
-    borderColor: '#e53935',
+    backgroundColor: theme.colors.primaryContainer + '10',
+    borderColor: theme.colors.primary,
   },
   shiftSelectText: {
     fontSize: 10.5,
-    color: '#a0a3b0',
+    color: theme.colors.secondary,
   },
   shiftSelectTextActive: {
-    color: '#e53935',
+    color: theme.colors.primary,
     fontWeight: 'bold',
   },
   personRow: {
@@ -1310,7 +1327,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: theme.colors.border,
   },
   personRight: {
     flexDirection: 'row-reverse',
@@ -1319,19 +1336,19 @@ const styles = StyleSheet.create({
   },
   personName: {
     fontSize: 11.5,
-    color: '#f2f2f7',
+    color: theme.colors.onSurface,
     fontWeight: 'bold',
   },
   personRole: {
     fontSize: 9.5,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
   },
   formActions: {
     marginTop: 8,
   },
   modalSubmitBtn: {
-    backgroundColor: '#e53935',
-    borderRadius: 12,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.xl,
     height: 44,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1340,7 +1357,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   modalSubmitBtnText: {
-    color: '#ffffff',
+    color: theme.colors.onPrimary,
     fontSize: 13,
     fontWeight: 'bold',
   },

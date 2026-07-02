@@ -12,6 +12,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const user = useAuthStore((s) => s.user)
   const router = useRouter()
+  const accessToken = useAuthStore((s) => s.accessToken)
+  const refreshToken = useAuthStore((s) => s.refreshToken)
+  const setAuth = useAuthStore((s) => s.setAuth)
+  const logout = useAuthStore((s) => s.logout)
   const [hydrated, setHydrated] = useState(false)
 
   const [config, setConfig] = useState<{
@@ -35,9 +39,48 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!hydrated) return
 
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !accessToken || !refreshToken) {
       router.push('/login')
       return
+    }
+
+    async function checkAndRefreshToken() {
+      const token = useAuthStore.getState().accessToken
+      const refreshTok = useAuthStore.getState().refreshToken
+      if (!token || !refreshTok) return
+
+      try {
+        const payloadBase64 = token.split('.')[1]
+        // Decode base64 unicode properly
+        const decoded = JSON.parse(atob(payloadBase64))
+        const exp = decoded.exp
+        
+        // If expired or expiring in less than 60 seconds, refresh it
+        if (exp && (Date.now() / 1000) >= exp - 60) {
+          const res = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken: refreshTok }),
+          })
+
+          if (res.ok) {
+            const data = await res.json()
+            if (data.accessToken && data.refreshToken) {
+              setAuth(
+                useAuthStore.getState().user!,
+                data.accessToken,
+                data.refreshToken
+              )
+            }
+          } else {
+            // Refresh failed (refresh token expired/revoked) -> logout
+            logout()
+            router.push('/login')
+          }
+        }
+      } catch (err) {
+        console.error('Error checking/refreshing token:', err)
+      }
     }
 
     async function fetchConfig() {
@@ -49,8 +92,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         }
       } catch {}
     }
+
+    void checkAndRefreshToken()
     void fetchConfig()
-  }, [isAuthenticated, router, hydrated])
+
+    const interval = setInterval(() => {
+      void checkAndRefreshToken()
+    }, 30000) // check every 30 seconds
+
+    return () => clearInterval(interval)
+  }, [isAuthenticated, accessToken, refreshToken, router, hydrated])
 
   if (!hydrated) {
     return (

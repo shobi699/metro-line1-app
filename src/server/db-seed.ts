@@ -33,6 +33,11 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
         await prisma.user.deleteMany()
         await prisma.role.deleteMany()
         await prisma.setting.deleteMany()
+        await prisma.uiMenuItem.deleteMany().catch(() => {})
+        await prisma.uiDashboardWidget.deleteMany().catch(() => {})
+        await prisma.uiPageVersion.deleteMany().catch(() => {})
+        await prisma.uiPage.deleteMany().catch(() => {})
+        await prisma.uiTheme.deleteMany().catch(() => {})
         logSeed('Database clean up completed successfully.')
       } catch (cleanupErr) {
         logSeed(`Error during cleanup: ${cleanupErr}`)
@@ -740,6 +745,8 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
     // ── Settings ───────────────────────────────────────────
     await seedDefaultSettings(prisma)
     logSeed('Default settings seeded.')
+    await seedUiBuilder(prisma)
+    logSeed('UI Builder settings seeded.')
 
     logSeed('Self-seeded database successfully.')
   } catch (error: unknown) {
@@ -982,4 +989,42 @@ export async function seedPerformanceTables(prisma: PrismaClient) {
       create: a,
     })
   }
+}
+
+export async function seedUiBuilder(prisma: PrismaClient) {
+  // Check if UI theme already seeded
+  const themeCount = await prisma.uiTheme.count()
+  if (themeCount > 0) return
+
+  // Seed Theme
+  await prisma.uiTheme.create({
+    data: {
+      primaryColor: '#ae0011',
+      accentColor: '#575e70',
+      radius: 12,
+      fontSize: 'md',
+      darkModeDefault: false,
+      logoUrl: '',
+    }
+  })
+
+  // Seed Default Menu Items
+  await prisma.uiMenuItem.createMany({
+    data: [
+      { label: 'پروفایل', icon: 'User', route: 'ProfileScreen', orderIndex: 4, isVisible: true },
+      { label: 'گفتگو', icon: 'MessageSquare', route: 'ChatScreen', orderIndex: 3, isVisible: true },
+      { label: 'اعلان‌ها', icon: 'Bell', route: 'NotificationsScreen', orderIndex: 2, isVisible: true },
+      { label: 'شیفت‌ها', icon: 'Calendar', route: 'CalendarScreen', orderIndex: 1, isVisible: true },
+      { label: 'داشبورد', icon: 'LayoutDashboard', route: 'HomeScreen', orderIndex: 0, isVisible: true },
+    ]
+  })
+
+  // Seed Default Widgets
+  await prisma.uiDashboardWidget.createMany({
+    data: [
+      { widgetType: 'stat_card', title: 'شیفت امروز', size: 'md', orderIndex: 0, isVisible: true, configJson: { source: 'shift' } },
+      { widgetType: 'chart', title: 'عملکرد هفتگی کیلومتر رانندگی', size: 'md', orderIndex: 1, isVisible: true, configJson: { type: 'bar', source: 'kpi' } },
+      { widgetType: 'list', title: 'آخرین بخشنامه‌های ایمنی', size: 'lg', orderIndex: 2, isVisible: true, configJson: { limit: 3, source: 'bulletins' } },
+    ]
+  })
 }

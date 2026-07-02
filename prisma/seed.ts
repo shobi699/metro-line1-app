@@ -29,6 +29,13 @@ async function main() {
   await prisma.readReceipt.deleteMany().catch(() => {})
   await prisma.safetyBulletin.deleteMany().catch(() => {})
   await prisma.post.deleteMany().catch(() => {})
+  
+  // Clear UI Builder tables
+  await prisma.uiMenuItem.deleteMany().catch(() => {})
+  await prisma.uiDashboardWidget.deleteMany().catch(() => {})
+  await prisma.uiPageVersion.deleteMany().catch(() => {})
+  await prisma.uiPage.deleteMany().catch(() => {})
+  await prisma.uiTheme.deleteMany().catch(() => {})
 
   // ── Roles (dynamic RBAC: flat permission keys) ─────────
   const roles = {} as Record<string, string>
@@ -721,6 +728,36 @@ async function main() {
     ],
   })
 
+  // ── Seed UI Builder defaults ──────────────────────
+  await prisma.uiTheme.create({
+    data: {
+      primaryColor: '#ae0011',
+      accentColor: '#575e70',
+      radius: 12,
+      fontSize: 'md',
+      darkModeDefault: false,
+      logoUrl: '',
+    }
+  })
+
+  await prisma.uiMenuItem.createMany({
+    data: [
+      { label: 'پروفایل', icon: 'User', route: 'ProfileScreen', orderIndex: 4, isVisible: true },
+      { label: 'گفتگو', icon: 'MessageSquare', route: 'ChatScreen', orderIndex: 3, isVisible: true },
+      { label: 'اعلان‌ها', icon: 'Bell', route: 'NotificationsScreen', orderIndex: 2, isVisible: true },
+      { label: 'شیفت‌ها', icon: 'Calendar', route: 'CalendarScreen', orderIndex: 1, isVisible: true },
+      { label: 'داشبورد', icon: 'LayoutDashboard', route: 'HomeScreen', orderIndex: 0, isVisible: true },
+    ]
+  })
+
+  await prisma.uiDashboardWidget.createMany({
+    data: [
+      { widgetType: 'stat_card', title: 'شیفت امروز', size: 'md', orderIndex: 0, isVisible: true, configJson: JSON.stringify({ source: 'shift' }) },
+      { widgetType: 'chart', title: 'عملکرد هفتگی کیلومتر رانندگی', size: 'md', orderIndex: 1, isVisible: true, configJson: JSON.stringify({ type: 'bar', source: 'kpi' }) },
+      { widgetType: 'list', title: 'آخرین بخشنامه‌های ایمنی', size: 'lg', orderIndex: 2, isVisible: true, configJson: JSON.stringify({ limit: 3, source: 'bulletins' }) },
+    ]
+  })
+
   console.log('Seed complete:')
   console.log(`  Roles: super_admin, admin, operator`)
   console.log(`  Users: ${allOperators.length} (${superAdmin.nationalId} / admin123)`)
@@ -732,6 +769,7 @@ async function main() {
   console.log(`  Chat rooms: 3 (عمومی، راهبران، مرکز فرمان)`)
   console.log(`  Posts: 3 (اخبار، بخش‌نامه، آموزش)`)
   console.log(`  Shift templates: 3 (نوبتی ۹ ساعت، ۱۲ ساعت، ستادی)`)
+  console.log(`  UI Builder Default Menu, Theme and Widgets Seeded.`)
 
   await prisma.$disconnect()
 }

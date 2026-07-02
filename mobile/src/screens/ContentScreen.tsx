@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { StyleSheet, View, Text, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native'
 import { Newspaper, BookOpen, GraduationCap } from 'lucide-react-native'
 import { useAuthStore } from '../stores/auth'
-import { Theme } from '../shared/theme'
+import { useTheme } from '../shared/ThemeProvider'
 import { API_URL } from '../shared/config'
 
 interface Post {
@@ -13,16 +13,17 @@ interface Post {
   createdAt: string
 }
 
-const TYPE_ICONS: Record<string, React.ReactNode> = {
-  news: <Newspaper size={16} color={Theme.colors.accent} />,
-  training: <GraduationCap size={16} color={Theme.colors.info} />,
-  circular: <BookOpen size={16} color={Theme.colors.warning} />,
-}
-
 export function ContentScreen() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const { theme } = useTheme()
+
+  const TYPE_ICONS: Record<string, React.ReactNode> = {
+    news: <Newspaper size={16} color={theme.colors.primary} />,
+    training: <GraduationCap size={16} color={theme.colors.info} />,
+    circular: <BookOpen size={16} color={theme.colors.warning} />,
+  }
 
   useEffect(() => {
     if (!accessToken) return
@@ -37,10 +38,32 @@ export function ContentScreen() {
       .catch(() => setLoading(false))
   }, [accessToken])
 
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.colors.background },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background },
+    header: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8, padding: 16, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
+    title: { fontSize: 18, fontWeight: 'bold', color: theme.colors.primary, fontFamily: theme.typography.screenTitle.fontFamily },
+    list: { padding: 16, paddingTop: 12 },
+    card: { 
+      backgroundColor: theme.colors.surfaceContainerLowest, 
+      borderRadius: theme.borderRadius.xl, 
+      padding: 16, 
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      ...theme.shadows.level1,
+    },
+    cardHeader: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6, marginBottom: 8 },
+    cardType: { fontSize: 11, color: theme.colors.secondary, fontFamily: theme.typography.captionSm.fontFamily, fontWeight: '700' },
+    cardTitle: { fontSize: 15, fontWeight: '800', color: theme.colors.onSurface, marginBottom: 4, textAlign: 'right', fontFamily: theme.typography.cardTitle.fontFamily },
+    cardExcerpt: { fontSize: 13, color: theme.colors.secondary, lineHeight: 20, textAlign: 'right', fontFamily: theme.typography.bodyMd.fontFamily },
+    emptyText: { fontSize: 14, color: theme.colors.secondary, fontFamily: theme.typography.bodyMd.fontFamily },
+  })
+
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={Theme.colors.accent} />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     )
   }
@@ -48,7 +71,7 @@ export function ContentScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Newspaper size={24} color={Theme.colors.accent} />
+        <Newspaper size={24} color={theme.colors.primary} />
         <Text style={styles.title}>محتوا و اخبار</Text>
       </View>
       <FlatList
@@ -75,16 +98,4 @@ export function ContentScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: Theme.spacing.lg },
-  title: { fontSize: Theme.fontSize.xl, fontWeight: 'bold', color: Theme.colors.text },
-  list: { padding: Theme.spacing.lg, paddingTop: 0 },
-  card: { backgroundColor: Theme.colors.surface, borderRadius: Theme.borderRadius.md, padding: Theme.spacing.lg, marginBottom: Theme.spacing.md },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-  cardType: { fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted },
-  cardTitle: { fontSize: Theme.fontSize.lg, fontWeight: 'bold', color: Theme.colors.text, marginBottom: 4 },
-  cardExcerpt: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, lineHeight: 20 },
-  emptyText: { fontSize: Theme.fontSize.md, color: Theme.colors.textMuted },
-})
+export default ContentScreen

@@ -12,22 +12,12 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
+  SafeAreaView
 } from 'react-native'
+import { MaterialIcons } from '@expo/vector-icons'
 import { useAuthStore } from '../stores/auth'
-import {
-  User,
-  Shield,
-  Phone,
-  Mail,
-  LogOut,
-  Bell,
-  Edit2,
-  Car,
-  Check,
-  X,
-  Palette,
-} from 'lucide-react-native'
 import { API_URL } from '../shared/config'
+import { useTheme } from '../shared/ThemeProvider'
 
 const ROLE_LABEL: Record<string, string> = {
   super_admin: 'مدیر کل',
@@ -35,29 +25,31 @@ const ROLE_LABEL: Record<string, string> = {
   operator: 'راهبر',
 }
 
-const AVAILABILITY_LABELS: Record<string, { label: string; color: string }> = {
-  online: { label: 'آماده به کار', color: '#34c759' },
-  busy: { label: 'مشغول', color: '#e53935' },
-  on_shift: { label: 'در شیفت کاری', color: '#007aff' },
-  offline: { label: 'خارج از شیفت / استراحت', color: '#8e8e93' },
-}
+export function ProfileScreen({ navigation }: any) {
+  const { theme } = useTheme()
 
-const DEFAULT_THEME_COLORS = [
-  { name: 'قرمز (خط ۱)', hex: '#e53935' },
-  { name: 'آبی (مرکزی)', hex: '#007aff' },
-  { name: 'سبز (ایمنی)', hex: '#34c759' },
-  { name: 'نارنجی (هشدار)', hex: '#ff9500' },
-  { name: 'خاکستری (سرد)', hex: '#8e8e93' },
-]
+  const AVAILABILITY_LABELS: Record<string, { label: string; color: string }> = {
+    online: { label: 'آماده به کار', color: theme.colors.success },
+    busy: { label: 'مشغول', color: theme.colors.error },
+    on_shift: { label: 'در شیفت کاری', color: theme.colors.primary },
+    offline: { label: 'خارج از شیفت / استراحت', color: theme.colors.secondary },
+  }
 
-const DEFAULT_AVATARS = [
-  { id: 'driver', name: 'راهبر قطار', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80' },
-  { id: 'dispatcher', name: 'دیسپچر', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80' },
-  { id: 'operator', name: 'اپراتور', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80' },
-  { id: 'manager', name: 'مدیر', url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80' },
-]
+  const DEFAULT_THEME_COLORS = [
+    { name: 'قرمز (خط ۱)', hex: '#e53935' },
+    { name: 'آبی (مرکزی)', hex: '#007aff' },
+    { name: 'سبز (ایمنی)', hex: '#34c759' },
+    { name: 'نارنجی (هشدار)', hex: '#ff9500' },
+    { name: 'خاکستری (سرد)', hex: '#8e8e93' },
+  ]
 
-export function ProfileScreen() {
+  const DEFAULT_AVATARS = [
+    { id: 'driver', name: 'راهبر قطار', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80' },
+    { id: 'dispatcher', name: 'دیسپچر', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80' },
+    { id: 'operator', name: 'اپراتور', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80' },
+    { id: 'manager', name: 'مدیر', url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80' },
+  ]
+
   const user = useAuthStore((s) => s.user)
   const accessToken = useAuthStore((s) => s.accessToken)
   const refreshToken = useAuthStore((s) => s.refreshToken)
@@ -267,467 +259,487 @@ export function ProfileScreen() {
   const availabilityInfo = AVAILABILITY_LABELS[userAvailability] || { label: 'نامشخص', color: '#8e8e93' }
   const userAvatar = user?.customFields?.avatar
 
+  const styles = StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: theme.colors.background },
+    container: { flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.containerMargin },
+    loaderContainer: { paddingVertical: 8, alignItems: 'center' },
+    avatarSection: { alignItems: 'center', marginBottom: 32, paddingTop: 16 },
+    avatarWrapper: {
+      width: 86,
+      height: 86,
+      borderRadius: 43,
+      borderWidth: 2.5,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 12,
+      position: 'relative',
+      backgroundColor: theme.colors.surfaceContainerLow,
+    },
+    avatarImage: { width: 78, height: 78, borderRadius: 39 },
+    avatarFallback: { width: 78, height: 78, borderRadius: 39, backgroundColor: theme.colors.surfaceContainer, justifyContent: 'center', alignItems: 'center' },
+    statusIndicator: {
+      position: 'absolute',
+      bottom: 2,
+      right: 2,
+      width: 14,
+      height: 14,
+      borderRadius: 7,
+      borderWidth: 2,
+      borderColor: theme.colors.background,
+    },
+    name: { fontFamily: theme.typography.screenTitle.fontFamily, fontSize: theme.typography.screenTitle.fontSize, fontWeight: '700', color: theme.colors.onSurface, textAlign: 'center' },
+    headerBadges: { flexDirection: 'row-reverse', gap: 8, marginTop: 10, flexWrap: 'wrap', justifyContent: 'center' },
+    roleBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: theme.borderRadius.sm },
+    roleText: { fontFamily: theme.typography.captionSm.fontFamily, fontSize: 11, fontWeight: '700' },
+    statusTextLine: { fontFamily: theme.typography.bodyMd.fontFamily, fontSize: theme.typography.bodyMd.fontSize, fontWeight: '600', marginTop: 8, textAlign: 'center' },
+    editButton: {
+      flexDirection: 'row-reverse',
+      alignItems: 'center',
+      gap: 6,
+      borderWidth: 1,
+      borderRadius: theme.borderRadius.md,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      marginTop: 16,
+    },
+    editButtonText: { fontFamily: theme.typography.cardTitle.fontFamily, fontSize: 12, fontWeight: '700' },
+    section: { marginBottom: 32 },
+    sectionTitle: { fontFamily: theme.typography.cardTitle.fontFamily, fontSize: theme.typography.cardTitle.fontSize, fontWeight: '700', color: theme.colors.onSurface, textAlign: 'right', marginBottom: 16 },
+    card: { backgroundColor: theme.colors.surfaceContainerLowest, borderWidth: 1, borderColor: theme.colors.surfaceVariant, borderRadius: theme.borderRadius.xl, padding: 16, ...theme.shadows.level1 },
+    infoRow: {
+      flexDirection: 'row-reverse',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.surfaceVariant,
+    },
+    infoRowNoBorder: { borderBottomWidth: 0 },
+    infoLabelContainer: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8 },
+    infoLabel: { color: theme.colors.secondary, fontFamily: theme.typography.bodyMd.fontFamily, fontSize: theme.typography.bodyMd.fontSize, fontWeight: '600' },
+    infoValue: { color: theme.colors.onSurface, fontFamily: 'monospace', fontSize: 13, fontWeight: '700' },
+    switchRow: {
+      flexDirection: 'row-reverse',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.surfaceVariant,
+    },
+    switchTextContainer: { alignItems: 'flex-start', flex: 1, paddingStart: 12 },
+    switchTitle: { color: theme.colors.onSurface, fontFamily: theme.typography.bodyMd.fontFamily, fontSize: theme.typography.bodyMd.fontSize, fontWeight: '700', textAlign: 'right' },
+    switchDesc: { color: theme.colors.secondary, fontFamily: theme.typography.captionSm.fontFamily, fontSize: 10, marginTop: 4, textAlign: 'right' },
+    logoutButton: {
+      flexDirection: 'row-reverse',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: theme.colors.errorContainer,
+      borderWidth: 1,
+      borderColor: theme.colors.error + '40',
+      borderRadius: theme.borderRadius.xl,
+      padding: 16,
+      ...theme.shadows.level1,
+    },
+    logoutText: { color: theme.colors.error, fontFamily: theme.typography.cardTitle.fontFamily, fontSize: theme.typography.cardTitle.fontSize, fontWeight: '700' },
+    
+    // Modal Styles
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent: 'flex-end' },
+    modalContent: {
+      backgroundColor: theme.colors.background,
+      borderTopLeftRadius: theme.borderRadius.xxl,
+      borderTopRightRadius: theme.borderRadius.xxl,
+      maxHeight: '90%',
+      paddingBottom: 20,
+      borderWidth: 1,
+      borderColor: theme.colors.surfaceVariant,
+      ...theme.shadows.level2,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 24,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.surfaceVariant,
+    },
+    modalTitle: { color: theme.colors.onSurface, fontFamily: theme.typography.screenTitle.fontFamily, fontSize: theme.typography.screenTitle.fontSize, fontWeight: '700', flex: 1, textAlign: 'right' },
+    closeBtn: { padding: 4 },
+    modalForm: { padding: 24 },
+    inputLabel: { color: theme.colors.secondary, fontFamily: theme.typography.bodyMd.fontFamily, fontSize: theme.typography.bodyMd.fontSize, textAlign: 'right', marginBottom: 8, marginTop: 16, fontWeight: '700' },
+    textInput: {
+      backgroundColor: theme.colors.surfaceContainerLowest,
+      borderColor: theme.colors.surfaceVariant,
+      borderWidth: 1,
+      borderRadius: theme.borderRadius.md,
+      height: 48,
+      color: theme.colors.onSurface,
+      paddingHorizontal: 12,
+      textAlign: 'right',
+      fontFamily: theme.typography.bodyMd.fontFamily,
+      fontSize: theme.typography.bodyMd.fontSize,
+    },
+    avatarPickerRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', marginBottom: 12 },
+    avatarPickWrapper: { alignItems: 'center', width: '22%', borderWidth: 1, borderColor: theme.colors.surfaceVariant, borderRadius: theme.borderRadius.md, padding: 6, backgroundColor: theme.colors.surfaceContainerLowest, ...theme.shadows.level1 },
+    avatarPickImg: { width: 44, height: 44, borderRadius: 22, marginBottom: 4 },
+    avatarPickName: { color: theme.colors.secondary, fontFamily: theme.typography.captionSm.fontFamily, fontSize: 9, textAlign: 'center', fontWeight: '600' },
+    availabilityRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
+    availabilityBtn: {
+      flex: 1,
+      minWidth: '22%',
+      height: 40,
+      backgroundColor: theme.colors.surfaceContainerLowest,
+      borderColor: theme.colors.surfaceVariant,
+      borderWidth: 1,
+      borderRadius: theme.borderRadius.md,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    availabilityBtnText: { color: theme.colors.secondary, fontFamily: theme.typography.captionSm.fontFamily, fontSize: 11, fontWeight: '600' },
+    colorRow: { flexDirection: 'row-reverse', gap: 12, marginTop: 6, justifyContent: 'center' },
+    colorCircle: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center', ...theme.shadows.level1 },
+    colorCircleActive: { borderWidth: 3, borderColor: '#ffffff' },
+    modalActions: { flexDirection: 'row-reverse', gap: 12, marginTop: 32, marginBottom: 20 },
+    modalBtn: { flex: 1, height: 48, borderRadius: theme.borderRadius.md, justifyContent: 'center', alignItems: 'center', ...theme.shadows.level1 },
+    modalBtnSave: { backgroundColor: theme.colors.primary },
+    modalBtnCancel: { backgroundColor: theme.colors.surfaceContainerLowest, borderWidth: 1, borderColor: theme.colors.surfaceVariant },
+    modalBtnText: { color: '#ffffff', fontFamily: theme.typography.cardTitle.fontFamily, fontSize: theme.typography.cardTitle.fontSize, fontWeight: '700' },
+  })
+
   return (
-    <ScrollView style={styles.container}>
-      {loading && (
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="small" color={userTheme} />
-        </View>
-      )}
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container}>
+        {loading && (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="small" color={userTheme} />
+          </View>
+        )}
 
-      {/* Avatar & Profile Info Header */}
-      <View style={styles.avatarSection}>
-        <View style={[styles.avatarWrapper, { borderColor: userTheme }]}>
-          {userAvatar ? (
-            <Image source={{ uri: userAvatar }} style={styles.avatarImage} />
-          ) : (
-            <View style={styles.avatarFallback}>
-              <User size={40} color={userTheme} />
+        {/* Avatar & Profile Info Header */}
+        <View style={styles.avatarSection}>
+          <View style={[styles.avatarWrapper, { borderColor: userTheme }]}>
+            {userAvatar ? (
+              <Image source={{ uri: userAvatar }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatarFallback}>
+                <MaterialIcons name="person" size={40} color={userTheme} />
+              </View>
+            )}
+            <View style={[styles.statusIndicator, { backgroundColor: availabilityInfo.color }]} />
+          </View>
+          <Text style={styles.name}>{user?.name}</Text>
+          
+          <View style={styles.headerBadges}>
+            <View style={[styles.roleBadge, { backgroundColor: `${userTheme}20` }]}>
+              <Text style={[styles.roleText, { color: userTheme }]}>
+                {ROLE_LABEL[user?.roleKey ?? ''] ?? user?.roleKey}
+              </Text>
             </View>
-          )}
-          <View style={[styles.statusIndicator, { backgroundColor: availabilityInfo.color }]} />
-        </View>
-        <Text style={styles.name}>{user?.name}</Text>
-        
-        <View style={styles.headerBadges}>
-          <View style={[styles.roleBadge, { backgroundColor: `${userTheme}20` }]}>
-            <Text style={[styles.roleText, { color: userTheme }]}>
-              {ROLE_LABEL[user?.roleKey ?? ''] ?? user?.roleKey}
-            </Text>
+            <View style={[styles.roleBadge, { backgroundColor: theme.colors.surfaceContainer }]}>
+              <Text style={[styles.roleText, { color: theme.colors.secondary }]}>
+                کد ملی: {user?.nationalId}
+              </Text>
+            </View>
           </View>
-          <View style={[styles.roleBadge, { backgroundColor: '#ffffff10' }]}>
-            <Text style={[styles.roleText, { color: '#a0a3b0' }]}>
-              کد ملی: {user?.nationalId}
-            </Text>
-          </View>
-        </View>
-        
-        <Text style={[styles.statusTextLine, { color: availabilityInfo.color }]}>
-          وضعیت حضور: {availabilityInfo.label}
-        </Text>
-
-        <TouchableOpacity
-          style={[styles.editButton, { borderColor: `${userTheme}40` }]}
-          onPress={handleOpenEdit}
-          activeOpacity={0.7}
-        >
-          <Edit2 size={14} color={userTheme} />
-          <Text style={[styles.editButtonText, { color: userTheme }]}>
-            ویرایش مشخصات و شخصی‌سازی
+          
+          <Text style={[styles.statusTextLine, { color: availabilityInfo.color }]}>
+            وضعیت حضور: {availabilityInfo.label}
           </Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* Organizational Info Card */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>اطلاعات سازمانی و تماس</Text>
-        <View style={styles.card}>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoValue}>
-              {user?.customFields?.personnelNo || 'ثبت‌نشده'}
+          <TouchableOpacity
+            style={[styles.editButton, { borderColor: `${userTheme}40` }]}
+            onPress={handleOpenEdit}
+            activeOpacity={0.7}
+          >
+            <MaterialIcons name="edit" size={14} color={userTheme} />
+            <Text style={[styles.editButtonText, { color: userTheme }]}>
+              ویرایش مشخصات و شخصی‌سازی
             </Text>
-            <View style={styles.infoLabelContainer}>
-              <Shield size={14} color="#a0a3b0" />
-              <Text style={styles.infoLabel}>شماره پرسنلی</Text>
+          </TouchableOpacity>
+
+          {(user?.roleKey === 'admin' || user?.roleKey === 'super_admin') && (
+            <TouchableOpacity
+              style={[styles.editButton, { borderColor: theme.colors.primary, marginTop: 8 }]}
+              onPress={() => navigation.navigate('UIBuilder')}
+              activeOpacity={0.7}
+            >
+              <MaterialIcons name="dashboard-customize" size={14} color={theme.colors.primary} />
+              <Text style={[styles.editButtonText, { color: theme.colors.primary }]}>
+                مدیریت صفحه‌ساز و چیدمان (UI Builder)
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Organizational Info Card */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>اطلاعات سازمانی و تماس</Text>
+          <View style={styles.card}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoValue}>
+                {user?.customFields?.personnelNo || 'ثبت‌نشده'}
+              </Text>
+              <View style={styles.infoLabelContainer}>
+                <MaterialIcons name="shield" size={16} color={theme.colors.secondary} />
+                <Text style={styles.infoLabel}>شماره پرسنلی</Text>
+              </View>
             </View>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoValue}>{user?.phone || 'ثبت‌نشده'}</Text>
-            <View style={styles.infoLabelContainer}>
-              <Phone size={14} color="#a0a3b0" />
-              <Text style={styles.infoLabel}>تلفن همراه</Text>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoValue}>{user?.phone || 'ثبت‌نشده'}</Text>
+              <View style={styles.infoLabelContainer}>
+                <MaterialIcons name="phone" size={16} color={theme.colors.secondary} />
+                <Text style={styles.infoLabel}>تلفن همراه</Text>
+              </View>
             </View>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoValue}>{user?.email || 'ثبت‌نشده'}</Text>
-            <View style={styles.infoLabelContainer}>
-              <Mail size={14} color="#a0a3b0" />
-              <Text style={styles.infoLabel}>ایمیل</Text>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoValue}>{user?.email || 'ثبت‌نشده'}</Text>
+              <View style={styles.infoLabelContainer}>
+                <MaterialIcons name="mail" size={16} color={theme.colors.secondary} />
+                <Text style={styles.infoLabel}>ایمیل</Text>
+              </View>
             </View>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoValue}>
-              {user?.customFields?.carPlate || 'ثبت‌نشده'}
-            </Text>
-            <View style={styles.infoLabelContainer}>
-              <Car size={14} color="#a0a3b0" />
-              <Text style={styles.infoLabel}>پلاک خودرو</Text>
+            <View style={[styles.infoRow, styles.infoRowNoBorder]}>
+              <Text style={styles.infoValue}>
+                {user?.customFields?.carPlate || 'ثبت‌نشده'}
+              </Text>
+              <View style={styles.infoLabelContainer}>
+                <MaterialIcons name="directions-car" size={16} color={theme.colors.secondary} />
+                <Text style={styles.infoLabel}>پلاک خودرو</Text>
+              </View>
             </View>
           </View>
         </View>
-      </View>
 
-      {/* Notification Settings */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>تنظیمات اعلانات شخصی</Text>
-        <View style={styles.card}>
-          <View style={styles.switchRow}>
-            <Switch
-              value={circulars}
-              onValueChange={handleCircularsChange}
-              trackColor={{ false: '#262930', true: `${userTheme}40` }}
-              thumbColor={circulars ? userTheme : '#a0a3b0'}
-              disabled={saving}
-            />
-            <View style={styles.switchTextContainer}>
-              <Text style={styles.switchTitle}>بخشنامه‌ها و ابلاغیه‌ها</Text>
-              <Text style={styles.switchDesc}>دریافت اعلان هنگام صدور بخشنامه جدید ایمنی</Text>
+        {/* Notification Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>تنظیمات اعلانات شخصی</Text>
+          <View style={styles.card}>
+            <View style={styles.switchRow}>
+              <Switch
+                value={circulars}
+                onValueChange={handleCircularsChange}
+                trackColor={{ false: theme.colors.surfaceVariant, true: `${userTheme}40` }}
+                thumbColor={circulars ? userTheme : theme.colors.secondary}
+                disabled={saving}
+              />
+              <View style={styles.switchTextContainer}>
+                <Text style={styles.switchTitle}>بخشنامه‌ها و ابلاغیه‌ها</Text>
+                <Text style={styles.switchDesc}>دریافت اعلان هنگام صدور بخشنامه جدید ایمنی</Text>
+              </View>
             </View>
-          </View>
 
-          <View style={styles.switchRow}>
-            <Switch
-              value={chat}
-              onValueChange={handleChatChange}
-              trackColor={{ false: '#262930', true: `${userTheme}40` }}
-              thumbColor={chat ? userTheme : '#a0a3b0'}
-              disabled={saving}
-            />
-            <View style={styles.switchTextContainer}>
-              <Text style={styles.switchTitle}>پیام‌های گفتگو</Text>
-              <Text style={styles.switchDesc}>دریافت اعلان برای پیام‌های جدید در چت‌روم‌ها</Text>
+            <View style={styles.switchRow}>
+              <Switch
+                value={chat}
+                onValueChange={handleChatChange}
+                trackColor={{ false: theme.colors.surfaceVariant, true: `${userTheme}40` }}
+                thumbColor={chat ? userTheme : theme.colors.secondary}
+                disabled={saving}
+              />
+              <View style={styles.switchTextContainer}>
+                <Text style={styles.switchTitle}>پیام‌های گفتگو</Text>
+                <Text style={styles.switchDesc}>دریافت اعلان برای پیام‌های جدید در چت‌روم‌ها</Text>
+              </View>
             </View>
-          </View>
 
-          <View style={styles.switchRow}>
-            <Switch
-              value={shifts}
-              onValueChange={handleShiftsChange}
-              trackColor={{ false: '#262930', true: `${userTheme}40` }}
-              thumbColor={shifts ? userTheme : '#a0a3b0'}
-              disabled={saving}
-            />
-            <View style={styles.switchTextContainer}>
-              <Text style={styles.switchTitle}>درخواست‌های تغییر شیفت</Text>
-              <Text style={styles.switchDesc}>اعلان زمان موافقت، مخالفت یا پیشنهاد جابجایی شیفت</Text>
+            <View style={[styles.switchRow, styles.infoRowNoBorder]}>
+              <Switch
+                value={shifts}
+                onValueChange={handleShiftsChange}
+                trackColor={{ false: theme.colors.surfaceVariant, true: `${userTheme}40` }}
+                thumbColor={shifts ? userTheme : theme.colors.secondary}
+                disabled={saving}
+              />
+              <View style={styles.switchTextContainer}>
+                <Text style={styles.switchTitle}>درخواست‌های تغییر شیفت</Text>
+                <Text style={styles.switchDesc}>اعلان زمان موافقت، مخالفت یا پیشنهاد جابجایی شیفت</Text>
+              </View>
             </View>
           </View>
         </View>
-      </View>
 
-      {/* Actions */}
-      <View style={[styles.section, { marginBottom: 40 }]}>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
-          <LogOut size={18} color="#e53935" />
-          <Text style={styles.logoutText}>خروج از حساب</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Actions */}
+        <View style={[styles.section, { marginBottom: 40 }]}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
+            <MaterialIcons name="logout" size={20} color={theme.colors.error} />
+            <Text style={styles.logoutText}>خروج از حساب</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Edit Profile Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtn}>
-                <X size={20} color="#f2f2f7" />
-              </TouchableOpacity>
-              <Text style={styles.modalTitle}>ویرایش پروفایل و شخصی‌سازی</Text>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.modalForm} showsVerticalScrollIndicator={false}>
-              
-              {/* Profile Avatar Picker */}
-              <Text style={styles.inputLabel}>عکس پروفایل (انتخاب از قالب‌ها یا آدرس دلخواه)</Text>
-              <View style={styles.avatarPickerRow}>
-                {DEFAULT_AVATARS.map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={[
-                      styles.avatarPickWrapper,
-                      avatar === item.url && !customAvatarUrl ? { borderColor: themeColor, borderWidth: 2 } : null,
-                    ]}
-                    onPress={() => {
-                      setAvatar(item.url)
-                      setCustomAvatarUrl('')
-                    }}
-                  >
-                    <Image source={{ uri: item.url }} style={styles.avatarPickImg} />
-                    <Text style={styles.avatarPickName}>{item.name}</Text>
-                  </TouchableOpacity>
-                ))}
+        {/* Edit Profile Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtn}>
+                  <MaterialIcons name="close" size={24} color={theme.colors.onSurface} />
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>ویرایش پروفایل و شخصی‌سازی</Text>
               </View>
 
-              <Text style={styles.inputLabel}>یا آدرس اینترنتی تصویر دلخواه (URL)</Text>
-              <TextInput
-                style={styles.textInput}
-                value={customAvatarUrl}
-                onChangeText={(text) => {
-                  setCustomAvatarUrl(text)
-                  if (text) setAvatar('')
-                }}
-                placeholder="https://example.com/avatar.jpg"
-                placeholderTextColor="#555860"
-                autoCapitalize="none"
-                keyboardType="url"
-              />
-
-              {/* Personnel Number Input */}
-              <Text style={styles.inputLabel}>شماره پرسنلی</Text>
-              <TextInput
-                style={styles.textInput}
-                value={personnelNo}
-                onChangeText={setPersonnelNo}
-                placeholder="مثال: 102345"
-                placeholderTextColor="#555860"
-                keyboardType="number-pad"
-                maxLength={20}
-              />
-
-              {/* Phone Input */}
-              <Text style={styles.inputLabel}>تلفن همراه</Text>
-              <TextInput
-                style={styles.textInput}
-                value={phone}
-                onChangeText={setPhone}
-                placeholder="مثال: 09123456789"
-                placeholderTextColor="#555860"
-                keyboardType="phone-pad"
-                maxLength={11}
-              />
-
-              {/* Email Input */}
-              <Text style={styles.inputLabel}>ایمیل</Text>
-              <TextInput
-                style={styles.textInput}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="example@mail.com"
-                placeholderTextColor="#555860"
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-
-              {/* Car Plate Input */}
-              <Text style={styles.inputLabel}>پلاک خودرو</Text>
-              <TextInput
-                style={styles.textInput}
-                value={carPlate}
-                onChangeText={setCarPlate}
-                placeholder="مثال: ۱۲ ب ۳۴۵ ایران ۱۱"
-                placeholderTextColor="#555860"
-              />
-
-              {/* Availability Status Select */}
-              <Text style={styles.inputLabel}>وضعیت حضور</Text>
-              <View style={styles.availabilityRow}>
-                {Object.entries(AVAILABILITY_LABELS).map(([key, item]) => (
-                  <TouchableOpacity
-                    key={key}
-                    style={[
-                      styles.availabilityBtn,
-                      availability === key
-                        ? { backgroundColor: item.color, borderColor: item.color }
-                        : null,
-                    ]}
-                    onPress={() => setAvailability(key)}
-                  >
-                    <Text
+              <ScrollView contentContainerStyle={styles.modalForm} showsVerticalScrollIndicator={false}>
+                
+                {/* Profile Avatar Picker */}
+                <Text style={styles.inputLabel}>عکس پروفایل (انتخاب از قالب‌ها یا آدرس دلخواه)</Text>
+                <View style={styles.avatarPickerRow}>
+                  {DEFAULT_AVATARS.map((item) => (
+                    <TouchableOpacity
+                      key={item.id}
                       style={[
-                        styles.availabilityBtnText,
-                        availability === key ? { color: '#ffffff', fontWeight: 'bold' } : null,
+                        styles.avatarPickWrapper,
+                        avatar === item.url && !customAvatarUrl ? { borderColor: themeColor, borderWidth: 2 } : null,
                       ]}
+                      onPress={() => {
+                        setAvatar(item.url)
+                        setCustomAvatarUrl('')
+                      }}
                     >
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                      <Image source={{ uri: item.url }} style={styles.avatarPickImg} />
+                      <Text style={styles.avatarPickName}>{item.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
 
-              {/* Theme Color Picker */}
-              <Text style={styles.inputLabel}>رنگ تم پروفایل</Text>
-              <View style={styles.colorRow}>
-                {DEFAULT_THEME_COLORS.map((item) => (
+                <Text style={styles.inputLabel}>یا آدرس اینترنتی تصویر دلخواه (URL)</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={customAvatarUrl}
+                  onChangeText={(text) => {
+                    setCustomAvatarUrl(text)
+                    if (text) setAvatar('')
+                  }}
+                  placeholder="https://example.com/avatar.jpg"
+                  placeholderTextColor={theme.colors.secondary}
+                  autoCapitalize="none"
+                  keyboardType="url"
+                />
+
+                {/* Personnel Number Input */}
+                <Text style={styles.inputLabel}>شماره پرسنلی</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={personnelNo}
+                  onChangeText={setPersonnelNo}
+                  placeholder="مثال: 102345"
+                  placeholderTextColor={theme.colors.secondary}
+                  keyboardType="number-pad"
+                  maxLength={20}
+                />
+
+                {/* Phone Input */}
+                <Text style={styles.inputLabel}>تلفن همراه</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={phone}
+                  onChangeText={setPhone}
+                  placeholder="مثال: 09123456789"
+                  placeholderTextColor={theme.colors.secondary}
+                  keyboardType="phone-pad"
+                  maxLength={11}
+                />
+
+                {/* Email Input */}
+                <Text style={styles.inputLabel}>ایمیل</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="example@mail.com"
+                  placeholderTextColor={theme.colors.secondary}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+
+                {/* Car Plate Input */}
+                <Text style={styles.inputLabel}>پلاک خودرو</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={carPlate}
+                  onChangeText={setCarPlate}
+                  placeholder="مثال: ۱۲ ب ۳۴۵ ایران ۱۱"
+                  placeholderTextColor={theme.colors.secondary}
+                />
+
+                {/* Availability Status Select */}
+                <Text style={styles.inputLabel}>وضعیت حضور</Text>
+                <View style={styles.availabilityRow}>
+                  {Object.entries(AVAILABILITY_LABELS).map(([key, item]) => (
+                    <TouchableOpacity
+                      key={key}
+                      style={[
+                        styles.availabilityBtn,
+                        availability === key
+                          ? { backgroundColor: item.color, borderColor: item.color }
+                          : null,
+                      ]}
+                      onPress={() => setAvailability(key)}
+                    >
+                      <Text
+                        style={[
+                          styles.availabilityBtnText,
+                          availability === key ? { color: '#ffffff', fontWeight: 'bold' } : null,
+                        ]}
+                      >
+                        {item.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Theme Color Picker */}
+                <Text style={styles.inputLabel}>رنگ تم پروفایل</Text>
+                <View style={styles.colorRow}>
+                  {DEFAULT_THEME_COLORS.map((item) => (
+                    <TouchableOpacity
+                      key={item.hex}
+                      style={[
+                        styles.colorCircle,
+                        { backgroundColor: item.hex },
+                        themeColor === item.hex ? styles.colorCircleActive : null,
+                      ]}
+                      onPress={() => setThemeColor(item.hex)}
+                    >
+                      {themeColor === item.hex && (
+                        <MaterialIcons name="check" size={16} color="#ffffff" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Save / Cancel buttons */}
+                <View style={styles.modalActions}>
                   <TouchableOpacity
-                    key={item.hex}
-                    style={[
-                      styles.colorCircle,
-                      { backgroundColor: item.hex },
-                      themeColor === item.hex ? styles.colorCircleActive : null,
-                    ]}
-                    onPress={() => setThemeColor(item.hex)}
+                    style={[styles.modalBtn, styles.modalBtnSave, { backgroundColor: themeColor }]}
+                    onPress={handleSaveProfile}
+                    disabled={saving}
                   >
-                    {themeColor === item.hex && (
-                      <Check size={16} color="#ffffff" />
+                    {saving ? (
+                      <ActivityIndicator size="small" color="#ffffff" />
+                    ) : (
+                      <Text style={styles.modalBtnText}>ذخیره تغییرات</Text>
                     )}
                   </TouchableOpacity>
-                ))}
-              </View>
 
-              {/* Save / Cancel buttons */}
-              <View style={styles.modalActions}>
-                <TouchableOpacity
-                  style={[styles.modalBtn, styles.modalBtnSave, { backgroundColor: themeColor }]}
-                  onPress={handleSaveProfile}
-                  disabled={saving}
-                >
-                  {saving ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <Text style={styles.modalBtnText}>ذخیره تغییرات</Text>
-                  )}
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.modalBtn, styles.modalBtnCancel]}
-                  onPress={() => setModalVisible(false)}
-                  disabled={saving}
-                >
-                  <Text style={[styles.modalBtnText, { color: '#a0a3b0' }]}>انصراف</Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
+                  <TouchableOpacity
+                    style={[styles.modalBtn, styles.modalBtnCancel]}
+                    onPress={() => setModalVisible(false)}
+                    disabled={saving}
+                  >
+                    <Text style={[styles.modalBtnText, { color: theme.colors.secondary }]}>انصراف</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            </View>
           </View>
-        </View>
-      </Modal>
-    </ScrollView>
+        </Modal>
+      </ScrollView>
+    </SafeAreaView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#13151a', padding: 16 },
-  loaderContainer: { paddingVertical: 8, alignItems: 'center' },
-  avatarSection: { alignItems: 'center', marginBottom: 28, paddingTop: 12 },
-  avatarWrapper: {
-    width: 86,
-    height: 86,
-    borderRadius: 43,
-    borderWidth: 2.5,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-    position: 'relative',
-    backgroundColor: '#1c1e24',
-  },
-  avatarImage: { width: 78, height: 78, borderRadius: 39 },
-  avatarFallback: { width: 78, height: 78, borderRadius: 39, backgroundColor: '#262930', justifyContent: 'center', alignItems: 'center' },
-  statusIndicator: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: 2,
-    borderColor: '#13151a',
-  },
-  name: { fontSize: 18, fontWeight: 'bold', color: '#f2f2f7', textAlign: 'center' },
-  headerBadges: { flexDirection: 'row-reverse', gap: 8, marginTop: 10, flexWrap: 'wrap', justifyContent: 'center' },
-  roleBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
-  roleText: { fontSize: 11, fontWeight: '600' },
-  statusTextLine: { fontSize: 12, fontWeight: '600', marginTop: 8, textAlign: 'center' },
-  editButton: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginTop: 14,
-  },
-  editButtonText: { fontSize: 11, fontWeight: 'bold' },
-  section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 13, fontWeight: 'bold', color: '#f2f2f7', textAlign: 'right', marginBottom: 8 },
-  card: { backgroundColor: '#1c1e24', borderWidth: 1, borderColor: '#262930', borderRadius: 12, padding: 12 },
-  infoRow: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#26293040',
-  },
-  infoLabelContainer: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
-  infoLabel: { color: '#a0a3b0', fontSize: 12 },
-  infoValue: { color: '#f2f2f7', fontSize: 12, fontWeight: '500', fontFamily: 'monospace' },
-  switchRow: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#26293040',
-  },
-  switchTextContainer: { alignItems: 'flex-start', flex: 1, paddingStart: 12 },
-  switchTitle: { color: '#f2f2f7', fontSize: 12, fontWeight: '600', textAlign: 'right' },
-  switchDesc: { color: '#a0a3b0', fontSize: 9, marginTop: 2, textAlign: 'right' },
-  logoutButton: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#1c1e24',
-    borderWidth: 1,
-    borderColor: '#e5393540',
-    borderRadius: 12,
-    padding: 12,
-  },
-  logoutText: { color: '#e53935', fontSize: 13, fontWeight: '600' },
-  
-  // Modal Styles
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.75)', justifyContent: 'flex-end' },
-  modalContent: {
-    backgroundColor: '#13151a',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
-    paddingBottom: 20,
-    borderWidth: 1,
-    borderColor: '#262930',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#262930',
-  },
-  modalTitle: { color: '#f2f2f7', fontSize: 14, fontWeight: 'bold', flex: 1, textAlign: 'right' },
-  closeBtn: { padding: 4 },
-  modalForm: { padding: 16 },
-  inputLabel: { color: '#a0a3b0', fontSize: 11, textAlign: 'right', marginBottom: 6, marginTop: 12, fontWeight: '600' },
-  textInput: {
-    backgroundColor: '#1c1e24',
-    borderColor: '#262930',
-    borderWidth: 1,
-    borderRadius: 8,
-    height: 40,
-    color: '#f2f2f7',
-    paddingHorizontal: 12,
-    textAlign: 'right',
-    fontSize: 13,
-  },
-  avatarPickerRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', marginBottom: 10 },
-  avatarPickWrapper: { alignItems: 'center', width: '22%', borderWidth: 1, borderColor: '#262930', borderRadius: 8, padding: 4, backgroundColor: '#1c1e24' },
-  avatarPickImg: { width: 44, height: 44, borderRadius: 22, marginBottom: 4 },
-  avatarPickName: { color: '#a0a3b0', fontSize: 8, textAlign: 'center' },
-  availabilityRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', gap: 6, flexWrap: 'wrap' },
-  availabilityBtn: {
-    flex: 1,
-    minWidth: '22%',
-    height: 34,
-    backgroundColor: '#1c1e24',
-    borderColor: '#262930',
-    borderWidth: 1,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  availabilityBtnText: { color: '#a0a3b0', fontSize: 10 },
-  colorRow: { flexDirection: 'row-reverse', gap: 10, marginTop: 4, justifyContent: 'center' },
-  colorCircle: { width: 34, height: 34, borderRadius: 17, justifyContent: 'center', alignItems: 'center' },
-  colorCircleActive: { borderWidth: 2, borderColor: '#ffffff' },
-  modalActions: { flexDirection: 'row-reverse', gap: 10, marginTop: 24, marginBottom: 20 },
-  modalBtn: { flex: 1, height: 40, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
-  modalBtnSave: { backgroundColor: '#e53935' },
-  modalBtnCancel: { backgroundColor: '#1c1e24', borderWidth: 1, borderColor: '#262930' },
-  modalBtnText: { color: '#ffffff', fontSize: 13, fontWeight: 'bold' },
-})
 
 export default ProfileScreen

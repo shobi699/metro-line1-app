@@ -34,6 +34,7 @@ import { useConfigStore } from '../stores/config'
 import { useNetworkStore } from '../stores/network'
 import { API_URL } from '../shared/config'
 import { toFa } from '../shared/jalali'
+import { useTheme } from '../shared/ThemeProvider'
 
 interface ChecklistItem {
   label: string
@@ -88,6 +89,8 @@ export function ChecklistsScreen({ navigation }: any) {
   // Navigation states
   const [activeTab, setActiveTab] = useState<'fill' | 'history' | 'admin'>('fill')
   const [isAdminSimulated, setIsAdminSimulated] = useState(true)
+  const { theme } = useTheme()
+  const styles = useMemo(() => getStyles(theme), [theme])
 
   // Template creation states (Admin)
   const [newTplName, setNewTplName] = useState('')
@@ -278,7 +281,7 @@ export function ChecklistsScreen({ navigation }: any) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ChevronRight size={20} color="#f2f2f7" />
+          <ChevronRight size={20} color={theme.colors.onSurface} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>چک‌لیست‌های فنی قطار (خط ۱)</Text>
         <View style={{ width: 24 }} />
@@ -287,7 +290,7 @@ export function ChecklistsScreen({ navigation }: any) {
       {/* Admin Simulation Toggle Bar */}
       <View style={styles.adminSimulationBar}>
         <View style={styles.adminSimLabelContainer}>
-          <Shield size={14} color={isAdminSimulated ? "#e53935" : "#8e8e93"} style={{ marginLeft: 6 }} />
+          <Shield size={14} color={isAdminSimulated ? theme.colors.error : theme.colors.secondary} style={{ marginLeft: 6 }} />
           <Text style={styles.adminSimLabel}>شبیه‌ساز نقش مدیریت (ادمین):</Text>
         </View>
         <TouchableOpacity
@@ -344,7 +347,7 @@ export function ChecklistsScreen({ navigation }: any) {
             activeTemplate ? (
               <View style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <ClipboardCheck size={16} color="#e53935" style={{ marginLeft: 6 }} />
+                  <ClipboardCheck size={16} color={theme.colors.error} style={{ marginLeft: 6 }} />
                   <Text style={styles.cardTitle}>{activeTemplate.name}</Text>
                   <TouchableOpacity
                     style={styles.cancelButton}
@@ -448,14 +451,14 @@ export function ChecklistsScreen({ navigation }: any) {
 
                 {!isFormValid && (
                   <View style={styles.validationHelp}>
-                    <Info size={11} color="#ef4444" style={{ marginLeft: 4 }} />
+                    <Info size={11} color={theme.colors.error} style={{ marginLeft: 4 }} />
                     <Text style={styles.validationHelpText}>برای ارسال، تایید موارد الزامی اجباری است.</Text>
                   </View>
                 )}
               </View>
             ) : templates.length === 0 ? (
               <View style={styles.emptyCard}>
-                <ClipboardCheck size={36} color="#8e8e93" />
+                <ClipboardCheck size={36} color={theme.colors.secondary} />
                 <Text style={styles.emptyText}>هیچ قالب چک‌لیست فعالی یافت نشد.</Text>
               </View>
             ) : (
@@ -528,9 +531,9 @@ export function ChecklistsScreen({ navigation }: any) {
                             <View style={styles.historyItemTitleRow}>
                               <Text style={styles.historyItemLabel}>{item.label}</Text>
                               {item.checked ? (
-                                <CheckCircle2 size={12} color="#34c759" />
+                                <CheckCircle2 size={12} color={theme.colors.success} />
                               ) : (
-                                <XCircle size={12} color="#ef4444" />
+                                <XCircle size={12} color={theme.colors.error} />
                               )}
                             </View>
                             {item.note && item.note.trim() ? (
@@ -550,7 +553,7 @@ export function ChecklistsScreen({ navigation }: any) {
           {activeTab === 'admin' && isAdminSimulated && (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <Lock size={16} color="#e53935" style={{ marginLeft: 6 }} />
+                <Lock size={16} color={theme.colors.error} style={{ marginLeft: 6 }} />
                 <Text style={styles.cardTitle}>تعریف قالب جدید چک‌لیست قبل از حرکت</Text>
               </View>
 
@@ -576,7 +579,7 @@ export function ChecklistsScreen({ navigation }: any) {
 
               {/* Added items list */}
               <View style={styles.adminItemsSection}>
-                <Text style={styles.sectionTitle}>تسک‌های تعریف شده در این قالب ({toFa(newTplItems.length)} مورد):</Text>
+                <Text style={styles.listSectionTitle}>تسک‌های تعریف شده در این قالب ({toFa(newTplItems.length)} مورد):</Text>
                 
                 {newTplItems.length === 0 ? (
                   <Text style={styles.emptyTasksText}>هیچ تسکی اضافه نشده است.</Text>
@@ -614,8 +617,8 @@ export function ChecklistsScreen({ navigation }: any) {
                 <View style={styles.switchRow}>
                   <Text style={styles.switchLabel}>این مورد الزامی و اجباری است:</Text>
                   <Switch
-                    trackColor={{ false: '#262930', true: 'rgba(229, 57, 53, 0.4)' }}
-                    thumbColor={newItemRequired ? '#e53935' : '#8e8e93'}
+                    trackColor={{ false: theme.colors.border, true: theme.colors.primaryContainer }}
+                    thumbColor={newItemRequired ? theme.colors.primary : theme.colors.secondary}
                     onValueChange={setNewItemRequired}
                     value={newItemRequired}
                   />
@@ -643,11 +646,11 @@ export function ChecklistsScreen({ navigation }: any) {
   )
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#13151a',
-    padding: 16,
+    backgroundColor: theme.colors.background,
+    padding: theme.spacing.containerMargin,
   },
   centerContainer: {
     flex: 1,
@@ -661,13 +664,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#1c1e24',
+    backgroundColor: theme.colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: '#262930',
-    borderRadius: 8,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
     paddingHorizontal: 12,
     height: 46,
     marginBottom: 12,
+    ...theme.shadows.level1,
   },
   adminSimLabelContainer: {
     flexDirection: 'row-reverse',
@@ -675,76 +679,81 @@ const styles = StyleSheet.create({
   },
   adminSimLabel: {
     fontSize: 11,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     fontWeight: 'bold',
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   adminSimButton: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: theme.borderRadius.md,
     borderWidth: 1,
-    borderColor: '#3a3f4b',
-    backgroundColor: '#13151a',
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surfaceContainerLowest,
   },
   adminSimButtonActive: {
-    backgroundColor: 'rgba(229, 57, 53, 0.1)',
-    borderColor: 'rgba(229, 57, 53, 0.4)',
+    backgroundColor: theme.colors.primaryContainer,
+    borderColor: theme.colors.primary,
   },
   adminSimButtonText: {
     fontSize: 10,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     fontWeight: '600',
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   adminSimButtonTextActive: {
-    color: '#e53935',
+    color: theme.colors.onPrimary,
   },
   tabsContainer: {
     flexDirection: 'row-reverse',
-    backgroundColor: '#1c1e24',
-    borderRadius: 8,
+    backgroundColor: theme.colors.surfaceContainerLow,
+    borderRadius: theme.borderRadius.xl,
     padding: 3,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#262930',
+    borderColor: theme.colors.border,
   },
   tabButton: {
     flex: 1,
     paddingVertical: 8,
     alignItems: 'center',
-    borderRadius: 6,
+    borderRadius: theme.borderRadius.lg,
   },
   tabButtonActive: {
-    backgroundColor: '#e53935',
+    backgroundColor: theme.colors.primary,
   },
   tabButtonText: {
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     fontSize: 11,
     fontWeight: 'bold',
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   tabButtonTextActive: {
-    color: '#f2f2f7',
+    color: theme.colors.onPrimary,
   },
   card: {
-    backgroundColor: '#1c1e24',
-    borderColor: '#262930',
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderColor: theme.colors.border,
     borderWidth: 1,
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: theme.borderRadius.xl,
+    padding: 16,
+    ...theme.shadows.level1,
   },
   cardHeader: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(38, 41, 48, 0.4)',
+    borderBottomColor: theme.colors.border,
     paddingBottom: 8,
     marginBottom: 10,
   },
   cardTitle: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#f2f2f7',
+    fontSize: 15,
+    fontWeight: '800',
+    color: theme.colors.onSurface,
     flex: 1,
     textAlign: 'right',
+    fontFamily: theme.typography.cardTitle.fontFamily,
   },
   cancelButton: {
     paddingHorizontal: 8,
@@ -752,20 +761,22 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     fontSize: 11,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   templateDesc: {
     fontSize: 11,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     textAlign: 'right',
     marginBottom: 12,
     lineHeight: 16,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   metadataBox: {
-    backgroundColor: '#13151a',
-    borderRadius: 8,
+    backgroundColor: theme.colors.surfaceContainerLow,
+    borderRadius: theme.borderRadius.lg,
     borderWidth: 1,
-    borderColor: '#262930',
+    borderColor: theme.colors.border,
     padding: 12,
     marginBottom: 14,
     gap: 12,
@@ -775,20 +786,22 @@ const styles = StyleSheet.create({
   },
   metaLabel: {
     fontSize: 11,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     textAlign: 'right',
-    fontWeight: '600',
+    fontWeight: '700',
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   metaInput: {
-    backgroundColor: '#1c1e24',
-    borderColor: '#262930',
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderColor: theme.colors.border,
     borderWidth: 1,
-    borderRadius: 6,
-    height: 36,
+    borderRadius: theme.borderRadius.md,
+    height: 40,
     paddingHorizontal: 10,
-    color: '#f2f2f7',
-    fontSize: 11,
+    color: theme.colors.onSurface,
+    fontSize: 14,
     textAlign: 'right',
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   stationSelectionRow: {
     flexDirection: 'row-reverse',
@@ -796,435 +809,91 @@ const styles = StyleSheet.create({
   stationPill: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: '#1c1e24',
-    borderColor: '#262930',
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderColor: theme.colors.border,
     borderWidth: 1,
     borderRadius: 15,
     marginLeft: 6,
   },
   stationPillActive: {
-    backgroundColor: 'rgba(229, 57, 53, 0.1)',
-    borderColor: '#e53935',
+    backgroundColor: theme.colors.primaryContainer,
+    borderColor: theme.colors.primary,
   },
   stationPillText: {
-    color: '#8e8e93',
-    fontSize: 10.5,
+    color: theme.colors.secondary,
+    fontSize: 11,
+    fontWeight: '600',
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   stationPillTextActive: {
-    color: '#e53935',
-    fontWeight: 'bold',
-  },
-  itemsList: {
-    gap: 8,
-    marginBottom: 16,
-  },
-  itemRow: {
-    backgroundColor: '#13151a',
-    borderWidth: 1,
-    borderColor: '#262930',
-    borderRadius: 8,
-    padding: 10,
-  },
-  itemRowChecked: {
-    borderColor: 'rgba(52, 199, 89, 0.2)',
-    backgroundColor: 'rgba(52, 199, 89, 0.02)',
-  },
-  itemRowRequired: {
-    borderColor: 'rgba(239, 68, 68, 0.12)',
-  },
-  checkWrapper: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    gap: 8,
-  },
-  checkbox: {
-    width: 17,
-    height: 17,
-    borderWidth: 1.5,
-    borderColor: '#8e8e93',
-    borderRadius: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  checkboxChecked: {
-    borderColor: '#34c759',
-    backgroundColor: 'rgba(52, 199, 89, 0.1)',
-  },
-  checkMark: {
-    color: '#34c759',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  labelWrapper: {
-    flex: 1,
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  itemLabelText: {
-    fontSize: 11.5,
-    color: '#f2f2f7',
-    textAlign: 'right',
-    flex: 1,
-  },
-  itemLabelTextDone: {
-    textDecorationLine: 'line-through',
-    color: '#8e8e93',
-  },
-  requiredBadge: {
-    fontSize: 8.5,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 3,
-    fontWeight: 'bold',
-    marginRight: 6,
-  },
-  requiredBadgeTrue: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
-    color: '#ef4444',
-  },
-  requiredBadgeFalse: {
-    backgroundColor: '#262930',
-    color: '#8e8e93',
-  },
-  itemNoteContainer: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    backgroundColor: 'rgba(28, 30, 36, 0.5)',
-    borderWidth: 1,
-    borderColor: 'rgba(38, 41, 48, 0.5)',
-    borderRadius: 6,
-    height: 28,
-    paddingHorizontal: 6,
-    marginTop: 8,
-  },
-  itemNoteInput: {
-    flex: 1,
-    color: '#f2f2f7',
-    fontSize: 10,
-    textAlign: 'right',
-    height: '100%',
-  },
-  submitBtn: {
-    backgroundColor: '#e53935',
-    height: 42,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  submitBtnDisabled: {
-    opacity: 0.5,
-  },
-  submitBtnText: {
-    color: '#f2f2f7',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  validationHelp: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  validationHelpText: {
-    fontSize: 10,
-    color: '#ef4444',
-  },
-  emptyCard: {
-    backgroundColor: '#1c1e24',
-    borderWidth: 1,
-    borderColor: '#262930',
-    borderRadius: 12,
-    padding: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-  },
-  emptyText: {
-    color: '#8e8e93',
-    fontSize: 12,
-  },
-  listContainer: {
-    gap: 12,
-  },
-  listSectionTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#f2f2f7',
-    textAlign: 'right',
-    marginBottom: 4,
-  },
-  templateItemCard: {
-    backgroundColor: '#1c1e24',
-    borderColor: '#262930',
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 14,
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  templateCardMeta: {
-    flex: 1,
-    gap: 4,
-  },
-  templateCardName: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#f2f2f7',
-    textAlign: 'right',
-  },
-  templateCardDesc: {
-    fontSize: 10.5,
-    color: '#8e8e93',
-    textAlign: 'right',
-  },
-  templateCardBadges: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  badgeLabel: {
-    fontSize: 9,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    backgroundColor: '#13151a',
-    color: '#8e8e93',
-    borderRadius: 4,
-    borderWidth: 0.5,
-    borderColor: '#262930',
-  },
-  badgeLabelReq: {
-    color: '#ef4444',
-    backgroundColor: 'rgba(239, 68, 68, 0.05)',
-    borderColor: 'rgba(239, 68, 68, 0.1)',
-  },
-  historyCard: {
-    backgroundColor: '#1c1e24',
-    borderColor: '#262930',
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 12,
-    gap: 10,
-  },
-  historyCardHeader: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(38, 41, 48, 0.3)',
-    paddingBottom: 8,
-  },
-  historyTplName: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#f2f2f7',
-    textAlign: 'right',
-  },
-  historyMetaText: {
-    fontSize: 9.5,
-    color: '#8e8e93',
-    textAlign: 'right',
-    marginTop: 2,
-  },
-  historyStatusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    backgroundColor: 'rgba(52, 199, 89, 0.1)',
-    borderRadius: 4,
-    borderWidth: 0.5,
-    borderColor: 'rgba(52, 199, 89, 0.2)',
-  },
-  historyStatusText: {
-    fontSize: 9,
-    color: '#34c759',
-    fontWeight: 'bold',
-  },
-  defectAlertBanner: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 179, 0, 0.08)',
-    borderColor: 'rgba(255, 179, 0, 0.2)',
-    borderWidth: 1,
-    borderRadius: 6,
-    padding: 6,
-  },
-  defectAlertText: {
-    fontSize: 10,
-    color: '#ffb300',
-    fontWeight: 'bold',
-  },
-  historyItemsGrid: {
-    gap: 6,
-  },
-  historyItemRow: {
-    padding: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-    gap: 4,
-  },
-  histChecked: {
-    backgroundColor: 'rgba(52, 199, 89, 0.02)',
-    borderColor: 'rgba(52, 199, 89, 0.08)',
-  },
-  histUnchecked: {
-    backgroundColor: 'rgba(239, 68, 68, 0.02)',
-    borderColor: 'rgba(239, 68, 68, 0.08)',
-  },
-  historyItemTitleRow: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  historyItemLabel: {
-    fontSize: 10.5,
-    color: '#f2f2f7',
-    flex: 1,
-    textAlign: 'right',
-  },
-  historyItemNote: {
-    fontSize: 9.5,
-    color: '#ffb300',
-    textAlign: 'right',
-    backgroundColor: 'rgba(255, 179, 0, 0.05)',
-    padding: 4,
-    borderRadius: 4,
-    marginTop: 2,
-  },
-  taskInput: {
-    backgroundColor: '#13151a',
-    borderColor: '#262930',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 38,
-    color: '#f2f2f7',
-    fontSize: 11.5,
-    textAlign: 'right',
-    marginBottom: 10,
-  },
-  textarea: {
-    backgroundColor: '#13151a',
-    borderColor: '#262930',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    color: '#f2f2f7',
-    fontSize: 11,
-    textAlign: 'right',
-    minHeight: 52,
-    marginBottom: 14,
-  },
-  adminItemsSection: {
-    gap: 8,
-    marginBottom: 14,
-  },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#e53935',
-    textAlign: 'right',
-  },
-  emptyTasksText: {
-    fontSize: 10.5,
-    color: '#8e8e93',
-    textAlign: 'center',
-    paddingVertical: 10,
-  },
-  adminItemsList: {
-    backgroundColor: '#13151a',
-    borderColor: '#262930',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 6,
-    gap: 6,
-  },
-  adminItemRow: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#262930',
-  },
-  adminItemRowTextContainer: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    flex: 1,
-  },
-  adminItemIndex: {
-    fontSize: 10.5,
-    color: '#8e8e93',
-    marginLeft: 4,
-  },
-  adminItemLabel: {
-    fontSize: 11,
-    color: '#f2f2f7',
-    textAlign: 'right',
-    flex: 1,
-  },
-  adminItemDelete: {
-    padding: 4,
-  },
-  addItemForm: {
-    backgroundColor: '#13151a',
-    borderWidth: 1,
-    borderColor: '#262930',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 14,
-  },
-  addItemFormTitle: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#f2f2f7',
-    textAlign: 'right',
-    marginBottom: 8,
-  },
-  switchRow: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  switchLabel: {
-    fontSize: 10.5,
-    color: '#8e8e93',
-  },
-  addItemBtn: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#1c1e24',
-    borderWidth: 1,
-    borderColor: '#262930',
-    height: 32,
-    borderRadius: 6,
-  },
-  addItemBtnText: {
-    color: '#f2f2f7',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  header: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#262930',
-    marginBottom: 12,
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#f2f2f7',
-    textAlign: 'center',
-    flex: 1,
-  }
+    color: theme.colors.onPrimary,
+    fontWeight: '800',
+    fontFamily: theme.typography.captionSm.fontFamily,
+  },
+  itemsList: { gap: 8, marginBottom: 16 },
+  itemRow: { backgroundColor: theme.colors.surfaceContainerLowest, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.borderRadius.lg, padding: 12 },
+  itemRowChecked: { borderColor: theme.colors.success + '40', backgroundColor: theme.colors.success + '08' },
+  itemRowRequired: { borderColor: theme.colors.error + '20' },
+  checkWrapper: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10 },
+  checkbox: { width: 18, height: 18, borderWidth: 1.5, borderColor: theme.colors.border, borderRadius: 4, justifyContent: 'center', alignItems: 'center', marginLeft: 8, backgroundColor: theme.colors.surfaceContainerLowest },
+  checkboxChecked: { borderColor: theme.colors.success, backgroundColor: theme.colors.success + '1A' },
+  checkMark: { color: theme.colors.success, fontSize: 12, fontWeight: '900' },
+  labelWrapper: { flex: 1, flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between' },
+  itemLabelText: { fontSize: 13, color: theme.colors.onSurface, textAlign: 'right', flex: 1, fontWeight: '600', fontFamily: theme.typography.bodyMd.fontFamily },
+  itemLabelTextDone: { textDecorationLine: 'line-through', color: theme.colors.secondary },
+  requiredBadge: { fontSize: 9, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, fontWeight: '800', marginRight: 8, fontFamily: theme.typography.captionSm.fontFamily },
+  requiredBadgeTrue: { backgroundColor: theme.colors.error + '1A', color: theme.colors.error },
+  requiredBadgeFalse: { backgroundColor: theme.colors.surfaceContainerLow, color: theme.colors.secondary },
+  itemNoteContainer: { flexDirection: 'row-reverse', alignItems: 'center', backgroundColor: theme.colors.surfaceContainerLowest, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.borderRadius.md, height: 36, paddingHorizontal: 8, marginTop: 10 },
+  itemNoteInput: { flex: 1, color: theme.colors.onSurface, fontSize: 11, textAlign: 'right', height: '100%', fontFamily: theme.typography.bodyMd.fontFamily },
+  submitBtn: { backgroundColor: theme.colors.primary, height: 48, borderRadius: theme.borderRadius.lg, justifyContent: 'center', alignItems: 'center', marginTop: 8, ...theme.shadows.level1 },
+  submitBtnDisabled: { opacity: 0.5 },
+  submitBtnText: { color: '#ffffff', fontSize: 15, fontWeight: '800', fontFamily: theme.typography.cardTitle.fontFamily },
+  validationHelp: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  validationHelpText: { fontSize: 11, color: theme.colors.error, fontWeight: '600', fontFamily: theme.typography.captionSm.fontFamily },
+  emptyCard: { backgroundColor: theme.colors.surfaceContainerLowest, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.borderRadius.xl, padding: 32, justifyContent: 'center', alignItems: 'center', gap: 10, ...theme.shadows.level1 },
+  emptyText: { color: theme.colors.secondary, fontSize: 13, fontWeight: '600', fontFamily: theme.typography.bodyMd.fontFamily },
+  listContainer: { gap: 12 },
+  listSectionTitle: { fontSize: 14, fontWeight: '800', color: theme.colors.onSurface, textAlign: 'right', marginBottom: 6, fontFamily: theme.typography.sectionTitle.fontFamily },
+  templateItemCard: { backgroundColor: theme.colors.surfaceContainerLowest, borderColor: theme.colors.border, borderWidth: 1, borderRadius: theme.borderRadius.xl, padding: 16, flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', ...theme.shadows.level1 },
+  templateCardMeta: { flex: 1, gap: 6 },
+  templateCardName: { fontSize: 15, fontWeight: '800', color: theme.colors.onSurface, textAlign: 'right', fontFamily: theme.typography.cardTitle.fontFamily },
+  templateCardDesc: { fontSize: 11, color: theme.colors.secondary, textAlign: 'right', fontFamily: theme.typography.captionSm.fontFamily },
+  templateCardBadges: { flexDirection: 'row', gap: 6 },
+  badgeLabel: { fontSize: 10, paddingHorizontal: 6, paddingVertical: 3, backgroundColor: theme.colors.surfaceContainerLow, color: theme.colors.secondary, borderRadius: 4, borderWidth: 1, borderColor: theme.colors.border, fontWeight: '600', fontFamily: theme.typography.captionSm.fontFamily },
+  badgeLabelReq: { color: theme.colors.error, backgroundColor: theme.colors.error + '0A', borderColor: theme.colors.error + '1A' },
+  historyCard: { backgroundColor: theme.colors.surfaceContainerLowest, borderColor: theme.colors.border, borderWidth: 1, borderRadius: theme.borderRadius.xl, padding: 14, gap: 12, ...theme.shadows.level1 },
+  historyCardHeader: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.colors.border, paddingBottom: 10 },
+  historyTplName: { fontSize: 13, fontWeight: '800', color: theme.colors.onSurface, textAlign: 'right', fontFamily: theme.typography.cardTitle.fontFamily },
+  historyMetaText: { fontSize: 10, color: theme.colors.secondary, textAlign: 'right', marginTop: 4, fontWeight: '600', fontFamily: theme.typography.captionSm.fontFamily },
+  historyStatusBadge: { paddingHorizontal: 8, paddingVertical: 4, backgroundColor: theme.colors.success + '1A', borderRadius: 4, borderWidth: 1, borderColor: theme.colors.success + '30' },
+  historyStatusText: { fontSize: 10, color: theme.colors.success, fontWeight: '800', fontFamily: theme.typography.captionSm.fontFamily },
+  defectAlertBanner: { flexDirection: 'row-reverse', alignItems: 'center', backgroundColor: theme.colors.warning + '1A', borderColor: theme.colors.warning + '30', borderWidth: 1, borderRadius: 6, padding: 8 },
+  defectAlertText: { fontSize: 11, color: theme.colors.warning, fontWeight: '800', fontFamily: theme.typography.captionSm.fontFamily },
+  historyItemsGrid: { gap: 8 },
+  historyItemRow: { padding: 10, borderRadius: 6, borderWidth: 1, gap: 6 },
+  histChecked: { backgroundColor: theme.colors.success + '08', borderColor: theme.colors.success + '1A' },
+  histUnchecked: { backgroundColor: theme.colors.error + '08', borderColor: theme.colors.error + '1A' },
+  historyItemTitleRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' },
+  historyItemLabel: { fontSize: 11, color: theme.colors.onSurface, flex: 1, textAlign: 'right', fontWeight: '600', fontFamily: theme.typography.bodyMd.fontFamily },
+  historyItemNote: { fontSize: 10, color: theme.colors.warning, textAlign: 'right', backgroundColor: theme.colors.warning + '0A', padding: 6, borderRadius: 4, marginTop: 4, fontWeight: '600', fontFamily: theme.typography.captionSm.fontFamily },
+  taskInput: { backgroundColor: theme.colors.surfaceContainerLowest, borderColor: theme.colors.border, borderWidth: 1, borderRadius: theme.borderRadius.md, paddingHorizontal: 12, height: 42, color: theme.colors.onSurface, fontSize: 13, textAlign: 'right', marginBottom: 12, fontFamily: theme.typography.bodyMd.fontFamily },
+  textarea: { backgroundColor: theme.colors.surfaceContainerLowest, borderColor: theme.colors.border, borderWidth: 1, borderRadius: theme.borderRadius.md, padding: 12, color: theme.colors.onSurface, fontSize: 13, textAlign: 'right', minHeight: 60, marginBottom: 16, fontFamily: theme.typography.bodyMd.fontFamily },
+  adminItemsSection: { gap: 10, marginBottom: 16 },
+  emptyTasksText: { fontSize: 11, color: theme.colors.secondary, textAlign: 'center', paddingVertical: 12, fontWeight: '600', fontFamily: theme.typography.captionSm.fontFamily },
+  adminItemsList: { backgroundColor: theme.colors.surfaceContainerLow, borderColor: theme.colors.border, borderWidth: 1, borderRadius: theme.borderRadius.lg, padding: 8, gap: 8 },
+  adminItemRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
+  adminItemRowTextContainer: { flexDirection: 'row-reverse', alignItems: 'center', flex: 1 },
+  adminItemIndex: { fontSize: 11, color: theme.colors.secondary, marginLeft: 6, fontWeight: '700' },
+  adminItemLabel: { fontSize: 13, color: theme.colors.onSurface, textAlign: 'right', flex: 1, fontWeight: '600', fontFamily: theme.typography.bodyMd.fontFamily },
+  adminItemDelete: { padding: 6, backgroundColor: theme.colors.error + '1A', borderRadius: 4 },
+  addItemForm: { backgroundColor: theme.colors.surfaceContainerLowest, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.borderRadius.xl, padding: 12, marginBottom: 16 },
+  addItemFormTitle: { fontSize: 13, fontWeight: '800', color: theme.colors.onSurface, textAlign: 'right', marginBottom: 10, fontFamily: theme.typography.cardTitle.fontFamily },
+  switchRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  switchLabel: { fontSize: 11, color: theme.colors.secondary, fontWeight: '700', fontFamily: theme.typography.captionSm.fontFamily },
+  addItemBtn: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primary, borderWidth: 1, borderColor: theme.colors.border, height: 38, borderRadius: theme.borderRadius.md, ...theme.shadows.level1 },
+  addItemBtnText: { color: theme.colors.onPrimary, fontSize: 11, fontWeight: '800', fontFamily: theme.typography.captionSm.fontFamily },
+  header: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: theme.colors.border, marginBottom: 16 },
+  backButton: { padding: 4 },
+  headerTitle: { fontSize: 16, fontWeight: '900', color: theme.colors.primary, textAlign: 'center', flex: 1, fontFamily: theme.typography.screenTitle.fontFamily }
 })

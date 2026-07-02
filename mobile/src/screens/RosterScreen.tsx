@@ -11,6 +11,7 @@ import {
   Modal,
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useTheme } from '../shared/ThemeProvider'
 import { useAuthStore } from '../stores/auth'
 import { API_URL } from '../shared/config'
 import {
@@ -82,6 +83,8 @@ export function RosterScreen() {
   const [loading, setLoading] = useState(false)
   const [allLoading, setAllLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'timeline' | 'cabin' | 'all'>('cabin')
+  const { theme } = useTheme()
+  const styles = React.useMemo(() => getStyles(theme), [theme])
   
   // Driver personal trips
   const [rosterDay, setRosterDay] = useState<RosterDay | null>(null)
@@ -259,14 +262,19 @@ export function RosterScreen() {
   }
 
   // Find current trip for Cabin Mode
-  const currentTrip = trips.find(t => t.assignment && !t.assignment.handoverAt) || trips[0]
+  const activeTrip = trips.find(t => t.assignment && !t.assignment.handoverAt) || trips[0]
+  const currentTrip = activeTrip
 
   return (
     <View style={styles.container}>
       {/* Header Info */}
       <View style={styles.header}>
         <View style={styles.headerRight}>
-          <Text style={styles.headerTitle}>برنامه لوحه و اعزام راهبر</Text>
+          <Calendar size={20} color={theme.colors.primary} />
+          <Text style={styles.headerTitle}>لوحه و برنامه‌ریزی</Text>
+        </View>
+        <View style={styles.headerRight}>
+          <Clock size={20} color={theme.colors.primary} />
           {rosterDay ? (
             <Text style={styles.headerSubtitle}>
               تاریخ: {toPersianDigits(rosterDay.jalaliDate)} | نسخه: {toPersianDigits(rosterDay.versionNo)}
@@ -277,10 +285,10 @@ export function RosterScreen() {
         </View>
         <View style={{ flexDirection: 'row-reverse', gap: 8 }}>
           <TouchableOpacity style={styles.refreshButton} onPress={() => setSyncModalVisible(true)}>
-            <Calendar size={20} color="#ff3b30" />
+            <Calendar size={20} color={theme.colors.primary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh}>
-            <Clock size={20} color="#ff3b30" />
+            <Clock size={20} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -291,7 +299,7 @@ export function RosterScreen() {
           style={[styles.tab, activeTab === 'all' ? styles.activeTab : null]}
           onPress={() => setActiveTab('all')}
         >
-          <Text style={[styles.tabText, activeTab === 'all' ? styles.activeTabText : null]}>
+          <Text style={[styles.tabText, activeTab === 'all' ? styles.activeTabLabel : null]}>
             کل لوحه روز
           </Text>
         </TouchableOpacity>
@@ -299,7 +307,7 @@ export function RosterScreen() {
           style={[styles.tab, activeTab === 'timeline' ? styles.activeTab : null]}
           onPress={() => setActiveTab('timeline')}
         >
-          <Text style={[styles.tabText, activeTab === 'timeline' ? styles.activeTabText : null]}>
+          <Text style={[styles.tabText, activeTab === 'timeline' ? styles.activeTabLabel : null]}>
             خط زمان من
           </Text>
         </TouchableOpacity>
@@ -307,7 +315,7 @@ export function RosterScreen() {
           style={[styles.tab, activeTab === 'cabin' ? styles.activeTab : null]}
           onPress={() => setActiveTab('cabin')}
         >
-          <Text style={[styles.tabText, activeTab === 'cabin' ? styles.activeTabText : null]}>
+          <Text style={[styles.tabText, activeTab === 'cabin' ? styles.activeTabLabel : null]}>
             کابین (Cabin)
           </Text>
         </TouchableOpacity>
@@ -317,12 +325,12 @@ export function RosterScreen() {
         /* Full Daily Roster View for everyone */
         allLoading ? (
           <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#ff3b30" />
-            <Text style={styles.loaderText}>در حال دریافت لوحه کل خط...</Text>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={styles.loaderText}>در حال دریافت برنامه لوحه...</Text>
           </View>
-        ) : allTrips.length === 0 ? (
+        ) : !rosterDay ? (
           <View style={styles.emptyContainer}>
-            <HelpCircle size={48} color="#8e8e93" />
+            <HelpCircle size={48} color={theme.colors.secondary} />
             <Text style={styles.emptyText}>هیچ لوحه اعزامی برای کل خط ثبت نشده است.</Text>
           </View>
         ) : (
@@ -368,7 +376,7 @@ export function RosterScreen() {
                       <View style={styles.fullCardBody}>
                         {/* H1 Row */}
                         <View style={styles.driverRow}>
-                          <User size={13} color="#a0a3b0" />
+                          <User size={13} color={theme.colors.secondary} />
                           <Text style={styles.driverLabel}>H1 (اصلی):</Text>
                           <Text style={styles.driverName}>
                             {h1?.matchedUser?.name || h1?.rawName || 'تخصیص نیافته'}
@@ -380,7 +388,7 @@ export function RosterScreen() {
  
                         {/* H2 Row */}
                         <View style={styles.driverRow}>
-                          <User size={13} color="#a0a3b0" />
+                          <User size={13} color={theme.colors.secondary} />
                           <Text style={styles.driverLabel}>H2 (دوم):</Text>
                           <Text style={styles.driverName}>
                             {h2?.matchedUser?.name || h2?.rawName || 'کابین تک راهبر'}
@@ -393,7 +401,7 @@ export function RosterScreen() {
                         {/* Assistant T Row */}
                         {assistT && (
                           <View style={styles.driverRow}>
-                            <User size={13} color="#a0a3b0" />
+                            <User size={13} color={theme.colors.secondary} />
                             <Text style={styles.driverLabel}>کمکی T:</Text>
                             <Text style={styles.driverName}>
                               {assistT?.matchedUser?.name || assistT?.rawName || '—'}
@@ -407,7 +415,7 @@ export function RosterScreen() {
                         {/* Assistant R Row */}
                         {assistR && (
                           <View style={styles.driverRow}>
-                            <User size={13} color="#a0a3b0" />
+                            <User size={13} color={theme.colors.secondary} />
                             <Text style={styles.driverLabel}>کمکی R:</Text>
                             <Text style={styles.driverName}>
                               {assistR?.matchedUser?.name || assistR?.rawName || '—'}
@@ -434,85 +442,92 @@ export function RosterScreen() {
             </ScrollView>
           </View>
         )
-      ) : loading ? (
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#ff3b30" />
-          <Text style={styles.loaderText}>در حال دریافت برنامه لوحه روزانه...</Text>
-        </View>
-      ) : trips.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <HelpCircle size={48} color="#8e8e93" />
-          <Text style={styles.emptyText}>هیچ سفری در لوحه امروز برای شما ثبت نشده است.</Text>
-        </View>
       ) : activeTab === 'timeline' ? (
         /* Driver Timeline View */
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-          {trips.map((trip) => (
-            <View key={trip.id} style={styles.tripCard}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.trainText}>قطار {toPersianDigits(trip.trainNumber || '—')}</Text>
-                {trip.assignment && (
-                  <View style={styles.roleBadge}>
-                    <Text style={styles.roleText}>{trip.assignment.role}</Text>
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.cardBody}>
-                <View style={styles.routeRow}>
-                  <Text style={styles.stationText}>
-                    {trip.direction === 'SHAHRREY_TO_TAJRISH' ? 'شهرری' : 'تجریش'}
-                  </Text>
-                  <ArrowLeftRight size={14} color="#8e8e93" style={styles.arrowIcon} />
-                  <Text style={styles.stationText}>
-                    {trip.direction === 'SHAHRREY_TO_TAJRISH' ? 'تجریش' : 'شهرری'}
-                  </Text>
+        loading ? (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={styles.loaderText}>در حال دریافت برنامه لوحه روزانه...</Text>
+          </View>
+        ) : trips.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <HelpCircle size={48} color={theme.colors.secondary} />
+            <Text style={styles.emptyText}>هیچ سفری در لوحه امروز برای شما ثبت نشده است.</Text>
+          </View>
+        ) : (
+          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+            {trips.map((trip) => (
+              <View key={trip.id} style={styles.tripCard}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.trainText}>قطار {toPersianDigits(trip.trainNumber || '—')}</Text>
+                  {trip.assignment && (
+                    <View style={styles.roleBadge}>
+                      <Text style={styles.roleText}>{trip.assignment.role}</Text>
+                    </View>
+                  )}
                 </View>
 
-                <View style={styles.timeRow}>
-                  <Clock size={14} color="#a0a3b0" />
-                  <Text style={styles.timeText}>
-                    حرکت: {toPersianDigits(trip.departureTime || '')} | رسیدن: {toPersianDigits(trip.arrivalTime || '')}
-                  </Text>
+                <View style={styles.cardBody}>
+                  <View style={styles.routeRow}>
+                    <Text style={styles.stationText}>
+                      {trip.direction === 'SHAHRREY_TO_TAJRISH' ? 'شهرری' : 'تجریش'}
+                    </Text>
+                    <ArrowLeftRight size={14} color={theme.colors.secondary} style={styles.arrowIcon} />
+                    <Text style={styles.stationText}>
+                      {trip.direction === 'SHAHRREY_TO_TAJRISH' ? 'تجریش' : 'شهرری'}
+                    </Text>
+                  </View>
+
+                  <View style={styles.timeRow}>
+                    <Clock size={14} color={theme.colors.secondary} />
+                    <Text style={styles.timeText}>
+                      حرکت: {toPersianDigits(trip.departureTime || '')} | رسیدن: {toPersianDigits(trip.arrivalTime || '')}
+                    </Text>
+                  </View>
+
+                  {trip.operationalNote && (
+                    <View style={styles.noteContainer}>
+                      <Text style={styles.noteText}>پیام: {trip.operationalNote}</Text>
+                    </View>
+                  )}
+
+                  {/* Workflow Status Indicators */}
+                  {trip.assignment && (
+                    <View style={styles.workflowContainer}>
+                      <View style={styles.workflowStep}>
+                        <CheckCircle size={12} color={trip.assignment.acknowledgedAt ? theme.colors.success : theme.colors.border} />
+                        <Text style={[styles.stepText, trip.assignment.acknowledgedAt ? styles.stepTextActive : null]}>
+                          رؤیت
+                        </Text>
+                      </View>
+                      <View style={styles.workflowStep}>
+                        <CheckCircle size={12} color={trip.assignment.readyAt ? theme.colors.success : theme.colors.border} />
+                        <Text style={[styles.stepText, trip.assignment.readyAt ? styles.stepTextActive : null]}>
+                          آمادگی
+                        </Text>
+                      </View>
+                      <View style={styles.workflowStep}>
+                        <CheckCircle size={12} color={trip.assignment.handoverAt ? theme.colors.success : theme.colors.border} />
+                        <Text style={[styles.stepText, trip.assignment.handoverAt ? styles.stepTextActive : null]}>
+                          تحویل
+                        </Text>
+                      </View>
+                    </View>
+                  )}
                 </View>
-
-                {trip.operationalNote && (
-                  <View style={styles.noteContainer}>
-                    <Text style={styles.noteText}>پیام: {trip.operationalNote}</Text>
-                  </View>
-                )}
-
-                {/* Workflow Status Indicators */}
-                {trip.assignment && (
-                  <View style={styles.workflowContainer}>
-                    <View style={styles.workflowStep}>
-                      <CheckCircle size={12} color={trip.assignment.acknowledgedAt ? '#34c759' : '#8e8e93'} />
-                      <Text style={[styles.stepText, trip.assignment.acknowledgedAt ? styles.stepTextActive : null]}>
-                        رؤیت
-                      </Text>
-                    </View>
-                    <View style={styles.workflowStep}>
-                      <CheckCircle size={12} color={trip.assignment.readyAt ? '#34c759' : '#8e8e93'} />
-                      <Text style={[styles.stepText, trip.assignment.readyAt ? styles.stepTextActive : null]}>
-                        آمادگی
-                      </Text>
-                    </View>
-                    <View style={styles.workflowStep}>
-                      <CheckCircle size={12} color={trip.assignment.handoverAt ? '#34c759' : '#8e8e93'} />
-                      <Text style={[styles.stepText, trip.assignment.handoverAt ? styles.stepTextActive : null]}>
-                        تحویل
-                      </Text>
-                    </View>
-                  </View>
-                )}
               </View>
-            </View>
-          ))}
-        </ScrollView>
+            ))}
+          </ScrollView>
+        )
       ) : (
         /* Cabin Mode (High contrast current trip display) */
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-          {currentTrip && currentTrip.assignment && (
+        loading ? (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={styles.loaderText}>در حال بارگذاری سفر...</Text>
+          </View>
+        ) : activeTrip ? (
+          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
             <View style={styles.cabinContainer}>
               
               {/* Trip Highlight details */}
@@ -520,43 +535,44 @@ export function RosterScreen() {
                 <Text style={styles.cabinAlertTitle}>سفر جاری / بعدی راهبر</Text>
                 
                 <Text style={styles.cabinTrainNumber}>
-                  قطار {toPersianDigits(currentTrip.trainNumber || '—')}
+                  قطار {toPersianDigits(activeTrip.trainNumber || '—')}
                 </Text>
                 
                 <View style={styles.cabinRoute}>
                   <Text style={styles.cabinStation}>
-                    {currentTrip.direction === 'SHAHRREY_TO_TAJRISH' ? 'ایستگاه شهرری' : 'ایستگاه تجریش'}
+                    {activeTrip.direction === 'SHAHRREY_TO_TAJRISH' ? 'ایستگاه شهرری' : 'ایستگاه تجریش'}
                   </Text>
                   <Text style={styles.cabinArrow}>↓</Text>
                   <Text style={styles.cabinStation}>
-                    {currentTrip.direction === 'SHAHRREY_TO_TAJRISH' ? 'ایستگاه تجریش' : 'ایستگاه شهرری'}
+                    {activeTrip.direction === 'SHAHRREY_TO_TAJRISH' ? 'ایستگاه تجریش' : 'ایستگاه شهرری'}
                   </Text>
                 </View>
 
                 <View style={styles.cabinTimeRow}>
                   <Text style={styles.cabinTimeLabel}>ساعت حرکت:</Text>
-                  <Text style={styles.cabinTimeValue}>{toPersianDigits(currentTrip.departureTime || '')}</Text>
+                  <Text style={styles.cabinTimeValue}>{toPersianDigits(activeTrip.departureTime || '')}</Text>
                 </View>
-                
-                <View style={styles.cabinTimeRow}>
-                  <Text style={styles.cabinTimeLabel}>سمت و نقش شما:</Text>
-                  <Text style={styles.cabinRoleValue}>
-                    {currentTrip.assignment.role === 'H1'
-                      ? 'راهبر اصلی (H1)'
-                      : currentTrip.assignment.role === 'H2'
-                      ? 'راهبر دوم (H2)'
-                      : currentTrip.assignment.role === 'T'
-                      ? 'راهبر کمکی (T)'
-                      : 'راهبر کمکی (R)'}
-                  </Text>
-                </View>
+                {currentTrip.assignment && (
+                  <View style={styles.cabinTimeRow}>
+                    <Text style={styles.cabinTimeLabel}>سمت و نقش شما:</Text>
+                    <Text style={styles.cabinRoleValue}>
+                      {currentTrip.assignment.role === 'H1'
+                        ? 'راهبر اصلی (H1)'
+                        : currentTrip.assignment.role === 'H2'
+                        ? 'راهبر دوم (H2)'
+                        : currentTrip.assignment.role === 'T'
+                        ? 'راهبر کمکی (T)'
+                        : 'راهبر کمکی (R)'}
+                    </Text>
+                  </View>
+                )}
               </View>
 
               {/* Action workflows */}
               <View style={styles.actionsBox}>
                 {actionLoading ? (
                   <ActivityIndicator size="large" color="#ff3b30" />
-                ) : (
+                ) : currentTrip.assignment ? (
                   <>
                     {/* Step 1: Acknowledge */}
                     {!currentTrip.assignment.acknowledgedAt && (
@@ -614,11 +630,20 @@ export function RosterScreen() {
                       </View>
                     )}
                   </>
+                ) : (
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>جزئیات انتساب برای این سفر ثبت نشده است.</Text>
+                  </View>
                 )}
               </View>
             </View>
-          )}
-        </ScrollView>
+          </ScrollView>
+        ) : (
+          <View style={styles.emptyContainer}>
+            <HelpCircle size={48} color={theme.colors.secondary} />
+            <Text style={styles.emptyText}>هیچ سفری در لوحه امروز برای شما ثبت نشده است.</Text>
+          </View>
+        )
       )}
 
       {/* Dispute Modal */}
@@ -700,10 +725,10 @@ export function RosterScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#13151a',
+    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row-reverse',
@@ -713,52 +738,57 @@ const styles = StyleSheet.create({
     paddingTop: 48,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderColor: '#262930',
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   headerRight: {
     alignItems: 'flex-end',
   },
   headerTitle: {
     fontSize: 16,
-    color: '#ffffff',
+    color: theme.colors.primary,
     fontWeight: 'bold',
+    fontFamily: theme.typography.screenTitle.fontFamily,
   },
   headerSubtitle: {
     fontSize: 11,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     marginTop: 2,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   refreshButton: {
     padding: 8,
-    backgroundColor: '#262930',
-    borderRadius: 8,
+    backgroundColor: theme.colors.surfaceContainerLow,
+    borderRadius: theme.borderRadius.md,
   },
   tabsContainer: {
     flexDirection: 'row-reverse',
-    backgroundColor: '#1e2127',
+    backgroundColor: theme.colors.surfaceContainerLow,
     padding: 4,
     margin: 16,
-    borderRadius: 8,
+    borderRadius: theme.borderRadius.lg,
   },
   tab: {
     flex: 1,
     paddingVertical: 10,
     alignItems: 'center',
-    borderRadius: 6,
+    borderRadius: theme.borderRadius.md,
   },
   activeTab: {
-    backgroundColor: '#262930',
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    ...theme.shadows.level1,
   },
   tabText: {
     fontSize: 12,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     fontWeight: '600',
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   activeTabLabel: {
-    color: '#ffffff',
+    color: theme.colors.primary,
   },
   tabTextActive: {
-    color: '#ffffff',
+    color: theme.colors.primary,
   },
   loaderContainer: {
     flex: 1,
@@ -767,9 +797,10 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   loaderText: {
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     fontSize: 12,
     marginTop: 12,
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   emptyContainer: {
     flex: 1,
@@ -778,10 +809,11 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   emptyText: {
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     fontSize: 13,
     textAlign: 'center',
     marginTop: 16,
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   scrollView: {
     flex: 1,
@@ -801,55 +833,59 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#262930',
-    borderRadius: 8,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
     alignItems: 'center',
-    backgroundColor: '#1c1e24',
+    backgroundColor: theme.colors.surfaceContainerLowest,
   },
   filterBtnActive: {
-    borderColor: '#ff3b30',
-    backgroundColor: 'rgba(255, 59, 48, 0.1)',
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primaryContainer + '1A',
   },
   filterBtnText: {
     fontSize: 11,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     fontWeight: 'bold',
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   filterBtnTextActive: {
-    color: '#ff3b30',
+    color: theme.colors.primary,
   },
   tripCard: {
-    backgroundColor: '#1c1e24',
-    borderRadius: 12,
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderRadius: theme.borderRadius.xl,
     padding: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#262930',
+    borderColor: theme.colors.border,
+    ...theme.shadows.level1,
   },
   cardHeader: {
     flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderColor: '#262930',
+    borderColor: theme.colors.border,
     paddingBottom: 8,
     marginBottom: 8,
   },
   trainText: {
     fontSize: 14,
-    color: '#ff3b30',
+    color: theme.colors.primary,
     fontWeight: 'bold',
+    fontFamily: theme.typography.cardTitle.fontFamily,
   },
   roleBadge: {
-    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+    backgroundColor: theme.colors.primaryContainer + '1A',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 4,
   },
   roleText: {
     fontSize: 11,
-    color: '#ff3b30',
+    color: theme.colors.primary,
     fontWeight: 'bold',
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   cardBody: {
     gap: 8,
@@ -861,8 +897,9 @@ const styles = StyleSheet.create({
   },
   stationText: {
     fontSize: 13,
-    color: '#ffffff',
+    color: theme.colors.onSurface,
     fontWeight: '500',
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   arrowIcon: {
     transform: [{ scaleX: -1 }],
@@ -874,25 +911,28 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 11,
-    color: '#a0a3b0',
+    color: theme.colors.secondary,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   noteContainer: {
-    backgroundColor: 'rgba(255, 153, 0, 0.1)',
+    backgroundColor: theme.colors.warning + '1A',
     padding: 6,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: 'rgba(255, 153, 0, 0.2)',
+    borderColor: theme.colors.warning + '30',
     alignItems: 'flex-end',
   },
   noteText: {
     fontSize: 10,
-    color: '#ff9900',
+    color: theme.colors.warning,
+    fontFamily: theme.typography.captionSm.fontFamily,
+    fontWeight: '600',
   },
   workflowContainer: {
     flexDirection: 'row-reverse',
     justifyContent: 'space-around',
     borderTopWidth: 1,
-    borderColor: '#262930',
+    borderColor: theme.colors.border,
     paddingTop: 10,
     marginTop: 4,
   },
@@ -903,38 +943,41 @@ const styles = StyleSheet.create({
   },
   stepText: {
     fontSize: 10,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   stepTextActive: {
-    color: '#34c759',
+    color: theme.colors.success,
     fontWeight: 'bold',
   },
   fullTripCard: {
-    backgroundColor: '#1c1e24',
-    borderRadius: 12,
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderRadius: theme.borderRadius.xl,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#262930',
+    borderColor: theme.colors.border,
+    ...theme.shadows.level1,
   },
   fullCardHeader: {
     flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderColor: '#262930',
+    borderColor: theme.colors.border,
     paddingBottom: 6,
     marginBottom: 8,
   },
   fullTrainText: {
     fontSize: 13,
-    color: '#ff3b30',
+    color: theme.colors.primary,
     fontWeight: 'bold',
+    fontFamily: theme.typography.cardTitle.fontFamily,
   },
   fullTimeText: {
     fontSize: 12,
-    color: '#34c759',
+    color: theme.colors.success,
     fontWeight: 'bold',
-    fontMono: true,
+    fontFamily: 'monospace',
   },
   fullCardBody: {
     gap: 6,
@@ -946,61 +989,70 @@ const styles = StyleSheet.create({
   },
   driverLabel: {
     fontSize: 11,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   driverName: {
     fontSize: 12,
-    color: '#ffffff',
+    color: theme.colors.onSurface,
     fontWeight: '500',
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   activeDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#34c759',
+    backgroundColor: theme.colors.success,
     marginLeft: 6,
   },
   fullNoteText: {
     fontSize: 10,
-    color: '#ff9500',
-    backgroundColor: 'rgba(255, 149, 0, 0.1)',
+    color: theme.colors.warning,
+    backgroundColor: theme.colors.warning + '1A',
     padding: 4,
     borderRadius: 4,
     textAlign: 'right',
     marginTop: 4,
+    fontFamily: theme.typography.captionSm.fontFamily,
+    fontWeight: '600',
   },
   fullAlertText: {
     fontSize: 10,
-    color: '#ff3b30',
-    backgroundColor: 'rgba(255, 59, 48, 0.1)',
+    color: theme.colors.primary,
+    backgroundColor: theme.colors.primaryContainer + '1A',
     padding: 4,
     borderRadius: 4,
     textAlign: 'right',
     marginTop: 2,
+    fontFamily: theme.typography.captionSm.fontFamily,
+    fontWeight: '600',
   },
   cabinContainer: {
     gap: 16,
   },
   cabinCard: {
-    backgroundColor: '#1c1e24',
-    borderRadius: 16,
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderRadius: theme.borderRadius.xl,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#ff3b30',
+    borderColor: theme.colors.primary,
     alignItems: 'center',
+    ...theme.shadows.level2,
   },
   cabinAlertTitle: {
     fontSize: 12,
-    color: '#ff3b30',
+    color: theme.colors.primary,
     fontWeight: 'bold',
     letterSpacing: 1,
     marginBottom: 8,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   cabinTrainNumber: {
     fontSize: 32,
-    color: '#ffffff',
+    color: theme.colors.primary,
     fontWeight: 'bold',
     marginBottom: 16,
+    fontFamily: theme.typography.numericHero.fontFamily,
   },
   cabinRoute: {
     alignItems: 'center',
@@ -1008,12 +1060,13 @@ const styles = StyleSheet.create({
   },
   cabinStation: {
     fontSize: 18,
-    color: '#ffffff',
+    color: theme.colors.onSurface,
     fontWeight: 'bold',
+    fontFamily: theme.typography.screenTitle.fontFamily,
   },
   cabinArrow: {
     fontSize: 20,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     marginVertical: 4,
   },
   cabinTimeRow: {
@@ -1022,21 +1075,24 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 8,
     borderTopWidth: 1,
-    borderColor: '#262930',
+    borderColor: theme.colors.border,
   },
   cabinTimeLabel: {
     fontSize: 13,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   cabinTimeValue: {
     fontSize: 13,
-    color: '#34c759',
+    color: theme.colors.success,
     fontWeight: 'bold',
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   cabinRoleValue: {
     fontSize: 13,
-    color: '#ffffff',
+    color: theme.colors.onSurface,
     fontWeight: 'bold',
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   actionsBox: {
     gap: 12,
@@ -1044,55 +1100,59 @@ const styles = StyleSheet.create({
   bigButton: {
     width: '100%',
     paddingVertical: 18,
-    borderRadius: 12,
+    borderRadius: theme.borderRadius.xl,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 2,
+    ...theme.shadows.level2,
   },
   receiptBtn: {
-    backgroundColor: '#ff9500',
+    backgroundColor: theme.colors.warning,
   },
   readyBtn: {
-    backgroundColor: '#34c759',
+    backgroundColor: theme.colors.success,
   },
   handoverBtn: {
-    backgroundColor: '#007aff',
+    backgroundColor: theme.colors.info,
   },
   bigButtonText: {
     color: '#ffffff',
     fontSize: 15,
     fontWeight: 'bold',
+    fontFamily: theme.typography.cardTitle.fontFamily,
   },
   disputeButton: {
     width: '100%',
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: '#8e8e93',
-    borderRadius: 12,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 8,
   },
   disputeButtonText: {
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     fontSize: 13,
     fontWeight: '500',
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   disputedContainer: {
     flexDirection: 'row-reverse',
-    backgroundColor: 'rgba(255, 204, 0, 0.1)',
+    backgroundColor: theme.colors.warning + '1A',
     padding: 12,
-    borderRadius: 12,
+    borderRadius: theme.borderRadius.xl,
     borderWidth: 1,
-    borderColor: 'rgba(255, 204, 0, 0.3)',
+    borderColor: theme.colors.warning + '30',
     alignItems: 'center',
     gap: 8,
   },
   disputedText: {
     fontSize: 12,
-    color: '#ffcc00',
+    color: theme.colors.warning,
     flex: 1,
     textAlign: 'right',
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   successState: {
     alignItems: 'center',
@@ -1100,48 +1160,52 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   successStateText: {
-    color: '#34c759',
+    color: theme.colors.success,
     fontSize: 13,
     fontWeight: 'bold',
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContent: {
     width: '85%',
-    backgroundColor: '#1c1e24',
-    borderRadius: 16,
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderRadius: theme.borderRadius.xl,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#262930',
+    borderColor: theme.colors.border,
   },
   modalTitle: {
     fontSize: 16,
-    color: '#ffffff',
+    color: theme.colors.onSurface,
     fontWeight: 'bold',
     textAlign: 'right',
     marginBottom: 8,
+    fontFamily: theme.typography.cardTitle.fontFamily,
   },
   modalSubtitle: {
     fontSize: 12,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     textAlign: 'right',
     marginBottom: 16,
     lineHeight: 18,
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   textInput: {
-    backgroundColor: '#13151a',
+    backgroundColor: theme.colors.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: '#262930',
-    borderRadius: 8,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
     padding: 12,
-    color: '#ffffff',
+    color: theme.colors.onSurface,
     fontSize: 13,
     textAlign: 'right',
     marginBottom: 20,
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   modalButtons: {
     flexDirection: 'row',
@@ -1150,20 +1214,21 @@ const styles = StyleSheet.create({
   modalBtn: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: theme.borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalSubmitBtn: {
-    backgroundColor: '#ff3b30',
+    backgroundColor: theme.colors.primary,
   },
   modalCancelBtn: {
-    backgroundColor: '#262930',
+    backgroundColor: theme.colors.surfaceContainerLow,
   },
   modalBtnText: {
     color: '#ffffff',
     fontSize: 13,
     fontWeight: 'bold',
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
 })
 

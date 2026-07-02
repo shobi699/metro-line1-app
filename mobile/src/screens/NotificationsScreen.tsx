@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { useAuthStore } from '../stores/auth'
+import { useTheme } from '../shared/ThemeProvider'
 import { API_URL } from '../shared/config'
 import { Bell, Info, AlertTriangle, AlertCircle } from 'lucide-react-native'
 
@@ -20,18 +21,19 @@ interface Notification {
   createdAt: string
 }
 
-const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
-  info: { icon: Info, color: '#007aff' },
-  warning: { icon: AlertTriangle, color: '#ff9500' },
-  urgent: { icon: AlertCircle, color: '#e53935' },
-  system: { icon: Bell, color: '#8e8e93' },
-}
-
 export function NotificationsScreen() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
+  const { theme } = useTheme()
+
+  const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
+    info: { icon: Info, color: theme.colors.info },
+    warning: { icon: AlertTriangle, color: theme.colors.warning },
+    urgent: { icon: AlertCircle, color: theme.colors.error },
+    system: { icon: Bell, color: theme.colors.secondary },
+  }
 
   useEffect(() => {
     loadNotifications()
@@ -65,6 +67,27 @@ export function NotificationsScreen() {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)))
   }
 
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.colors.background },
+    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
+    filterBar: { flexDirection: 'row-reverse', padding: 16, gap: 8 },
+    filterButton: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: theme.borderRadius.md, backgroundColor: theme.colors.surfaceContainerLow, borderWidth: 1, borderColor: theme.colors.border },
+    filterActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+    filterText: { color: theme.colors.secondary, fontSize: 13, fontWeight: '600', fontFamily: theme.typography.captionSm.fontFamily },
+    filterTextActive: { color: theme.colors.onPrimary },
+    listContainer: { padding: 16, paddingBottom: 24 },
+    card: { flexDirection: 'row-reverse', backgroundColor: theme.colors.surfaceContainerLowest, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.borderRadius.xl, padding: 14, marginBottom: 10, gap: 12, ...theme.shadows.level1 },
+    cardUnread: { borderColor: theme.colors.primaryContainer + '40', backgroundColor: theme.colors.primaryContainer + '0D' },
+    iconContainer: { width: 36, height: 36, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
+    cardContent: { flex: 1 },
+    cardHeader: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
+    cardTitle: { fontSize: 14, fontWeight: '800', color: theme.colors.onSurface, textAlign: 'right', fontFamily: theme.typography.cardTitle.fontFamily },
+    unreadDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.primary },
+    cardBody: { fontSize: 12, color: theme.colors.secondary, textAlign: 'right', marginTop: 4, lineHeight: 18, fontFamily: theme.typography.bodyMd.fontFamily },
+    cardTime: { fontSize: 11, color: theme.colors.secondary, textAlign: 'right', marginTop: 6, fontFamily: theme.typography.captionSm.fontFamily },
+    emptyText: { color: theme.colors.secondary, fontSize: 14, marginTop: 8, fontFamily: theme.typography.bodyMd.fontFamily },
+  })
+
   return (
     <View style={styles.container}>
       <View style={styles.filterBar}>
@@ -84,7 +107,7 @@ export function NotificationsScreen() {
 
       {loading ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#e53935" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : (
         <FlatList
@@ -100,7 +123,7 @@ export function NotificationsScreen() {
                 onPress={() => !item.isRead && markAsRead(item.id)}
                 activeOpacity={0.7}
               >
-                <View style={[styles.iconContainer, { backgroundColor: `${config.color}20` }]}>
+                <View style={[styles.iconContainer, { backgroundColor: `${config.color}1A` }]}>
                   <Icon size={18} color={config.color} />
                 </View>
                 <View style={styles.cardContent}>
@@ -116,7 +139,7 @@ export function NotificationsScreen() {
           }}
           ListEmptyComponent={
             <View style={styles.centerContainer}>
-              <Bell size={40} color="#555860" />
+              <Bell size={40} color={theme.colors.secondary} />
               <Text style={styles.emptyText}>اعلانی وجود ندارد</Text>
             </View>
           }
@@ -126,24 +149,4 @@ export function NotificationsScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#13151a' },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
-  filterBar: { flexDirection: 'row', padding: 16, gap: 8 },
-  filterButton: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, backgroundColor: '#1c1e24', borderWidth: 1, borderColor: '#262930' },
-  filterActive: { backgroundColor: '#e53935', borderColor: '#e53935' },
-  filterText: { color: '#a0a3b0', fontSize: 13, fontWeight: '500' },
-  filterTextActive: { color: '#ffffff' },
-  listContainer: { padding: 16, paddingBottom: 24 },
-  card: { flexDirection: 'row', backgroundColor: '#1c1e24', borderWidth: 1, borderColor: '#262930', borderRadius: 12, padding: 14, marginBottom: 10, gap: 12 },
-  cardUnread: { borderColor: '#e5393540', backgroundColor: '#e5393508' },
-  iconContainer: { width: 36, height: 36, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
-  cardContent: { flex: 1 },
-  cardHeader: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
-  cardTitle: { fontSize: 14, fontWeight: '600', color: '#f2f2f7', textAlign: 'right' },
-  unreadDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#e53935' },
-  cardBody: { fontSize: 12, color: '#a0a3b0', textAlign: 'right', marginTop: 4, lineHeight: 18 },
-  cardTime: { fontSize: 11, color: '#555860', textAlign: 'right', marginTop: 6 },
-  emptyText: { color: '#a0a3b0', fontSize: 14, marginTop: 8 },
-})
 export default NotificationsScreen

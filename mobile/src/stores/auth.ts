@@ -44,9 +44,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   async logout() {
     try {
       await AsyncStorage.multiRemove([
-        ['@auth_user'],
-        ['@auth_accessToken'],
-        ['@auth_refreshToken'],
+        '@auth_user',
+        '@auth_accessToken',
+        '@auth_refreshToken',
       ])
     } catch {
       // silent

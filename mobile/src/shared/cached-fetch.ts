@@ -26,7 +26,7 @@ export async function cachedFetch<T>(
     if (cached) return cached
 
     if (options.method && options.method !== 'GET') {
-      await cacheStore.enqueue(url, options.method, options.body as string | null, headers)
+      await cacheStore.enqueue('attendance', 'default', url, options.method, options.body as string | null, headers)
     }
     return null
   }

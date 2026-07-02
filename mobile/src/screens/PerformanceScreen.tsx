@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { StyleSheet, View, Text, ScrollView, ActivityIndicator } from 'react-native'
 import { Trophy, TrendingUp, Award, Star } from 'lucide-react-native'
 import { useAuthStore } from '../stores/auth'
-import { Theme } from '../shared/theme'
+import { useTheme } from '../shared/ThemeProvider'
 import { API_URL } from '../shared/config'
 
 interface ScoreData {
@@ -21,6 +21,7 @@ export function PerformanceScreen() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const [data, setData] = useState<ScoreData | null>(null)
   const [loading, setLoading] = useState(true)
+  const { theme } = useTheme()
 
   useEffect(() => {
     if (!accessToken) return
@@ -35,10 +36,39 @@ export function PerformanceScreen() {
       .catch(() => setLoading(false))
   }, [accessToken])
 
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.colors.background },
+    content: { padding: theme.spacing.containerMargin },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background },
+    header: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8, marginBottom: 20 },
+    title: { fontSize: 18, fontWeight: 'bold', color: theme.colors.primary, fontFamily: theme.typography.screenTitle.fontFamily },
+    statsRow: { flexDirection: 'row-reverse', gap: 10, marginBottom: 24 },
+    statCard: { 
+      flex: 1, 
+      backgroundColor: theme.colors.surfaceContainerLowest, 
+      borderRadius: theme.borderRadius.xl, 
+      padding: 16, 
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      ...theme.shadows.level1,
+    },
+    statValue: { fontSize: 20, fontWeight: '800', color: theme.colors.primary, fontFamily: theme.typography.numericHero.fontFamily },
+    statLabel: { fontSize: 11, color: theme.colors.secondary, marginTop: 4, fontFamily: theme.typography.captionSm.fontFamily, fontWeight: '700' },
+    sectionTitle: { fontSize: 16, fontWeight: '800', color: theme.colors.onSurface, marginBottom: 16, textAlign: 'right', fontFamily: theme.typography.sectionTitle.fontFamily },
+    compRow: { marginBottom: 16, backgroundColor: theme.colors.surfaceContainerLowest, padding: 12, borderRadius: theme.borderRadius.lg, borderWidth: 1, borderColor: theme.colors.border },
+    compInfo: { flexDirection: 'row-reverse', justifyContent: 'space-between', marginBottom: 6 },
+    compName: { fontSize: 13, color: theme.colors.onSurface, fontWeight: '700', fontFamily: theme.typography.cardTitle.fontFamily },
+    compScore: { fontSize: 12, color: theme.colors.secondary, fontFamily: 'monospace' },
+    progressBar: { height: 6, backgroundColor: theme.colors.surfaceContainerLow, borderRadius: 3, overflow: 'hidden' },
+    progressFill: { height: 6, backgroundColor: theme.colors.primary, borderRadius: 3 },
+    emptyText: { fontSize: 14, color: theme.colors.secondary, fontFamily: theme.typography.bodyMd.fontFamily },
+  })
+
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={Theme.colors.accent} />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     )
   }
@@ -54,7 +84,7 @@ export function PerformanceScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Trophy size={24} color={Theme.colors.accent} />
+        <Trophy size={24} color={theme.colors.primary} />
         <Text style={styles.title}>عملکرد من</Text>
       </View>
 
@@ -89,22 +119,4 @@ export function PerformanceScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
-  content: { padding: Theme.spacing.lg },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Theme.colors.background },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: Theme.spacing.xl },
-  title: { fontSize: Theme.fontSize.xl, fontWeight: 'bold', color: Theme.colors.text },
-  statsRow: { flexDirection: 'row', gap: Theme.spacing.sm, marginBottom: Theme.spacing.xl },
-  statCard: { flex: 1, backgroundColor: Theme.colors.surface, borderRadius: Theme.borderRadius.md, padding: Theme.spacing.md, alignItems: 'center' },
-  statValue: { fontSize: Theme.fontSize.xl, fontWeight: 'bold', color: Theme.colors.accent },
-  statLabel: { fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted, marginTop: 4 },
-  sectionTitle: { fontSize: Theme.fontSize.lg, fontWeight: 'bold', color: Theme.colors.text, marginBottom: Theme.spacing.md },
-  compRow: { marginBottom: Theme.spacing.md },
-  compInfo: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  compName: { fontSize: Theme.fontSize.sm, color: Theme.colors.text },
-  compScore: { fontSize: Theme.fontSize.sm, color: Theme.colors.textMuted },
-  progressBar: { height: 6, backgroundColor: Theme.colors.border, borderRadius: 3 },
-  progressFill: { height: 6, backgroundColor: Theme.colors.accent, borderRadius: 3 },
-  emptyText: { fontSize: Theme.fontSize.md, color: Theme.colors.textMuted },
-})
+export default PerformanceScreen

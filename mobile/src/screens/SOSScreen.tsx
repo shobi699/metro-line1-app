@@ -11,12 +11,14 @@ import {
 import { useAuthStore } from '../stores/auth'
 import { useChatStore } from '../stores/chat'
 import { useConfigStore } from '../stores/config'
+import { useTheme } from '../shared/ThemeProvider'
 import { AlertOctagon, ShieldAlert } from 'lucide-react-native'
 
 export function SOSScreen() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
   const config = useConfigStore((s) => s.config)
+  const { theme } = useTheme()
   
   const rooms = useChatStore((s) => s.rooms)
   const sendMessage = useChatStore((s) => s.sendMessage)
@@ -139,17 +141,117 @@ export function SOSScreen() {
 
   const isSosEnabled = config?.mobile?.enableSos ?? true
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      padding: 24,
+    },
+    alarmContainer: {
+      backgroundColor: '#fde8e8', // قرمز بسیار روشن برای حالت آلارم فعال در تم لایت
+    },
+    header: {
+      alignItems: 'center',
+      marginTop: 20,
+      marginBottom: 40,
+      gap: 8,
+    },
+    headerTitle: {
+      fontSize: 18,
+      color: theme.colors.onSurface,
+      fontWeight: 'bold',
+      fontFamily: theme.typography.screenTitle.fontFamily,
+    },
+    content: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 32,
+    },
+    infoText: {
+      color: theme.colors.secondary,
+      fontSize: 14,
+      textAlign: 'center',
+      lineHeight: 22,
+      paddingHorizontal: 20,
+      fontFamily: theme.typography.bodyMd.fontFamily,
+    },
+    sosButton: {
+      width: 180,
+      height: 180,
+      borderRadius: 90,
+      backgroundColor: theme.colors.error, // قرمز اضطراری
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 8,
+      borderColor: theme.colors.error + '30',
+      elevation: 8,
+      shadowColor: theme.colors.error,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.4,
+      shadowRadius: 10,
+    },
+    sosButtonActive: {
+      backgroundColor: '#ff1744',
+      borderColor: 'rgba(255, 23, 68, 0.4)',
+    },
+    sosButtonDisabled: {
+      backgroundColor: theme.colors.surfaceContainerLow,
+      borderColor: theme.colors.border,
+      shadowOpacity: 0,
+      elevation: 0,
+    },
+    countdownContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    countdownNumber: {
+      fontSize: 32,
+      fontWeight: 'bold',
+      color: '#ffffff',
+      fontFamily: theme.typography.numericHero.fontFamily,
+    },
+    countdownText: {
+      fontSize: 11,
+      color: '#ffffff',
+      marginTop: 6,
+      textAlign: 'center',
+      paddingHorizontal: 12,
+      fontFamily: theme.typography.captionSm.fontFamily,
+      fontWeight: '700',
+    },
+    progressTrack: {
+      width: 200,
+      height: 8,
+      backgroundColor: theme.colors.surfaceContainerLow,
+      borderRadius: 4,
+      overflow: 'hidden',
+      marginTop: -8,
+    },
+    progressBar: {
+      height: '100%',
+      backgroundColor: theme.colors.error,
+    },
+    statusText: {
+      fontSize: 13,
+      color: theme.colors.secondary,
+      fontWeight: '600',
+      textAlign: 'center',
+      fontFamily: theme.typography.bodyMd.fontFamily,
+    },
+  })
+
   if (!isSosEnabled) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <ShieldAlert size={28} color="#8e8e93" />
+          <ShieldAlert size={28} color={theme.colors.secondary} />
           <Text style={styles.headerTitle}>سیستم دکمه اضطراری (SOS)</Text>
         </View>
 
         <View style={styles.content}>
           <View style={[styles.sosButton, styles.sosButtonDisabled]}>
-            <AlertOctagon size={64} color="#8e8e93" />
+            <AlertOctagon size={64} color={theme.colors.secondary} />
           </View>
 
           <Text style={styles.infoText}>
@@ -165,7 +267,7 @@ export function SOSScreen() {
   return (
     <View style={[styles.container, activeAlarm ? styles.alarmContainer : null]}>
       <View style={styles.header}>
-        <ShieldAlert size={28} color="#e53935" />
+        <ShieldAlert size={28} color={theme.colors.error} />
         <Text style={styles.headerTitle}>سیستم دکمه اضطراری (SOS)</Text>
       </View>
 
@@ -220,99 +322,5 @@ export function SOSScreen() {
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#13151a',
-    padding: 24,
-  },
-  alarmContainer: {
-    backgroundColor: '#3a0c11', // قرمز تیره چشمک‌زن/هشدار
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 40,
-    gap: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    color: '#f2f2f7',
-    fontWeight: 'bold',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 32,
-  },
-  infoText: {
-    color: '#a0a3b0',
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: 20,
-  },
-  sosButton: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: '#e53935', // قرمز اضطراری
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 8,
-    borderColor: 'rgba(229, 57, 53, 0.2)',
-    elevation: 8,
-    shadowColor: '#e53935',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-  },
-  sosButtonActive: {
-    backgroundColor: '#ff1744',
-    borderColor: 'rgba(255, 23, 68, 0.4)',
-  },
-  sosButtonDisabled: {
-    backgroundColor: '#262930',
-    borderColor: '#3a3d46',
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  countdownContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  countdownNumber: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  countdownText: {
-    fontSize: 10,
-    color: '#ffffff',
-    marginTop: 6,
-    textAlign: 'center',
-    paddingHorizontal: 12,
-  },
-  progressTrack: {
-    width: 200,
-    height: 8,
-    backgroundColor: '#262930',
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginTop: -8,
-  },
-  progressBar: {
-    height: '100%',
-    backgroundColor: '#ff1744',
-  },
-  statusText: {
-    fontSize: 13,
-    color: '#a0a3b0',
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-})
 
 export default SOSScreen

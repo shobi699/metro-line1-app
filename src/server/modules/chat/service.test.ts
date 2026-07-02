@@ -15,6 +15,7 @@ vi.mock('@/server/db', () => ({
     message: {
       create: vi.fn(),
       update: vi.fn(),
+      findUnique: vi.fn(),
     },
     setting: {
       findUnique: vi.fn(),

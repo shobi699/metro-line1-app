@@ -16,6 +16,7 @@ import { API_URL } from '../shared/config'
 import { LogIn, LogOut, MapPin, CheckCircle, Clock, Navigation } from 'lucide-react-native'
 import { useConfigStore } from '../stores/config'
 
+
 interface AttendanceRecord {
   id: string
   stationId: string | null
@@ -59,6 +60,8 @@ function getDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: num
   return R * c
 }
 
+import { useTheme } from '../shared/ThemeProvider'
+
 export function AttendanceScreen() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const config = useConfigStore((s) => s.config)
@@ -66,6 +69,7 @@ export function AttendanceScreen() {
   const [history, setHistory] = useState<AttendanceRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [checking, setChecking] = useState(false)
+  const { theme } = useTheme()
 
   // Geofencing states
   const [currentCoords, setCurrentCoords] = useState<{ lat: number; lng: number } | null>(null)
@@ -286,12 +290,100 @@ export function AttendanceScreen() {
   const isCheckedIn = todayRecord && !todayRecord.checkOutTime
   const isButtonDisabled = !isCheckedIn && !activeStation
 
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.containerMargin },
+    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
+    geofenceCard: { 
+      backgroundColor: theme.colors.surfaceContainerLowest, 
+      borderWidth: 1, 
+      borderColor: theme.colors.border, 
+      borderLeftWidth: 4, 
+      borderRadius: theme.borderRadius.xl, 
+      padding: 16, 
+      marginBottom: 16,
+      ...theme.shadows.level1,
+    },
+    geofenceCardActive: { borderLeftColor: theme.colors.success },
+    geofenceCardInactive: { borderLeftColor: theme.colors.error },
+    geofenceHeader: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6, marginBottom: 6 },
+    geofenceTitle: { color: theme.colors.onSurface, fontSize: 13, fontWeight: '800', fontFamily: theme.typography.cardTitle.fontFamily },
+    geofenceCoords: { color: theme.colors.secondary, fontSize: 10, textAlign: 'right', fontFamily: 'monospace' },
+    geofenceStatus: { fontSize: 11, fontWeight: '700', marginTop: 4, textAlign: 'right', fontFamily: theme.typography.captionSm.fontFamily },
+    geofenceStatusActive: { color: theme.colors.success },
+    geofenceStatusInactive: { color: theme.colors.error },
+    debugContainer: { marginTop: 10, borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: 8 },
+    debugTitle: { color: theme.colors.secondary, fontSize: 10, textAlign: 'right', marginBottom: 6, fontFamily: theme.typography.captionSm.fontFamily },
+    debugButtons: { flexDirection: 'row-reverse', gap: 6 },
+    debugBtn: { flex: 1, height: 28, backgroundColor: theme.colors.surfaceContainerLow, borderRadius: theme.borderRadius.md, justifyContent: 'center', alignItems: 'center' },
+    debugBtnActive: { backgroundColor: theme.colors.primaryContainer },
+    debugBtnText: { color: theme.colors.primary, fontSize: 10, fontWeight: '800', fontFamily: theme.typography.captionSm.fontFamily },
+    autoCheckInRow: { 
+      flexDirection: 'row-reverse', 
+      justifyContent: 'space-between', 
+      alignItems: 'center', 
+      backgroundColor: theme.colors.surfaceContainerLowest, 
+      borderWidth: 1, 
+      borderColor: theme.colors.border, 
+      borderRadius: theme.borderRadius.xl, 
+      padding: 16, 
+      marginBottom: 16,
+      ...theme.shadows.level1,
+    },
+    autoCheckInText: { alignItems: 'flex-start', flex: 1, paddingStart: 12 },
+    autoCheckInTitle: { color: theme.colors.onSurface, fontSize: 13, fontWeight: '800', textAlign: 'right', fontFamily: theme.typography.cardTitle.fontFamily },
+    autoCheckInDesc: { color: theme.colors.secondary, fontSize: 9, marginTop: 2, textAlign: 'right', fontFamily: theme.typography.captionSm.fontFamily },
+    statusCard: { 
+      alignItems: 'center', 
+      backgroundColor: theme.colors.surfaceContainerLowest, 
+      borderWidth: 1, 
+      borderColor: theme.colors.border, 
+      borderRadius: theme.borderRadius.xxl, 
+      padding: 24, 
+      marginBottom: 20,
+      ...theme.shadows.level2,
+    },
+    statusIcon: { width: 68, height: 68, borderRadius: 34, backgroundColor: theme.colors.surfaceContainerLow, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+    statusIconActive: { backgroundColor: theme.colors.success + '1A' },
+    statusText: { fontSize: 18, fontWeight: '800', color: theme.colors.onSurface, fontFamily: theme.typography.screenTitle.fontFamily },
+    timeText: { fontSize: 13, color: theme.colors.secondary, marginTop: 4, fontWeight: '600', fontFamily: theme.typography.bodyMd.fontFamily },
+    warningText: { fontSize: 11, color: theme.colors.error, textAlign: 'center', marginTop: 12, paddingHorizontal: 10, fontWeight: '700', fontFamily: theme.typography.captionSm.fontFamily },
+    actionButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', height: 48, borderRadius: theme.borderRadius.lg, marginTop: 16, ...theme.shadows.level1 },
+    actionButtonDisabled: { backgroundColor: theme.colors.surfaceContainerLow, opacity: 0.5 },
+    checkInButton: { backgroundColor: theme.colors.success },
+    checkOutButton: { backgroundColor: theme.colors.error },
+    actionText: { color: '#ffffff', fontSize: 15, fontWeight: '800', fontFamily: theme.typography.cardTitle.fontFamily },
+    sectionTitle: { fontSize: 16, fontWeight: '800', color: theme.colors.onSurface, textAlign: 'right', marginBottom: 12, fontFamily: theme.typography.sectionTitle.fontFamily },
+    listContainer: { paddingBottom: 20 },
+    historyCard: { 
+      flexDirection: 'row-reverse', 
+      justifyContent: 'space-between', 
+      alignItems: 'center', 
+      backgroundColor: theme.colors.surfaceContainerLowest, 
+      borderWidth: 1, 
+      borderColor: theme.colors.border, 
+      borderRadius: theme.borderRadius.lg, 
+      padding: 12, 
+      marginBottom: 8,
+      ...theme.shadows.level1,
+    },
+    historyLeft: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10 },
+    historyDate: { fontSize: 13, color: theme.colors.onSurface, fontWeight: '700', textAlign: 'right', fontFamily: theme.typography.bodyMd.fontFamily },
+    historyTime: { fontSize: 11, color: theme.colors.secondary, textAlign: 'right', marginTop: 2, fontWeight: '600', fontFamily: 'monospace' },
+    historyBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: theme.borderRadius.sm },
+    badgeComplete: { backgroundColor: theme.colors.success + '1A' },
+    badgeActive: { backgroundColor: theme.colors.warning + '1A' },
+    historyBadgeText: { fontSize: 10, fontWeight: '700', fontFamily: theme.typography.captionSm.fontFamily },
+    badgeTextComplete: { color: theme.colors.success },
+    badgeTextActive: { color: theme.colors.warning },
+    emptyText: { color: theme.colors.secondary, fontSize: 13, fontWeight: '600', fontFamily: theme.typography.bodyMd.fontFamily },
+  })
+
   return (
     <View style={styles.container}>
       {/* Geofencing Indicator */}
       <View style={[styles.geofenceCard, activeStation ? styles.geofenceCardActive : styles.geofenceCardInactive]}>
         <View style={styles.geofenceHeader}>
-          <Navigation size={18} color={activeStation ? '#34c759' : '#e53935'} />
+          <Navigation size={18} color={activeStation ? theme.colors.success : theme.colors.error} />
           <Text style={styles.geofenceTitle}>وضعیت موقعیت‌یابی هوشمند (Geofencing)</Text>
         </View>
         <Text style={styles.geofenceCoords}>
@@ -334,8 +426,8 @@ export function AttendanceScreen() {
         <Switch
           value={autoCheckIn}
           onValueChange={handleAutoCheckInChange}
-          trackColor={{ false: '#262930', true: '#e5393540' }}
-          thumbColor={autoCheckIn ? '#e53935' : '#a0a3b0'}
+          trackColor={{ false: theme.colors.border, true: theme.colors.primaryContainer }}
+          thumbColor={autoCheckIn ? theme.colors.primary : theme.colors.secondary}
         />
         <View style={styles.autoCheckInText}>
           <Text style={styles.autoCheckInTitle}>ثبت حضور خودکار (Geofencing Auto Check-In)</Text>
@@ -346,7 +438,7 @@ export function AttendanceScreen() {
       {/* Check In/Out Card */}
       <View style={styles.statusCard}>
         <View style={[styles.statusIcon, isCheckedIn ? styles.statusIconActive : null]}>
-          {isCheckedIn ? <CheckCircle size={40} color="#34c759" /> : <Clock size={40} color="#8e8e93" />}
+          {isCheckedIn ? <CheckCircle size={40} color={theme.colors.success} /> : <Clock size={40} color={theme.colors.secondary} />}
         </View>
         <Text style={styles.statusText}>{isCheckedIn ? 'در حال خدمت' : 'خارج از خدمت'}</Text>
         {todayRecord && (
@@ -393,7 +485,7 @@ export function AttendanceScreen() {
           return (
             <View style={styles.historyCard}>
               <View style={styles.historyLeft}>
-                <MapPin size={14} color="#8c91a5" />
+                <MapPin size={14} color={theme.colors.secondary} />
                 <View>
                   <Text style={styles.historyDate}>
                     {toFa(new Date(item.checkInTime).toLocaleDateString('fa-IR'))} - {station ? station.name : 'ایستگاه ثبت‌نشده'}
@@ -422,108 +514,5 @@ export function AttendanceScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0c0d12', padding: 16 },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
-  geofenceCard: { 
-    backgroundColor: '#151821', 
-    borderWidth: 1, 
-    borderColor: '#212533', 
-    borderLeftWidth: 4, 
-    borderRadius: 12, 
-    padding: 12, 
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  geofenceCardActive: { borderLeftColor: '#34c759' },
-  geofenceCardInactive: { borderLeftColor: '#e53935' },
-  geofenceHeader: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6, marginBottom: 6 },
-  geofenceTitle: { color: '#ffffff', fontSize: 12, fontWeight: 'bold' },
-  geofenceCoords: { color: '#8c91a5', fontSize: 10, textAlign: 'right' },
-  geofenceStatus: { fontSize: 11, fontWeight: '600', marginTop: 4, textAlign: 'right' },
-  geofenceStatusActive: { color: '#34c759' },
-  geofenceStatusInactive: { color: '#e53935' },
-  debugContainer: { marginTop: 10, borderTopWidth: 1, borderTopColor: '#212533', paddingTop: 8 },
-  debugTitle: { color: '#8c91a5', fontSize: 10, textAlign: 'right', marginBottom: 6 },
-  debugButtons: { flexDirection: 'row-reverse', gap: 6 },
-  debugBtn: { flex: 1, height: 26, backgroundColor: '#202432', borderRadius: 6, justifyContent: 'center', alignItems: 'center' },
-  debugBtnActive: { backgroundColor: '#e53935' },
-  debugBtnText: { color: '#ffffff', fontSize: 9, fontWeight: 'bold' },
-  autoCheckInRow: { 
-    flexDirection: 'row-reverse', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    backgroundColor: '#151821', 
-    borderWidth: 1, 
-    borderColor: '#212533', 
-    borderRadius: 12, 
-    padding: 12, 
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  autoCheckInText: { alignItems: 'flex-start', flex: 1, paddingStart: 12 },
-  autoCheckInTitle: { color: '#ffffff', fontSize: 12, fontWeight: 'bold', textAlign: 'right' },
-  autoCheckInDesc: { color: '#8c91a5', fontSize: 9, marginTop: 2, textAlign: 'right' },
-  statusCard: { 
-    alignItems: 'center', 
-    backgroundColor: '#151821', 
-    borderWidth: 1, 
-    borderColor: '#212533', 
-    borderRadius: 16, 
-    padding: 20, 
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  statusIcon: { width: 68, height: 68, borderRadius: 34, backgroundColor: 'rgba(91, 97, 117, 0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
-  statusIconActive: { backgroundColor: 'rgba(52, 199, 89, 0.15)' },
-  statusText: { fontSize: 15, fontWeight: '600', color: '#ffffff' },
-  timeText: { fontSize: 11, color: '#8c91a5', marginTop: 3 },
-  warningText: { fontSize: 10, color: '#e53935', textAlign: 'center', marginTop: 10, paddingHorizontal: 10 },
-  actionButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', height: 44, borderRadius: 10, marginTop: 14 },
-  actionButtonDisabled: { backgroundColor: '#212533', opacity: 0.5 },
-  checkInButton: { backgroundColor: '#34c759' },
-  checkOutButton: { backgroundColor: '#e53935' },
-  actionText: { color: '#ffffff', fontSize: 13, fontWeight: '600' },
-  sectionTitle: { fontSize: 13, fontWeight: 'bold', color: '#ffffff', textAlign: 'right', marginBottom: 8 },
-  listContainer: { paddingBottom: 20 },
-  historyCard: { 
-    flexDirection: 'row-reverse', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    backgroundColor: '#151821', 
-    borderWidth: 1, 
-    borderColor: '#212533', 
-    borderRadius: 10, 
-    padding: 10, 
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  historyLeft: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10 },
-  historyDate: { fontSize: 12, color: '#ffffff', fontWeight: '500', textAlign: 'right' },
-  historyTime: { fontSize: 10, color: '#8c91a5', textAlign: 'right', marginTop: 2 },
-  historyBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  badgeComplete: { backgroundColor: 'rgba(52, 199, 89, 0.15)' },
-  badgeActive: { backgroundColor: 'rgba(255, 149, 0, 0.15)' },
-  historyBadgeText: { fontSize: 10, fontWeight: '600' },
-  badgeTextComplete: { color: '#34c759' },
-  badgeTextActive: { color: '#ff9500' },
-  emptyText: { color: '#8c91a5', fontSize: 13 },
-})
 export default AttendanceScreen
 
