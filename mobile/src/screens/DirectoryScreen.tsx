@@ -9,7 +9,10 @@ import {
   ActivityIndicator,
   Linking,
   SafeAreaView,
-  Alert
+  Alert,
+  Modal,
+  Platform,
+  Pressable
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { MaterialIcons } from '@expo/vector-icons'
@@ -44,6 +47,11 @@ export function DirectoryScreen({ navigation }: any) {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [isOffline, setIsOffline] = useState(false)
+
+  // Custom Action Sheet Modal state (handles React Native Web compatibility)
+  const [actionSheetVisible, setActionSheetVisible] = useState(false)
+  const [actionSheetType, setActionSheetType] = useState<'call' | 'message' | null>(null)
+  const [selectedUser, setSelectedUser] = useState<DirectoryUser | null>(null)
 
   // Load cache immediately on mount
   useEffect(() => {
@@ -127,58 +135,16 @@ export function DirectoryScreen({ navigation }: any) {
     fetchUsers()
   }, [search, accessToken])
 
-  function handleCall(phone: string) {
-    Alert.alert(
-      'انتخاب روش تماس',
-      `لطفاً روش تماس با شماره ${phone} را انتخاب کنید:`,
-      [
-        {
-          text: '📞 تماس تلفنی معمولی (سیم‌کارت)',
-          onPress: () => Linking.openURL(`tel:${phone}`)
-        },
-        {
-          text: '🌐 کنفرانس صوتی خط ۱ (VoIP)',
-          onPress: () => navigation.navigate('کنفرانس صوتی')
-        },
-        {
-          text: '📡 شبیه‌ساز بی‌سیم راهبری',
-          onPress: () => navigation.navigate('بی‌سیم راهبری')
-        },
-        {
-          text: 'انصراف',
-          style: 'cancel'
-        }
-      ],
-      { cancelable: true }
-    )
+  function handleCall(user: DirectoryUser) {
+    setSelectedUser(user)
+    setActionSheetType('call')
+    setActionSheetVisible(true)
   }
 
-  function handleMessage(userId: string, phone?: string | null) {
-    const buttons = [
-      {
-        text: '💬 چت داخلی اپلیکیشن (بلادرنگ)',
-        onPress: () => navigation.navigate('چت', { dm: userId })
-      }
-    ]
-
-    if (phone) {
-      buttons.push({
-        text: '✉️ ارسال پیامک معمولی (SMS)',
-        onPress: () => Linking.openURL(`sms:${phone}`)
-      })
-    }
-
-    buttons.push({
-      text: 'انصراف',
-      style: 'cancel'
-    } as any)
-
-    Alert.alert(
-      'انتخاب روش ارسال پیام',
-      'لطفاً روش ارسال پیام را انتخاب کنید:',
-      buttons,
-      { cancelable: true }
-    )
+  function handleMessage(user: DirectoryUser) {
+    setSelectedUser(user)
+    setActionSheetType('message')
+    setActionSheetVisible(true)
   }
 
   const styles = StyleSheet.create({
@@ -322,6 +288,68 @@ export function DirectoryScreen({ navigation }: any) {
       fontSize: 12,
       fontWeight: 'bold',
     },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.65)',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+    },
+    modalContent: {
+      width: Platform.OS === 'web' ? 450 : '100%',
+      maxWidth: '100%',
+      backgroundColor: theme.colors.surfaceContainerLowest,
+      borderTopLeftRadius: theme.borderRadius.xl,
+      borderTopRightRadius: theme.borderRadius.xl,
+      padding: 24,
+      paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+      alignItems: 'stretch',
+    },
+    modalTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: theme.colors.onSurface,
+      textAlign: 'center',
+      marginBottom: 6,
+      fontFamily: theme.typography.cardTitle.fontFamily,
+    },
+    modalSubtitle: {
+      fontSize: 13,
+      color: theme.colors.secondary,
+      textAlign: 'center',
+      marginBottom: 20,
+      fontFamily: theme.typography.bodyMd.fontFamily,
+    },
+    modalButton: {
+      flexDirection: 'row-reverse',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.surfaceVariant,
+      borderWidth: 1,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      borderRadius: theme.borderRadius.lg,
+      marginBottom: 10,
+      gap: 12,
+    },
+    modalButtonText: {
+      fontSize: 13,
+      color: theme.colors.onSurface,
+      fontFamily: theme.typography.bodyMd.fontFamily,
+      fontWeight: '600',
+    },
+    modalCancelButton: {
+      backgroundColor: 'transparent',
+      borderColor: 'transparent',
+      justifyContent: 'center',
+      marginTop: 8,
+    },
+    modalCancelButtonText: {
+      fontSize: 14,
+      color: theme.colors.error || '#ef4444',
+      fontWeight: 'bold',
+      fontFamily: theme.typography.cardTitle.fontFamily,
+    },
   })
 
   function renderItem({ item }: { item: DirectoryUser }) {
@@ -364,7 +392,7 @@ export function DirectoryScreen({ navigation }: any) {
           <View style={styles.actionsContainer}>
             <TouchableOpacity
               style={[styles.actionButton, styles.callButton]}
-              onPress={() => handleCall(item.phone!)}
+              onPress={() => handleCall(item)}
               activeOpacity={0.7}
             >
               <MaterialIcons name="phone" size={16} color="#ffffff" />
@@ -373,7 +401,7 @@ export function DirectoryScreen({ navigation }: any) {
 
             <TouchableOpacity
               style={[styles.actionButton, styles.chatButton]}
-              onPress={() => handleMessage(item.id, item.phone)}
+              onPress={() => handleMessage(item)}
               activeOpacity={0.7}
             >
               <MaterialIcons name="chat" size={16} color="#ffffff" />
@@ -433,6 +461,99 @@ export function DirectoryScreen({ navigation }: any) {
           />
         )}
       </View>
+
+      <Modal
+        visible={actionSheetVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setActionSheetVisible(false)}
+      >
+        <Pressable 
+          style={styles.modalOverlay} 
+          onPress={() => setActionSheetVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              {actionSheetType === 'call' ? 'انتخاب روش تماس' : 'انتخاب روش ارسال پیام'}
+            </Text>
+            <Text style={styles.modalSubtitle}>
+              ارتباط با {selectedUser?.name}
+            </Text>
+
+            {actionSheetType === 'call' && selectedUser?.phone && (
+              <>
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => {
+                    setActionSheetVisible(false)
+                    Linking.openURL(`tel:${selectedUser.phone}`)
+                  }}
+                >
+                  <MaterialIcons name="phone" size={20} color={theme.colors.success} />
+                  <Text style={styles.modalButtonText}>تماس تلفنی معمولی (سیم‌کارت)</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => {
+                    setActionSheetVisible(false)
+                    navigation.navigate('کنفرانس صوتی')
+                  }}
+                >
+                  <MaterialIcons name="group" size={20} color={theme.colors.primary} />
+                  <Text style={styles.modalButtonText}>کنفرانس صوتی خط ۱ (VoIP)</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => {
+                    setActionSheetVisible(false)
+                    navigation.navigate('بی‌سیم راهبری')
+                  }}
+                >
+                  <MaterialIcons name="radio" size={20} color={theme.colors.warning || '#f59e0b'} />
+                  <Text style={styles.modalButtonText}>شبیه‌ساز بی‌سیم راهبری</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {actionSheetType === 'message' && selectedUser && (
+              <>
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => {
+                    setActionSheetVisible(false)
+                    navigation.navigate('چت', { dm: selectedUser.id })
+                  }}
+                >
+                  <MaterialIcons name="chat" size={20} color={theme.colors.primary} />
+                  <Text style={styles.modalButtonText}>چت داخلی اپلیکیشن (بلادرنگ)</Text>
+                </TouchableOpacity>
+
+                {selectedUser.phone && (
+                  <TouchableOpacity
+                    style={styles.modalButton}
+                    onPress={() => {
+                      setActionSheetVisible(false)
+                      Linking.openURL(`sms:${selectedUser.phone}`)
+                    }}
+                  >
+                    <MaterialIcons name="sms" size={20} color={theme.colors.success} />
+                    <Text style={styles.modalButtonText}>ارسال پیامک معمولی (SMS)</Text>
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
+
+            <TouchableOpacity
+              style={[styles.modalButton, styles.modalCancelButton]}
+              onPress={() => setActionSheetVisible(false)}
+            >
+              <Text style={styles.modalCancelButtonText}>انصراف</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </ScreenWrapper>
   )
 }
