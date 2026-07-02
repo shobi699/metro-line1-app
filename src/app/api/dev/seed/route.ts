@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
+import { jdate } from '@/lib/dayjs'
 
 export async function GET() {
   try {
@@ -95,7 +96,138 @@ export async function GET() {
       ]
     })
 
-    return NextResponse.json({ success: true, message: 'UI Builder & Leaves Seeding successful' })
+    // Seeding mock today's Roster Day and Trips for testing Cabin Mode
+    const todayJalali = jdate().format('YYYY/MM/DD')
+    const todayGregorian = new Date()
+    todayGregorian.setHours(12, 0, 0, 0)
+
+    // Clear any existing RosterDay for today to prevent conflict
+    const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
+    const endOfToday = new Date()
+    endOfToday.setHours(23, 59, 59, 999)
+
+    await prisma.rosterDay.deleteMany({
+      where: {
+        OR: [
+          { jalaliDate: todayJalali },
+          { gregorianDate: { gte: startOfToday, lte: endOfToday } }
+        ]
+      }
+    })
+
+    // Create RosterDay
+    const rosterDay = await prisma.rosterDay.create({
+      data: {
+        jalaliDate: todayJalali,
+        gregorianDate: todayGregorian,
+        title: `لوحه روزانه ${todayJalali}`,
+        schedulingTitle: `برنامه اعزام خط ۱ - ${todayJalali}`,
+        status: 'PUBLISHED'
+      }
+    })
+
+    // Create RosterVersion
+    const rosterVersion = await prisma.rosterVersion.create({
+      data: {
+        rosterDayId: rosterDay.id,
+        versionNo: 1,
+        status: 'PUBLISHED',
+        changeReason: 'راه‌اندازی اولیه لوحه دمو',
+        changeSummary: 'انتساب سفرهای دمو به کاربران'
+      }
+    })
+
+    // Find our users
+    const driverUser = await prisma.user.findFirst({
+      where: { nationalId: '1111111111' } // علی رضایی
+    })
+
+    const superAdminUser = await prisma.user.findFirst({
+      where: { nationalId: '0000000000' } // مدیر سیستم
+    })
+
+    const adminUser = await prisma.user.findFirst({
+      where: { nationalId: '9999999999' } // مدیر خط
+    })
+
+    const targetUserIds = [driverUser?.id, superAdminUser?.id, adminUser?.id].filter(Boolean) as string[]
+
+    // Create a few mock trips for today
+    const tripData = [
+      {
+        rowNo: 1,
+        trainNumber: '101',
+        direction: 'TAJRISH_TO_SHAHRREY',
+        originStation: 'تجریش',
+        destinationStation: 'شهرری',
+        departureTime: '۰۸:۳۰:۰۰',
+        arrivalTime: '۰۹:۱۵:۰۰',
+        status: 'NORMAL'
+      },
+      {
+        rowNo: 2,
+        trainNumber: '102',
+        direction: 'SHAHRREY_TO_TAJRISH',
+        originStation: 'شهرری',
+        destinationStation: 'تجریش',
+        departureTime: '۱۰:۰۰:۰۰',
+        arrivalTime: '۱۰:۴۵:۰۰',
+        status: 'NORMAL'
+      },
+      {
+        rowNo: 3,
+        trainNumber: '103',
+        direction: 'TAJRISH_TO_SHAHRREY',
+        originStation: 'تجریش',
+        destinationStation: 'شهرری',
+        departureTime: '۱۳:۱۵:۰۰',
+        arrivalTime: '۱۴:۰۰:۰۰',
+        status: 'NORMAL'
+      },
+      {
+        rowNo: 4,
+        trainNumber: '104',
+        direction: 'SHAHRREY_TO_TAJRISH',
+        originStation: 'شهرری',
+        destinationStation: 'تجریش',
+        departureTime: '۱۶:۳۰:۰۰',
+        arrivalTime: '۱۷:۱۵:۰۰',
+        status: 'NORMAL'
+      }
+    ]
+
+    for (const data of tripData) {
+      const trip = await prisma.trip.create({
+        data: {
+          rosterVersionId: rosterVersion.id,
+          rowNo: data.rowNo,
+          trainNumber: data.trainNumber,
+          direction: data.direction,
+          originStation: data.originStation,
+          destinationStation: data.destinationStation,
+          departureTime: data.departureTime,
+          arrivalTime: data.arrivalTime,
+          status: data.status
+        }
+      })
+
+      // Assign to all of our target users so whoever is logged in can see and test Cabin Mode!
+      for (const userId of targetUserIds) {
+        await prisma.tripAssignment.create({
+          data: {
+            tripId: trip.id,
+            role: 'H1', // Driver H1
+            rawName: 'راهبر نمونه',
+            matchedUserId: userId,
+            personnelNo: '100001',
+            matchStatus: 'MANUAL_MATCHED'
+          }
+        })
+      }
+    }
+
+    return NextResponse.json({ success: true, message: 'UI Builder, Leaves, & Roster Seeding successful' })
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
