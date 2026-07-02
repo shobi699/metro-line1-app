@@ -239,7 +239,7 @@ export function AiChatInterface() {
   }
 
   return (
-    <section className="relative flex flex-1 flex-col bg-background text-right transition-colors duration-150" dir="rtl">
+    <section className="relative flex flex-1 h-full flex-col bg-background text-right transition-colors duration-150 overflow-hidden" dir="rtl">
       
       {/* HEADER: AI Model status & Settings trigger */}
       <div className="z-10 flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-subtle bg-surface-container-low px-4 py-3 shadow-sm gap-2">
