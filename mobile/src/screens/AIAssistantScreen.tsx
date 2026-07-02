@@ -13,7 +13,6 @@ import {
 } from 'react-native'
 import { useAuthStore } from '../stores/auth'
 import { API_URL } from '../shared/config'
-import { cachedFetch } from '../shared/cached-fetch'
 import { MaterialIcons } from '@expo/vector-icons'
 import { useTheme } from '../shared/ThemeProvider'
 import { ScreenWrapper } from '../shared/ScreenWrapper'
@@ -80,6 +79,50 @@ export function AIAssistantScreen({ navigation }: any) {
     }, 100)
   }, [messages, loading])
 
+  async function aiAuthenticatedFetch(path: string, options: RequestInit = {}): Promise<any> {
+    const authStore = useAuthStore.getState()
+    const url = `${API_URL}${path}`
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string> || {}),
+    }
+    
+    if (authStore.accessToken) {
+      headers['Authorization'] = `Bearer ${authStore.accessToken}`
+    }
+
+    let res = await fetch(url, { ...options, headers })
+
+    if (res.status === 401 && authStore.refreshToken) {
+      const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: authStore.refreshToken })
+      })
+
+      if (refreshRes.ok) {
+        const tokens = await refreshRes.json()
+        if (authStore.user) {
+          await authStore.setAuth(authStore.user, tokens.accessToken, tokens.refreshToken)
+        }
+        headers['Authorization'] = `Bearer ${tokens.accessToken}`
+        res = await fetch(url, { ...options, headers })
+      } else {
+        await authStore.logout()
+        throw new Error('UNAUTHORIZED')
+      }
+    }
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '')
+      throw new Error(errText || `HTTP_${res.status}`)
+    }
+
+    const data = await res.json()
+    return data?.data ?? data
+  }
+
   async function handleSend(customText?: string) {
     const textToSend = customText || inputText
     if (!textToSend.trim() || loading) return
@@ -97,11 +140,8 @@ export function AIAssistantScreen({ navigation }: any) {
     setLoading(true)
 
     try {
-      const data = await cachedFetch<any>('/ai', {
+      const data = await aiAuthenticatedFetch('/ai', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           prompt: userText,
           conversationId,
@@ -135,15 +175,37 @@ export function AIAssistantScreen({ navigation }: any) {
           },
         ])
       }
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          text: '🔌 خطا در ارتباط با سرور. لطفاً اتصال شبکه خود را بررسی کنید.',
-          isUser: false,
-        },
-      ])
+    } catch (err: any) {
+      if (err.message === 'UNAUTHORIZED') {
+        return
+      }
+
+      const isNetworkError = err.message && (
+        err.message.includes('Network') || 
+        err.message.includes('fetch') || 
+        err.message.includes('Failed to fetch') ||
+        err.message.includes('type')
+      )
+
+      if (isNetworkError) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            text: '🔌 خطا در ارتباط با سرور. لطفاً اتصال شبکه خود را بررسی کنید.',
+            isUser: false,
+          },
+        ])
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            text: '⚠️ خطایی در پردازش درخواست رخ داد. لطفاً مجدداً تلاش کنید.',
+            isUser: false,
+          },
+        ])
+      }
     } finally {
       setLoading(false)
     }
@@ -171,11 +233,8 @@ export function AIAssistantScreen({ navigation }: any) {
     )
 
     try {
-      await cachedFetch<any>('/ai/feedback', {
+      await aiAuthenticatedFetch('/ai/feedback', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           messageId: backendId,
           feedback: feedbackValue
