@@ -103,19 +103,57 @@ export function RosterScreen() {
 
   // Filtered trips for "Whole Daily Roster" tab
   const filteredAllTrips = React.useMemo(() => {
+    // Helper to normalize characters and digits for robust Persian search
+    const normalizeText = (text: string): string => {
+      if (!text) return ''
+      const arabicYe = 'ي'
+      const persianYe = 'ی'
+      const arabicKe = 'ك'
+      const persianKe = 'ک'
+      
+      const persianDigits = [/۰/g, /۱/g, /۲/g, /۳/g, /۴/g, /۵/g, /۶/g, /۷/g, /۸/g, /۹/g]
+      const arabicDigits  = [/٠/g, /١/g, /٢/g, /٣/g, /٤/g, /٥/g, /٦/g, /٧/g, /٨/g, /٩/g]
+      
+      let normalized = text.toLowerCase()
+        .replace(new RegExp(arabicYe, 'g'), persianYe)
+        .replace(new RegExp(arabicKe, 'g'), persianKe)
+        
+      for (let i = 0; i < 10; i++) {
+        normalized = normalized.replace(persianDigits[i], String(i)).replace(arabicDigits[i], String(i))
+      }
+      return normalized.trim()
+    }
+
     return allTrips
       .filter((t) => t.direction === allDirectionFilter)
       .filter((t) => {
         if (!allSearchQuery.trim()) return true
-        const query = allSearchQuery.toLowerCase().trim()
-        const trainNo = (t.trainNumber || '').toLowerCase()
-        if (trainNo.includes(query)) return true
+        const query = normalizeText(allSearchQuery)
         
+        // 1. Check Train Number
+        const trainNo = normalizeText(t.trainNumber || '')
+        if (trainNo.includes(query)) return true
+
+        // 2. Check Departure and Arrival Times
+        const depTime = normalizeText(t.departureTime || '')
+        const arrTime = normalizeText(t.arrivalTime || '')
+        if (depTime.includes(query) || arrTime.includes(query)) return true
+
+        // 3. Check Stations
+        const origin = normalizeText(t.originStation || '')
+        const destination = normalizeText(t.destinationStation || '')
+        // Farsi names for direction / stations mapping
+        const farsiOrigin = t.direction === 'SHAHRREY_TO_TAJRISH' ? 'شهرری' : 'تجریش'
+        const farsiDest = t.direction === 'SHAHRREY_TO_TAJRISH' ? 'تجریش' : 'شهرری'
+        if (normalizeText(farsiOrigin).includes(query) || normalizeText(farsiDest).includes(query) || origin.includes(query) || destination.includes(query)) return true
+        
+        // 4. Check Drivers in Assignments
         return t.assignments.some(a => {
-          const name = (a.matchedUser?.name || a.rawName || '').toLowerCase()
-          const personnel = (a.personnelNo || '').toLowerCase()
-          const role = (a.role || '').toLowerCase()
-          return name.includes(query) || personnel.includes(query) || role.includes(query)
+          const name = normalizeText(a.matchedUser?.name || a.rawName || '')
+          const personnel = normalizeText(a.personnelNo || '')
+          const role = normalizeText(a.role || '')
+          const roleLabel = a.role === 'H1' ? 'اصلی' : a.role === 'H2' ? 'دوم' : 'کمکی'
+          return name.includes(query) || personnel.includes(query) || role.includes(query) || normalizeText(roleLabel).includes(query)
         })
       })
   }, [allTrips, allDirectionFilter, allSearchQuery])
