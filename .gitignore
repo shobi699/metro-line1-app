@@ -59,3 +59,9 @@ mobile/ios/
 # local pdf manuals data directory
 /lohe
 /lohe/docs
+
+# SQLite databases
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
