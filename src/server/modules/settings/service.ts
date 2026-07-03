@@ -514,8 +514,8 @@ const DEFAULT_SETTINGS = [
     label: 'شماره نسخه پنل وب',
     description: 'شماره نسخه رسمی پنل وب پرسنل خط ۱ مترو تهران — جهت نمایش در سایدبار',
     type: 'text',
-    value: 'v0.1.1',
-    defaultValue: 'v0.1.1',
+    value: 'v0.1.2',
+    defaultValue: 'v0.1.2',
     category: 'general',
   },
   {

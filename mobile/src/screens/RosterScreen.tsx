@@ -99,7 +99,27 @@ export function RosterScreen() {
   // Full line trips (All Today Roster)
   const [allTrips, setAllTrips] = useState<Trip[]>([])
   const [allDirectionFilter, setAllDirectionFilter] = useState<'SHAHRREY_TO_TAJRISH' | 'TAJRISH_TO_SHAHRREY'>('SHAHRREY_TO_TAJRISH')
-  
+  const [allSearchQuery, setAllSearchQuery] = useState('')
+
+  // Filtered trips for "Whole Daily Roster" tab
+  const filteredAllTrips = React.useMemo(() => {
+    return allTrips
+      .filter((t) => t.direction === allDirectionFilter)
+      .filter((t) => {
+        if (!allSearchQuery.trim()) return true
+        const query = allSearchQuery.toLowerCase().trim()
+        const trainNo = (t.trainNumber || '').toLowerCase()
+        if (trainNo.includes(query)) return true
+        
+        return t.assignments.some(a => {
+          const name = (a.matchedUser?.name || a.rawName || '').toLowerCase()
+          const personnel = (a.personnelNo || '').toLowerCase()
+          const role = (a.role || '').toLowerCase()
+          return name.includes(query) || personnel.includes(query) || role.includes(query)
+        })
+      })
+  }, [allTrips, allDirectionFilter, allSearchQuery])
+
   // Dispute Modal state
   const [disputeModalVisible, setDisputeModalVisible] = useState(false)
   const [disputeNote, setDisputeNote] = useState('')
@@ -363,6 +383,17 @@ export function RosterScreen() {
           </View>
         ) : (
           <View style={{ flex: 1 }}>
+            {/* Search Input */}
+            <View style={styles.searchContainer}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="جستجو در شماره قطار، نام راهبر، سمت..."
+                placeholderTextColor={theme.colors.secondary}
+                value={allSearchQuery}
+                onChangeText={setAllSearchQuery}
+              />
+            </View>
+
             {/* Direction Filter Toggles */}
             <View style={styles.directionFilter}>
               <TouchableOpacity
@@ -395,19 +426,21 @@ export function RosterScreen() {
                 />
               }
             >
-              {allTrips.filter(t => t.direction === allDirectionFilter).length === 0 ? (
+              {filteredAllTrips.length === 0 ? (
                 <View style={styles.emptyContainer}>
                   <HelpCircle size={48} color={theme.colors.secondary} />
-                  <Text style={styles.emptyText}>هیچ سفری در این مسیر برای امروز ثبت نشده است.</Text>
+                  <Text style={styles.emptyText}>
+                    {allSearchQuery.trim() 
+                      ? 'موردی یافت نشد.' 
+                      : 'هیچ سفری در این مسیر برای امروز ثبت نشده است.'}
+                  </Text>
                 </View>
               ) : (
-                allTrips
-                  .filter(t => t.direction === allDirectionFilter)
-                  .map((trip) => {
-                    const h1 = trip.assignments.find(a => a.role === 'H1')
-                    const h2 = trip.assignments.find(a => a.role === 'H2')
-                    const assistT = trip.assignments.find(a => a.role === 'T')
-                    const assistR = trip.assignments.find(a => a.role === 'R')
+                filteredAllTrips.map((trip) => {
+                  const h1 = trip.assignments.find(a => a.role === 'H1')
+                  const h2 = trip.assignments.find(a => a.role === 'H2')
+                  const assistT = trip.assignments.find(a => a.role === 'T')
+                  const assistR = trip.assignments.find(a => a.role === 'R')
                     
                     return (
                       <View key={trip.id} style={styles.fullTripCard}>
@@ -1354,6 +1387,23 @@ const getStyles = (theme: any) => StyleSheet.create({
   },
   modalCancelBtn: {
     backgroundColor: theme.colors.surfaceContainerLow,
+  },
+  searchContainer: {
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  searchInput: {
+    backgroundColor: theme.colors.surfaceContainerLow,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.lg,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    color: theme.colors.onSurface,
+    fontSize: 13,
+    textAlign: 'right',
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   modalBtnText: {
     color: '#ffffff',
