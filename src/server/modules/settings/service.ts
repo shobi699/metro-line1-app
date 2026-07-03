@@ -510,6 +510,15 @@ const DEFAULT_SETTINGS = [
     category: 'general',
   },
   {
+    key: 'general.webVersion',
+    label: 'شماره نسخه پنل وب',
+    description: 'شماره نسخه رسمی پنل وب پرسنل خط ۱ مترو تهران — جهت نمایش در سایدبار',
+    type: 'text',
+    value: 'v0.1.1',
+    defaultValue: 'v0.1.1',
+    category: 'general',
+  },
+  {
     key: 'general.developerText',
     label: 'متن کپی‌رایت و برنامه‌نویس',
     description: 'نام شرکت یا بخش توسعه‌دهنده نرم‌افزار جهت نمایش در منوی موبایل',

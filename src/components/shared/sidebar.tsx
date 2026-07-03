@@ -235,6 +235,16 @@ export function SidebarContent() {
   const pathname = usePathname()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
+  const [webVersion, setWebVersion] = useState<string>('v0.1.1')
+
+  useEffect(() => {
+    fetch('/api/config')
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.data?.webVersion) setWebVersion(json.data.webVersion)
+      })
+      .catch(() => {})
+  }, [])
 
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}
@@ -389,6 +399,11 @@ export function SidebarContent() {
             <LogOut className="size-4" />
             خروج
           </Button>
+        </div>
+        {/* Web Version Badge */}
+        <div className="flex items-center justify-center gap-1.5 rounded-md bg-surface-container-high/50 px-2 py-1.5">
+          <span className="text-[10px] text-foreground-muted/60">نسخه پنل وب:</span>
+          <span className="font-mono text-[10px] font-semibold text-accent/80 tracking-wide">{webVersion}</span>
         </div>
       </div>
     </div>

@@ -17,6 +17,7 @@ export async function GET(request: Request) {
 
     // New mobile branding settings
     const appVersion = await getSettingValue('general.appVersion', 'نسخه ۱.۵.۰')
+    const webVersion = await getSettingValue('general.webVersion', 'v0.1.1')
     const developerText = await getSettingValue('general.developerText', 'توسعه داده شده توسط بخش فناوری سیر و حرکت')
     const socialLinksRaw = await getSettingValue('general.socialLinks', '[]')
     let socialLinks = []
@@ -104,6 +105,7 @@ export async function GET(request: Request) {
           showHolidays,
         },
         appVersion,
+        webVersion,
         developerText,
         socialLinks,
         leaveTypes,
