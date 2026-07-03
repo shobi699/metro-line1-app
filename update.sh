@@ -4,9 +4,35 @@
 
 echo "=== شروع فرآیند به‌روزرسانی پروژه ==="
 
+# رفع خودکار تداخل فایل‌های قفل یا موقت
+if [ -f "package-lock.json" ]; then
+  echo "در حال ریست کردن تغییرات محلی package-lock.json..."
+  git checkout -- package-lock.json
+fi
+
+# مدیریت فایل دیتابیس برای جلوگیری از تداخل گیت
+DB_EXISTS=false
+if [ -f "prisma/dev.db" ]; then
+  echo "در حال انتقال موقت دیتابیس برای جلوگیری از تداخل ادغام..."
+  mv prisma/dev.db prisma/dev.db.bak
+  DB_EXISTS=true
+fi
+
 # ۱. دریافت آخرین تغییرات از مخزن گیت
 echo "در حال دریافت آخرین کدهای پروژه از Git..."
 git pull origin main
+PULL_STATUS=$?
+
+# بازگرداندن فایل دیتابیس
+if [ "$DB_EXISTS" = true ]; then
+  echo "در حال بازگرداندن دیتابیس..."
+  mv prisma/dev.db.bak prisma/dev.db
+fi
+
+if [ $PULL_STATUS -ne 0 ]; then
+  echo "خطا: دریافت کدها از گیت ناموفق بود. لغو فرآیند بروزرسانی."
+  exit 1
+fi
 
 # ۲. نصب وابستگی‌های پروژه
 echo "در حال نصب پکیج‌ها و وابستگی‌های جدید..."
@@ -26,6 +52,6 @@ npm run build
 
 # ۶. ری‌استارت کردن وب‌سایت در PM2 برای اعمال تغییرات زنده
 echo "در حال راه‌اندازی مجدد برنامه در PM2..."
-pm2 restart metro-app
+pm2 restart metro-app || pm2 restart all
 
 echo "=== فرآیند به‌روزرسانی با موفقیت به پایان رسید! ==="
