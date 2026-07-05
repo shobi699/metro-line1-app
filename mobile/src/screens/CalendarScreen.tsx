@@ -533,8 +533,12 @@ export function CalendarScreen({ navigation }: any) {
       >
         {/* Top App Bar (Header) */}
         <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 }}>
-          <TouchableOpacity style={styles.headerBtn}>
-            <MaterialIcons name="settings" size={24} color={theme.colors.secondary} />
+          <TouchableOpacity
+            style={styles.headerBtn}
+            accessibilityLabel="تقویم زندگی"
+            onPress={() => navigation.navigate('LifeCalendarScreen')}
+          >
+            <MaterialIcons name="event-note" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.todayBtn} onPress={jumpToToday}>
             <Text style={styles.todayBtnText}>امروز</Text>

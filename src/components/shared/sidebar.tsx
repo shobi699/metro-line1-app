@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   Users,
   Calendar,
+  CalendarDays,
   ArrowLeftRight,
   AlertTriangle,
   ShieldCheck,
@@ -94,6 +95,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         icon: Calendar,
         items: [
           { label: 'شیفت و تقویم من', href: '/shifts', icon: Calendar },
+          { label: 'تقویم زندگی', href: '/calendar', icon: CalendarDays },
           { label: 'لوحه اعزام روزانه خط ۱', href: '/roster', icon: Clock },
           { label: 'درخواست تعویض شیفت', href: '/swap/inbox', icon: ArrowLeftRight },
           { label: 'حضور و غیاب هوشمند', href: '/attendance', icon: UserCheck },

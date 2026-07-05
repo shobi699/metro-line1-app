@@ -1,8 +1,6 @@
 import { AiProvider } from '@/generated/prisma/client'
 
-export interface ProviderConfig extends AiProvider {
-  // We can merge in runtime config if needed
-}
+export type ProviderConfig = AiProvider
 
 export interface AIResponse {
   text: string

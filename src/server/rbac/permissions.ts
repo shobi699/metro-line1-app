@@ -103,6 +103,62 @@ export const PERMISSION_CATALOG: PermissionGroup[] = [
       { key: 'settings:update', label: 'ویرایش' },
     ],
   },
+  {
+    resource: 'faults',
+    label: 'مدیریت خرابی‌ها (فالت)',
+    permissions: [
+      { key: 'faults:create', label: 'ثبت فالت' },
+      { key: 'faults:read', label: 'مشاهده فالت‌ها' },
+      { key: 'faults:review', label: 'تایید / رد / ویرایش در مرحله بازبینی' },
+      { key: 'faults:repair', label: 'ثبت اقدامات تعمیراتی' },
+      { key: 'faults:verify', label: 'تایید نهایی و بستن' },
+      { key: 'faults:reopen', label: 'بازگشایی فالت بسته‌شده' },
+      { key: 'faults:defer', label: 'ماندگار کردن (Deferred)' },
+    ],
+  },
+  {
+    resource: 'fleet',
+    label: 'ناوگان قطارها',
+    permissions: [
+      { key: 'fleet:manage', label: 'مدیریت قطارها و واگن‌ها' },
+      { key: 'fleet:read', label: 'مشاهده ناوگان' },
+    ],
+  },
+  {
+    resource: 'fault-catalog',
+    label: 'کاتالوگ خطاها',
+    permissions: [
+      { key: 'fault-catalog:manage', label: 'مدیریت کاتالوگ' },
+      { key: 'fault-catalog:read', label: 'مشاهده کاتالوگ' },
+    ],
+  },
+  {
+    resource: 'calendar',
+    label: 'تقویم',
+    permissions: [
+      { key: 'calendar:view', label: 'مشاهده تقویم خود' },
+      { key: 'calendar:personal', label: 'مدیریت رویدادهای شخصی' },
+      { key: 'calendar:view-team', label: 'مشاهده شیفت هم‌گروهی‌ها' },
+      { key: 'calendar:ics', label: 'اشتراک ICS' },
+    ],
+  },
+  {
+    resource: 'calendar-admin',
+    label: 'مدیریت تقویم',
+    permissions: [
+      { key: 'calendar-admin:holidays', label: 'مدیریت تعطیلات و مناسبت‌ها' },
+      { key: 'calendar-admin:events', label: 'رویدادهای سازمانی' },
+      { key: 'calendar-admin:config', label: 'پیکربندی ظاهر و قوانین' },
+    ],
+  },
+  {
+    resource: 'fault-reports',
+    label: 'گزارش‌های فالت',
+    permissions: [
+      { key: 'fault-reports:view', label: 'مشاهده گزارش‌ها و داشبورد' },
+      { key: 'fault-reports:export', label: 'خروجی اکسل / PDF' },
+    ],
+  },
 ]
 
 /** فهرست تخت همهٔ کلیدهای مجوز معتبر. */

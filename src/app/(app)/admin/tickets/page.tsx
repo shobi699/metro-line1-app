@@ -7,7 +7,7 @@ import { AlertTriangle, Filter, Image as ImageIcon, MessageSquare } from 'lucide
 import { useAuthStore } from '@/features/auth'
 import { toFa } from '@/lib/fa'
 import dayjs from 'dayjs'
-// @ts-ignore
+// @ts-expect-error — dayjs-jalali بدون type declaration منتشر شده است
 import jalaliday from 'dayjs-jalali'
 
 dayjs.extend(jalaliday)

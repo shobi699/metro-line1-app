@@ -68,6 +68,39 @@ enum AuditLogAction {
   export
 }
 
+enum TrainStatus {
+  active
+  standby
+  maintenance
+  out_of_service
+}
+
+enum FaultStatus {
+  submitted
+  under_review
+  needs_info
+  rejected
+  approved
+  in_repair
+  repaired
+  verified_closed
+  deferred
+  reopened
+}
+
+enum FaultLogAction {
+  created
+  status_changed
+  edited
+  assigned
+  comment
+  priority_changed
+  attachment_added
+  sla_breached
+  reopened
+  deferred
+}
+
 enum ChatRoomType {
   direct
   group
@@ -84,6 +117,13 @@ enum ChatRoomKind {
   announcement
   emergency
   management
+}
+
+enum PersonalEventType {
+  event
+  birthday
+  task
+  note
 }
 
 enum PostType {
@@ -156,6 +196,13 @@ model User {
   leaveRequests             LeaveRequest[]      @relation("LeaveRequester")
   reviewedLeaves            LeaveRequest[]      @relation("LeaveReviewer")
   aiConversations           AiConversation[]
+  faultsReporter            FaultReport[]     @relation("FaultReporter")
+  faultsReviewer            FaultReport[]     @relation("FaultReviewer")
+  faultsAssignee            FaultReport[]     @relation("FaultAssignee")
+  faultsVerifier            FaultReport[]     @relation("FaultVerifier")
+  faultLogsActor            FaultLog[]        @relation("FaultLogActor")
+  personalEvents            PersonalEvent[]   @relation("PersonalEvents")
+  calendarPreference        CalendarPreference? @relation("CalendarPref")
 
   @@index([roleId])
   @@index([status])
@@ -1234,5 +1281,241 @@ model AiKnowledgeCache {
   isVerified         Boolean  @default(false)
   createdAt          DateTime @default(now())
   lastUsedAt         DateTime @default(now())
+}
+
+// ── Fleet ──────────────────────────────────────────────
+
+model Train {
+  id             String      @id @default(cuid())
+  trainNumber    String      @unique          // e.g. "110"
+  fleetSeries    String?                      // DC01, AC02, etc.
+  manufacturer   String?                      // CNR, CRRC, etc.
+  wagonCount     Int         @default(7)
+  commissionedAt DateTime?                  
+  status         TrainStatus @default(active)
+  qrToken        String      @unique @default(cuid())  
+  notes          String?
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  wagons Wagon[]
+  faults FaultReport[]
+
+  @@index([status])
+}
+
+model Wagon {
+  id         String  @id @default(cuid())
+  trainId    String
+  wagonCode  String                         // e.g. "110-3"
+  position   Int                            // 1..7
+  wagonType  String?                        // Mc / Tp / M / T
+  isActive   Boolean @default(true)
+
+  train  Train         @relation(fields: [trainId], references: [id])
+  faults FaultReport[]
+
+  @@unique([trainId, position])
+  @@index([trainId])
+}
+
+// ── Fault Catalog ──────────────────────────────────────────────
+
+model FaultCategory {
+  id        String  @id @default(cuid())
+  code      String  @unique      // BRK, DRS, TRC, HVAC, SIG, BOG, PAN, etc.
+  title     String               
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  faultCodes FaultCode[]
+}
+
+model FaultCode {
+  id              String         @id @default(cuid())
+  categoryId      String
+  code            String         @unique   // e.g. DRS-004
+  title           String                   
+  description     String?                  
+  defaultPriority TicketPriority @default(medium)
+  safetyCritical  Boolean        @default(false)  
+  requiresWagon   Boolean        @default(true)   
+  operatorGuide   String?                  
+  keywords        String?                  
+  aliases         String?                  
+  embedding       Bytes?                   
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  category FaultCategory @relation(fields: [categoryId], references: [id])
+  faults   FaultReport[]
+
+  @@index([categoryId])
+}
+
+// ── Fault Report & Workflow ──────────────────────────────────────────────
+
+model FaultReport {
+  id             String         @id @default(cuid())
+  faultNo        Int            @unique // Managed programmatically to avoid SQLite non-primary autoincrement error
+  trainId        String
+  wagonId        String?
+  faultCodeId    String
+  status         FaultStatus    @default(submitted)
+  priority       TicketPriority @default(medium)
+
+  // Registration
+  reporterId     String
+  description    String                    
+  locationNote   String?                   
+  occurredAt     DateTime                  
+  serviceImpact  String?                   // none | delay | evacuated | removed_from_service
+  photoUrls      Json?                     
+  annotations    Json?                     
+
+  // Review
+  reviewerId     String?
+  reviewNote     String?
+  reviewedAt     DateTime?
+
+  // Repair
+  assigneeId     String?                   
+  repairStartAt  DateTime?
+  repairEndAt    DateTime?
+  rootCause      String?                   
+  actionsTaken   String?                   
+  partsUsed      Json?                     // [{name, qty, partNo?}]
+
+  // Verification/Deferral
+  verifierId     String?
+  verifiedAt     DateTime?
+  closedAt       DateTime?
+  deferReason    String?                   
+  deferUntil     DateTime?                 
+
+  // Recurrence & SLA
+  recurrenceOfId String?                   
+  slaDueAt       DateTime?                 
+  slaBreached    Boolean        @default(false)
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  train        Train        @relation(fields: [trainId], references: [id])
+  wagon        Wagon?       @relation(fields: [wagonId], references: [id])
+  faultCode    FaultCode    @relation(fields: [faultCodeId], references: [id])
+  reporter     User         @relation("FaultReporter", fields: [reporterId], references: [id])
+  reviewer     User?        @relation("FaultReviewer", fields: [reviewerId], references: [id])
+  assignee     User?        @relation("FaultAssignee", fields: [assigneeId], references: [id])
+  verifier     User?        @relation("FaultVerifier", fields: [verifierId], references: [id])
+  recurrenceOf FaultReport? @relation("FaultRecurrence", fields: [recurrenceOfId], references: [id])
+  recurrences  FaultReport[] @relation("FaultRecurrence")
+  logs         FaultLog[]
+
+  @@index([trainId, status])
+  @@index([faultCodeId])
+  @@index([status])
+  @@index([occurredAt])
+  @@index([slaDueAt])
+}
+
+model FaultLog {
+  id         String         @id @default(cuid())
+  faultId    String
+  actorId    String
+  action     FaultLogAction
+  fromStatus FaultStatus?
+  toStatus   FaultStatus?
+  note       String?
+  changes    Json?          // {field: {before, after}}
+  createdAt  DateTime       @default(now())
+
+  fault FaultReport @relation(fields: [faultId], references: [id], onDelete: Cascade)
+  actor User        @relation("FaultLogActor", fields: [actorId], references: [id])
+
+  @@index([faultId])
+}
+
+// ── Life Calendar (تقویم زندگی شیفت‌محور) ─────────────
+
+model PersonalEvent {
+  id          String            @id @default(cuid())
+  userId      String
+  type        PersonalEventType @default(event)
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime?
+  allDay      Boolean           @default(true)
+  color       String?
+  location    String?
+  isDone      Boolean           @default(false)
+  recurrence  Json?             // {freq: yearly|monthly|weekly|daily, interval, until, jalali:true}
+  reminders   Json?             // [{minutesBefore: 60}]
+  isPrivate   Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  user User @relation("PersonalEvents", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startAt])
+}
+
+model Holiday {
+  id         String   @id @default(cuid())
+  jalaliDate String                         // "1405-01-01"
+  title      String
+  kind       String   @default("official")  // official | religious | occasion
+  isOffDay   Boolean  @default(true)
+  recurring  Boolean  @default(true)        // تکرار سالانه جلالی
+  hijriBased Boolean  @default(false)       // قمری — ادمین سالانه ایمپورت می‌کند
+  color      String?
+  isActive   Boolean  @default(true)
+
+  @@index([jalaliDate])
+}
+
+model OrgEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime?
+  allDay      Boolean  @default(true)
+  audience    Json                           // {roles:[], groups:[], userIds:[]}
+  color       String?
+  mandatory   Boolean  @default(false)
+  createdBy   String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([startAt])
+}
+
+model CalendarPreference {
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  layers       Json    // {shift:{on:true}, holidays:{on:true}, personal:{on:true}, org:{on:true}, tasks:{on:true}}
+  defaultView  String  @default("month")
+  weekStart    String  @default("saturday")
+  widgetConfig Json?
+  icsToken     String? @unique
+
+  user User @relation("CalendarPref", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Workflow {
+  id          String   @id @default(cuid())
+  key         String   // "fault-default"
+  version     Int
+  isActive    Boolean  @default(false)
+  definition  Json     // { states:[], transitions:[], rules:[] }
+  publishedAt DateTime?
+  publishedBy String?
+  createdAt   DateTime @default(now())
+
+  @@unique([key, version])
 }
 

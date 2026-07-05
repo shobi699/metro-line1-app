@@ -15,6 +15,7 @@ import { HomeScreen } from './src/screens/HomeScreen'
 import { DirectoryScreen } from './src/screens/DirectoryScreen'
 import { ChatScreen } from './src/screens/ChatScreen'
 import { CalendarScreen } from './src/screens/CalendarScreen'
+import { LifeCalendarScreen } from './src/screens/LifeCalendarScreen'
 import { SOSScreen } from './src/screens/SOSScreen'
 import { AIAssistantScreen } from './src/screens/AIAssistantScreen'
 import { NotificationsScreen } from './src/screens/NotificationsScreen'
@@ -74,6 +75,7 @@ export type RootStackParamList = {
   SubmitRequestScreen: undefined
   MonthlyReportScreen: undefined
   CalendarScreen: undefined
+  LifeCalendarScreen: undefined
   LeaveReportScreen: undefined
   PlateSearch: undefined
   'راهنمای کاربری': undefined
@@ -118,6 +120,7 @@ function HomeStackScreen() {
       <Stack.Screen name="SubmitRequestScreen" component={SubmitRequestScreen} />
       <Stack.Screen name="MonthlyReportScreen" component={MonthlyReportScreen} />
       <Stack.Screen name="CalendarScreen" component={CalendarScreen} />
+      <Stack.Screen name="LifeCalendarScreen" component={LifeCalendarScreen} />
       <Stack.Screen name="LeaveReportScreen" component={LeaveReportScreen} />
       <Stack.Screen name="PlateSearch" component={PlateSearchScreen} />
       <Stack.Screen name="راهنمای کاربری" component={GuideScreen} />
@@ -137,6 +140,9 @@ function getComponentForRoute(route: string) {
     case 'RosterScreen':
     case 'Roster':
       return CalendarScreen
+    case 'LifeCalendarScreen':
+    case 'LifeCalendar':
+      return LifeCalendarScreen
     case 'NotificationsScreen':
     case 'Notifications':
     case 'FicationsScreen':

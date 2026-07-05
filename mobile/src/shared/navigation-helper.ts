@@ -6,6 +6,8 @@ export function handleDynamicNavigation(navigation: any, target: string) {
     Home: 'HomeScreen',
     CalendarScreen: 'شیفت‌ها',
     Calendar: 'شیفت‌ها',
+    LifeCalendarScreen: 'LifeCalendarScreen',
+    LifeCalendar: 'LifeCalendarScreen',
     NotificationsScreen: 'اعلان‌ها',
     Notifications: 'اعلان‌ها',
     FicationsScreen: 'اعلان‌ها',

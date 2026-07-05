@@ -49,6 +49,21 @@
   /* ── Surface tint (brand red) ──────── */
   --color-surface-tint:       var(--surface-tint);
 
+  /* ── Shift palette (SHIFT_CALENDAR_UI_DESIGN.md §2.1) ── */
+  --color-shift-morning:      var(--shift-morning);
+  --color-shift-morning-bg:   var(--shift-morning-bg);
+  --color-shift-evening:      var(--shift-evening);
+  --color-shift-evening-bg:   var(--shift-evening-bg);
+  --color-shift-night:        var(--shift-night);
+  --color-shift-night-bg:     var(--shift-night-bg);
+  --color-shift-off:          var(--shift-off);
+  --color-shift-off-bg:       var(--shift-off-bg);
+  --color-shift-office:       var(--shift-office);
+  --color-shift-office-bg:    var(--shift-office-bg);
+  --color-evt-personal:       var(--evt-personal);
+  --color-evt-org:            var(--evt-org);
+  --color-evt-task:           var(--evt-task);
+
   /* ── Fonts ────────────────────────── */
   --font-sans:  "Vazirmatn Variable", "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
   --font-mono:  "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
@@ -134,6 +149,21 @@
   /* ── Semantic extras (light) ──────── */
   --error-container:    oklch(0.92 0.05 25);
   --on-error-container: oklch(0.30 0.15 25);
+
+  /* ── Shift palette (light) ─────────── */
+  --shift-morning:     #0e9f9f;
+  --shift-morning-bg:  color-mix(in srgb, #0e9f9f 10%, transparent);
+  --shift-evening:     #d97706;
+  --shift-evening-bg:  color-mix(in srgb, #d97706 10%, transparent);
+  --shift-night:       #4f46e5;
+  --shift-night-bg:    color-mix(in srgb, #4f46e5 10%, transparent);
+  --shift-off:         #16a34a;
+  --shift-off-bg:      color-mix(in srgb, #16a34a 10%, transparent);
+  --shift-office:      #64748b;
+  --shift-office-bg:   color-mix(in srgb, #64748b 10%, transparent);
+  --evt-personal:      #2563eb;
+  --evt-org:           #7c3aed;
+  --evt-task:          #0891b2;
 }
 
 /* ── Dark mode (default) ────────────── */
@@ -182,6 +212,21 @@
   /* ── Semantic extras (dark) ───────── */
   --error-container:    oklch(0.35 0.15 25);
   --on-error-container: oklch(0.92 0.05 25);
+
+  /* ── Shift palette (dark) ──────────── */
+  --shift-morning:     #2dd4cf;
+  --shift-morning-bg:  color-mix(in srgb, #2dd4cf 12%, transparent);
+  --shift-evening:     #fbbf24;
+  --shift-evening-bg:  color-mix(in srgb, #fbbf24 12%, transparent);
+  --shift-night:       #818cf8;
+  --shift-night-bg:    color-mix(in srgb, #818cf8 12%, transparent);
+  --shift-off:         #4ade80;
+  --shift-off-bg:      color-mix(in srgb, #4ade80 12%, transparent);
+  --shift-office:      #94a3b8;
+  --shift-office-bg:   color-mix(in srgb, #94a3b8 12%, transparent);
+  --evt-personal:      #3b82f6;
+  --evt-org:           #a78bfa;
+  --evt-task:          #22d3ee;
 }
 
 /* ── Base styles ───────────────────── */
