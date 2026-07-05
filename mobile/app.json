@@ -17,6 +17,46 @@
       "package": "com.metro.line1",
       "usesCleartextTraffic": true
     },
+    "plugins": [
+      "expo-notifications",
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "ShiftSmall",
+              "label": "شیفت امروز",
+              "description": "شیفت امروز و فردا در یک نگاه",
+              "minWidth": "110dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "ShiftWeek",
+              "label": "خط زندگی هفته",
+              "description": "ریبون ۷ روزه شیفت‌ها + رویداد امروز",
+              "minWidth": "250dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "ShiftMonth",
+              "label": "ماه شیفت",
+              "description": "۳۰ روز پیش رو با رنگ شیفت + رویدادهای بعدی",
+              "minWidth": "250dp",
+              "minHeight": "250dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 4,
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "fc31b1a7-577c-4709-b70f-ff9f2c8dd541"

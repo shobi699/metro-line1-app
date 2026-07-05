@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { cachedFetch } from '../shared/cached-fetch'
+import { syncWidgetAndReminders } from '../shared/widget-sync'
 import { gregorianToJalali, jalaliToGregorian, getJalaliMonthLength } from '../shared/jalali'
 
 // ── انواع — آینه‌ی پاسخ GET /api/calendar (سرور) ──────
@@ -67,6 +68,7 @@ export interface NewEventInput {
   title: string
   startAt: string
   allDay: boolean
+  reminders?: { minutesBefore: number }[]
 }
 
 function toGregStr(d: Date): string {
@@ -157,6 +159,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
     })
     if (data) {
       await get().loadMonth()
+      void syncWidgetAndReminders()
       return true
     }
     return false
@@ -165,6 +168,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   async deleteEvent(id) {
     await cachedFetch(`/calendar/events/${id}`, { method: 'DELETE' })
     await get().loadMonth()
+    void syncWidgetAndReminders()
   },
 
   async toggleTask(id, isDone) {

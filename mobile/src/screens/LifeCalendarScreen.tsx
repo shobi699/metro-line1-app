@@ -13,6 +13,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons'
 import { useTheme } from '../shared/ThemeProvider'
 import { ScreenWrapper } from '../shared/ScreenWrapper'
+import { syncWidgetAndReminders } from '../shared/widget-sync'
 import { toFa, getJalaliDateLabel } from '../shared/jalali'
 import {
   useCalendarStore,
@@ -68,10 +69,12 @@ export function LifeCalendarScreen({ navigation }: any) {
 
   const [newTitle, setNewTitle] = useState('')
   const [newType, setNewType] = useState<'event' | 'task'>('event')
+  const [newReminder, setNewReminder] = useState<number | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     void loadMonth()
+    void syncWidgetAndReminders()
   }, [])
 
   const todayStr = todayGregStr()
@@ -104,9 +107,13 @@ export function LifeCalendarScreen({ navigation }: any) {
       title: newTitle.trim(),
       startAt: `${selectedDay.date}T00:00:00.000Z`,
       allDay: true,
+      reminders: newReminder !== null ? [{ minutesBefore: newReminder }] : undefined,
     })
     setIsSaving(false)
-    if (ok) setNewTitle('')
+    if (ok) {
+      setNewTitle('')
+      setNewReminder(null)
+    }
   }
 
   const styles = StyleSheet.create({
@@ -736,6 +743,30 @@ export function LifeCalendarScreen({ navigation }: any) {
                         کار
                       </Text>
                     </TouchableOpacity>
+                  </View>
+                  <View style={styles.typeChipsRow}>
+                    {(
+                      [
+                        { label: '🔕 بدون یادآور', value: null },
+                        { label: '⏰ صبح همان روز', value: 0 },
+                        { label: '⏰ ۱ روز قبل', value: 1440 },
+                      ] as const
+                    ).map((r) => (
+                      <TouchableOpacity
+                        key={String(r.value)}
+                        style={[styles.typeChip, newReminder === r.value && styles.typeChipActive]}
+                        onPress={() => setNewReminder(r.value)}
+                      >
+                        <Text
+                          style={[
+                            styles.typeChipText,
+                            newReminder === r.value && styles.typeChipTextActive,
+                          ]}
+                        >
+                          {r.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
                   </View>
                   <View style={styles.addRow}>
                     <TextInput
