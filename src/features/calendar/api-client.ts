@@ -1,6 +1,7 @@
 import type {
   CalendarRangeResponse,
   CalendarEventEntry,
+  CalendarInsights,
   PersonalEventInput,
 } from './types'
 
@@ -58,6 +59,31 @@ export const calendarApi = {
       method: 'POST',
       body: JSON.stringify({ isDone }),
     })
+  },
+
+  getInsights(accessToken: string, jYear: number, jMonth: number) {
+    return apiFetch<CalendarInsights>(
+      `/api/calendar/insights?year=${jYear}&month=${jMonth}`,
+      accessToken,
+    )
+  },
+
+  getIcsToken(accessToken: string) {
+    return apiFetch<{ token: string }>('/api/calendar/ics/rotate', accessToken)
+  },
+
+  rotateIcsToken(accessToken: string) {
+    return apiFetch<{ token: string }>('/api/calendar/ics/rotate', accessToken, {
+      method: 'POST',
+    })
+  },
+
+  async downloadMonthExcel(accessToken: string, jYear: number, jMonth: number): Promise<Blob> {
+    const res = await fetch(`/api/calendar/export?year=${jYear}&month=${jMonth}&format=xlsx`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+    if (!res.ok) throw new Error('خروجی اکسل آماده نشد')
+    return res.blob()
   },
 
   getPreferences(accessToken: string) {

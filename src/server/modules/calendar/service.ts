@@ -19,6 +19,8 @@ export interface CalendarShiftEntry {
   label: string
   startTime: string
   endTime: string
+  /** ساعات کارکرد تقریبی این شیفت */
+  hours: number
   source: 'cycle' | 'roster' | 'manual'
   /** true یعنی از سیکل پیش‌بینی شده و هنوز در DB/لوحه ثبت نشده */
   forecast: boolean
@@ -71,6 +73,15 @@ export interface CalendarDay {
   holidays: CalendarHolidayEntry[]
   events: CalendarEventEntry[]
   orgEvents: CalendarOrgEventEntry[]
+}
+
+/** ساعات پیش‌فرض هر کد شیفت وقتی جزئیات قالب سیکل در دسترس نیست (هم‌راستا با materialize) */
+const FALLBACK_HOURS: Record<string, number> = {
+  morning: 9,
+  evening: 9,
+  night: 12,
+  office: 8.75,
+  off: 0,
 }
 
 const DEFAULT_LAYERS = {
@@ -149,6 +160,7 @@ async function resolveShiftLayer(
         label: detail?.label ?? dbShift.code,
         startTime: detail?.startTime ?? '',
         endTime: detail?.endTime ?? '',
+        hours: detail?.hours ?? FALLBACK_HOURS[dbShift.code] ?? 0,
         source: (dbShift.source as 'cycle' | 'roster' | 'manual') ?? 'manual',
         forecast: false,
       })
@@ -163,6 +175,7 @@ async function resolveShiftLayer(
           label: detail.label,
           startTime: detail.startTime,
           endTime: detail.endTime,
+          hours: detail.hours ?? FALLBACK_HOURS[detail.code] ?? 0,
           source: 'cycle',
           forecast: true,
         })
@@ -264,30 +277,66 @@ async function resolvePersonalLayer(
     result.set(dateKey, list)
   }
 
-  const startJ = jdate(start.toDate())
-  const endJ = jdate(end.toDate())
+  const totalDays = end.diff(start, 'day') + 1
 
   for (const e of events) {
-    const rec = e.recurrence as { freq?: string; jalali?: boolean } | null
-    const yearlyJalali = e.type === 'birthday' || (rec?.freq === 'yearly' && rec?.jalali !== false)
+    const rec = e.recurrence as {
+      freq?: 'yearly' | 'monthly' | 'weekly' | 'daily'
+      interval?: number
+      until?: string
+    } | null
+    // تولد همیشه تکرار سالانه جلالی دارد؛ بقیه بر اساس قانون recurrence (همیشه جلالی‌آگاه)
+    const freq = e.type === 'birthday' ? 'yearly' : rec?.freq
+    const interval = Math.max(1, rec?.interval ?? 1)
+    const until = rec?.until ? dayjs(rec.until).endOf('day') : null
 
-    if (yearlyJalali) {
-      // بسط تکرار سالانه جلالی: تطبیق ماه/روز جلالی رویداد در سال(های) بازه
-      const eventJ = jdate(e.startAt)
-      for (let jy = startJ.year(); jy <= endJ.year(); jy++) {
-        const occ = jdate(e.startAt).year(jy).month(eventJ.month()).date(eventJ.date())
-        const occGreg = dayjs(occ.toDate())
-        if (occGreg.isBefore(start.startOf('day')) || occGreg.isAfter(end.endOf('day'))) continue
-        const isOriginal = occGreg.format('YYYY-MM-DD') === dayjs(e.startAt).format('YYYY-MM-DD')
-        push(occGreg.format('YYYY-MM-DD'), toEventEntry(e, !isOriginal, occGreg.toISOString()))
+    const originalKey = dayjs(e.startAt).format('YYYY-MM-DD')
+    const originalDay = dayjs(originalKey)
+
+    if (!freq) {
+      if (!originalDay.isBefore(start.startOf('day')) && !originalDay.isAfter(end.endOf('day'))) {
+        push(originalKey, toEventEntry(e))
       }
       continue
     }
 
-    const key = dayjs(e.startAt).format('YYYY-MM-DD')
-    const eventDay = dayjs(key)
-    if (eventDay.isBefore(start.startOf('day')) || eventDay.isAfter(end.endOf('day'))) continue
-    push(key, toEventEntry(e))
+    // بسط تکرار: پیمایش روزهای بازه و تطبیق با قانون (بازه حداکثر ۴۰۰ روز است)
+    const eventJ = jdate(e.startAt)
+    for (let i = 0; i < totalDays; i++) {
+      const day = start.add(i, 'day')
+      if (day.isBefore(originalDay)) continue
+      if (until && day.isAfter(until)) continue
+
+      const dayJ = jdate(day.toDate())
+      const diffDays = day.diff(originalDay, 'day')
+      let matches = false
+
+      switch (freq) {
+        case 'yearly':
+          // هر سال جلالی، همان ماه/روز جلالی («هر سال ۵ مرداد»)
+          matches =
+            dayJ.month() === eventJ.month() &&
+            dayJ.date() === eventJ.date() &&
+            (dayJ.year() - eventJ.year()) % interval === 0
+          break
+        case 'monthly': {
+          // هر ماه جلالی، همان روزِ ماه («هر ماه ۱۵ام» — قسط)
+          const monthDiff = (dayJ.year() - eventJ.year()) * 12 + (dayJ.month() - eventJ.month())
+          matches = dayJ.date() === eventJ.date() && monthDiff % interval === 0
+          break
+        }
+        case 'weekly':
+          matches = diffDays % 7 === 0 && (diffDays / 7) % interval === 0
+          break
+        case 'daily':
+          matches = diffDays % interval === 0
+          break
+      }
+
+      if (!matches) continue
+      const key = day.format('YYYY-MM-DD')
+      push(key, toEventEntry(e, key !== originalKey, day.toISOString()))
+    }
   }
 
   return result

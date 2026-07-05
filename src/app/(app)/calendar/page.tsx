@@ -1,16 +1,19 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
-import { ChevronLeft, ChevronRight, CalendarCheck } from 'lucide-react'
-import { dayjs } from '@/lib/dayjs'
+import { useEffect, useMemo, useState } from 'react'
+import { ChevronLeft, ChevronRight, CalendarCheck, Download } from 'lucide-react'
+import { dayjs, jdate } from '@/lib/dayjs'
 import { toFa } from '@/lib/fa'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/features/auth'
 import {
   useCalendarStore,
+  calendarApi,
   MonthGrid,
   TodayPanel,
   DayDrawer,
+  InsightsPanel,
+  IcsDialog,
   JALALI_MONTHS,
   type PersonalEventInput,
 } from '@/features/calendar'
@@ -29,14 +32,22 @@ export default function CalendarPage() {
     goToToday,
     selectDay,
     loadMonth,
+    loadInsights,
     addEvent,
     removeEvent,
     toggleTask,
+    insights,
+    insightsLoading,
+    goToMonth,
   } = useCalendarStore()
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
-    if (accessToken) loadMonth(accessToken)
-  }, [accessToken, jYear, jMonth, loadMonth])
+    if (accessToken) {
+      loadMonth(accessToken)
+      loadInsights(accessToken)
+    }
+  }, [accessToken, jYear, jMonth, loadMonth, loadInsights])
 
   const todayStr = dayjs().format('YYYY-MM-DD')
   const today = useMemo(() => days.find((d) => d.date === todayStr) ?? null, [days, todayStr])
@@ -64,6 +75,28 @@ export default function CalendarPage() {
     toggleTask(accessToken, id, isDone)
   }
 
+  async function handleExport() {
+    if (!accessToken) return
+    setExporting(true)
+    try {
+      const blob = await calendarApi.downloadMonthExcel(accessToken, jYear, jMonth)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `calendar-${jYear}-${String(jMonth).padStart(2, '0')}.xlsx`
+      a.click()
+      URL.revokeObjectURL(url)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  function handleSelectBridge(fromDate: string) {
+    const j = jdate(dayjs(fromDate).toDate())
+    goToMonth(j.year(), j.month() + 1)
+    selectDay(fromDate)
+  }
+
   return (
     <div className="space-y-4 p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -74,6 +107,11 @@ export default function CalendarPage() {
           <p className="text-xs text-foreground-muted">تقویم زندگی شیفت‌محور</p>
         </div>
         <div className="flex items-center gap-1.5">
+          {accessToken && <IcsDialog accessToken={accessToken} />}
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
+            <Download className="size-4" />
+            {exporting ? 'در حال آماده‌سازی…' : 'اکسل ماه'}
+          </Button>
           <Button variant="outline" size="sm" onClick={goToToday}>
             <CalendarCheck className="size-4" />
             امروز
@@ -102,6 +140,12 @@ export default function CalendarPage() {
           </Button>
         </div>
       )}
+
+      <InsightsPanel
+        insights={insights}
+        loading={insightsLoading}
+        onSelectBridge={handleSelectBridge}
+      />
 
       <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
         <MonthGrid

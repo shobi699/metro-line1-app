@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import Link from 'next/link'
+import { Trash2, TriangleAlert, ArrowLeftRight } from 'lucide-react'
 import { toFa } from '@/lib/fa'
 import { cn } from '@/lib/utils'
 import { jdate } from '@/lib/dayjs'
@@ -174,6 +175,26 @@ export function DayDrawer({
           </div>
 
           <div className="space-y-2 border-t border-border-subtle pt-3">
+            {meta && day.shift && day.shift.code !== 'off' && (
+              <div className="flex items-center justify-between gap-2 rounded-lg border border-warning/40 bg-warning/10 p-2 text-xs">
+                <span className="flex items-center gap-1.5">
+                  <TriangleAlert className="size-3.5 shrink-0 text-warning" aria-hidden />
+                  <span>
+                    این روز شیفت {meta.label} هستید
+                    {day.shift.startTime
+                      ? ` (${toFa(day.shift.startTime)}–${toFa(day.shift.endTime)})`
+                      : ''}
+                  </span>
+                </span>
+                <Link
+                  href="/swap/inbox"
+                  className="flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1 transition-colors hover:bg-surface-hover"
+                >
+                  <ArrowLeftRight className="size-3" aria-hidden />
+                  درخواست تعویض
+                </Link>
+              </div>
+            )}
             <div className="flex gap-1.5" role="radiogroup" aria-label="نوع مورد جدید">
               {(
                 [

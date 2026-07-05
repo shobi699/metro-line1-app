@@ -3,8 +3,36 @@ export interface CalendarShiftEntry {
   label: string
   startTime: string
   endTime: string
+  hours: number
   source: 'cycle' | 'roster' | 'manual'
   forecast: boolean
+}
+
+export interface MonthShiftStats {
+  counts: Record<string, number>
+  workHours: number
+  offDays: number
+}
+
+export interface HolidayBridge {
+  from: string
+  to: string
+  fromJalali: string
+  toJalali: string
+  length: number
+  parts: string[]
+}
+
+export interface CalendarInsights {
+  jYear: number
+  jMonth: number
+  stats: MonthShiftStats
+  prevStats: MonthShiftStats
+  bridges: HolidayBridge[]
+  countdown: {
+    daysToNextOff: number | null
+    nextShift: { date: string; jalali: string; code: string; startTime: string } | null
+  }
 }
 
 export interface CalendarHolidayEntry {

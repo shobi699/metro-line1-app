@@ -14,6 +14,15 @@ export {
   type CalendarOrgEventEntry,
 } from './service'
 export {
+  getCalendarInsights,
+  findBridges,
+  type CalendarInsights,
+  type HolidayBridge,
+  type MonthShiftStats,
+} from './insights'
+export { getOrCreateIcsToken, rotateIcsToken, buildIcsFeed } from './ics'
+export { exportMonthToExcel } from './export'
+export {
   calendarRangeSchema,
   personalEventSchema,
   personalEventUpdateSchema,

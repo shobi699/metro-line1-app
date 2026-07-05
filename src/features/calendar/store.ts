@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { jdate, fromJalali, gregStr, dayjs } from '@/lib/dayjs'
 import { calendarApi } from './api-client'
-import type { CalendarDay, PersonalEventInput } from './types'
+import type { CalendarDay, CalendarInsights, PersonalEventInput } from './types'
 
 interface CalendarState {
   /** سال و ماه جلالی نمای جاری */
@@ -10,7 +10,9 @@ interface CalendarState {
   days: CalendarDay[]
   loading: boolean
   error: string | null
-  selectedDate: string | null // میلادی YYYY-MM-DD
+  selectedDate: string | null
+  insights: CalendarInsights | null
+  insightsLoading: boolean // میلادی YYYY-MM-DD
 
   goToMonth: (jYear: number, jMonth: number) => void
   nextMonth: () => void
@@ -18,6 +20,7 @@ interface CalendarState {
   goToToday: () => void
   selectDay: (date: string | null) => void
   loadMonth: (accessToken: string) => Promise<void>
+  loadInsights: (accessToken: string) => Promise<void>
   addEvent: (accessToken: string, input: PersonalEventInput) => Promise<void>
   removeEvent: (accessToken: string, id: string) => Promise<void>
   toggleTask: (accessToken: string, id: string, isDone: boolean) => Promise<void>
@@ -36,6 +39,8 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   loading: false,
   error: null,
   selectedDate: null,
+  insights: null,
+  insightsLoading: false,
 
   goToMonth: (jYear, jMonth) => set({ jYear, jMonth }),
 
@@ -78,6 +83,20 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
         error: e instanceof Error ? e.message : 'تقویم به‌روز نشد',
         loading: false,
       })
+    }
+  },
+
+  loadInsights: async (accessToken) => {
+    const { jYear, jMonth } = get()
+    set({ insightsLoading: true })
+    try {
+      const insights = await calendarApi.getInsights(accessToken, jYear, jMonth)
+      const current = get()
+      if (current.jYear === jYear && current.jMonth === jMonth) {
+        set({ insights, insightsLoading: false })
+      }
+    } catch {
+      set({ insightsLoading: false })
     }
   },
 

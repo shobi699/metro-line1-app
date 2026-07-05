@@ -386,6 +386,23 @@ export function LifeCalendarScreen({ navigation }: any) {
       marginTop: 8,
       gap: 8,
     },
+    conflictBox: {
+      flexDirection: 'row-reverse',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: theme.colors.warning + '20',
+      borderWidth: 1,
+      borderColor: theme.colors.warning + '60',
+      borderRadius: theme.borderRadius.md,
+      padding: 10,
+    },
+    conflictText: {
+      flex: 1,
+      fontSize: 12,
+      color: theme.colors.warning,
+      textAlign: 'right',
+      fontFamily: theme.typography.captionSm.fontFamily,
+    },
     typeChipsRow: { flexDirection: 'row-reverse', gap: 8 },
     typeChip: {
       minHeight: 36,
@@ -722,6 +739,17 @@ export function LifeCalendarScreen({ navigation }: any) {
                 )}
 
                 <View style={styles.quickAddBox}>
+                  {selectedDay.shift && selectedDay.shift.code !== 'off' && (
+                    <View style={styles.conflictBox}>
+                      <MaterialIcons name="warning-amber" size={16} color={theme.colors.warning} />
+                      <Text style={styles.conflictText}>
+                        این روز شیفت {SHIFT_PALETTE[selectedDay.shift.code]?.label ?? ''} هستید
+                        {selectedDay.shift.startTime
+                          ? ` (${toFa(selectedDay.shift.startTime)}–${toFa(selectedDay.shift.endTime)})`
+                          : ''}
+                      </Text>
+                    </View>
+                  )}
                   <View style={styles.typeChipsRow}>
                     <TouchableOpacity
                       style={[styles.typeChip, newType === 'event' && styles.typeChipActive]}

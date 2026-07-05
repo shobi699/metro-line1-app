@@ -10,6 +10,7 @@ export interface CalendarShiftEntry {
   label: string
   startTime: string
   endTime: string
+  hours: number
   source: 'cycle' | 'roster' | 'manual'
   forecast: boolean
 }
