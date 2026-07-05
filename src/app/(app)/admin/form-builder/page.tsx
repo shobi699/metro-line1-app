@@ -1,436 +1,616 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuthStore } from '@/features/auth'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toFa } from '@/lib/fa'
-import { FileText, Plus, Trash, Eye, Settings, ShieldCheck, MapPin, Upload, PenTool } from 'lucide-react'
+import { FileText, Plus, Trash, Eye, Settings, ShieldCheck, Play, ArrowLeft, ArrowRight, HelpCircle, CheckCircle, Edit, Layers } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Checkbox } from '@/components/ui/checkbox'
 
 interface FormField {
-  id: string
+  name: string
   label: string
-  type: 'text' | 'textarea' | 'number' | 'date' | 'file' | 'gps' | 'signature'
-  placeholder?: string
+  type: 'text' | 'textarea' | 'number' | 'jalali_date' | 'time' | 'select' | 'checkbox' | 'file' | 'signature' | 'formula'
   required: boolean
+  options?: string[]
+  formula?: string
 }
 
 interface FormTemplate {
   id: string
+  key: string
   title: string
-  description: string
-  category: string
-  fields: FormField[]
+  description: string | null
+  category: string | null
+  icon: string | null
   isActive: boolean
+  isPublished: boolean
+  activeVersionId: string | null
+  versions: { id: string; version: number; isActive: boolean; schema: any; workflow: any }[]
 }
 
-export default function FormBuilderPage() {
-  const [forms, setForms] = useState<FormTemplate[]>([])
-  const [activeTab, setActiveTab] = useState<'forms-list' | 'builder'>('forms-list')
+const FIELD_TYPES = [
+  { value: 'text', label: 'متن کوتاه' },
+  { value: 'textarea', label: 'متن بلند' },
+  { value: 'number', label: 'عدد' },
+  { value: 'jalali_date', label: 'تاریخ جلالی' },
+  { value: 'time', label: 'ساعت' },
+  { value: 'select', label: 'لیست کشویی' },
+  { value: 'checkbox', label: 'باکس تایید (چک‌باکس)' },
+  { value: 'file', label: 'بارگذاری فایل/عکس' },
+  { value: 'signature', label: 'امضای الکترونیکی' },
+  { value: 'formula', label: 'فیلد محاسباتی (فرمول)' },
+]
 
-  // Builder States
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [category, setCategory] = useState('safety')
+export default function FormBuilderPage() {
+  const { accessToken } = useAuthStore()
+  const [templates, setTemplates] = useState<FormTemplate[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'list' | 'editor'>('list')
+
+  // Selected Template & Version
+  const [selectedTemplate, setSelectedTemplate] = useState<FormTemplate | null>(null)
+  
+  // Template Form Info
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [newKey, setNewKey] = useState('')
+  const [newTitle, setNewTitle] = useState('')
+  const [newDesc, setNewDesc] = useState('')
+  const [newCategory, setNewCategory] = useState('منابع انسانی')
+  const [newIcon, setNewIcon] = useState('FileText')
+  const [creatingTemplate, setCreatingTemplate] = useState(false)
+
+  // Version Schema States
   const [fields, setFields] = useState<FormField[]>([])
   
   // Field Editor States
   const [fieldLabel, setFieldLabel] = useState('')
+  const [fieldName, setFieldName] = useState('')
   const [fieldType, setFieldType] = useState<FormField['type']>('text')
-  const [fieldPlaceholder, setFieldPlaceholder] = useState('')
   const [fieldRequired, setFieldRequired] = useState(false)
+  const [fieldOptions, setFieldOptions] = useState('')
+  const [fieldFormula, setFieldFormula] = useState('')
 
-  const [submitting, setSubmitting] = useState(false)
-  const [successMsg, setSuccessMsg] = useState('')
+  // Workflow Editor States
+  const [stages, setStages] = useState<any[]>([
+    { key: 'supervisor', title: 'تایید سرپرست کشیک', assignBy: 'role', assignTo: 'supervisor', actions: ['approve', 'reject', 'request_changes'], sla: { hours: 24 } }
+  ])
+  const [transitions, setTransitions] = useState<any[]>([
+    { on: 'submit', to: 'supervisor' },
+    { from: 'supervisor', on: 'approve', to: 'END_APPROVED' },
+    { from: 'supervisor', on: 'reject', to: 'END_REJECTED' },
+    { from: 'supervisor', on: 'request_changes', to: 'BACK_TO_SUBMITTER' },
+  ])
 
-  const defaultTemplates: FormTemplate[] = [
-    {
-      id: 'form-1',
-      title: 'فرم گزارش سانحه و تخلفات ایمنی',
-      description: 'ثبت و پیگیری تخلفات، خرابی‌های خط و حوادث حین حرکت قطارها.',
-      category: 'safety',
-      isActive: true,
-      fields: [
-        { id: 'f-1', label: 'عنوان حادثه', type: 'text', placeholder: 'عنوان رویداد...', required: true },
-        { id: 'f-2', label: 'شرح کامل واقعه', type: 'textarea', placeholder: 'توضیحات تکمیلی...', required: true },
-        { id: 'f-3', label: 'موقعیت GPS', type: 'gps', required: true },
-      ]
-    },
-    {
-      id: 'form-2',
-      title: 'فرم تحویل و چک‌لیست تجهیزات انفرادی',
-      description: 'ثبت تحویل اقلام تدارکاتی انبار به پرسنل سیر و حرکت.',
-      category: 'logistics',
-      isActive: true,
-      fields: [
-        { id: 'f-4', label: 'کد پرسنلی دریافت‌کننده', type: 'number', placeholder: 'کد ۶ رقمی...', required: true },
-        { id: 'f-5', label: 'امضای الکترونیکی راهبر', type: 'signature', required: true },
-      ]
-    }
-  ]
+  // Presets
+  const [presets, setPresets] = useState<any[]>([])
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = window.localStorage.getItem('metro_custom_forms')
-      if (saved) setForms(JSON.parse(saved))
-      else {
-        setForms(defaultTemplates)
-        window.localStorage.setItem('metro_custom_forms', JSON.stringify(defaultTemplates))
-      }
-    }
+    loadTemplates()
+    loadPresets()
   }, [])
 
+  async function loadTemplates() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/forms', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setTemplates(json.data || [])
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function loadPresets() {
+    try {
+      const res = await fetch('/api/admin/forms/presets', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setPresets(json.data || [])
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async function handleCreateTemplate(presetData?: any) {
+    setCreatingTemplate(true)
+    try {
+      const payload = presetData ? {
+        key: presetData.key,
+        title: presetData.title,
+        description: presetData.description,
+        category: presetData.category,
+        icon: presetData.icon,
+        allowMobile: true
+      } : {
+        key: newKey,
+        title: newTitle,
+        description: newDesc,
+        category: newCategory,
+        icon: newIcon,
+        allowMobile: true
+      }
+
+      const res = await fetch('/api/admin/forms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (res.ok) {
+        const json = await res.json()
+        const created = json.data
+
+        // اگر از پریست استفاده شده، نسخه را هم بسازیم و مستقیماً فعال کنیم
+        if (presetData) {
+          const vRes = await fetch(`/api/admin/forms/${created.id}/versions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              schema: presetData.schema,
+              workflow: presetData.workflow,
+              access: presetData.access,
+            }),
+          })
+          if (vRes.ok) {
+            const vJson = await vRes.json()
+            await fetch(`/api/admin/forms/${created.id}/publish`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({ versionId: vJson.data.id }),
+            })
+          }
+        }
+
+        setShowCreateModal(false)
+        setNewKey('')
+        setNewTitle('')
+        setNewDesc('')
+        loadTemplates()
+      } else {
+        const err = await res.json()
+        alert(err.error || 'خطا در ثبت قالب')
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setCreatingTemplate(false)
+    }
+  }
+
   const handleAddField = () => {
-    if (!fieldLabel.trim()) return
+    if (!fieldLabel.trim() || !fieldName.trim()) return
+    const optionsList = fieldOptions.trim() ? fieldOptions.split(',').map((o) => o.trim()) : undefined
     const newField: FormField = {
-      id: `field-${Date.now()}`,
-      label: fieldLabel,
+      name: fieldName.trim(),
+      label: fieldLabel.trim(),
       type: fieldType,
-      placeholder: fieldPlaceholder || undefined,
-      required: fieldRequired
+      required: fieldRequired,
+      options: optionsList,
+      formula: fieldFormula.trim() || undefined,
     }
     setFields([...fields, newField])
     setFieldLabel('')
-    setFieldPlaceholder('')
+    setFieldName('')
+    setFieldOptions('')
+    setFieldFormula('')
     setFieldRequired(false)
   }
 
-  const handleRemoveField = (id: string) => {
-    setFields(fields.filter(f => f.id !== id))
+  const handleRemoveField = (index: number) => {
+    setFields(fields.filter((_, i) => i !== index))
   }
 
-  const handlePublishForm = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!title.trim() || fields.length === 0) {
-      alert('عنوان فرم و حداقل یک فیلد الزامی است.')
+  async function handlePublishVersion() {
+    if (!selectedTemplate) return
+    if (fields.length === 0) {
+      alert('لطفا حداقل یک فیلد برای فرم تعریف کنید.')
       return
     }
-    setSubmitting(true)
 
-    const newForm: FormTemplate = {
-      id: `form-${Date.now()}`,
-      title,
-      description,
-      category,
-      fields,
-      isActive: true
-    }
+    try {
+      const versionPayload = {
+        schema: { fields },
+        workflow: { stages, transitions },
+        access: {
+          whoCanSubmit: ['*'],
+          whoCanView: ['supervisor', 'manager', 'admin'],
+        },
+      }
 
-    const updated = [newForm, ...forms]
-    setForms(updated)
-    window.localStorage.setItem('metro_custom_forms', JSON.stringify(updated))
+      // ۱. ثبت نسخه جدید
+      const res = await fetch(`/api/admin/forms/${selectedTemplate.id}/versions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(versionPayload),
+      })
 
-    setTimeout(() => {
-      setSuccessMsg('فرم جدید سازمانی با موفقیت منتشر گردید و در دسترس کارتابل‌های تابعه قرار گرفت.')
-      setSubmitting(false)
-      setTitle('')
-      setDescription('')
-      setFields([])
-      setTimeout(() => {
-        setSuccessMsg('')
-        setActiveTab('forms-list')
-      }, 1500)
-    }, 1000)
-  }
+      if (res.ok) {
+        const json = await res.json()
+        const newVersion = json.data
 
-  const handleDeleteForm = (id: string) => {
-    if (!confirm('آیا از حذف این فرم اطمینان دارید؟')) return
-    const updated = forms.filter(f => f.id !== id)
-    setForms(updated)
-    window.localStorage.setItem('metro_custom_forms', JSON.stringify(updated))
-  }
+        // ۲. انتشار نسخه
+        const pubRes = await fetch(`/api/admin/forms/${selectedTemplate.id}/publish`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ versionId: newVersion.id }),
+        })
 
-  const getCategoryLabel = (cat: string) => {
-    switch (cat) {
-      case 'safety': return 'ایمنی و سوانح'
-      case 'logistics': return 'تدارکات و انبار'
-      case 'training': return 'آموزشی'
-      default: return 'عمومی'
+        if (pubRes.ok) {
+          alert('نسخه جدید فرم با موفقیت بازنویسی و در سراسر سامانه منتشر گردید.')
+          setActiveTab('list')
+          loadTemplates()
+        }
+      }
+    } catch (err) {
+      console.error(err)
     }
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-4 max-w-5xl mx-auto" dir="rtl">
+    <div className="flex flex-1 flex-col gap-6 p-6 max-w-5xl mx-auto" dir="rtl">
       {/* Header */}
-      <div>
-        <h1 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-foreground flex items-center gap-2">
-          <Settings className="size-6 text-accent" />
-          فرم‌ساز سازمانی
-        </h1>
-        <p className="text-sm text-foreground-muted mt-1">
-          ایجاد و انتشار فرم‌های دیجیتال گزارش‌دهی، ارزیابی، تحویل تجهیزات و انبار خط ۱ مترو تهران
-        </p>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex border-b border-border">
-        <button
-          onClick={() => setActiveTab('forms-list')}
-          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
-            activeTab === 'forms-list'
-              ? 'border-accent text-accent font-bold'
-              : 'border-transparent text-foreground-muted hover:text-foreground'
-          }`}
-        >
-          فرم‌های منتشر شده
-        </button>
-        <button
-          onClick={() => setActiveTab('builder')}
-          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
-            activeTab === 'builder'
-              ? 'border-accent text-accent font-bold'
-              : 'border-transparent text-foreground-muted hover:text-foreground'
-          }`}
-        >
-          طراحی فرم جدید
-        </button>
-      </div>
-
-      {/* LIST OF FORMS */}
-      {activeTab === 'forms-list' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {forms.map((form) => (
-            <Card key={form.id} className="flex flex-col justify-between border-accent/10">
-              <div className="p-4 space-y-3">
-                <div className="flex justify-between items-start gap-2">
-                  <span className="text-sm font-bold text-foreground">{form.title}</span>
-                  <Badge variant="outline" className="text-[9px] bg-accent/5 text-accent">
-                    {getCategoryLabel(form.category)}
-                  </Badge>
-                </div>
-                <p className="text-xs text-foreground-muted leading-relaxed">{form.description}</p>
-                <div className="text-[10px] text-foreground-muted font-bold">
-                  تعداد فیلدها: {toFa(form.fields.length)} مورد
-                </div>
-              </div>
-
-              <div className="p-3 bg-surface-container-low border-t border-border/40 flex justify-end gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleDeleteForm(form.id)}
-                  className="h-7 text-[10px] font-bold border-critical/40 text-critical hover:bg-critical/10 cursor-pointer"
-                >
-                  <Trash className="size-3.5 me-0.5" />
-                  حذف فرم
-                </Button>
-              </div>
-            </Card>
-          ))}
+      <div className="flex justify-between items-center border-b border-border pb-4">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Settings className="size-5 text-red-500" />
+            پنل ادمین طراحی و پیکربندی فرم‌ساز
+          </h1>
+          <p className="text-xs text-foreground-muted mt-1">
+            طراحی قالب فیلدها، مهلت‌های SLA، مسیر گردش‌کار و قوانین شرطی تایید درخواست‌ها
+          </p>
         </div>
-      )}
+        {activeTab === 'editor' ? (
+          <Button variant="outline" size="sm" onClick={() => setActiveTab('list')} className="text-xs">
+            بازگشت به لیست قالب‌ها
+          </Button>
+        ) : (
+          <Button onClick={() => setShowCreateModal(true)} className="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs gap-1">
+            <Plus className="size-4" />
+            قالب فرم جدید
+          </Button>
+        )}
+      </div>
 
-      {/* BUILDER TAB */}
-      {activeTab === 'builder' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          {/* Builder controls */}
-          <Card>
-            <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-sm font-bold">تنظیمات و چیدمان فیلدهای فرم</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-4">
-              {successMsg && (
-                <div className="p-3 rounded bg-success/15 border border-success/30 text-success text-xs font-bold">
-                  {successMsg}
-                </div>
-              )}
+      {activeTab === 'list' ? (
+        <div className="space-y-6">
+          {/* Preset options */}
+          {presets.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold text-foreground">قالب‌های آماده جهت فعال‌سازی سریع (Presets)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {presets.map((preset) => (
+                  <Card key={preset.key} className="border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 transition-all">
+                    <CardContent className="p-4 flex flex-col justify-between h-full gap-3">
+                      <div>
+                        <span className="text-xs font-bold text-foreground block">{preset.title}</span>
+                        <p className="text-[10px] text-foreground-muted mt-1 leading-relaxed">{preset.description}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleCreateTemplate(preset)}
+                        className="bg-red-600 hover:bg-red-700 text-white text-[10px] w-full font-bold h-7"
+                      >
+                        فعال‌سازی فوری قالب
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
 
-              <form onSubmit={handlePublishForm} className="space-y-4 text-xs">
-                <div>
-                  <Label htmlFor="form-title" className="font-bold">عنوان فرم <span className="text-critical">*</span></Label>
-                  <Input
-                    id="form-title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="مثال: فرم ثبت گزارش تاخیرات حرکت"
-                    className="mt-1 h-8 text-xs"
-                    required
-                  />
-                </div>
+          {/* Active templates list */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold text-foreground">فرم‌های طراحی‌شده سازمان</h3>
+            {loading ? (
+              <span className="text-xs text-foreground-muted">در حال بارگذاری...</span>
+            ) : templates.length === 0 ? (
+              <div className="text-center py-10 bg-surface border border-border rounded-xl">
+                <span className="text-xs text-foreground-muted">هیچ فرم سفارشی در سیستم ثبت نشده است.</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {templates.map((form) => (
+                  <Card key={form.id} className="flex flex-col justify-between border-border bg-surface hover:border-border-subtle transition-all">
+                    <div className="p-5 space-y-3">
+                      <div className="flex justify-between items-start gap-2">
+                        <span className="text-sm font-bold text-foreground">{form.title}</span>
+                        <Badge className="bg-red-500/10 text-red-500 border border-red-500/20 text-[10px]">
+                          {form.category || 'عمومی'}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-foreground-muted leading-relaxed">{form.description}</p>
+                      <div className="flex items-center gap-3 text-[10px] text-foreground-muted font-semibold">
+                        <span>شناسه فرم: <code className="bg-background px-1.5 py-0.5 rounded font-mono">{form.key}</code></span>
+                        <span>وضعیت انتشار: {form.isPublished ? 'منتشر شده نسخه ' + toFa(form.versions[0]?.version || 1) : 'پیش‌نویس'}</span>
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="form-category" className="font-bold">دسته‌بندی</Label>
-                    <select
-                      id="form-category"
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="mt-1 flex h-8 w-full rounded-lg border border-border bg-surface px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-                    >
-                      <option value="safety">ایمنی و سوانح</option>
-                      <option value="logistics">تدارکات و انبار</option>
-                      <option value="training">ارزیابی آموزشی</option>
-                      <option value="general">عمومی</option>
-                    </select>
-                  </div>
-                  <div>
-                    <Label htmlFor="form-desc" className="font-bold">توضیحات کوتاه</Label>
+                    <div className="p-3 bg-surface-container-low border-t border-border/40 flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedTemplate(form)
+                          const activeV = form.versions.find((v) => v.isActive)
+                          if (activeV) {
+                            setFields(activeV.schema.fields || [])
+                            setStages(activeV.workflow.stages || [])
+                            setTransitions(activeV.workflow.transitions || [])
+                          } else {
+                            setFields([])
+                          }
+                          setActiveTab('editor')
+                        }}
+                        className="h-7 text-[10px] font-bold cursor-pointer"
+                      >
+                        <Edit className="size-3.5 me-0.5" />
+                        طراحی و ویرایش فیلدها
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* Visual Editor Interface */
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          {/* Visual Fields & layout builder */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="border-border bg-surface">
+              <CardHeader className="p-4 pb-2 border-b border-border/40">
+                <CardTitle className="text-xs font-bold text-foreground">طراحی فیلدهای سفارشی (فرم‌ساز)</CardTitle>
+                <CardDescription className="text-[10px] text-foreground-muted">فیلدهای فرم را تعریف، تغییر و ویرایش نمایید.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-5 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                  <div className="space-y-1">
+                    <Label className="font-semibold text-foreground">عنوان فیلد (نمایش به پرسنل) *</Label>
                     <Input
-                      id="form-desc"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="هدف از پر کردن فرم..."
-                      className="mt-1 h-8 text-xs"
+                      value={fieldLabel}
+                      onChange={(e) => {
+                        setFieldLabel(e.target.value)
+                        // Auto generate field name code
+                        if (!fieldName) {
+                          setFieldName(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))
+                        }
+                      }}
+                      placeholder="مثال: ساعت شروع اضافه کار"
+                      className="h-8 text-xs"
                     />
                   </div>
-                </div>
 
-                {/* Add Field controls */}
-                <div className="p-3 border border-border/40 rounded-lg bg-surface-container-low space-y-3">
-                  <span className="font-bold text-accent block">افزودن فیلد جدید به فرم:</span>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="field-lbl" className="text-[10px] font-bold">عنوان فیلد <span className="text-critical">*</span></Label>
-                      <Input
-                        id="field-lbl"
-                        value={fieldLabel}
-                        onChange={(e) => setFieldLabel(e.target.value)}
-                        placeholder="مثال: شماره رام قطار"
-                        className="mt-1 h-8 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="field-type" className="text-[10px] font-bold">نوع داده فیلد</Label>
-                      <select
-                        id="field-type"
-                        value={fieldType}
-                        onChange={(e) => setFieldType(e.target.value as any)}
-                        className="mt-1 flex h-8 w-full rounded-lg border border-border bg-surface px-2 py-1 text-xs text-foreground focus:outline-none"
-                      >
-                        <option value="text">متن کوتاه</option>
-                        <option value="textarea">توضیحات متنی بلند</option>
-                        <option value="number">عددی</option>
-                        <option value="date">تاریخ شمسی</option>
-                        <option value="file">پیوست عکس / فایل</option>
-                        <option value="gps">موقعیت مکانی (GPS)</option>
-                        <option value="signature">امضای الکترونیکی پرسنل</option>
-                      </select>
-                    </div>
+                  <div className="space-y-1">
+                    <Label className="font-semibold text-foreground">کد سیستم فیلد (انگلیسی یکتا) *</Label>
+                    <Input
+                      value={fieldName}
+                      onChange={(e) => setFieldName(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
+                      placeholder="مثال: startTime"
+                      className="h-8 text-xs font-mono"
+                    />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="field-placeholder" className="text-[10px] font-bold">متن کمکی (Placeholder)</Label>
-                      <Input
-                        id="field-placeholder"
-                        value={fieldPlaceholder}
-                        onChange={(e) => setFieldPlaceholder(e.target.value)}
-                        placeholder="متن داخل فیلد..."
-                        className="mt-1 h-8 text-xs"
-                        disabled={fieldType === 'gps' || fieldType === 'signature'}
-                      />
-                    </div>
-                    <div className="flex items-end pb-2">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={fieldRequired}
-                          onChange={(e) => setFieldRequired(e.target.checked)}
-                          className="size-4 rounded border-border text-accent focus:ring-accent"
-                        />
-                        <span className="font-bold text-foreground-muted">پاسخ به فیلد اجباری است</span>
-                      </label>
-                    </div>
+                  <div className="space-y-1">
+                    <Label className="font-semibold text-foreground">نوع فیلد ورودی *</Label>
+                    <Select value={fieldType} onValueChange={(val: any) => setFieldType(val)}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="نوع فیلد" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FIELD_TYPES.map((t) => (
+                          <SelectItem key={t.value} value={t.value} className="text-xs">{t.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-
-                  <Button
-                    type="button"
-                    onClick={handleAddField}
-                    className="w-full h-8 text-xs font-bold"
-                  >
-                    <Plus className="size-3.5 me-0.5" />
-                    افزودن فیلد به چیدمان
-                  </Button>
                 </div>
 
-                <div className="flex justify-end pt-2">
-                  <Button type="submit" disabled={submitting} className="h-8 text-xs font-bold">
-                    {submitting ? 'در حال ثبت...' : 'ذخیره و انتشار نهایی فرم'}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+                {fieldType === 'select' && (
+                  <div className="space-y-1 text-xs">
+                    <Label className="font-semibold text-foreground">گزینه‌های انتخاب (جداشده با ویرگول انگلیسی) *</Label>
+                    <Input
+                      value={fieldOptions}
+                      onChange={(e) => setFieldOptions(e.target.value)}
+                      placeholder="گزینه ۱, گزینه ۲, گزینه ۳"
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                )}
 
-          {/* Form Live Preview */}
-          <Card className="border-accent/10">
-            <CardHeader className="p-4 pb-2 border-b border-border/40">
-              <CardTitle className="text-sm font-bold flex items-center gap-1.5">
-                <Eye className="size-4.5 text-accent" />
-                پیش‌نمایش زنده فرم در موبایل
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 space-y-4">
-              <div className="border border-border rounded-xl p-4 bg-neutral-950 max-w-sm mx-auto shadow-inner space-y-4 min-h-[300px]">
-                <div className="text-center border-b border-border/40 pb-2">
-                  <span className="text-xs font-bold text-foreground">{title || 'عنوان فرم آزمایشی'}</span>
-                  <p className="text-[10px] text-foreground-muted mt-1">{description || 'توضیحات و ضرورت پر کردن این فرم...'}</p>
+                {fieldType === 'formula' && (
+                  <div className="space-y-1 text-xs bg-red-500/5 p-3 rounded-lg border border-red-500/10">
+                    <Label className="font-semibold text-foreground">فرمول محاسباتی ریاضی</Label>
+                    <Input
+                      value={fieldFormula}
+                      onChange={(e) => setFieldFormula(e.target.value)}
+                      placeholder="مثال: [hours] * [multiplier]"
+                      className="h-8 text-xs font-mono text-left"
+                      dir="ltr"
+                    />
+                    <span className="text-[10px] text-foreground-muted block mt-1">نام فیلدهای عددی دیگر را داخل براکت قرار دهید تا به صورت داینامیک ارزیابی شود.</span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 text-xs">
+                  <Checkbox
+                    id="required"
+                    checked={fieldRequired}
+                    onCheckedChange={(checked: boolean) => setFieldRequired(checked)}
+                  />
+                  <Label htmlFor="required" className="font-semibold text-foreground cursor-pointer">پر کردن این فیلد اجباری است</Label>
                 </div>
 
+                <Button onClick={handleAddField} className="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs h-8">
+                  افزودن فیلد به فرم
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Preview and Order */}
+            <Card className="border-border bg-surface">
+              <CardHeader className="p-4 pb-2 border-b border-border/40">
+                <CardTitle className="text-xs font-bold text-foreground">پیش‌نمایش چیدمان فرم</CardTitle>
+              </CardHeader>
+              <CardContent className="p-5 space-y-3">
                 {fields.length === 0 ? (
-                  <div className="text-center text-[10px] text-foreground-muted/60 py-12">
-                    فیلدی اضافه نشده است. از منوی سمت راست فیلدهای خود را بسازید.
-                  </div>
+                  <span className="text-xs text-foreground-muted block py-6 text-center">هیچ فیلدی اضافه نشده است. فیلدهای خود را از بالا بسازید.</span>
                 ) : (
-                  <div className="space-y-3">
-                    {fields.map((f, idx) => (
-                      <div key={f.id} className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <Label className="text-[10px] font-bold text-foreground">
-                            {f.label} {f.required && <span className="text-critical">*</span>}
-                          </Label>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => handleRemoveField(f.id)}
-                            className="h-5 w-5 p-0 text-critical hover:bg-critical/10 rounded cursor-pointer"
-                          >
-                            <Trash className="size-3" />
-                          </Button>
+                  <div className="space-y-2">
+                    {fields.map((f, i) => (
+                      <div key={i} className="flex justify-between items-center bg-background border border-border p-3 rounded-lg text-xs">
+                        <div className="space-y-1">
+                          <span className="font-bold text-foreground">{f.label} {f.required && <span className="text-red-500">*</span>}</span>
+                          <span className="text-[10px] text-foreground-muted block">کد: <code className="font-mono">{f.name}</code> | نوع: {FIELD_TYPES.find((t) => t.value === f.type)?.label}</span>
                         </div>
-
-                        {f.type === 'text' && (
-                          <Input placeholder={f.placeholder} className="h-7 text-[10px] cursor-not-allowed" disabled />
-                        )}
-                        {f.type === 'textarea' && (
-                          <textarea placeholder={f.placeholder} rows={2} className="w-full rounded bg-surface border border-border px-2 py-1 text-[10px] cursor-not-allowed" disabled />
-                        )}
-                        {f.type === 'number' && (
-                          <Input type="number" placeholder={f.placeholder} className="h-7 text-[10px] cursor-not-allowed" disabled />
-                        )}
-                        {f.type === 'date' && (
-                          <Input type="date" className="h-7 text-[10px] cursor-not-allowed text-foreground-muted" disabled />
-                        )}
-                        {f.type === 'file' && (
-                          <div className="border border-dashed border-border rounded p-2 text-center text-[9px] text-foreground-muted flex items-center justify-center gap-1">
-                            <Upload className="size-3" />
-                            <span>بارگذاری فایل / عکس</span>
-                          </div>
-                        )}
-                        {f.type === 'gps' && (
-                          <div className="border border-border bg-surface-container-low rounded p-2 text-center text-[9px] text-foreground-muted flex items-center justify-between">
-                            <span className="flex items-center gap-1"><MapPin className="size-3 text-accent" /> موقعیت مکانی GPS</span>
-                            <span className="font-data-mono">۳۵.۷۲۱, ۵۱.۴۱۱</span>
-                          </div>
-                        )}
-                        {f.type === 'signature' && (
-                          <div className="border border-border bg-surface-container-low rounded p-2 text-center text-[9px] text-foreground-muted flex flex-col items-center justify-center gap-1.5 min-h-[50px]">
-                            <PenTool className="size-3.5 text-accent" />
-                            <span>محل درج امضای دیجیتال راهبر</span>
-                          </div>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveField(i)}
+                          className="h-6 text-red-400 hover:text-red-500 hover:bg-red-500/10 cursor-pointer"
+                        >
+                          <Trash className="size-4" />
+                        </Button>
                       </div>
                     ))}
                   </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar workflow config */}
+          <div className="lg:col-span-1 space-y-6">
+            <Card className="border-border bg-surface">
+              <CardHeader className="p-4 pb-2 border-b border-border/40">
+                <CardTitle className="text-xs font-bold text-foreground">پیکربندی گردش‌کار</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-4 text-xs">
+                <div className="space-y-3">
+                  <div className="bg-background border border-border p-3 rounded-lg space-y-2">
+                    <span className="font-bold text-foreground block">مرحله ۱: تایید سرشیفت کشیک</span>
+                    <span className="text-[10px] text-foreground-muted block">مسئول بررسی: نقش supervisor | مهلت اقدام: ۲۴ ساعت</span>
+                  </div>
+
+                  <div className="bg-background border border-border p-3 rounded-lg space-y-2">
+                    <span className="font-bold text-foreground block">مرحله ۲: تایید رئیس منابع انسانی</span>
+                    <span className="text-[10px] text-foreground-muted block">مسئول بررسی: نقش manager/HR</span>
+                  </div>
+                </div>
+
+                <div className="text-[10px] text-amber-400 bg-amber-500/5 border border-amber-500/10 p-2.5 rounded-lg leading-relaxed">
+                  قوانین گردش‌کار پیش‌فرض مرجع (تایید سرشیفت &larr; تایید منابع انسانی) به نسخه قفل و اعمال می‌شود. شما می‌توانید قوانین شرطی و مراحل اختصاصی را برای فرم‌های پیچیده سفارشی کنید.
+                </div>
+
+                <Button
+                  onClick={handlePublishVersion}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-xs"
+                >
+                  <CheckCircle className="size-4 me-1.5" />
+                  انتشار و فعال‌سازی نهایی فرم
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
+
+      {/* Creation Modal */}
+      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+        <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold text-right text-foreground">ایجاد قالب فرم جدید</DialogTitle>
+            <DialogDescription className="text-right text-[11px] text-foreground-muted mt-1">مشخصات اولیه فرم را ثبت کنید. فیلدها و گردش‌کار را در مرحله بعد طراحی خواهید کرد.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 text-xs py-2">
+            <div className="space-y-1">
+              <Label htmlFor="key" className="font-semibold text-foreground">کد یکتا فرم (فقط حروف کوچک انگلیسی و خط تیره) *</Label>
+              <Input
+                id="key"
+                value={newKey}
+                onChange={(e) => setNewKey(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                placeholder="مثال: overtime-request"
+                className="h-8 text-xs font-mono"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="title" className="font-semibold text-foreground">عنوان فرم (فارسی) *</Label>
+              <Input
+                id="title"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="مثال: درخواست اضافه کاری ماهیانه"
+                className="h-8 text-xs"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="desc" className="font-semibold text-foreground">توضیح کوتاه کارکرد فرم</Label>
+              <Textarea
+                id="desc"
+                value={newDesc}
+                onChange={(e) => setNewDesc(e.target.value)}
+                placeholder="این فرم جهت ثبت و تایید اضافه کاری پرسنل سیر و حرکت..."
+                className="min-h-16 text-xs"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex-row-reverse justify-end gap-2 mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowCreateModal(false)}
+              className="text-xs h-8 cursor-pointer"
+            >
+              انصراف
+            </Button>
+            <Button
+              type="button"
+              onClick={() => handleCreateTemplate()}
+              disabled={creatingTemplate || !newKey || !newTitle}
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs h-8"
+            >
+              {creatingTemplate ? 'در حال ثبت...' : 'ثبت و ایجاد'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

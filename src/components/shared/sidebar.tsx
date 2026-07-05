@@ -87,6 +87,8 @@ const NAVIGATION_SECTIONS: NavSection[] = [
           { label: 'جدول برترها (رتبه)', href: '/leaderboard', icon: Trophy },
           { label: 'کارنامه و ارزیابی عملکرد', href: '/performance', icon: Award },
           { label: 'ثبت بازخورد و پیام', href: '/feedback', icon: MessageSquare },
+          { label: 'فرم‌ها و درخواست‌ها', href: '/forms', icon: FileText },
+          { label: 'کارتابل تاییدات من', href: '/forms/inbox', icon: ShieldCheck },
         ]
       },
       {

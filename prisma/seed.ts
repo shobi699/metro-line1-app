@@ -64,6 +64,19 @@ async function main() {
     'feedback:respond',
     'notifications:send',
     'chat:access',
+    'faults:create',
+    'faults:read',
+    'faults:review',
+    'faults:repair',
+    'faults:verify',
+    'faults:defer',
+    'faults:reopen',
+    'fleet:manage',
+    'fleet:read',
+    'fault-catalog:manage',
+    'fault-catalog:read',
+    'fault-reports:view',
+    'fault-reports:export',
   ]
 
   const operatorPerms = [
@@ -79,7 +92,12 @@ async function main() {
     'meetings:create',
     'feedback:create',
     'chat:access',
+    'faults:create',
+    'faults:read',
+    'fleet:read',
+    'fault-catalog:read',
   ]
+
 
   for (const [key, name, perms, rank] of [
     ['super_admin', 'مدیر ارشد', ['*'], 2],
@@ -684,6 +702,66 @@ async function main() {
         defaultValue: JSON.stringify(true),
         category: 'shifts',
         isEnabled: true,
+      },
+      {
+        key: 'faults.workflow.requireFinalVerification',
+        label: 'الزام به تایید نهایی فالت‌ها',
+        description: 'آیا رفع فالت نیاز به تایید نهایی توسط مدیر/ناظر دارد؟',
+        type: 'boolean',
+        value: JSON.stringify(true),
+        defaultValue: JSON.stringify(true),
+        category: 'tickets',
+        isEnabled: true,
+      },
+      {
+        key: 'faults.sla.review.hours',
+        label: 'مهلت بازبینی فالت (ساعت)',
+        description: 'مهلت بازبینی بر اساس اولویت به صورت ساختار JSON',
+        type: 'text',
+        value: JSON.stringify({ critical: 1, high: 4, medium: 12, low: 24 }),
+        defaultValue: JSON.stringify({ critical: 1, high: 4, medium: 12, low: 24 }),
+        category: 'tickets',
+        isEnabled: true,
+      },
+      {
+        key: 'faults.sla.repair.hours',
+        label: 'مهلت تعمیر فالت (ساعت)',
+        description: 'مهلت رفع خرابی بر اساس اولویت به صورت ساختار JSON',
+        type: 'text',
+        value: JSON.stringify({ critical: 4, high: 24, medium: 72, low: 168 }),
+        defaultValue: JSON.stringify({ critical: 4, high: 24, medium: 72, low: 168 }),
+        category: 'tickets',
+        isEnabled: true,
+      },
+      {
+        key: 'faults.recurrence.windowDays',
+        label: 'پنجره تشخیص فالت تکراری (روز)',
+        description: 'بازه زمانی برای بررسی وقوع خرابی مشابه در قطار',
+        type: 'number',
+        value: JSON.stringify(30),
+        defaultValue: JSON.stringify(30),
+        category: 'tickets',
+        isEnabled: true,
+      },
+      {
+        key: 'faults.persistent.thresholdDays',
+        label: 'آستانه ماندگار شدن فالت (روز)',
+        description: 'تعداد روزهای باز بودن فالت برای طبقه‌بندی به عنوان ماندگار',
+        type: 'number',
+        value: JSON.stringify(7),
+        defaultValue: JSON.stringify(7),
+        category: 'tickets',
+        isEnabled: true,
+      },
+      {
+        key: 'faults.autoAssign.byCategory',
+        label: 'تخصیص خودکار تیم تعمیرات',
+        description: 'نگاشت دسته‌بندی خرابی به نقش پرسنل فنی به صورت JSON',
+        type: 'text',
+        value: JSON.stringify({ BRK: 'expert', DRS: 'expert', HVAC: 'expert', SIG: 'expert', TRC: 'expert', BOG: 'expert', PAN: 'expert' }),
+        defaultValue: JSON.stringify({ BRK: 'expert', DRS: 'expert', HVAC: 'expert', SIG: 'expert', TRC: 'expert', BOG: 'expert', PAN: 'expert' }),
+        category: 'tickets',
+        isEnabled: true,
       }
     ]
   })
@@ -811,7 +889,107 @@ async function main() {
   console.log(`  Shift templates: 3 (نوبتی ۹ ساعت، ۱۲ ساعت، ستادی)`)
   console.log(`  UI Builder Default Menu, Theme and Widgets Seeded.`)
 
+  // Seed Fleet & Fault Catalog
+  await seedFaultSubsystemData(prisma)
+
   await prisma.$disconnect()
+}
+
+async function seedFaultSubsystemData(prisma: any) {
+  // 1. Seed Trains & Wagons
+  const trainsData = [
+    { number: '101', series: 'DC01', manufacturer: 'CNR' },
+    { number: '102', series: 'DC01', manufacturer: 'CNR' },
+    { number: '103', series: 'DC01', manufacturer: 'CNR' },
+    { number: '104', series: 'AC02', manufacturer: 'CRRC' },
+    { number: '105', series: 'AC02', manufacturer: 'CRRC' },
+    { number: '106', series: 'AC02', manufacturer: 'CRRC' },
+    { number: '107', series: 'AC02', manufacturer: 'CRRC' },
+    { number: '108', series: 'AC02', manufacturer: 'CRRC' },
+    { number: '109', series: 'AC02', manufacturer: 'CRRC' },
+    { number: '110', series: 'AC02', manufacturer: 'CRRC' },
+  ]
+
+  for (const t of trainsData) {
+    const train = await prisma.train.upsert({
+      where: { trainNumber: t.number },
+      update: { fleetSeries: t.series, manufacturer: t.manufacturer },
+      create: { trainNumber: t.number, fleetSeries: t.series, manufacturer: t.manufacturer, status: 'active' },
+    })
+
+    // Upsert 7 wagons for each train
+    for (let pos = 1; pos <= 7; pos++) {
+      const wagonCode = `${t.number}-${pos}`
+      await prisma.wagon.upsert({
+        where: { trainId_position: { trainId: train.id, position: pos } },
+        update: { wagonCode },
+        create: { trainId: train.id, position: pos, wagonCode, wagonType: pos === 1 || pos === 7 ? 'Mc' : pos === 3 || pos === 5 ? 'M' : 'Tp' },
+      })
+    }
+  }
+
+  // 2. Seed Fault Categories
+  const categories = [
+    { code: 'BRK', title: 'ترمز' },
+    { code: 'DRS', title: 'درب‌ها' },
+    { code: 'TRC', title: 'کشش (Traction)' },
+    { code: 'HVAC', title: 'تهویه مطبوع' },
+    { code: 'SIG', title: 'سیگنالینگ و ارتباطات' },
+    { code: 'BOG', title: 'بوژی و چرخ‌ها' },
+    { code: 'PAN', title: 'پانتوگراف و شبکه برق' },
+  ]
+
+  const categoryMap = new Map<string, string>()
+  for (const c of categories) {
+    const cat = await prisma.faultCategory.upsert({
+      where: { code: c.code },
+      update: { title: c.title },
+      create: { code: c.code, title: c.title },
+    })
+    categoryMap.set(c.code, cat.id)
+  }
+
+  // 3. Seed Fault Codes
+  const faultCodes = [
+    { categoryCode: 'BRK', code: 'BRK-012', title: 'عدم آزادسازی ترمز واگن', defaultPriority: 'high', safetyCritical: true, requiresWagon: true, keywords: 'ترمز, قفل, چسبیدن, سیلندر', aliases: 'ترمز ول نمیکنه | چرخ قفله | ترمز چسبیده', operatorGuide: 'سوپاپ ترمز واگن مربوطه را بکشید و مجدد تست کنید.' },
+    { categoryCode: 'BRK', code: 'BRK-007', title: 'گیرپاژ کفشک ترمز', defaultPriority: 'critical', safetyCritical: true, requiresWagon: true, keywords: 'کفشک, گیرپاژ, سیلندر, داغ', aliases: 'کفشک ترمز چسبیده | لنت داغ شده | دود لنت' },
+    { categoryCode: 'DRS', code: 'DRS-004', title: 'گیر مکانیکی درب', defaultPriority: 'medium', safetyCritical: false, requiresWagon: true, keywords: 'درب, گیر, مانع, باز', aliases: 'درب گیر کرده | در باز نمیشه | مانع بین در' },
+    { categoryCode: 'DRS', code: 'DRS-001', title: 'خرابی لیمیت سوئیچ درب', defaultPriority: 'medium', safetyCritical: false, requiresWagon: true, keywords: 'لیمیت, سوئیچ, درب, بازخورد', aliases: 'چراغ درب روشن میمونه | فیدبک درب | لیمیت درب' },
+    { categoryCode: 'HVAC', code: 'HVAC-001', title: 'عدم کارکرد کمپرسور تهویه', defaultPriority: 'low', safetyCritical: false, requiresWagon: true, keywords: 'تهویه, کولر, گرم, کمپرسور', aliases: 'باد تهویه گرمه | کولر کار نمیکنه | کمپرسور خراب' },
+    { categoryCode: 'SIG', code: 'SIG-001', title: 'قطع ارتباط رادیویی قطار', defaultPriority: 'high', safetyCritical: true, requiresWagon: false, keywords: 'رادیو, بی سیم, بیسیم, سیگنال', aliases: 'بیسیم قطعه | ارتباط با OCC قطعه | آنتن بیسیم نداریم' },
+    { categoryCode: 'TRC', code: 'TRC-001', title: 'خطای اینورتر کشش', defaultPriority: 'high', safetyCritical: true, requiresWagon: true, keywords: 'اینورتر, کشش, تراکشن, موتور', aliases: 'تراکشن فالت | موتور کار نمیکنه | خطای اینورتر' },
+    { categoryCode: 'BOG', code: 'BOG-003', title: 'قفل بوژی', defaultPriority: 'critical', safetyCritical: true, requiresWagon: true, keywords: 'بوژی, چرخ, قفل, بلبرینگ', aliases: 'بوژی قفله | دمای بلبرینگ بالا | چرخ نمیچرخه' },
+    { categoryCode: 'PAN', code: 'PAN-001', title: 'خرابی بوق پانتوگراف', defaultPriority: 'critical', safetyCritical: true, requiresWagon: false, keywords: 'پانتوگراف, بوق, شبکه, برق', aliases: 'پانتو بوق زده | آرک پانتوگراف | برق قطع شده' },
+  ]
+
+  for (const f of faultCodes) {
+    const categoryId = categoryMap.get(f.categoryCode)
+    if (!categoryId) continue
+
+    await prisma.faultCode.upsert({
+      where: { code: f.code },
+      update: {
+        title: f.title,
+        defaultPriority: f.defaultPriority,
+        safetyCritical: f.safetyCritical,
+        requiresWagon: f.requiresWagon,
+        keywords: f.keywords,
+        aliases: f.aliases,
+        operatorGuide: f.operatorGuide,
+      },
+      create: {
+        categoryId,
+        code: f.code,
+        title: f.title,
+        defaultPriority: f.defaultPriority as any,
+        safetyCritical: f.safetyCritical,
+        requiresWagon: f.requiresWagon,
+        keywords: f.keywords,
+        aliases: f.aliases,
+        operatorGuide: f.operatorGuide,
+      },
+    })
+  }
 }
 
 main().catch(async (e) => {

@@ -2,38 +2,79 @@
 
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/features/auth'
-import { TicketForm } from '@/components/shared/ticket-form'
+import { toFa, jalali, faTime } from '@/lib/fa'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-} from '@/components/ui/card'
-import { toFa } from '@/lib/fa'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import Link from 'next/link'
 
-interface Ticket {
+interface UserRef {
   id: string
-  title: string
-  description: string | null
-  priority: string
+  name: string
+}
+
+interface FaultReport {
+  id: string
+  faultNo: number
+  trainId: string
+  wagonId: string | null
+  faultCodeId: string
   status: string
-  wagonCode: string | null
+  priority: string
+  reporterId: string
+  reviewerId: string | null
+  assigneeId: string | null
+  verifierId: string | null
+  description: string
+  locationNote: string | null
+  occurredAt: string
+  serviceImpact: string
+  photoUrls: string | null
+  annotations: string | null
+  slaDueAt: string
+  slaBreached: boolean
   createdAt: string
-  creator: { id: string; name: string; nationalId: string }
+  train: { trainNumber: string; fleetSeries: string }
+  wagon: { wagonCode: string; position: number } | null
+  faultCode: { code: string; title: string; category: { title: string }; operatorGuide: string | null; safetyCritical: boolean }
+  reporter: UserRef
+  assignee: UserRef | null
+  reviewer: UserRef | null
+  verifier: UserRef | null
+  recurrenceOfId: string | null
   _count: { logs: number }
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  open: 'باز',
-  in_progress: 'در حال تعمیر',
-  resolved: 'حل شده',
-  closed: 'بسته شده',
+  submitted: 'ثبت شده',
+  under_review: 'در حال بررسی',
+  needs_info: 'نیاز به اطلاعات',
+  rejected: 'رد شده',
+  approved: 'تایید شده',
+  in_repair: 'در حال تعمیر',
+  repaired: 'تعمیر شده',
+  verified_closed: 'بسته شده',
+  deferred: 'ماندگار (Deferred)',
+  reopened: 'بازگشایی شده',
 }
 
 const STATUS_CLASSES: Record<string, string> = {
-  open: 'bg-warning/10 text-warning border border-warning/20',
-  in_progress: 'bg-info/10 text-info border border-info/20',
-  resolved: 'bg-success/10 text-success border border-success/20',
-  closed: 'bg-foreground-muted/10 text-foreground-muted border border-border-subtle',
+  submitted: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+  under_review: 'bg-purple-500/10 text-purple-400 border border-purple-500/20',
+  needs_info: 'bg-orange-500/10 text-orange-400 border border-orange-500/20',
+  rejected: 'bg-red-500/10 text-red-400 border border-red-500/20',
+  approved: 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20',
+  in_repair: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20',
+  repaired: 'bg-teal-500/10 text-teal-400 border border-teal-500/20',
+  verified_closed: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+  deferred: 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20',
+  reopened: 'bg-pink-500/10 text-pink-400 border border-pink-500/20',
 }
 
 const PRIORITY_LABELS: Record<string, string> = {
@@ -44,214 +85,561 @@ const PRIORITY_LABELS: Record<string, string> = {
 }
 
 const PRIORITY_CLASSES: Record<string, string> = {
-  low: 'bg-foreground-muted/10 text-foreground-muted border border-border-subtle',
-  medium: 'bg-info/10 text-info border border-info/20',
-  high: 'bg-warning/10 text-warning border border-warning/20',
-  critical: 'bg-critical/10 text-critical border border-critical/20',
+  low: 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20',
+  medium: 'bg-sky-500/10 text-sky-400 border border-sky-500/20',
+  high: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+  critical: 'bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse',
+}
+
+const IMPACT_LABELS: Record<string, string> = {
+  none: 'بدون اثر',
+  delay: 'تاخیر در حرکت',
+  evacuated: 'تخلیه مسافر',
+  removed_from_service: 'خروج از سرویس',
 }
 
 export default function TicketsPage() {
-  const accessToken = useAuthStore((s) => s.accessToken)
-  const [tickets, setTickets] = useState<Ticket[]>([])
-  const [stats, setStats] = useState({
-    open: 0,
-    inProgress: 0,
-    resolved: 0,
-    closed: 0,
-    total: 0,
-  })
+  const { accessToken, user } = useAuthStore()
+  const [reports, setReports] = useState<FaultReport[]>([])
   const [loading, setLoading] = useState(true)
-  const [statusFilter, setStatusFilter] = useState('')
-  const [currentTime, setCurrentTime] = useState('')
+  const [filterStatus, setFilterStatus] = useState<string>('')
+  const [filterPriority, setFilterPriority] = useState<string>('all')
+  const [filterTrain, setFilterTrain] = useState<string>('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [queueMode, setQueueMode] = useState<'my' | 'all'>('all')
+
+  // Wizard state
+  const [wizardOpen, setWizardOpen] = useState(false)
+  const [wizardStep, setWizardStep] = useState(1)
+  const [wizardTrains, setWizardTrains] = useState<any[]>([])
+  const [selectedTrain, setSelectedTrain] = useState<string>('')
+  const [selectedWagon, setSelectedWagon] = useState<string>('')
+  const [wizardWagons, setWizardWagons] = useState<any[]>([])
+  const [nlpText, setNlpText] = useState('')
+  const [matchingResults, setMatchingResults] = useState<any[]>([])
+  const [selectedFaultCodeId, setSelectedFaultCodeId] = useState('')
+  const [faultLocation, setFaultLocation] = useState('')
+  const [faultDesc, setFaultDesc] = useState('')
+  const [serviceImpact, setServiceImpact] = useState('none')
+  const [nlpMatching, setNlpMatching] = useState(false)
+
+  // Dialog Action states
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false)
+  const [repairDialogOpen, setRepairDialogOpen] = useState(false)
+  const [deferDialogOpen, setDeferDialogOpen] = useState(false)
+  const [reopenDialogOpen, setReopenDialogOpen] = useState(false)
+  const [activeReport, setActiveReport] = useState<FaultReport | null>(null)
+
+  // Actions payloads
+  const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | 'needs_info'>('approve')
+  const [reviewNote, setReviewNote] = useState('')
+  const [reviewPriority, setReviewPriority] = useState<string>('')
+  const [reviewAssignee, setReviewAssignee] = useState<string>('')
+  const [usersList, setUsersList] = useState<any[]>([])
+
+  const [actionsTaken, setActionsTaken] = useState('')
+  const [rootCause, setRootCause] = useState('')
+  const [partsUsed, setPartsUsed] = useState<{ name: string; qty: number }[]>([])
+  const [newPartName, setNewPartName] = useState('')
+  const [newPartQty, setNewPartQty] = useState(1)
+
+  const [deferReason, setDeferReason] = useState('')
+  const [deferUntil, setDeferUntil] = useState('')
+
+  const [reopenReason, setReopenReason] = useState('')
+
+  // Excel Import state
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importPreview, setImportPreview] = useState<any | null>(null)
+  const [importing, setImporting] = useState(false)
 
   useEffect(() => {
-    function updateTime() {
-      const now = new Date()
-      const h = String(now.getHours()).padStart(2, '0')
-      const m = String(now.getMinutes()).padStart(2, '0')
-      const s = String(now.getSeconds()).padStart(2, '0')
-      setCurrentTime(`${h}:${m}:${s}`)
-    }
-    updateTime()
-    const interval = setInterval(updateTime, 1000)
-    return () => clearInterval(interval)
-  }, [])
+    loadReports()
+    loadWizardTrains()
+    loadUsersList()
+  }, [filterStatus, filterPriority, filterTrain, queueMode, searchQuery])
 
-  async function loadTickets() {
+  async function loadReports() {
+    setLoading(true)
     try {
-      const params = statusFilter ? `?status=${statusFilter}` : ''
-      const res = await fetch(`/api/tickets${params}`, {
+      const endpoint = queueMode === 'my' ? '/api/faults/my-queue' : '/api/faults'
+      const params = new URLSearchParams()
+      if (filterStatus) params.append('status', filterStatus)
+      if (filterPriority && filterPriority !== 'all') params.append('priority', filterPriority)
+      if (filterTrain && filterTrain !== 'all') params.append('trainId', filterTrain)
+      if (searchQuery) params.append('q', searchQuery)
+
+      const url = `${endpoint}?${params.toString()}`
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${accessToken}` },
       })
       if (res.ok) {
-        const data = await res.json()
-        setTickets(data.data.tickets)
-        setStats(data.data.stats)
+        const json = await res.json()
+        setReports(json.data)
       }
-    } catch {
-      // silent
+    } catch (err) {
+      console.error(err)
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const params = statusFilter ? `?status=${statusFilter}` : ''
-        const res = await fetch(`/api/tickets${params}`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        })
-        if (!cancelled && res.ok) {
-          const data = await res.json()
-          setTickets(data.data.tickets)
-          setStats(data.data.stats)
-        }
-      } catch {
-        // silent
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    load()
-    return () => { cancelled = true }
-  }, [statusFilter, accessToken])
-
-  async function handleStatusChange(ticketId: string, newStatus: string) {
-    const note = prompt('یادداشت (اختیاری):')
+  async function loadWizardTrains() {
     try {
-      const res = await fetch(`/api/tickets/${ticketId}/status`, {
+      const res = await fetch('/api/fleet/trains', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setWizardTrains(json.data)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async function loadUsersList() {
+    try {
+      const res = await fetch('/api/directory', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setUsersList(json.data)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  // Wagon layouts on train select
+  useEffect(() => {
+    if (selectedTrain) {
+      const t = wizardTrains.find((x) => x.id === selectedTrain)
+      if (t) {
+        setWizardWagons(t.wagons || [])
+      }
+    } else {
+      setWizardWagons([])
+    }
+    setSelectedWagon('')
+  }, [selectedTrain, wizardTrains])
+
+  // NLP matcher triggering
+  async function triggerNlpMatch() {
+    if (!nlpText.trim()) return
+    setNlpMatching(true)
+    try {
+      const res = await fetch('/api/fault-catalog/match', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ status: newStatus, note: note || undefined }),
+        body: JSON.stringify({ text: nlpText }),
       })
-      if (res.ok) loadTickets()
-    } catch {
-      // silent
+      if (res.ok) {
+        const json = await res.json()
+        setMatchingResults(json.data)
+        if (json.data && json.data.length > 0) {
+          setSelectedFaultCodeId(json.data[0].faultCodeId)
+        }
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setNlpMatching(false)
     }
   }
 
-  const NEXT_STATUS: Record<string, string> = {
-    open: 'in_progress',
-    in_progress: 'resolved',
-    resolved: 'closed',
+  // Save fault creation
+  async function submitNewFault() {
+    if (!selectedTrain || !selectedFaultCodeId || !faultDesc.trim()) return
+    try {
+      const res = await fetch('/api/faults', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          trainId: selectedTrain,
+          wagonId: selectedWagon || null,
+          faultCodeId: selectedFaultCodeId,
+          description: faultDesc.trim(),
+          locationNote: faultLocation || null,
+          occurredAt: new Date().toISOString(),
+          serviceImpact,
+        }),
+      })
+
+      if (res.ok) {
+        setWizardOpen(false)
+        resetWizard()
+        loadReports()
+      } else {
+        const json = await res.json()
+        alert(json.error || 'خطا در ثبت فالت')
+      }
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  const NEXT_LABEL: Record<string, string> = {
-    open: 'شروع تعمیر',
-    in_progress: 'حل شده',
-    resolved: 'بستن',
+  function resetWizard() {
+    setWizardStep(1)
+    setSelectedTrain('')
+    setSelectedWagon('')
+    setNlpText('')
+    setMatchingResults([])
+    setSelectedFaultCodeId('')
+    setFaultLocation('')
+    setFaultDesc('')
+    setServiceImpact('none')
+  }
+
+  // Workflows action execution
+  async function handleTransitionSubmit(action: string, payload?: any) {
+    if (!activeReport) return
+    try {
+      const res = await fetch(`/api/faults/${activeReport.id}/transition`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          action,
+          payload,
+        }),
+      })
+
+      if (res.ok) {
+        setReviewDialogOpen(false)
+        setRepairDialogOpen(false)
+        setDeferDialogOpen(false)
+        setReopenDialogOpen(false)
+        loadReports()
+      } else {
+        const json = await res.json()
+        alert(json.error || 'خطا در تغییر وضعیت گردشکار')
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  // Add Part helper
+  function addPart() {
+    if (!newPartName.trim() || newPartQty <= 0) return
+    setPartsUsed([...partsUsed, { name: newPartName.trim(), qty: newPartQty }])
+    setNewPartName('')
+    setNewPartQty(1)
+  }
+
+  // Excel handlers
+  async function handleImportValidate() {
+    if (!importFile) return
+    setImporting(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', importFile)
+      const res = await fetch('/api/faults/import?mode=validate', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: formData,
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setImportPreview(json.data)
+      } else {
+        const json = await res.json()
+        alert(json.error || 'خطا در بررسی فایل')
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setImporting(false)
+    }
+  }
+
+  async function handleImportCommit() {
+    if (!importPreview || importPreview.validRows.length === 0) return
+    setImporting(true)
+    try {
+      const res = await fetch('/api/faults/import?mode=commit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          validRows: importPreview.validRows,
+          batchId: importPreview.batchId,
+        }),
+      })
+      if (res.ok) {
+        alert('بارگذاری اکسل با موفقیت انجام شد')
+        setImportDialogOpen(false)
+        setImportFile(null)
+        setImportPreview(null)
+        loadReports()
+      } else {
+        const json = await res.json()
+        alert(json.error || 'خطا در ایمپورت نهایی')
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setImporting(false)
+    }
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-4">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-1 flex-col gap-6 p-6" dir="rtl">
+      {/* Header section */}
+      <div className="flex items-center justify-between border-b border-border-subtle pb-4">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground mb-1">
-            تیکت‌های خرابی قطار
+          <h1 className="text-xl font-bold tracking-tight text-foreground mb-1">
+            سامانه مدیریت فالت قطارها (خرابی ناوگان)
           </h1>
-          <p className="text-sm text-foreground-muted">ثبت و پیگیری گزارش‌های خرابی ناوگان و تجهیزات خط ۱</p>
+          <p className="text-sm text-foreground-muted">پیگیری چرخه عمر خرابی‌ها، بازبینی فنی، اقدامات نگهداری و تایید کیفی</p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Live Clock */}
-          {currentTime && (
-            <div className="bg-surface px-3 py-1 rounded-lg border border-border flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-              <span className="font-mono text-xs text-foreground-muted" dir="ltr">
-                {toFa(currentTime)}
-              </span>
-            </div>
-          )}
-          <TicketForm onCreated={loadTickets} />
+          <Button onClick={() => setImportDialogOpen(true)} variant="outline" className="text-xs">
+            وارد کردن اکسل
+          </Button>
+          <Button onClick={() => setWizardOpen(true)} className="bg-red-600 hover:bg-red-700 text-white font-semibold">
+            + ثبت فالت جدید
+          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
-        {[
-          { key: 'open', label: 'باز', count: stats.open },
-          { key: 'in_progress', label: 'در حال تعمیر', count: stats.inProgress },
-          { key: 'resolved', label: 'حل شده', count: stats.resolved },
-          { key: 'closed', label: 'بسته شده', count: stats.closed },
-        ].map((s) => (
-          <button
-            key={s.key}
-            onClick={() => setStatusFilter(statusFilter === s.key ? '' : s.key)}
-            className={`rounded-lg border p-4 text-center transition-all duration-150 active:scale-[0.98] ${
-              statusFilter === s.key
-                ? 'border-accent bg-accent/10 text-accent font-semibold shadow-sm'
-                : 'border-border bg-surface hover:bg-surface-hover text-foreground-muted hover:text-foreground'
-            }`}
+      {/* Queue selection and filters */}
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-surface p-4 rounded-xl border border-border">
+        <div className="flex items-center gap-2">
+          <Button
+            variant={queueMode === 'all' ? 'default' : 'outline'}
+            className="text-xs h-9"
+            onClick={() => setQueueMode('all')}
           >
-            <div className="text-lg font-semibold tracking-tight">{toFa(s.count)}</div>
-            <div className="text-xs mt-1">{s.label}</div>
-          </button>
-        ))}
+            همه فالت‌ها
+          </Button>
+          <Button
+            variant={queueMode === 'my' ? 'default' : 'outline'}
+            className="text-xs h-9"
+            onClick={() => setQueueMode('my')}
+          >
+            صف کارهای من
+          </Button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 flex-1 justify-end">
+          <Input
+            placeholder="جستجو در شرح فالت یا کدهای خطا..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-64 text-xs h-9"
+          />
+
+          <Select value={filterStatus} onValueChange={(val) => setFilterStatus(val || '')}>
+            <SelectTrigger className="w-40 text-xs h-9">
+              <SelectValue placeholder="فیلتر وضعیت" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">همه وضعیت‌ها</SelectItem>
+              {Object.entries(STATUS_LABELS).map(([k, v]) => (
+                <SelectItem key={k} value={k}>
+                  {v}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={filterPriority} onValueChange={(val) => setFilterPriority(val || '')}>
+            <SelectTrigger className="w-36 text-xs h-9">
+              <SelectValue placeholder="اولویت" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">همه اولویت‌ها</SelectItem>
+              <SelectItem value="low">کم</SelectItem>
+              <SelectItem value="medium">متوسط</SelectItem>
+              <SelectItem value="high">زیاد</SelectItem>
+              <SelectItem value="critical">بحرانی</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
+      {/* Reports Listing */}
       {loading ? (
-        <div role="status" className="rounded-lg border border-border bg-surface p-12 text-center">
-          <p className="text-sm text-foreground-muted">در حال بارگذاری تیکت‌ها...</p>
+        <div className="text-center py-20 bg-surface border border-border rounded-xl">
+          <div className="animate-pulse text-sm text-foreground-muted">در حال بارگذاری فالت‌ها...</div>
         </div>
-      ) : tickets.length === 0 ? (
-        <div className="rounded-lg border border-border bg-surface p-12 text-center">
-          <p className="text-sm text-foreground-muted">هیچ تیکت خرابی با وضعیت انتخاب‌شده یافت نشد.</p>
+      ) : reports.length === 0 ? (
+        <div className="text-center py-20 bg-surface border border-border rounded-xl">
+          <div className="text-sm text-foreground-muted">هیچ فالت خرابی یافت نشد.</div>
         </div>
       ) : (
-        <div className="space-y-3">
-          {tickets.map((ticket) => (
-            <Card key={ticket.id} className="border border-border bg-surface hover:bg-surface-hover hover:border-border-subtle transition-all duration-150 shadow-none">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-semibold text-foreground">{ticket.title}</h3>
-                      {ticket.wagonCode && (
-                        <span className="font-mono text-xs text-foreground-muted bg-background-subtle border border-border-subtle rounded px-1.5 py-0.5" dir="ltr">
-                          {ticket.wagonCode}
+        <div className="grid gap-4">
+          {reports.map((report) => (
+            <Card key={report.id} className="border border-border bg-surface hover:bg-surface-hover hover:border-border-subtle transition-all shadow-none">
+              <CardContent className="p-5">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="space-y-3 flex-1">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Link href={`/tickets/${report.id}`}>
+                        <Badge className="bg-red-500/10 text-red-500 border border-red-500/20 font-mono text-xs hover:bg-red-500/20 cursor-pointer transition-all">
+                          F-{report.faultNo}
+                        </Badge>
+                      </Link>
+                      <h3 className="text-sm font-bold text-foreground">
+                        قطار {toFa(report.train.trainNumber)}
+                        {report.wagon && ` | واگن ${toFa(report.wagon.position)} (${report.wagon.wagonCode})`}
+                      </h3>
+                      <span className="text-xs text-foreground-muted font-semibold bg-background-subtle border border-border-subtle rounded px-2 py-0.5">
+                        {report.faultCode.code} - {report.faultCode.title}
+                      </span>
+                      {report.recurrenceOfId && (
+                        <Badge className="bg-orange-500/10 text-orange-400 border border-orange-500/20 text-xs">
+                          فالت تکراری ⚠️
+                        </Badge>
+                      )}
+                      {report.faultCode.safetyCritical && (
+                        <Badge className="bg-red-600 text-white border border-red-700 text-xs font-semibold animate-pulse">
+                          ایمنی‌محور 🚨
+                        </Badge>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-foreground-muted leading-relaxed max-w-4xl">
+                      {report.description}
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-foreground-muted">
+                      <span>ثبت‌کننده: {report.reporter.name}</span>
+                      {report.assignee && <span>ارجاع به: {report.assignee.name}</span>}
+                      <span>زمان ثبت: {jalali(report.createdAt)} ساعت {faTime(report.createdAt)}</span>
+                      
+                      {/* SLA Warning */}
+                      {report.slaDueAt && (
+                        <span className={`flex items-center gap-1 ${report.slaBreached ? 'text-red-400 font-bold' : ''}`}>
+                          مهلت اقدام: {jalali(report.slaDueAt)} {faTime(report.slaDueAt)}
+                          {report.slaBreached && ' (نقض شده ⚠️)'}
                         </span>
                       )}
                     </div>
-                    {ticket.description && (
-                      <p className="text-xs text-foreground-muted line-clamp-2 max-w-3xl leading-relaxed">
-                        {ticket.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-4 text-xs text-foreground-muted">
-                      <span>ثبت‌کننده: {ticket.creator.name}</span>
-                      <span className="font-mono">
-                        تاریخ: {toFa(new Date(ticket.createdAt).toLocaleDateString('fa-IR'))}
-                      </span>
-                      <span>تعداد وقایع: {toFa(ticket._count.logs)}</span>
-                    </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold ${PRIORITY_CLASSES[ticket.priority] ?? ''}`}
-                    >
-                      {PRIORITY_LABELS[ticket.priority]}
+                  <div className="flex items-center gap-3 self-end md:self-center">
+                    <span className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold ${PRIORITY_CLASSES[report.priority]}`}>
+                      اولویت {PRIORITY_LABELS[report.priority]}
                     </span>
-                    <span
-                      className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold ${STATUS_CLASSES[ticket.status] ?? ''}`}
-                    >
-                      {STATUS_LABELS[ticket.status]}
+                    <span className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold ${STATUS_CLASSES[report.status]}`}>
+                      {STATUS_LABELS[report.status]}
                     </span>
-                    {NEXT_STATUS[ticket.status] && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-xs px-3 hover:border-accent hover:text-accent transition-colors"
-                        onClick={() =>
-                          handleStatusChange(ticket.id, NEXT_STATUS[ticket.status])
-                        }
-                      >
-                        {NEXT_LABEL[ticket.status]}
-                      </Button>
-                    )}
+
+                    {/* Actions Panel */}
+                    <div className="flex items-center gap-2">
+                      {/* Supervisor Approval */}
+                      {(report.status === 'submitted' || report.status === 'under_review') &&
+                        (user?.roleKey === 'super_admin' || user?.roleKey === 'admin' || user?.roleKey === 'supervisor' || user?.roleKey === 'shift_lead') && (
+                          <Button
+                            size="sm"
+                            className="bg-purple-600 hover:bg-purple-700 text-white text-xs h-8"
+                            onClick={() => {
+                              setActiveReport(report)
+                              setReviewPriority(report.priority)
+                              setReviewNote('')
+                              setReviewDialogOpen(true)
+                            }}
+                          >
+                            بررسی و تایید
+                          </Button>
+                        )}
+
+                      {/* Specialist start repair */}
+                      {(report.status === 'approved' || report.status === 'deferred') && (
+                        <Button
+                          size="sm"
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8"
+                          onClick={() => {
+                            setActiveReport(report)
+                            handleTransitionSubmit('start_repair')
+                          }}
+                        >
+                          شروع تعمیر
+                        </Button>
+                      )}
+
+                      {/* Specialist complete repair */}
+                      {report.status === 'in_repair' && (
+                        <Button
+                          size="sm"
+                          className="bg-teal-600 hover:bg-teal-700 text-white text-xs h-8"
+                          onClick={() => {
+                            setActiveReport(report)
+                            setActionsTaken('')
+                            setRootCause('')
+                            setPartsUsed([])
+                            setRepairDialogOpen(true)
+                          }}
+                        >
+                          ثبت تعمیرات
+                        </Button>
+                      )}
+
+                      {/* Defer capability */}
+                      {(report.status === 'approved' || report.status === 'in_repair') &&
+                        (user?.roleKey === 'super_admin' || user?.roleKey === 'admin' || user?.roleKey === 'manager') && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs h-8 border-zinc-600 text-zinc-300 hover:bg-zinc-800"
+                            onClick={() => {
+                              setActiveReport(report)
+                              setDeferReason('')
+                              setDeferUntil('')
+                              setDeferDialogOpen(true)
+                            }}
+                          >
+                            ماندگار سازی
+                          </Button>
+                        )}
+
+                      {/* Final close */}
+                      {report.status === 'repaired' &&
+                        (user?.roleKey === 'super_admin' || user?.roleKey === 'admin' || user?.roleKey === 'supervisor' || user?.roleKey === 'manager') && (
+                          <Button
+                            size="sm"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8"
+                            onClick={() => {
+                              setActiveReport(report)
+                              handleTransitionSubmit('verify')
+                            }}
+                          >
+                            تایید نهایی و بستن
+                          </Button>
+                        )}
+
+                      {/* Reopen within 30 days */}
+                      {(report.status === 'verified_closed' || report.status === 'rejected') &&
+                        (user?.roleKey === 'super_admin' || user?.roleKey === 'admin' || user?.roleKey === 'supervisor') && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs h-8"
+                            onClick={() => {
+                              setActiveReport(report)
+                              setReopenReason('')
+                              setReopenDialogOpen(true)
+                            }}
+                          >
+                            بازگشایی مجدد
+                          </Button>
+                        )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -259,6 +647,507 @@ export default function TicketsPage() {
           ))}
         </div>
       )}
+
+      {/* ── DIALOG 1: FAULT CREATION WIZARD ── */}
+      <Dialog open={wizardOpen} onOpenChange={(open) => { setWizardOpen(open); if (!open) resetWizard() }}>
+        <DialogContent className="max-w-2xl bg-zinc-950 text-foreground border border-border">
+          <DialogHeader>
+            <DialogTitle>ویزارد ثبت گزارش فالت قطار - گام {wizardStep} از ۴</DialogTitle>
+            <DialogDescription>
+              لطفاً قطار، واگن، کد فالت و مشخصات خرابی را مشخص کنید.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* STEP 1: SELECT TRAIN */}
+          {wizardStep === 1 && (
+            <div className="space-y-4 py-4">
+              <Label>قطار مورد نظر را انتخاب کنید:</Label>
+              <Select value={selectedTrain} onValueChange={(val) => setSelectedTrain(val || '')}>
+                <SelectTrigger className="w-full text-xs">
+                  <SelectValue placeholder="انتخاب قطار..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {wizardTrains.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      قطار {t.trainNumber} ({t.fleetSeries || 'سری نامشخص'})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* STEP 2: SELECT WAGON */}
+          {wizardStep === 2 && (
+            <div className="space-y-4 py-4">
+              <Label>موقعیت واگن خرابی را مشخص کنید (یا کادر قطار کامل):</Label>
+              <div className="grid grid-cols-7 gap-2">
+                {wizardWagons.map((w) => (
+                  <Button
+                    key={w.id}
+                    variant={selectedWagon === w.id ? 'default' : 'outline'}
+                    className="flex flex-col h-16 py-2 text-xs"
+                    onClick={() => setSelectedWagon(w.id === selectedWagon ? '' : w.id)}
+                  >
+                    <span className="font-bold">واگن {w.position}</span>
+                    <span className="text-[10px] text-foreground-muted">{w.wagonCode}</span>
+                  </Button>
+                ))}
+              </div>
+              <div className="text-center text-xs text-foreground-muted mt-2">
+                عدم انتخاب واگن به این معنی است که خرابی کل قطار یا سیستم ارتباطی را در بر می‌گیرد.
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: MATCH FAULT CODE (NLP) */}
+          {wizardStep === 3 && (
+            <div className="space-y-4 py-4">
+              <Label>توضیح خرابی به زبان روان (مثلاً: باد کولر گرم است، درب گیر کرده):</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={nlpText}
+                  onChange={(e) => setNlpText(e.target.value)}
+                  placeholder="شرح خرابی را وارد کنید..."
+                  className="flex-1 text-xs"
+                />
+                <Button onClick={triggerNlpMatch} disabled={nlpMatching} className="text-xs">
+                  {nlpMatching ? 'در حال تطبیق...' : 'تطبیق کاتالوگ'}
+                </Button>
+              </div>
+
+              {matchingResults.length > 0 ? (
+                <div className="space-y-2 border border-border p-3 rounded-lg bg-zinc-900">
+                  <span className="text-xs font-semibold text-foreground-muted">کدهای پیشنهادی هوش مصنوعی:</span>
+                  {matchingResults.map((r) => (
+                    <div
+                      key={r.faultCodeId}
+                      className={`flex items-center justify-between p-2 rounded border cursor-pointer text-xs ${
+                        selectedFaultCodeId === r.faultCodeId
+                          ? 'border-red-600 bg-red-600/10'
+                          : 'border-zinc-800 bg-zinc-950 hover:bg-zinc-900'
+                      }`}
+                      onClick={() => setSelectedFaultCodeId(r.faultCodeId)}
+                    >
+                      <div>
+                        <span className="font-bold text-foreground block">{r.code} - {r.title}</span>
+                        {r.reason && <span className="text-[10px] text-purple-400 block">{r.reason}</span>}
+                      </div>
+                      <Badge variant="outline">{r.confidence}% تطبیق</Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-xs text-foreground-muted py-2">
+                  پس از تایپ شرح خرابی، دکمه «تطبیق کاتالوگ» را کلیک کنید تا مناسب‌ترین کدهای خطا استخراج شوند.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* STEP 4: FINAL DETAILS & SUBMIT */}
+          {wizardStep === 4 && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>شرح نهایی وقوع خرابی:</Label>
+                <Textarea
+                  value={faultDesc}
+                  onChange={(e) => setFaultDesc(e.target.value)}
+                  placeholder="جزئیات دقیق خرابی را وارد کنید..."
+                  className="text-xs h-24"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>موقعیت جغرافیایی وقوع (ایستگاه/بین ایستگاه):</Label>
+                <Input
+                  value={faultLocation}
+                  onChange={(e) => setFaultLocation(e.target.value)}
+                  placeholder="مثال: ایستگاه امام خمینی، خط ۲ سکوی ۱"
+                  className="text-xs"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>اثر خرابی بر سیر و حرکت قطار:</Label>
+                <Select value={serviceImpact} onValueChange={(val) => setServiceImpact(val || '')}>
+                  <SelectTrigger className="w-full text-xs">
+                    <SelectValue placeholder="اثر بر حرکت..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">بدون تاثیر بر سیر</SelectItem>
+                    <SelectItem value="delay">تاخیر جزئی در حرکت</SelectItem>
+                    <SelectItem value="evacuated">تخلیه کامل قطار</SelectItem>
+                    <SelectItem value="removed_from_service">خروج قطار از خط</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex justify-between gap-2 border-t border-border pt-4">
+            <Button
+              variant="outline"
+              disabled={wizardStep === 1}
+              onClick={() => setWizardStep(wizardStep - 1)}
+              className="text-xs"
+            >
+              قبلی
+            </Button>
+
+            {wizardStep < 4 ? (
+              <Button
+                disabled={
+                  (wizardStep === 1 && !selectedTrain) ||
+                  (wizardStep === 3 && !selectedFaultCodeId)
+                }
+                onClick={() => setWizardStep(wizardStep + 1)}
+                className="text-xs"
+              >
+                بعدی
+              </Button>
+            ) : (
+              <Button
+                disabled={!faultDesc.trim()}
+                onClick={submitNewFault}
+                className="bg-red-600 hover:bg-red-700 text-white text-xs"
+              >
+                ثبت و ارسال گزارش
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── DIALOG 2: REVIEW & APPROVE ── */}
+      <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+        <DialogContent className="bg-zinc-950 text-foreground border border-border max-w-md">
+          <DialogHeader>
+            <DialogTitle>بررسی و تعیین تکلیف اولیه فالت</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>تصمیم بازبینی:</Label>
+              <Select value={reviewAction} onValueChange={(val: any) => setReviewAction(val)}>
+                <SelectTrigger className="text-xs h-9">
+                  <SelectValue placeholder="انتخاب اقدام..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="approve">تایید و ارجاع کار فنی</SelectItem>
+                  <SelectItem value="reject">رد فالت (نامعتبر / تکراری)</SelectItem>
+                  <SelectItem value="needs_info">برگشت جهت تکمیل اطلاعات راهبر</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {reviewAction === 'approve' && (
+              <>
+                <div className="space-y-2">
+                  <Label>اولویت فالت قطار:</Label>
+                  <Select value={reviewPriority} onValueChange={(val) => setReviewPriority(val || '')}>
+                    <SelectTrigger className="text-xs h-9">
+                      <SelectValue placeholder="اولویت را انتخاب کنید" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">کم</SelectItem>
+                      <SelectItem value="medium">متوسط</SelectItem>
+                      <SelectItem value="high">زیاد</SelectItem>
+                      <SelectItem value="critical">بحرانی</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>ارجاع مستقیم به کارشناس تعمیرات (اختیاری):</Label>
+                  <Select value={reviewAssignee} onValueChange={(val) => setReviewAssignee(val || '')}>
+                    <SelectTrigger className="text-xs h-9">
+                      <SelectValue placeholder="انتخاب کارشناس..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="no-assign">بدون تخصیص (تخصیص خودکار سیستم)</SelectItem>
+                      {usersList.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.name} ({u.role?.label || 'پرسنل'})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+
+            <div className="space-y-2">
+              <Label>توضیحات بازبینی و اقدامات:</Label>
+              <Textarea
+                value={reviewNote}
+                onChange={(e) => setReviewNote(e.target.value)}
+                placeholder="یادداشت‌های فنی سرشیفت یا دلیل رد فالت..."
+                className="text-xs h-20"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex justify-end gap-2 border-t border-border pt-4">
+            <Button variant="outline" onClick={() => setReviewDialogOpen(false)} className="text-xs">
+              انصراف
+            </Button>
+            <Button
+              onClick={() =>
+                handleTransitionSubmit(reviewAction, {
+                  priority: reviewAction === 'approve' ? reviewPriority : undefined,
+                  assigneeId: reviewAction === 'approve' && reviewAssignee !== 'no-assign' ? reviewAssignee : undefined,
+                  reviewNote,
+                })
+              }
+              className="text-xs bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              ثبت بازبینی
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── DIALOG 3: REPAIR ACTIONS ── */}
+      <Dialog open={repairDialogOpen} onOpenChange={setRepairDialogOpen}>
+        <DialogContent className="bg-zinc-950 text-foreground border border-border max-w-lg">
+          <DialogHeader>
+            <DialogTitle>ثبت اقدامات تعمیراتی و رفع خرابی</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>شرح اقدامات فنی انجام‌شده:</Label>
+              <Textarea
+                value={actionsTaken}
+                onChange={(e) => setActionsTaken(e.target.value)}
+                placeholder="توضیح دهید چه کارهایی برای رفع فالت قطار انجام شد..."
+                className="text-xs h-20"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>علت ریشه‌ای خرابی (Root Cause):</Label>
+              <Input
+                value={rootCause}
+                onChange={(e) => setRootCause(e.target.value)}
+                placeholder="علت اصلی خرابی قطعه یا بروز حادثه..."
+                className="text-xs"
+              />
+            </div>
+
+            <div className="space-y-3 border border-border p-3 rounded-lg bg-zinc-900">
+              <Label className="text-xs font-semibold">قطعات مصرف شده:</Label>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  value={newPartName}
+                  onChange={(e) => setNewPartName(e.target.value)}
+                  placeholder="نام قطعه..."
+                  className="flex-1 text-xs h-8"
+                />
+                <Input
+                  type="number"
+                  value={newPartQty}
+                  onChange={(e) => setNewPartQty(parseInt(e.target.value, 10))}
+                  placeholder="تعداد..."
+                  className="w-20 text-xs h-8"
+                />
+                <Button onClick={addPart} variant="outline" className="text-xs h-8">
+                  افزودن
+                </Button>
+              </div>
+
+              {partsUsed.length > 0 ? (
+                <div className="space-y-1 text-xs">
+                  {partsUsed.map((p, idx) => (
+                    <div key={idx} className="flex justify-between bg-zinc-950 p-1.5 rounded border border-zinc-800">
+                      <span>{p.name}</span>
+                      <span className="font-bold">{toFa(p.qty)} عدد</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-[10px] text-foreground-muted text-center">قطعه‌ای مصرف نشده است.</div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="flex justify-end gap-2 border-t border-border pt-4">
+            <Button variant="outline" onClick={() => setRepairDialogOpen(false)} className="text-xs">
+              انصراف
+            </Button>
+            <Button
+              disabled={!actionsTaken.trim() || !rootCause.trim()}
+              onClick={() =>
+                handleTransitionSubmit('complete_repair', {
+                  actionsTaken,
+                  rootCause,
+                  partsUsed,
+                })
+              }
+              className="text-xs bg-teal-600 hover:bg-teal-700 text-white"
+            >
+              ثبت نهایی تعمیرات
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── DIALOG 4: DEFER FAULT ── */}
+      <Dialog open={deferDialogOpen} onOpenChange={setDeferDialogOpen}>
+        <DialogContent className="bg-zinc-950 text-foreground border border-border max-w-md">
+          <DialogHeader>
+            <DialogTitle>ماندگار کردن فالت قطار (Defer Fault)</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>علت ماندگاری و عدم رفع فوری فالت:</Label>
+              <Textarea
+                value={deferReason}
+                onChange={(e) => setDeferReason(e.target.value)}
+                placeholder="توضیح دهید چرا رفع فالت به تعویق می‌افتد..."
+                className="text-xs h-20"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>مهلت بازبینی و رفع نهایی (تاریخ میلادی):</Label>
+              <Input
+                type="date"
+                value={deferUntil}
+                onChange={(e) => setDeferUntil(e.target.value)}
+                className="text-xs"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex justify-end gap-2 border-t border-border pt-4">
+            <Button variant="outline" onClick={() => setDeferDialogOpen(false)} className="text-xs">
+              انصراف
+            </Button>
+            <Button
+              disabled={!deferReason.trim() || !deferUntil}
+              onClick={() =>
+                handleTransitionSubmit('defer', {
+                  deferReason,
+                  deferUntil,
+                })
+              }
+              className="text-xs bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              تایید ماندگار سازی
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── DIALOG 5: REOPEN FAULT ── */}
+      <Dialog open={reopenDialogOpen} onOpenChange={setReopenDialogOpen}>
+        <DialogContent className="bg-zinc-950 text-foreground border border-border max-w-md">
+          <DialogHeader>
+            <DialogTitle>بازگشایی مجدد فالت قطار</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>علت بازگشایی فالت:</Label>
+              <Textarea
+                value={reopenReason}
+                onChange={(e) => setReopenReason(e.target.value)}
+                placeholder="چرا خرابی همچنان پابرجاست؟ جزئیات را یادداشت کنید..."
+                className="text-xs h-20"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex justify-end gap-2 border-t border-border pt-4">
+            <Button variant="outline" onClick={() => setReopenDialogOpen(false)} className="text-xs">
+              انصراف
+            </Button>
+            <Button
+              disabled={!reopenReason.trim()}
+              onClick={() =>
+                handleTransitionSubmit('reopen', {
+                  note: reopenReason,
+                })
+              }
+              className="text-xs bg-pink-600 hover:bg-pink-700 text-white"
+            >
+              تایید و بازگشایی
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── DIALOG 6: EXCEL IMPORT ── */}
+      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+        <DialogContent className="bg-zinc-950 text-foreground border border-border max-w-xl">
+          <DialogHeader>
+            <DialogTitle>وارد کردن گروهی فالت‌ها از اکسل</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>انتخاب فایل اکسل:</Label>
+              <Input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                className="text-xs bg-zinc-900 border-zinc-800"
+              />
+            </div>
+
+            {importFile && !importPreview && (
+              <Button onClick={handleImportValidate} disabled={importing} className="w-full text-xs">
+                {importing ? 'در حال تحلیل...' : 'بارگذاری و پیش‌نمایش فایل'}
+              </Button>
+            )}
+
+            {importPreview && (
+              <div className="space-y-3 border border-border p-4 rounded-lg bg-zinc-900 text-xs">
+                <div className="flex justify-between font-semibold">
+                  <span className="text-emerald-400">تعداد ردیف‌های معتبر: {toFa(importPreview.validCount)}</span>
+                  <span className="text-red-400">تعداد خطاها: {toFa(importPreview.errorCount)}</span>
+                </div>
+
+                {importPreview.errors.length > 0 && (
+                  <div className="max-h-40 overflow-y-auto space-y-1 mt-2 p-2 bg-zinc-950 rounded border border-zinc-800 text-[11px]">
+                    {importPreview.errors.map((e: any, idx: number) => (
+                      <div key={idx} className="text-red-400">
+                        ردیف {toFa(e.row)} ({e.keyIdentifier}): {e.reason}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex justify-between gap-2 border-t border-border pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setImportDialogOpen(false)
+                setImportFile(null)
+                setImportPreview(null)
+              }}
+              className="text-xs"
+            >
+              انصراف
+            </Button>
+            {importPreview && importPreview.validRows.length > 0 && (
+              <Button
+                onClick={handleImportCommit}
+                disabled={importing}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+              >
+                {importing ? 'در حال ثبت...' : `ثبت نهایی ${toFa(importPreview.validCount)} ردیف`}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

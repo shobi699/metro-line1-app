@@ -203,6 +203,9 @@ model User {
   faultLogsActor            FaultLog[]        @relation("FaultLogActor")
   personalEvents            PersonalEvent[]   @relation("PersonalEvents")
   calendarPreference        CalendarPreference? @relation("CalendarPref")
+  formSubmissions           FormSubmission[]  @relation("FormSubmitter")
+  formLogsActor             FormLog[]         @relation("FormLogActor")
+  formDecisions             FormApproval[]    @relation("FormDecider")
 
   @@index([roleId])
   @@index([status])
@@ -1517,5 +1520,124 @@ model Workflow {
   createdAt   DateTime @default(now())
 
   @@unique([key, version])
+}
+
+// ── Form Builder Core ──────────────────────────────────
+
+enum FormSubmissionStatus {
+  draft         // پیشنویس (هنوز ارسال نشده)
+  submitted     // ارسال شده — در گردشکار
+  in_review     // در حال بررسی یک مرحله
+  needs_changes // برگشت به متقاضی برای اصلاح
+  approved      // تایید نهایی
+  rejected      // رد شده
+  cancelled     // لغو توسط متقاضی
+}
+
+model FormTemplate {
+  id              String   @id @default(cuid())
+  key             String   @unique              // "overtime-request"
+  title           String                        // «درخواست اضافهکار»
+  description     String?
+  category        String?                        // «منابع انسانی»، «عملیات»...
+  icon            String?                        // نام آیکون
+  isActive        Boolean  @default(true)
+  isPublished     Boolean  @default(false)
+  activeVersionId String?                     // نسخه فعال
+  allowMobile     Boolean  @default(true)        // نمایش در اپ موبایل
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  versions    FormVersion[]
+  submissions FormSubmission[]
+
+  @@index([category])
+}
+
+model FormVersion {
+  id          String   @id @default(cuid())
+  templateId  String
+  version     Int
+  schema      Json     // { fields:[...], layout:[...] } — تعریف کامل فیلدها و چیدمان
+  workflow    Json     // { stages:[...], transitions:[...], rules:[...] } — گردشکار
+  access      Json     // { whoCanSubmit:[roleKeys/userIds], whoCanView:[...] }
+  isActive    Boolean  @default(false)
+  publishedAt DateTime?
+  publishedBy String?
+  createdAt   DateTime @default(now())
+
+  template    FormTemplate     @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  submissions FormSubmission[]
+
+  @@unique([templateId, version])
+}
+
+model FormSubmission {
+  id            String               @id @default(cuid())
+  submissionNo  Int                  @unique // خوانا: R-2045
+  templateId    String
+  versionId     String                                // نسخهی قالب هنگام ثبت (قفل)
+  submitterId   String
+  status        FormSubmissionStatus @default(submitted)
+  currentStage  String?                               // کلید مرحله جاری در گردشکار
+  data          Json                                  // { fieldName: value } پاسخهای متقاضی
+  targetDate    DateTime?                             // تاریخ موضوع درخواست (مثلاً روز اضافهکار)
+  amount        Float?                                // مقدار عددی کلیدی (ساعت/مبلغ) برای گزارش
+  slaDueAt      DateTime?
+  submittedAt   DateTime             @default(now())
+  closedAt      DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  template  FormTemplate    @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  version   FormVersion     @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  submitter User            @relation("FormSubmitter", fields: [submitterId], references: [id], onDelete: Cascade)
+  steps     FormApproval[]
+  logs      FormLog[]
+
+  @@index([templateId, status])
+  @@index([submitterId])
+  @@index([currentStage])
+  @@index([targetDate])
+}
+
+model FormApproval {
+  id           String   @id @default(cuid())
+  submissionId String
+  stageKey     String                       // «supervisor-review»
+  stageTitle   String
+  assigneeId   String?                      // مسئول این مرحله (نقش یا کاربر مشخص)
+  decision     String?                      // approve | reject | refer | request_changes | null(pending)
+  note         String?
+  decidedById  String?
+  decidedAt    DateTime?
+  referredTo   String?                      // اگر ارجاع داده، به کدام نقش/کاربر
+  createdAt    DateTime @default(now())
+
+  submission   FormSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  decidedBy    User?          @relation("FormDecider", fields: [decidedById], references: [id])
+
+  @@index([submissionId])
+  @@index([assigneeId, decision])
+  @@index([decidedById])
+}
+
+model FormLog {
+  id           String   @id @default(cuid())
+  submissionId String
+  actorId      String
+  action       String                       // submitted|approved|rejected|referred|edited|commented|cancelled
+  fromStage    String?
+  toStage      String?
+  note         String?
+  changes      Json?                        // برای ویرایشها
+  createdAt    DateTime @default(now())
+
+  submission FormSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  actor      User           @relation("FormLogActor", fields: [actorId], references: [id])
+
+  @@index([submissionId])
+  @@index([actorId])
 }
 

@@ -159,6 +159,24 @@ export const PERMISSION_CATALOG: PermissionGroup[] = [
       { key: 'fault-reports:export', label: 'خروجی اکسل / PDF' },
     ],
   },
+  {
+    resource: 'forms',
+    label: 'فرم‌ها و درخواست‌ها',
+    permissions: [
+      { key: 'forms:submit', label: 'ثبت فرم' },
+      { key: 'forms:view-own', label: 'مشاهده فرم‌های خود' },
+      { key: 'forms:review', label: 'تایید/رد/ارجاع در مرحله' },
+      { key: 'forms:view-all', label: 'مشاهده همه ارسال‌ها' },
+      { key: 'forms:report', label: 'گزارش و خروجی' },
+    ],
+  },
+  {
+    resource: 'forms-admin',
+    label: 'مدیریت فرم‌ساز',
+    permissions: [
+      { key: 'forms-admin:manage', label: 'مدیریت کامل قالب‌ها و گردشکار' },
+    ],
+  },
 ]
 
 /** فهرست تخت همهٔ کلیدهای مجوز معتبر. */

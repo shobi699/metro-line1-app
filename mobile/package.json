@@ -8,7 +8,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "ts:check": "tsc"
+    "ts:check": "tsc",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@expo-google-fonts/vazirmatn": "^0.2.3",
@@ -42,6 +43,7 @@
     "@babel/core": "^7.20.0",
     "@types/jalaali-js": "^1.2.0",
     "@types/react": "~18.2.45",
+    "patch-package": "^8.0.1",
     "typescript": "~5.3.3"
   },
   "private": true
