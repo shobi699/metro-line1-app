@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
 import { prisma } from '@/server/db'
 import { aiQuerySchema } from '@/lib/zod/ai'

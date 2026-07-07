@@ -3,5 +3,10 @@ export {
   listFeedback,
   replyToFeedback,
   getFeedbackStats,
+  getFeedbackDetail,
+  addFeedbackMessage,
+  voteIdea,
+  getFeedbackByToken,
+  getFeedbackCategories,
   type FeedbackData,
 } from './service'

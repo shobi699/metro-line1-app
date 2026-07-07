@@ -23,4 +23,23 @@ export class GeminiAdapter implements AIProviderAdapter {
       usedProvider: config.name,
     }
   }
+
+  async *chatStream(prompt: string, config: ProviderConfig): AsyncGenerator<string, void, unknown> {
+    if (!config.apiKey) {
+      throw new Error(`Gemini API key is missing for provider ${config.name}`)
+    }
+
+    const genAI = new GoogleGenerativeAI(config.apiKey)
+    const model = genAI.getGenerativeModel({
+      model: config.modelName || 'gemini-2.0-flash',
+    })
+
+    const result = await model.generateContentStream(prompt)
+    for await (const chunk of result.stream) {
+      const text = chunk.text()
+      if (text) {
+        yield text
+      }
+    }
+  }
 }

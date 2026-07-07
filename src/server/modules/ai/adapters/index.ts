@@ -10,6 +10,7 @@ export interface AIResponse {
 
 export interface AIProviderAdapter {
   chat(prompt: string, config: ProviderConfig): Promise<AIResponse>
+  chatStream?(prompt: string, config: ProviderConfig): AsyncGenerator<string, void, unknown>
 }
 
 // Registry to lazily load adapters

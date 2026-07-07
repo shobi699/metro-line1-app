@@ -1,16 +1,16 @@
-# Graph Report - metro-line1-app  (2026-07-02)
+# Graph Report - metro-line1-app  (2026-07-07)
 
 ## Corpus Check
-- 1313 files · ~2,461,294 words
+- 1611 files · ~2,668,700 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 14234 nodes · 17482 edges · 1145 communities (904 shown, 241 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 239 edges (avg confidence: 0.79)
+- 16074 nodes · 21619 edges · 1201 communities (999 shown, 202 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 587 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a4aa65f0`
+- Built from commit: `ef4b41ff`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -59,6 +59,7 @@
 - [[_COMMUNITY_Community 42|Community 42]]
 - [[_COMMUNITY_Community 43|Community 43]]
 - [[_COMMUNITY_Community 44|Community 44]]
+- [[_COMMUNITY_Community 45|Community 45]]
 - [[_COMMUNITY_Community 46|Community 46]]
 - [[_COMMUNITY_Community 48|Community 48]]
 - [[_COMMUNITY_Community 51|Community 51]]
@@ -542,6 +543,7 @@
 - [[_COMMUNITY_Community 529|Community 529]]
 - [[_COMMUNITY_Community 530|Community 530]]
 - [[_COMMUNITY_Community 531|Community 531]]
+- [[_COMMUNITY_Community 532|Community 532]]
 - [[_COMMUNITY_Community 533|Community 533]]
 - [[_COMMUNITY_Community 534|Community 534]]
 - [[_COMMUNITY_Community 535|Community 535]]
@@ -812,6 +814,7 @@
 - [[_COMMUNITY_Community 800|Community 800]]
 - [[_COMMUNITY_Community 801|Community 801]]
 - [[_COMMUNITY_Community 802|Community 802]]
+- [[_COMMUNITY_Community 803|Community 803]]
 - [[_COMMUNITY_Community 804|Community 804]]
 - [[_COMMUNITY_Community 805|Community 805]]
 - [[_COMMUNITY_Community 806|Community 806]]
@@ -1126,30 +1129,82 @@
 - [[_COMMUNITY_Community 1144|Community 1144]]
 - [[_COMMUNITY_Community 1145|Community 1145]]
 - [[_COMMUNITY_Community 1146|Community 1146]]
+- [[_COMMUNITY_Community 1147|Community 1147]]
+- [[_COMMUNITY_Community 1148|Community 1148]]
+- [[_COMMUNITY_Community 1149|Community 1149]]
+- [[_COMMUNITY_Community 1150|Community 1150]]
+- [[_COMMUNITY_Community 1151|Community 1151]]
+- [[_COMMUNITY_Community 1152|Community 1152]]
+- [[_COMMUNITY_Community 1153|Community 1153]]
+- [[_COMMUNITY_Community 1154|Community 1154]]
+- [[_COMMUNITY_Community 1155|Community 1155]]
+- [[_COMMUNITY_Community 1156|Community 1156]]
+- [[_COMMUNITY_Community 1157|Community 1157]]
+- [[_COMMUNITY_Community 1158|Community 1158]]
+- [[_COMMUNITY_Community 1159|Community 1159]]
+- [[_COMMUNITY_Community 1160|Community 1160]]
+- [[_COMMUNITY_Community 1161|Community 1161]]
+- [[_COMMUNITY_Community 1162|Community 1162]]
+- [[_COMMUNITY_Community 1163|Community 1163]]
+- [[_COMMUNITY_Community 1164|Community 1164]]
+- [[_COMMUNITY_Community 1165|Community 1165]]
+- [[_COMMUNITY_Community 1166|Community 1166]]
+- [[_COMMUNITY_Community 1167|Community 1167]]
+- [[_COMMUNITY_Community 1168|Community 1168]]
+- [[_COMMUNITY_Community 1169|Community 1169]]
+- [[_COMMUNITY_Community 1170|Community 1170]]
+- [[_COMMUNITY_Community 1171|Community 1171]]
+- [[_COMMUNITY_Community 1172|Community 1172]]
+- [[_COMMUNITY_Community 1173|Community 1173]]
+- [[_COMMUNITY_Community 1174|Community 1174]]
+- [[_COMMUNITY_Community 1175|Community 1175]]
+- [[_COMMUNITY_Community 1176|Community 1176]]
+- [[_COMMUNITY_Community 1177|Community 1177]]
+- [[_COMMUNITY_Community 1178|Community 1178]]
+- [[_COMMUNITY_Community 1179|Community 1179]]
+- [[_COMMUNITY_Community 1180|Community 1180]]
+- [[_COMMUNITY_Community 1181|Community 1181]]
+- [[_COMMUNITY_Community 1182|Community 1182]]
+- [[_COMMUNITY_Community 1183|Community 1183]]
+- [[_COMMUNITY_Community 1184|Community 1184]]
+- [[_COMMUNITY_Community 1185|Community 1185]]
+- [[_COMMUNITY_Community 1186|Community 1186]]
+- [[_COMMUNITY_Community 1187|Community 1187]]
+- [[_COMMUNITY_Community 1188|Community 1188]]
+- [[_COMMUNITY_Community 1189|Community 1189]]
+- [[_COMMUNITY_Community 1190|Community 1190]]
+- [[_COMMUNITY_Community 1191|Community 1191]]
+- [[_COMMUNITY_Community 1192|Community 1192]]
+- [[_COMMUNITY_Community 1193|Community 1193]]
+- [[_COMMUNITY_Community 1195|Community 1195]]
+- [[_COMMUNITY_Community 1196|Community 1196]]
+- [[_COMMUNITY_Community 1197|Community 1197]]
+- [[_COMMUNITY_Community 1198|Community 1198]]
+- [[_COMMUNITY_Community 1199|Community 1199]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `getSessionUser()` - 293 edges
-2. `authErrorResponse()` - 289 edges
-3. `cn()` - 168 edges
-4. `requireRole()` - 129 edges
-5. `prisma` - 114 edges
-6. `useAuthStore` - 101 edges
-7. `toFa()` - 99 edges
-8. `Button()` - 65 edges
-9. `useTheme()` - 57 edges
-10. `useAuthStore` - 55 edges
+1. `getSessionUser()` - 558 edges
+2. `authErrorResponse()` - 551 edges
+3. `requireRole()` - 220 edges
+4. `prisma` - 217 edges
+5. `cn()` - 182 edges
+6. `toFa()` - 142 edges
+7. `useAuthStore` - 141 edges
+8. `requirePermission()` - 123 edges
+9. `Button()` - 92 edges
+10. `Card()` - 77 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Prisma AGENTS.md` --semantically_similar_to--> `DESIGN.md - Design System`  [EXTRACTED] [semantically similar]
   prisma/AGENTS.md → DESIGN.md
-- `AppContent()` --calls--> `useConfigStore`  [INFERRED]
-  mobile/App.tsx → mobile/src/stores/config.ts
+- `FileDrop()` --semantically_similar_to--> `TicketForm`  [INFERRED] [semantically similar]
+  src/components/shared/file-drop.tsx → src/components/shared/ticket-form.tsx
+- `test()` --calls--> `getEmbedding()`  [EXTRACTED]
+  test-embedding.ts → src/server/modules/ai/embedding.ts
 - `Badge` --semantically_similar_to--> `Button`  [INFERRED] [semantically similar]
   src/components/ui/badge.tsx → src/components/ui/button.tsx
 - `Prisma PROMPT.md - Build Prompt` --references--> `AGENTS.md - Agent Instructions`  [EXTRACTED]
   prisma/PROMPT.md → AGENTS.md
-- `TestShadcnInstaller` --uses--> `ShadcnInstaller`  [INFERRED]
-  .agents/.agents/skills/ckm-ui-styling/scripts/tests/test_shadcn_add.py → .agents/skills/ckm-ui-styling/scripts/shadcn_add.py
 
 ## Import Cycles
 - 3-file cycle: `src/server/db-seed.ts -> src/server/modules/custom-fields/service.ts -> src/server/db.ts -> src/server/db-seed.ts`
@@ -1171,23 +1226,23 @@
 - **Persian RTL Localization Layer** — rtl_persian_support, vazirmatn_font, jalali_calendar, dayjs_jalali_type_declaration [EXTRACTED 0.90]
 - **Authentication & Security Layer** — jwt_auth_flow, rbac_role_hierarchy, zod_validation, audit_logging [EXTRACTED 0.90]
 
-## Communities (1145 total, 241 thin omitted)
+## Communities (1201 total, 202 thin omitted)
 
 ### Community 0 - "API Routes & RBAC"
-Cohesion: 0.04
-Nodes (114): POST(), GET(), GET(), AttendanceData, checkIn(), checkOut(), getTodayAttendance(), getUserAttendance() (+106 more)
+Cohesion: 0.18
+Nodes (12): calculateShiftForDate(), getShiftForUserAndDate(), CycleShiftDetail, CycleTemplate, DailyNote, DailyTask, DEFAULT_ASSIGNMENTS, DEFAULT_NOTES (+4 more)
 
 ### Community 1 - "Service Layer & Validation"
-Cohesion: 0.08
-Nodes (48): findAssignmentForUser(), getShiftForUserAndDate(), getShiftForUserAndDateFromDb(), MOCK_USERS_LIST, buildCompositeKey(), GroupKey, groupKeyFor(), GROUPS_LIST (+40 more)
+Cohesion: 0.11
+Nodes (31): findAssignmentForUser(), getShiftForUserAndDate(), getShiftForUserAndDateFromDb(), MOCK_USERS_LIST, GROUPS_LIST, DbShift, ResolvedShiftResponse, ShiftAssignmentDto (+23 more)
 
 ### Community 3 - "UI Components & Layout"
-Cohesion: 0.09
-Nodes (27): AppLayout(), metadata, RootLayout(), Badge, BulletinGuard, Button, Card, Dialog (+19 more)
+Cohesion: 0.08
+Nodes (32): AppLayout(), metadata, RootLayout(), Badge, BulletinGuard, Button, Card, Dialog (+24 more)
 
 ### Community 4 - "Pages & Client State"
-Cohesion: 0.09
-Nodes (31): AppContent(), HomeStackScreen(), RootStackParamList, Stack, Tab, AIAssistantScreen(), Message, Bulletin (+23 more)
+Cohesion: 0.05
+Nodes (65): HomeStackScreen(), MainTabs(), RootStackParamList, Stack, Tab, MonthlyReportScreen(), FormField, FormTemplate (+57 more)
 
 ### Community 5 - "Build Config & Documentation"
 Cohesion: 0.11
@@ -1198,8 +1253,8 @@ Cohesion: 0.05
 Nodes (42): الف) ساختار پروژه موبایل (React Native / TypeScript):, اهداف کوتاه‌مدت, ب) ساختار پروژه موبایل (Flutter / Dart):, بخش الف) بررسی و نقد طرح موجود, ج) راهبرد Geofencing و SOS:, طرح جامع اپلیکیشن اطلاع‌رسانی و پرسنلی سیر و حرکت — خط یک مترو, فاز ۱: راه‌اندازی هسته سیستم و پایگاه داده (MVP Core), فاز ۲: سیستم ارتباطات بلادرنگ و مدیریت لوحه شیفت (+34 more)
 
 ### Community 7 - "Tooling Configuration"
-Cohesion: 0.10
-Nodes (20): fetchPrivateConfig(), ChatMessage, ChatRoom, Env, WebSocketSession, DurableObjectNamespace, DurableObjectState, DurableObjectStub (+12 more)
+Cohesion: 0.43
+Nodes (5): addPoints(), GamificationScoreData, getLeaderboard(), getUserScore(), GET()
 
 ### Community 8 - "Tech Stack Overview"
 Cohesion: 0.50
@@ -1214,48 +1269,48 @@ Cohesion: 0.67
 Nodes (3): DataTable, EmptyState, Table
 
 ### Community 11 - "Session & Auth Store"
-Cohesion: 0.10
-Nodes (25): MainTabs(), CustomPageScreen(), DashboardStats, TodayShift, DEFAULT_MENU_ITEMS, DEFAULT_SYSTEM_SETTINGS, DEFAULT_WIDGETS, UIBuilderScreen() (+17 more)
+Cohesion: 0.05
+Nodes (39): Certificate, ExamRecord, LearningPath, MyExamsPage(), PendingExam, CoursePath, LearningGalleryPage(), QUIZ_QUESTIONS (+31 more)
 
 ### Community 12 - "Registration Flow"
 Cohesion: 0.04
-Nodes (105): AuditLogRow, AttendanceRecord, Device, INITIAL_DEVICES, Bulletin, ChecklistItem, ChecklistRecord, ChecklistsPage() (+97 more)
+Nodes (98): AuditLogRow, AttendanceRecord, Device, INITIAL_DEVICES, ChecklistItem, ChecklistRecord, ChecklistsPage(), LINE1_STATIONS (+90 more)
 
 ### Community 13 - "Swap Request Actions"
-Cohesion: 0.06
-Nodes (34): dependencies, dayjs, expo, expo-font, @expo-google-fonts/vazirmatn, expo-status-bar, lucide-react-native, react (+26 more)
+Cohesion: 0.04
+Nodes (45): dependencies, dayjs, expo, expo-blur, expo-document-picker, expo-file-system, expo-font, @expo-google-fonts/vazirmatn (+37 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.07
-Nodes (44): approveInputSchema, GET(), RosterUploadInput, rosterUploadSchema, SwapActionInput, swapActionSchema, SwapRequestInput, swapRequestSchema (+36 more)
+Cohesion: 0.06
+Nodes (42): GET(), RosterUploadInput, rosterUploadSchema, SwapActionInput, swapActionSchema, SwapRequestInput, swapRequestSchema, GET() (+34 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.05
 Nodes (43): Audit checklist, Avoid blocking patterns, Avoid these, Best practices, Browser compatibility, Character encoding, Code quality, Code quality (+35 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.09
-Nodes (35): AccessTokenPayload, getAccessSecret(), getRefreshSecret(), issueAccessToken(), issueRefreshToken(), RefreshTokenPayload, verifyAccessToken(), verifyRefreshToken() (+27 more)
+Cohesion: 0.07
+Nodes (42): AccessTokenPayload, getAccessSecret(), getRefreshSecret(), issueAccessToken(), issueRefreshToken(), RefreshTokenPayload, verifyAccessToken(), verifyRefreshToken() (+34 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.04
-Nodes (56): PrivateConfig, usePrivateConfig(), CHANNEL_KIND_META, ChatView(), PRIORITY_META, UserOption, addMessage(), ChannelKind (+48 more)
+Cohesion: 0.08
+Nodes (26): fetchPrivateConfig(), PrivateConfig, usePrivateConfig(), CHANNEL_KIND_META, ChatView(), PRIORITY_META, UserOption, addMessage() (+18 more)
 
 ### Community 19 - "Community 19"
-Cohesion: 0.07
-Nodes (44): GET(), POST(), addComment(), createPost(), deletePost(), emptyToNull(), extractPrerequisiteId(), getPostBySlug() (+36 more)
+Cohesion: 0.06
+Nodes (52): ackSchema, POST(), GET(), GET(), addComment(), createPost(), deletePost(), emptyToNull() (+44 more)
 
 ### Community 20 - "Community 20"
-Cohesion: 0.07
-Nodes (27): dependencies, @base-ui/react, bcryptjs, class-variance-authority, clsx, dayjs, dotenv, @fontsource-variable/jetbrains-mono (+19 more)
+Cohesion: 0.06
+Nodes (33): dependencies, @base-ui/react, bcryptjs, class-variance-authority, clsx, dayjs, dayjs-jalali, dotenv (+25 more)
 
 ### Community 21 - "Community 21"
 Cohesion: 0.09
 Nodes (21): aliases, components, hooks, lib, ui, utils, iconLibrary, menuAccent (+13 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.11
-Nodes (18): package, usesCleartextTraffic, projectId, expo, android, extra, ios, name (+10 more)
+Cohesion: 0.10
+Nodes (19): package, usesCleartextTraffic, projectId, expo, android, extra, ios, name (+11 more)
 
 ### Community 23 - "Community 23"
 Cohesion: 0.10
@@ -1266,12 +1321,12 @@ Cohesion: 0.12
 Nodes (17): devDependencies, eslint, eslint-config-next, @opennextjs/cloudflare, prettier, prettier-plugin-tailwindcss, prisma, tailwindcss (+9 more)
 
 ### Community 25 - "Community 25"
-Cohesion: 0.12
-Nodes (15): Auth & RBAC, Demo Accounts, Directory (دفتر تلفن), Environment Variables, Fault Ticketing (تیکتینگ خرابی), Features, License, Project Structure (+7 more)
+Cohesion: 0.07
+Nodes (27): 🔑 اکانت‌های دمو برای تست (Demo Accounts), 🧪 دستورات ترمینال (Scripts), ⚡ راه‌اندازی سریع (Quick Start), 📂 ساختار پوشه‌های پروژه (Project Structure), 🚇 سامانه جامع سیر و حرکت خط ۱ مترو تهران (Tehran Metro Line 1 Platform), 📄 لایسنس (License), 🔒 متغیرهای محیطی (Environment Variables), 🚀 ویژگی‌ها و امکانات کلیدی سامانه (Key Features) (+19 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.06
-Nodes (38): fromJalali(), gregStr(), jdate(), gd_g(), gd_j(), isLeapGregorian(), jalaliToGregorianArray(), persianDigits (+30 more)
+Cohesion: 0.21
+Nodes (13): exportMonthToExcel(), SHIFT_FA, WEEKDAY_FA, monthDays(), monthRange(), GET(), fromJalali(), gregStr() (+5 more)
 
 ### Community 27 - "Community 27"
 Cohesion: 0.05
@@ -1279,7 +1334,7 @@ Nodes (43): Arbitrary Values, Aspect Ratio, Background Colors, Border Color, Bor
 
 ### Community 28 - "Community 28"
 Cohesion: 0.09
-Nodes (36): GET(), POST(), createCustomFieldDef(), deleteCustomFieldDef(), ensurePersonnelCustomFields(), getCustomFieldDef(), listCustomFieldDefs(), updateCustomFieldDef() (+28 more)
+Nodes (35): GET(), POST(), createCustomFieldDef(), deleteCustomFieldDef(), ensurePersonnelCustomFields(), getCustomFieldDef(), listCustomFieldDefs(), updateCustomFieldDef() (+27 more)
 
 ### Community 29 - "Community 29"
 Cohesion: 0.06
@@ -1295,27 +1350,27 @@ Nodes (43): Arbitrary Values, Aspect Ratio, Background Colors, Border Color, Bor
 
 ### Community 32 - "Community 32"
 Cohesion: 0.07
-Nodes (23): Any, Path, main(), Add custom font families.          Args:             fonts: Dict of font_type, Add custom spacing values.          Args:             spacing: Dict of name:, Add custom breakpoints.          Args:             breakpoints: Dict of name:, Add plugin requirements.          Args:             plugins: List of plugin n, Get plugin recommendations based on configuration.          Returns: (+15 more)
+Nodes (23): Any, Path, main(), Add custom font families.          Args:             fonts: Dict of font_type: [, Add custom spacing values.          Args:             spacing: Dict of name: val, Add custom breakpoints.          Args:             breakpoints: Dict of name: wi, Add plugin requirements.          Args:             plugins: List of plugin name, Get plugin recommendations based on configuration.          Returns: (+15 more)
 
 ### Community 33 - "Community 33"
-Cohesion: 0.03
-Nodes (85): TripData, AttendancePage(), ACTION_LABELS, AuditActor, AuditLogEntry, AuditLogsPage(), ENTITY_LABELS, AuthState (+77 more)
+Cohesion: 0.02
+Nodes (107): AICachePage(), AIProvidersPage(), TripData, AttendancePage(), ACTION_LABELS, AuditActor, AuditLogEntry, AuditLogsPage() (+99 more)
 
 ### Community 34 - "Community 34"
 Cohesion: 0.29
 Nodes (6): compilerOptions, baseUrl, paths, strict, extends, @/*
 
 ### Community 35 - "Community 35"
-Cohesion: 0.03
-Nodes (51): ActiveTrain, AnalyticsData, DashboardStats, MetroStation, OperationLog, RecentBulletin, SCADASubsystem, STATION_POSITIONS (+43 more)
+Cohesion: 0.06
+Nodes (29): ActiveTrain, AnalyticsData, DashboardStats, MetroStation, OperationLog, RecentBulletin, SCADASubsystem, STATION_POSITIONS (+21 more)
 
 ### Community 36 - "Community 36"
 Cohesion: 0.33
 Nodes (5): name, prisma, seed, private, version
 
 ### Community 37 - "Community 37"
-Cohesion: 0.29
-Nodes (7): scripts, build, dev, lint, start, test, typecheck
+Cohesion: 0.25
+Nodes (8): scripts, build, build:ci, dev, lint, start, test, typecheck
 
 ### Community 38 - "Community 38"
 Cohesion: 0.05
@@ -1338,8 +1393,8 @@ Cohesion: 0.05
 Nodes (21): Tests for shadcn_add.py, Test adding components without shadcn config., Test adding components that are already installed., Test adding components with overwrite flag., Test adding components in dry run mode., Test successful component addition., Test ShadcnInstaller class., Test component addition with subprocess error. (+13 more)
 
 ### Community 53 - "Community 53"
-Cohesion: 0.10
-Nodes (32): POST(), GET(), POST(), CreateBulletinInput, createBulletinSchema, CreateTicketInput, createTicketSchema, UpdateTicketStatusInput (+24 more)
+Cohesion: 0.08
+Nodes (38): GET(), POST(), getSession(), CreateBulletinInput, createBulletinSchema, CreateTicketInput, createTicketSchema, UpdateTicketStatusInput (+30 more)
 
 ### Community 54 - "Community 54"
 Cohesion: 0.05
@@ -1354,20 +1409,20 @@ Cohesion: 0.05
 Nodes (37): 1. Color Palette, 2. Typography, 3. Logo Usage, 4. Voice & Tone, 5. Imagery Guidelines, 6. Design Components, Accessibility, AI Image Generation (+29 more)
 
 ### Community 59 - "Community 59"
-Cohesion: 0.04
-Nodes (73): CRITICAL_KEYWORDS, POST(), RULEBOOK_DATABASE, RulebookItem, otpStore, approveUserSchema, registerSchema, PATCH() (+65 more)
+Cohesion: 0.03
+Nodes (87): POST(), otpStore, approveUserSchema, PATCH(), reviewPerformanceAppeal(), PATCH(), POST_TO_ROLE_KEY, GET() (+79 more)
 
 ### Community 60 - "Community 60"
 Cohesion: 0.05
 Nodes (37): 1. Color Palette, 2. Typography, 3. Logo Usage, 4. Voice & Tone, 5. Imagery Guidelines, 6. Design Components, Accessibility, AI Image Generation (+29 more)
 
 ### Community 61 - "Community 61"
-Cohesion: 0.33
-Nodes (6): CommentItem, PostDetail, PostDetailPage(), QuizQuestion, renderBody(), TYPE_LABELS
+Cohesion: 0.04
+Nodes (60): CrisisEvent, CrisisPage(), INCIDENT_TYPES, IncidentReport, SAMPLE_SOS_ALERTS, SOS_STATUS_LABELS, SOSAlert, STATUS_LABELS (+52 more)
 
 ### Community 62 - "Community 62"
 Cohesion: 0.03
-Nodes (84): DocumentRequest, INITIAL_REQUESTS, cn(), IranPlate(), IranPlateProps, VehiclePlateFromData(), NAVIGATION_SECTIONS, NavItem (+76 more)
+Nodes (77): QuickAddType, CATEGORIES, CustomFieldDef, DirectoryPage(), ImportResult, UserRow, cn(), toFa/jalali (+69 more)
 
 ### Community 63 - "Community 63"
 Cohesion: 0.05
@@ -1378,12 +1433,12 @@ Cohesion: 0.05
 Nodes (37): G10: Vertical Separation, G11: Inconsistency, G12: Clutter, G13: Artificial Coupling, G14: Feature Envy, G15: Selector Arguments, G16: Obscured Intent, G17: Misplaced Responsibility (+29 more)
 
 ### Community 65 - "Community 65"
-Cohesion: 0.22
-Nodes (5): Test TailwindConfigGenerator class., Test generating complete TypeScript configuration., Test default output path for JavaScript., Test custom output path., TestTailwindConfigGenerator
+Cohesion: 0.03
+Nodes (34): Tests for tailwind_config_gen.py, Test adding full color palette., Test adding custom fonts., Test adding custom spacing., Test adding custom breakpoints., Test TailwindConfigGenerator class., Test that adding same plugin twice doesn't duplicate., Test initialization with default settings. (+26 more)
 
 ### Community 66 - "Community 66"
-Cohesion: 0.06
-Nodes (62): POST(), fuzzyMatchScore(), jalaliToDate(), levenshteinDistance(), normalizeFarsiString(), GET(), PATCH(), createBulkNotifications() (+54 more)
+Cohesion: 0.05
+Nodes (68): POST(), GET(), querySchema, GET(), fuzzyMatchScore(), jalaliToDate(), levenshteinDistance(), normalizeFarsiString() (+60 more)
 
 ### Community 68 - "Community 68"
 Cohesion: 0.05
@@ -1602,8 +1657,8 @@ Cohesion: 0.07
 Nodes (27): Advanced Architecture Patterns, 🚀 Advanced Capabilities, Build High-Performance Mini Programs, Core Request Wrapper Implementation, 🚨 Critical Rules You Must Follow, Cross-Platform Mini Program Development, Development Standards, Integrate Deeply with WeChat Ecosystem (+19 more)
 
 ### Community 127 - "Community 127"
-Cohesion: 0.20
-Nodes (10): fast, normal, slow, $type, $value, $type, $value, duration (+2 more)
+Cohesion: 0.18
+Nodes (11): fast, normal, slow, $type, $value, $type, $value, primitive (+3 more)
 
 ### Community 128 - "Community 128"
 Cohesion: 0.07
@@ -1630,12 +1685,12 @@ Cohesion: 0.07
 Nodes (27): Advanced Architecture Patterns, 🚀 Advanced Capabilities, Build High-Performance Mini Programs, Core Request Wrapper Implementation, 🚨 Critical Rules You Must Follow, Cross-Platform Mini Program Development, Development Standards, Integrate Deeply with WeChat Ecosystem (+19 more)
 
 ### Community 134 - "Community 134"
-Cohesion: 0.09
-Nodes (27): ChecklistItem, ChecklistRecord, ChecklistsScreen(), LINE1_STATIONS, Template, DirectoryScreen(), DirectoryUser, HomeScreen() (+19 more)
+Cohesion: 0.11
+Nodes (26): AppContent(), AttendanceRecord, AttendanceScreen(), METRO_STATIONS, MetroStation, CabinModeScreen(), getStyles(), Trip (+18 more)
 
 ### Community 135 - "Community 135"
-Cohesion: 0.11
-Nodes (6): KvAdapter, MemoryAdapter, OtpAdapter, OtpEntry, ResetEntry, KvNamespace
+Cohesion: 0.15
+Nodes (21): $type, $value, $type, $value, 500, 600, blue, green (+13 more)
 
 ### Community 136 - "Community 136"
 Cohesion: 0.07
@@ -1842,12 +1897,12 @@ Cohesion: 0.08
 Nodes (23): Accelerate Developer Onboarding, 🚀 Advanced Capabilities, Build Fast, Accurate Mental Models, Code Before Everything, Codebase Onboarding Engineer Agent, 🚨 Critical Rules You Must Follow, Explanation Discipline, 🔄 Learning & Memory (+15 more)
 
 ### Community 187 - "Community 187"
-Cohesion: 0.09
-Nodes (30): AttendanceRecord, AttendanceScreen(), METRO_STATIONS, MetroStation, CalendarScreen(), JALALI_MONTHS, SHIFT_MAPPING, Bulletin (+22 more)
+Cohesion: 0.07
+Nodes (42): d1, d2, CalendarScreen(), JALALI_MONTHS, SHIFT_MAPPING, LeaveReportScreen(), EVT_ORG, EVT_PERSONAL (+34 more)
 
 ### Community 188 - "Community 188"
-Cohesion: 0.08
-Nodes (24): امنیت آفلاین, حالت جلوگیری از خطای انسانی, نکته امنیتی, پیشنهادهای حرفه‌ای, پیشنهادهای حرفه‌ای, پیشنهادهای حرفه‌ای, پیشنهادهای حرفه‌ای, پیشنهادهای حرفه‌ای (+16 more)
+Cohesion: 0.07
+Nodes (27): امنیت آفلاین, حالت جلوگیری از خطای انسانی, نکته امنیتی, نکته مهم, پیشنهادهای حرفه‌ای, پیشنهادهای حرفه‌ای, پیشنهادهای حرفه‌ای, پیشنهادهای حرفه‌ای (+19 more)
 
 ### Community 189 - "Community 189"
 Cohesion: 0.08
@@ -1878,8 +1933,8 @@ Cohesion: 0.09
 Nodes (22): Best Practices, Chart.js Integration, Command, Component Spec Pattern, Contextual Decision Flow, Decision System CSVs, Design System, Integration (+14 more)
 
 ### Community 196 - "Community 196"
-Cohesion: 0.11
-Nodes (19): $type, $value, $type, $value, $type, $value, $type, $value (+11 more)
+Cohesion: 0.09
+Nodes (24): $type, $value, $type, $value, $type, $value, $type, $value (+16 more)
 
 ### Community 197 - "Community 197"
 Cohesion: 0.09
@@ -1950,8 +2005,8 @@ Cohesion: 0.10
 Nodes (20): Async Patterns, Bundling, Data Patterns, Debug Tricks, Directives, Error Handling, File Conventions, Font Optimization (+12 more)
 
 ### Community 214 - "Community 214"
-Cohesion: 0.15
-Nodes (21): $type, $value, $type, $value, 500, 600, blue, green (+13 more)
+Cohesion: 0.16
+Nodes (5): KvAdapter, OtpAdapter, OtpEntry, ResetEntry, KvNamespace
 
 ### Community 215 - "Community 215"
 Cohesion: 0.10
@@ -1966,24 +2021,24 @@ Cohesion: 0.10
 Nodes (20): Async Patterns, Bundling, Data Patterns, Debug Tricks, Directives, Error Handling, File Conventions, Font Optimization (+12 more)
 
 ### Community 218 - "Community 218"
-Cohesion: 0.12
-Nodes (23): $type, $value, sm, $type, $value, $type, $value, $type (+15 more)
+Cohesion: 0.11
+Nodes (27): $type, $value, lg, sm, $type, $value, $type, $value (+19 more)
 
 ### Community 219 - "Community 219"
-Cohesion: 0.43
-Nodes (5): addPoints(), GamificationScoreData, getLeaderboard(), getUserScore(), GET()
+Cohesion: 0.03
+Nodes (103): togglePersonalTaskDone(), POST(), POST(), embeddingToBuffer(), GET(), POST(), PATCH(), POST() (+95 more)
 
 ### Community 220 - "Community 220"
 Cohesion: 0.20
-Nodes (16): GET(), POST(), createArticle(), createFAQ(), deleteArticle(), getArticleBySlug(), KnowledgeArticleData, KnowledgeFAQData (+8 more)
+Nodes (16): createArticle(), createFAQ(), deleteArticle(), getArticleBySlug(), KnowledgeArticleData, KnowledgeFAQData, listArticles(), listFAQs() (+8 more)
 
 ### Community 221 - "Community 221"
-Cohesion: 0.53
-Nodes (6): $type, $value, 600, 600, 600, 600
+Cohesion: 0.06
+Nodes (83): CacheRecord, FAQ, Interaction, KnowledgeSource, layers, Persona, Provider, ReportData (+75 more)
 
 ### Community 222 - "Community 222"
-Cohesion: 0.10
-Nodes (21): رنگ‌بندی پیشنهادی, فرایند پیشنهادی, قابلیت‌ها, قابلیت‌های AI, قوانین قابل بررسی, مثال, موارد قابل نمایش, نمای سرشیفت (+13 more)
+Cohesion: 0.05
+Nodes (39): حل تعارض, رنگ‌بندی پیشنهادی, روش‌های ثبت حضور, فرایند پیشنهادی, قابلیت‌ها, قابلیت‌ها, قابلیت‌ها, قابلیت‌ها (+31 more)
 
 ### Community 223 - "Community 223"
 Cohesion: 0.10
@@ -1998,8 +2053,8 @@ Cohesion: 0.15
 Nodes (19): _e(), generate_chart_slide(), generate_cta_slide(), generate_deck(), generate_metrics_slide(), generate_problem_slide(), generate_solution_slide(), generate_testimonial_slide() (+11 more)
 
 ### Community 226 - "Community 226"
-Cohesion: 0.10
-Nodes (21): $type, $value, $type, $value, $type, $value, $type, $value (+13 more)
+Cohesion: 0.11
+Nodes (20): $type, $value, $type, $value, $type, $value, $type, $value (+12 more)
 
 ### Community 227 - "Community 227"
 Cohesion: 0.10
@@ -2038,8 +2093,8 @@ Cohesion: 0.10
 Nodes (19): Base Color Presets, Best Practices, Color Customization, Color Format, Component Customization, CSS Variable System, Customize Styles, Customize Variants (+11 more)
 
 ### Community 236 - "Community 236"
-Cohesion: 0.14
-Nodes (11): main(), Add custom font families.          Args:             fonts: Dict of font_type, Add custom spacing values.          Args:             spacing: Dict of name:, Add custom breakpoints.          Args:             breakpoints: Dict of name:, Add plugin requirements.          Args:             plugins: List of plugin n, Get plugin recommendations based on configuration.          Returns:, Generate Tailwind CSS configuration files., Validate configuration.          Returns:             Tuple of (valid, messag (+3 more)
+Cohesion: 0.10
+Nodes (17): main(), Add custom font families.          Args:             fonts: Dict of font_type: [, Add custom spacing values.          Args:             spacing: Dict of name: val, Add custom breakpoints.          Args:             breakpoints: Dict of name: wi, Add plugin requirements.          Args:             plugins: List of plugin name, Get plugin recommendations based on configuration.          Returns:, Generate configuration file content.          Returns:             Configuration, Generate TypeScript configuration. (+9 more)
 
 ### Community 237 - "Community 237"
 Cohesion: 0.10
@@ -2062,8 +2117,8 @@ Cohesion: 0.10
 Nodes (19): AI and Automation Readiness, Business Logic Modeling, 🚨 Critical Rules You Must Follow, 🔄 Learning & Memory, OrgScript Engineer Personality, OrgScript Process Example, OrgScript Tooling Development, Robust Parser Architecture (+11 more)
 
 ### Community 242 - "Community 242"
-Cohesion: 0.18
-Nodes (8): LoginScreen(), ManagerUser, MEETING_ROOMS, MeetingRequest, MeetingsScreen(), TIME_SLOTS, BASE_URL, setApiUrl()
+Cohesion: 0.10
+Nodes (19): LoginScreen(), ActiveModal, PLATE_LETTERS, ProfileScreen(), ROLE_LABEL, { width: SCREEN_W, height: SCREEN_H }, FaultReport, LOG_ACTION_LABELS (+11 more)
 
 ### Community 243 - "Community 243"
 Cohesion: 0.10
@@ -2095,7 +2150,7 @@ Nodes (19): $type, $value, $type, $value, $type, $value, $type, $value (+11 more
 
 ### Community 250 - "Community 250"
 Cohesion: 0.11
-Nodes (19): $type, $value, background, foreground, muted-foreground, primary, primary-hover, secondary (+11 more)
+Nodes (19): $type, $value, background, destructive, foreground, muted-foreground, primary-hover, secondary (+11 more)
 
 ### Community 251 - "Community 251"
 Cohesion: 0.11
@@ -2247,7 +2302,7 @@ Nodes (16): Buttons, Common ARIA patterns, Error states, Form fields, Level A (m
 
 ### Community 288 - "Community 288"
 Cohesion: 0.19
-Nodes (10): Path, main(), Add all available shadcn/ui components.          Args:             overwrite:, List installed components.          Returns:             Tuple of (success, m, Handle shadcn/ui component installation., Initialize installer.          Args:             project_root: Project root d, Check if shadcn is initialized in project.          Returns:             True, Get list of already installed components.          Returns:             List (+2 more)
+Nodes (10): Path, main(), Add all available shadcn/ui components.          Args:             overwrite: If, List installed components.          Returns:             Tuple of (success, mess, Handle shadcn/ui component installation., Initialize installer.          Args:             project_root: Project root dire, Check if shadcn is initialized in project.          Returns:             True if, Get list of already installed components.          Returns:             List of (+2 more)
 
 ### Community 289 - "Community 289"
 Cohesion: 0.12
@@ -2263,7 +2318,7 @@ Nodes (16): Buttons, Common ARIA patterns, Error states, Form fields, Level A (m
 
 ### Community 292 - "Community 292"
 Cohesion: 0.19
-Nodes (10): Path, main(), Add all available shadcn/ui components.          Args:             overwrite:, List installed components.          Returns:             Tuple of (success, m, Handle shadcn/ui component installation., Initialize installer.          Args:             project_root: Project root d, Check if shadcn is initialized in project.          Returns:             True, Get list of already installed components.          Returns:             List (+2 more)
+Nodes (10): Path, main(), Add all available shadcn/ui components.          Args:             overwrite: If, List installed components.          Returns:             Tuple of (success, mess, Handle shadcn/ui component installation., Initialize installer.          Args:             project_root: Project root dire, Check if shadcn is initialized in project.          Returns:             True if, Get list of already installed components.          Returns:             List of (+2 more)
 
 ### Community 293 - "Community 293"
 Cohesion: 0.12
@@ -2378,12 +2433,12 @@ Cohesion: 0.12
 Nodes (16): 5.10 Subscribe to Derived State, 5.11 Use Functional setState Updates, 5.12 Use Lazy State Initialization, 5.13 Use Transitions for Non-Urgent Updates, 5.14 Use useDeferredValue for Expensive Derived Renders, 5.15 Use useRef for Transient Values, 5.1 Calculate Derived State During Rendering, 5.2 Defer State Reads to Usage Point (+8 more)
 
 ### Community 321 - "Community 321"
-Cohesion: 0.17
-Nodes (14): AuditLog, AVAILABILITY_LABELS, DEFAULT_THEME_COLORS, FullProfile, PLATE_LETTERS, ProfilePage(), ROLE_LABEL, Vehicle (+6 more)
+Cohesion: 0.24
+Nodes (5): apiFetch(), ChatRoom, DurableObjectState, getFieldDefs(), apiFetch()
 
 ### Community 322 - "Community 322"
-Cohesion: 0.12
-Nodes (15): جمع‌بندی پیشنهادی, ۱۳) پیشنهاد ماژول‌های جدید برای حرفه‌ای‌تر شدن محصول, ۱۳.۱ ماژول مدیریت مرخصی و مأموریت, ۱۳.۲ ماژول مدیریت تجهیزات فردی, ۱۳.۳ ماژول Onboarding نیروهای جدید, ۱۳.۴ ماژول فرم‌ساز سازمانی, ۱۳.۵ ماژول مدیریت اسناد رسمی, ۱۳.۶ ماژول مدیریت حوادث و شبه‌حادثه‌ها (+7 more)
+Cohesion: 0.11
+Nodes (17): KPIهای آموزشی, KPIهای ارتباطی, KPIهای عملیاتی, KPIهای مدیریتی, جمع‌بندی پیشنهادی, ۱۴) ارتقای معماری فنی, ۱۴.۱ پیشنهاد Stack حرفه‌ای‌تر, ۱۴.۲ معماری پیشنهادی بک‌اند (+9 more)
 
 ### Community 323 - "Community 323"
 Cohesion: 0.13
@@ -2398,8 +2453,8 @@ Cohesion: 0.13
 Nodes (14): AIDA (Attention-Interest-Desire-Action), Before-After-Bridge, Contrast Patterns, Copywriting Formulas, Core Formulas, Cost of Inaction, FAB (Features-Advantages-Benefits), Formula-to-Slide Mapping (+6 more)
 
 ### Community 326 - "Community 326"
-Cohesion: 0.67
-Nodes (4): $type, $value, 50, 50
+Cohesion: 0.33
+Nodes (7): R2Bucket, StorageDriver, StoredFile, localStorageDriver, UPLOAD_ROOT, createR2Driver(), R2Env
 
 ### Community 327 - "Community 327"
 Cohesion: 0.13
@@ -2582,8 +2637,8 @@ Cohesion: 0.13
 Nodes (14): Accessibility (30% of typical issues), Audit categories, Audit output format, Before every deploy, Best practices (15% of typical issues), How it works, Monthly deep dive, Performance (40% of typical issues) (+6 more)
 
 ### Community 372 - "Community 372"
-Cohesion: 0.67
-Nodes (4): $type, $value, 800, 800
+Cohesion: 0.05
+Nodes (54): cosineSimilarity(), EmbeddingPipeline, getEmbedding(), chunkText(), indexKnowledgeSource(), Article, CRITICAL_KEYWORDS, POST() (+46 more)
 
 ### Community 373 - "Community 373"
 Cohesion: 0.14
@@ -2603,7 +2658,7 @@ Nodes (13): Card Styles, Component Variants, CSS Structures, Feature Grid (3 col
 
 ### Community 377 - "Community 377"
 Cohesion: 0.23
-Nodes (13): build_cip_prompt(), check_logo_required(), generate_cip_set(), generate_with_nano_banana(), load_env(), load_logo_image(), main(), Generate image using Gemini Nano Banana (native image generation)      Support (+5 more)
+Nodes (13): build_cip_prompt(), check_logo_required(), generate_cip_set(), generate_with_nano_banana(), load_env(), load_logo_image(), main(), Generate image using Gemini Nano Banana (native image generation)      Supports (+5 more)
 
 ### Community 378 - "Community 378"
 Cohesion: 0.14
@@ -2679,7 +2734,7 @@ Nodes (13): Card Styles, Component Variants, CSS Structures, Feature Grid (3 col
 
 ### Community 396 - "Community 396"
 Cohesion: 0.23
-Nodes (13): build_cip_prompt(), check_logo_required(), generate_cip_set(), generate_with_nano_banana(), load_env(), load_logo_image(), main(), Generate image using Gemini Nano Banana (native image generation)      Support (+5 more)
+Nodes (13): build_cip_prompt(), check_logo_required(), generate_cip_set(), generate_with_nano_banana(), load_env(), load_logo_image(), main(), Generate image using Gemini Nano Banana (native image generation)      Supports (+5 more)
 
 ### Community 397 - "Community 397"
 Cohesion: 0.14
@@ -2734,8 +2789,8 @@ Cohesion: 0.14
 Nodes (13): 3D transforms, Buttons, Component Animation Patterns, Contents, Crossfade transitions, Drawers and panels, Hover effects, Lists and stagger (+5 more)
 
 ### Community 410 - "Community 410"
-Cohesion: 0.22
-Nodes (13): POST(), jalaliPeriodId(), GET(), POST(), calculatePeriodScoresAndNormalize(), COMPETENCY_IDS, filePerformanceAppeal(), getCurrentPeriodId() (+5 more)
+Cohesion: 0.06
+Nodes (38): POST(), GET(), POST(), authenticate(), GET(), POST(), calculatePeriodScoresAndNormalize(), COMPETENCY_IDS (+30 more)
 
 ### Community 411 - "Community 411"
 Cohesion: 0.15
@@ -3062,8 +3117,8 @@ Cohesion: 0.20
 Nodes (12): $type, $value, bg, bg, padding, shadow, card, bg (+4 more)
 
 ### Community 492 - "Community 492"
-Cohesion: 0.20
-Nodes (6): Generate configuration file content.          Returns:             Configurat, Generate TypeScript configuration., Generate JavaScript configuration., Format plugins array for config.          Validates each plugin name against a, Add indentation to JSON string., Write configuration to file.          Returns:             Tuple of (success,
+Cohesion: 0.03
+Nodes (115): DELETE(), GET(), aiProviderSchema, GET(), POST(), GET(), POST(), GET() (+107 more)
 
 ### Community 493 - "Community 493"
 Cohesion: 0.17
@@ -3202,8 +3257,8 @@ Cohesion: 0.17
 Nodes (11): ⚙️ Autonomous Optimization Architect, 🚨 Critical Rules You Must Follow, Example Code: The Intelligent Guardrail Router, 🔍 How This Agent Differs From Existing Roles, 🔄 Learning & Memory, 💭 Your Communication Style, 🎯 Your Core Mission, 🧠 Your Identity & Memory (+3 more)
 
 ### Community 527 - "Community 527"
-Cohesion: 0.33
-Nodes (8): GET(), POST(), createFeedback(), FeedbackData, getFeedbackStats(), listFeedback(), replyToFeedback(), PATCH()
+Cohesion: 0.14
+Nodes (20): createFeedbackSchema, GET(), addFeedbackMessage(), createFeedback(), FeedbackData, getFeedbackByToken(), getFeedbackCategories(), getFeedbackDetail() (+12 more)
 
 ### Community 528 - "Community 528"
 Cohesion: 0.17
@@ -3220,6 +3275,10 @@ Nodes (10): Color Palette, Colors, Core Visual Elements, Logo, Logo, Quick Check
 ### Community 531 - "Community 531"
 Cohesion: 0.18
 Nodes (10): Bold Dynamic, CIP Design Style Guide, Classic Traditional, Color Psychology, Corporate Minimal, Fresh Modern, Luxury Premium, Modern Tech (+2 more)
+
+### Community 532 - "Community 532"
+Cohesion: 0.13
+Nodes (29): calendarApi, CalendarPage(), CalendarState, useCalendarStore, CalendarDay, CalendarEventEntry, CalendarHolidayEntry, CalendarInsights (+21 more)
 
 ### Community 533 - "Community 533"
 Cohesion: 0.18
@@ -3334,12 +3393,12 @@ Cohesion: 0.18
 Nodes (10): 💬 Communication Style, 🔧 Critical Rules, Golden Signals, 🔥 Incident Response Integration, 🔭 Observability Stack, 📋 SLO Framework, SRE (Site Reliability Engineer) Agent, The Three Pillars (+2 more)
 
 ### Community 561 - "Community 561"
-Cohesion: 0.29
-Nodes (7): وضعیت فعلی طرح, پیشنهادهای توسعه حرفه‌ای, ۱۱) رزرو وقت جلسه با مدیران, ۱۱.۱ تقویم مدیریتی حرفه‌ای, ۱۱.۲ نوع جلسه, ۱۱.۳ گردش کار جلسه, ۱۱.۴ مستندسازی نتیجه جلسه
+Cohesion: 0.12
+Nodes (17): توسعه حرفه‌ای طرح اپلیکیشن اطلاع‌رسانی و پرسنلی سیر و حرکت — خط یک مترو, وضعیت فعلی طرح, وضعیت فعلی طرح, پیشنهادهای توسعه حرفه‌ای, پیشنهادهای توسعه حرفه‌ای, پیشنهادهای حرفه‌ای‌تر, ۱) ارتقای نگاه محصولی: از اپلیکیشن به «پلتفرم عملیاتی», ۱۰) انتقادات، پیشنهادها و پیام به مدیر (+9 more)
 
 ### Community 562 - "Community 562"
-Cohesion: 0.42
-Nodes (8): GET(), PATCH(), POST(), createMeetingRequest(), getManagerMeetings(), getUserMeetings(), MeetingData, reviewMeeting()
+Cohesion: 0.17
+Nodes (16): createMeetingSchema, GET(), PATCH(), POST(), createMeetingRequest(), getAvailableSlots(), getManagerMeetings(), getMeetingRooms() (+8 more)
 
 ### Community 563 - "Community 563"
 Cohesion: 0.18
@@ -3363,7 +3422,7 @@ Nodes (9): Common Structures, Duarte Sparkline Pattern, Matching Strategy to Con
 
 ### Community 568 - "Community 568"
 Cohesion: 0.29
-Nodes (9): enhance_prompt(), generate_batch(), generate_logo(), load_env(), main(), Enhance the logo prompt with style and industry modifiers, Generate a logo using Gemini models with image generation      Args:, Generate multiple logo variants with different styles (+1 more)
+Nodes (9): enhance_prompt(), generate_batch(), generate_logo(), load_env(), main(), Enhance the logo prompt with style and industry modifiers, Generate a logo using Gemini models with image generation      Args:         asp, Generate multiple logo variants with different styles (+1 more)
 
 ### Community 569 - "Community 569"
 Cohesion: 0.20
@@ -3511,7 +3570,7 @@ Nodes (9): Common Structures, Duarte Sparkline Pattern, Matching Strategy to Con
 
 ### Community 605 - "Community 605"
 Cohesion: 0.29
-Nodes (9): enhance_prompt(), generate_batch(), generate_logo(), load_env(), main(), Enhance the logo prompt with style and industry modifiers, Generate a logo using Gemini models with image generation      Args:, Generate multiple logo variants with different styles (+1 more)
+Nodes (9): enhance_prompt(), generate_batch(), generate_logo(), load_env(), main(), Enhance the logo prompt with style and industry modifiers, Generate a logo using Gemini models with image generation      Args:         asp, Generate multiple logo variants with different styles (+1 more)
 
 ### Community 606 - "Community 606"
 Cohesion: 0.20
@@ -3523,7 +3582,7 @@ Nodes (9): Common Structures, Duarte Sparkline Pattern, Matching Strategy to Con
 
 ### Community 608 - "Community 608"
 Cohesion: 0.22
-Nodes (6): Any, Path, Initialize generator.          Args:             typescript: If True, generat, Determine default output path., Create base configuration structure., Get default content paths for framework.
+Nodes (6): Any, Path, Initialize generator.          Args:             typescript: If True, generate ., Determine default output path., Create base configuration structure., Get default content paths for framework.
 
 ### Community 609 - "Community 609"
 Cohesion: 0.20
@@ -3650,12 +3709,12 @@ Cohesion: 0.20
 Nodes (9): 1. Eliminating Waterfalls (async), 2. Bundle Size Optimization (bundle), 3. Server-Side Performance (server), 4. Client-Side Data Fetching (client), 5. Re-render Optimization (rerender), 6. Rendering Performance (rendering), 7. JavaScript Performance (js), 8. Advanced Patterns (advanced) (+1 more)
 
 ### Community 640 - "Community 640"
-Cohesion: 0.24
-Nodes (6): AiChatInterface(), CustomFieldDoc, FAQ_ITEMS, Message, SAMPLE_AUDIT_LOGS, LiveManualFeed()
+Cohesion: 0.22
+Nodes (7): AiChatInterface(), CITATION_DATABASE, CustomFieldDoc, FAQ_ITEMS, Message, Persona, LiveManualFeed()
 
 ### Community 641 - "Community 641"
-Cohesion: 0.05
-Nodes (19): Tests for tailwind_config_gen.py, Test adding full color palette., Test adding custom spacing., Test TailwindConfigGenerator class., Test initialization with default settings., Test plugin recommendations., Test generating TypeScript configuration., Test generating JavaScript configuration. (+11 more)
+Cohesion: 0.03
+Nodes (34): Tests for tailwind_config_gen.py, Test adding full color palette., Test adding custom fonts., Test adding custom spacing., Test adding custom breakpoints., Test TailwindConfigGenerator class., Test that adding same plugin twice doesn't duplicate., Test initialization with default settings. (+26 more)
 
 ### Community 642 - "Community 642"
 Cohesion: 0.22
@@ -3810,8 +3869,8 @@ Cohesion: 0.36
 Nodes (7): generate_html(), get_deliverable_info(), get_image_base64(), main(), Convert image to base64 for embedding in HTML, Extract deliverable type from filename and get info, Generate HTML presentation from CIP images
 
 ### Community 680 - "Community 680"
-Cohesion: 0.29
-Nodes (8): padding-x, input, $type, $value, focus-ring, padding-x, $type, $value
+Cohesion: 0.20
+Nodes (12): padding-x, padding-y, input, $type, $value, focus-ring, padding-x, padding-y (+4 more)
 
 ### Community 681 - "Community 681"
 Cohesion: 0.25
@@ -3910,8 +3969,8 @@ Cohesion: 0.25
 Nodes (7): Best Practices, Common Pitfall, Decision Tree: Choosing Your Approach, Example: Using with_server.py, Reconnaissance-Then-Action Pattern, Reference Files, Web Application Testing
 
 ### Community 705 - "Community 705"
-Cohesion: 0.09
-Nodes (16): GET(), PATCH(), POST(), activateCrisis(), CrisisEventData, getActiveCrisis(), getCrisisHistory(), resolveCrisis() (+8 more)
+Cohesion: 0.38
+Nodes (8): GET(), PATCH(), POST(), activateCrisis(), CrisisEventData, getActiveCrisis(), getCrisisHistory(), resolveCrisis()
 
 ### Community 706 - "Community 706"
 Cohesion: 0.25
@@ -4106,12 +4165,12 @@ Cohesion: 0.29
 Nodes (7): راهبر, سرشیفت, مدیر, ۱۶) تجربه کاربری حرفه‌ای‌تر, ۱۶.۱ صفحه خانه نقش‌محور, ۱۶.۲ طراحی Mobile-First واقعی, ۱۶.۳ پشتیبانی فارسی حرفه‌ای
 
 ### Community 754 - "Community 754"
-Cohesion: 0.29
-Nodes (7): وضعیت فعلی طرح, پیشنهادهای توسعه حرفه‌ای, ۱۰) انتقادات، پیشنهادها و پیام به مدیر, ۱۰.۱ سیستم تیکت مدیریتی, ۱۰.۲ ناشناس‌بودن واقعی, ۱۰.۳ تحلیل بازخوردها, ۱۰.۴ تبدیل پیشنهاد به پروژه
+Cohesion: 0.04
+Nodes (48): Permissionهای جدید (افزودن به `src/server/rbac/permissions.ts`), تشخیص خودکار تکرار (Recurrence Detection), خارج از دامنه فاز ۱, سناریو ۱ — چرخه کامل موفق, سناریو ۲ — برگشت برای تکمیل اطلاعات, سناریو ۳ — فالت ماندگار (Deferred), سناریو ۴ — فالت تکراری و تشدید (Escalation), سناریو ۵ — ثبت ۳۰ ثانیه‌ای با QR و زبان محاوره‌ای ⚡ (+40 more)
 
 ### Community 755 - "Community 755"
 Cohesion: 0.26
-Nodes (11): createTsrEntry(), deleteTsrEntry(), ensureFileExists(), filePath, getTsrEntries(), TsrEntry, DELETE(), GET() (+3 more)
+Nodes (11): createTsrEntry(), deleteTsrEntry(), ensureFileExists(), filePath, getTsrEntries(), TsrEntry, GET(), DELETE() (+3 more)
 
 ### Community 756 - "Community 756"
 Cohesion: 0.47
@@ -4178,8 +4237,8 @@ Cohesion: 0.33
 Nodes (5): Creating a New Rule, Getting Started, React Best Practices, Rule File Structure, Structure
 
 ### Community 772 - "Community 772"
-Cohesion: 0.33
-Nodes (6): MVP پیشنهادی, فاز ۱ — هسته ضروری, فاز ۲ — عملیات روزانه, فاز ۳ — ارتباطات و آموزش, فاز ۴ — پیشرفته, ۱۸) اولویت‌بندی پیشنهادی MVP
+Cohesion: 0.10
+Nodes (13): NajvaDriver, PusheDriver, SelfHostedDriver, KavenegarDriver, MeliPayamakDriver, SmsIrDriver, DeliveryReport, DeviceTarget (+5 more)
 
 ### Community 773 - "Community 773"
 Cohesion: 0.33
@@ -4194,28 +4253,28 @@ Cohesion: 0.33
 Nodes (6): Pattern 1 — Sequential Chain, Pattern 2 — Parallel Fan-Out / Fan-In, Pattern 3 — Hierarchical (Orchestrator-Subagent), Pattern 4 — Evaluator-Optimizer Loop, Pattern 5 — Mesh / Peer Network, Topology Patterns
 
 ### Community 776 - "Community 776"
-Cohesion: 0.33
-Nodes (5): Roster & Shift Module v2.6, طرح جامع ماژول مدیریت لوحه و اعزام پرسنل, ۱) هدف ماژول, ۱۵) پیشنهاد تکمیلی برای دیتابیس Prisma, ۱۷) جمع‌بندی نسخه نهایی پیشنهادی
+Cohesion: 0.08
+Nodes (32): POST(), createFormSubmission(), evaluateFormula(), executeWorkflowAction(), validateSubmissionData(), POST(), GET(), GET() (+24 more)
 
 ### Community 777 - "Community 777"
-Cohesion: 0.33
-Nodes (6): Cabin Mode, ۹) تجربه کاربری موبایل راهبر, ۹.۱ صفحه «لوحه امروز», ۹.۲ Timeline View, ۹.۳ Card View, ۹.۴ حالت «کابین»
+Cohesion: 0.06
+Nodes (35): Permissionهای جدید (افزودن به `src/server/rbac/permissions.ts`), تشخیص خودکار تکرار (Recurrence Detection), خارج از دامنه فاز ۱, سناریو ۱ — چرخه کامل موفق, سناریو ۲ — برگشت برای تکمیل اطلاعات, سناریو ۳ — فالت ماندگار (Deferred), سناریو ۴ — فالت تکراری و تشدید (Escalation), سناریو ۵ — نقض SLA (+27 more)
 
 ### Community 778 - "Community 778"
-Cohesion: 0.33
-Nodes (6): روش اول: OCR جدولی, روش دوم: Template-based Extraction, ۴) موتور استخراج لوحه از Excel و PDF, ۴.۱ مسیر پیشنهادی برای Excel, ۴.۲ مسیر پیشنهادی برای PDF, ۴.۳ پیشنهاد حرفه‌ای
+Cohesion: 0.13
+Nodes (24): ensureNotificationPermission(), eventBaseTime(), syncReminders(), syncWidgetAndReminders(), COLORS, daysToNextOff(), findToday(), HexColor (+16 more)
 
 ### Community 779 - "Community 779"
-Cohesion: 0.33
-Nodes (6): مزیت این مدل, ۳) مدل داده پیشنهادی حرفه‌ای‌تر, ۳.۱ RosterDay — لوحه روزانه, ۳.۲ RosterVersion — نسخه لوحه, ۳.۳ Trip — حرکت / سفر عملیاتی, ۳.۴ TripAssignment — تخصیص پرسنل به سفر
+Cohesion: 0.06
+Nodes (30): بزرگ ۴×۴ — ماه مینیاتوری, سناریو ۱ — «ثانیه‌ی اول», سناریو ۲ — ثبت ۳ لمسی, سناریو ۳ — فهم شیفت شب با یک نگاه, سناریو ۴ — ویجت در آسانسور, سناریو ۵ — شخصی‌سازی ادمین، بازتاب همه‌جا, 🎨 طرح UI/UX تقویم زندگی شیفت‌محور — وب و موبایل, متوسط ۴×۲ — «خطِ زندگی جیبی» (امضا) (+22 more)
 
 ### Community 780 - "Community 780"
-Cohesion: 0.33
-Nodes (6): ۱۳) اتصال به سایر ماژول‌ها, ۱۳.۱ اتصال به تقویم کاری, ۱۳.۲ اتصال به حضور و غیاب, ۱۳.۳ اتصال به چک‌لیست, ۱۳.۴ اتصال به نوتیفیکیشن, ۱۳.۵ اتصال به AI Assistant
+Cohesion: 0.06
+Nodes (30): سناریو ۱ — ساخت فرم اضافه‌کار توسط مدیر (بدون کد), سناریو ۲ — ثبت درخواست توسط راهبر (موبایل), سناریو ۳ — تایید، ارجاع و رد, سناریو ۴ — بازگشت برای اصلاح, سناریو ۵ — گزارش‌گیری و خروجی, 📝 طرح جامع فرم‌ساز سازمانی با گردش‌کار تایید (Dynamic Form & Approval Platform), ۱) چشم‌انداز و جایگاه در پروژه, ۱۰) API (App Router) (+22 more)
 
 ### Community 781 - "Community 781"
-Cohesion: 0.33
-Nodes (6): ۱۶) نکات اصلاحی روی متن فعلی تو, ۱۶.۱ از `Trip.h1_driver_id` و `Trip.h2_driver_id` فاصله بگیر, ۱۶.۲ فیلد `date: Date` کافی نیست, ۱۶.۳ `direction` باید بر اساس بلوک جدول تعیین شود, ۱۶.۴ `operationalStatus` را از اول خیلی محدود نکن, ۱۶.۵ حتماً `rawValue` ذخیره کن
+Cohesion: 0.07
+Nodes (28): سناریو ۱ — یک نگاه صبحگاهی (ویجت), سناریو ۲ — برنامه‌ریزی سفر با پل تعطیلات, سناریو ۳ — تولد جلالی تکرارشونده, سناریو ۴ — تداخل و تعویض, سناریو ۵ — ادمین مناسبت‌ها را به‌روز می‌کند, 📅 طرح جامع تقویم زندگی شیفت‌محور (Shift Life Calendar), ۱) چشم‌انداز و جایگاه در پروژه, ۱۰) فازبندی اجرا (+20 more)
 
 ### Community 782 - "Community 782"
 Cohesion: 0.33
@@ -4234,8 +4293,8 @@ Cohesion: 0.40
 Nodes (4): Ticket, TicketsState, TicketStats, useTicketsStore
 
 ### Community 786 - "Community 786"
-Cohesion: 0.60
-Nodes (5): $type, $value, 700, 700, 700
+Cohesion: 0.32
+Nodes (6): ChatMessage, Env, WebSocketSession, DurableObjectNamespace, DurableObjectStub, WebSocketPair
 
 ### Community 787 - "Community 787"
 Cohesion: 0.40
@@ -4246,12 +4305,8 @@ Cohesion: 0.40
 Nodes (4): format_output(), generate_design_brief(), Format results for Claude consumption (token-optimized), Generate a comprehensive logo design brief based on query
 
 ### Community 789 - "Community 789"
-Cohesion: 0.17
-Nodes (15): CabinModeScreen(), getStyles(), Trip, ChatScreen(), SOSScreen(), Participant, VoiceConferenceScreen(), VoiceRoom (+7 more)
-
-### Community 790 - "Community 790"
-Cohesion: 0.60
-Nodes (5): $type, $value, border, border, border
+Cohesion: 0.14
+Nodes (20): GET(), audienceIncludes(), DEFAULT_LAYERS, FALLBACK_HOURS, getCalendarRange(), OrgAudience, resolveHolidayLayer(), resolveOrgLayer() (+12 more)
 
 ### Community 791 - "Community 791"
 Cohesion: 0.60
@@ -4301,9 +4356,13 @@ Nodes (4): format_output(), generate_design_brief(), Format results for Claude c
 Cohesion: 0.28
 Nodes (9): $type, $value, $type, $value, 50, 800, blue, 50 (+1 more)
 
+### Community 803 - "Community 803"
+Cohesion: 0.15
+Nodes (15): GET(), POST(), GET(), PATCH(), GET(), GET(), POST(), createSurvey() (+7 more)
+
 ### Community 804 - "Community 804"
-Cohesion: 0.60
-Nodes (5): radius, radius, radius, $type, $value
+Cohesion: 0.33
+Nodes (6): Category, FeedbackItem, FeedbackLog, FeedbackMessage, FeedbackScreen(), toFa()
 
 ### Community 805 - "Community 805"
 Cohesion: 0.40
@@ -4350,12 +4409,12 @@ Cohesion: 0.50
 Nodes (3): DirectoryState, DirectoryUser, useDirectoryStore
 
 ### Community 816 - "Community 816"
-Cohesion: 0.40
-Nodes (5): ۶) پاک‌سازی و نرمال‌سازی داده‌ها, ۶.۱ Normalizer فارسی, ۶.۲ Fuzzy Matching, ۶.۳ آستانه پیشنهادی, ۶.۴ Staging Area
+Cohesion: 0.53
+Nodes (6): $type, $value, 600, 600, 600, 600
 
 ### Community 817 - "Community 817"
-Cohesion: 0.40
-Nodes (5): ۷) اعتبارسنجی عملیاتی و ایمنی, ۷.۱ اعتبارسنجی ساختاری, ۷.۲ اعتبارسنجی پرسنلی, ۷.۳ اعتبارسنجی Anti-Fatigue, ۷.۴ سطح هشدار
+Cohesion: 0.09
+Nodes (21): سناریو ۱ — اطلاعیه الزامی با پیگیری کامل, سناریو ۲ — بنر فوری با انقضا, سناریو ۳ — تابلوی دپو, سناریو ۴ — هدف‌گیری شیفتی, سناریو ۵ — انتشار زمان‌بندی‌شده و انقضا, 📣 طرح جامع سامانه اطلاع‌رسانی و اعلانات سازمانی (Announcements Platform), ۱) زیرساخت موجود که طرح روی آن سوار می‌شود, ۲) مفاهیم و انواع اعلان سازمانی (+13 more)
 
 ### Community 818 - "Community 818"
 Cohesion: 0.40
@@ -4386,16 +4445,16 @@ Cohesion: 0.60
 Nodes (5): $type, $value, border, border, border
 
 ### Community 825 - "Community 825"
-Cohesion: 0.67
-Nodes (4): xl, xl, $type, $value
+Cohesion: 0.09
+Nodes (21): سناریو ۱ — انتشار لوحه (رویداد عادی), سناریو ۲ — SOS (رویداد حیاتی، نمایش قدرت چندلایه), سناریو ۳ — سوئیچ درایور بدون کد, سناریو ۴ — قطعی سرویس ایرانی, سناریو ۵ — بخشنامه اجباری با پیگیری پیامکی, سناریو ۶ — احترام به شب‌کار, 🔔 طرح جامع سامانه اعلان چندکاناله مقاوم به تحریم (Notification Gateway), ۱) چشم‌انداز و اصول طراحی (+13 more)
 
 ### Community 826 - "Community 826"
-Cohesion: 0.40
-Nodes (5): KPIهای آموزشی, KPIهای ارتباطی, KPIهای عملیاتی, KPIهای مدیریتی, ۱۷) KPIهای حرفه‌ای‌تر
+Cohesion: 0.19
+Nodes (15): commitCatalogImport(), commitFaultReportsImport(), commitTrainsImport(), ExcelImportError, ExcelImportPreview, parseDate(), parseExcelBoolean(), rollbackFaultReportsImport() (+7 more)
 
 ### Community 827 - "Community 827"
-Cohesion: 0.67
-Nodes (4): padding-y, padding-y, $type, $value
+Cohesion: 0.10
+Nodes (20): سناریو ۱ — تغییر شماره تلفن با تایید, سناریو ۲ — انقضای گواهینامه راهبری, سناریو ۳ — ادمین ساختار پروفایل را تغییر می‌دهد, سناریو ۴ — گم شدن گوشی, سناریو ۵ — استخدام جدید (Onboarding), 👤 طرح جامع پروفایل کاربری حرفه‌ای (User Profile Platform), ۱) زیرساخت موجود که طرح روی آن سوار می‌شود, ۲) معماری اطلاعاتی پروفایل — تب‌های کاربر (+12 more)
 
 ### Community 828 - "Community 828"
 Cohesion: 0.50
@@ -4414,12 +4473,12 @@ Cohesion: 0.67
 Nodes (3): is_server_ready(), main(), Wait for server to be ready by polling the port.
 
 ### Community 832 - "Community 832"
-Cohesion: 0.40
-Nodes (5): الزامات ایمنی, قابلیت‌ها, نمونه پاسخ استاندارد AI, پیشنهادهای حرفه‌ای, ۱۲.۷ دستیار هوشمند عملیاتی AI
+Cohesion: 0.20
+Nodes (13): AttendanceData, checkIn(), checkOut(), getTodayAttendance(), getUserAttendance(), POST(), GET(), POST() (+5 more)
 
 ### Community 833 - "Community 833"
-Cohesion: 0.40
-Nodes (5): ۱۴) ارتقای معماری فنی, ۱۴.۱ پیشنهاد Stack حرفه‌ای‌تر, ۱۴.۲ معماری پیشنهادی بک‌اند, ۱۴.۳ صف و پردازش پس‌زمینه, ۱۴.۴ Event-Driven Architecture
+Cohesion: 0.20
+Nodes (13): CalendarInsights, computeStats(), findBridges(), getCalendarInsights(), HolidayBridge, isRestDay(), MonthShiftStats, CalendarDay (+5 more)
 
 ### Community 834 - "Community 834"
 Cohesion: 0.50
@@ -4494,32 +4553,32 @@ Cohesion: 0.50
 Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
 
 ### Community 852 - "Community 852"
-Cohesion: 0.50
-Nodes (4): Admin APIs, Driver APIs, Supervisor APIs, ۱۴) APIهای پیشنهادی
+Cohesion: 0.19
+Nodes (12): GET(), GET(), getRadioChannels(), getRadioLogs(), getRadioPhrases(), logTransmission(), RadioChannelData, RadioLogData (+4 more)
 
 ### Community 853 - "Community 853"
-Cohesion: 0.50
-Nodes (4): برای راهبر, برای سرشیفت, برای مدیر, ۱۰) اکشن‌های عملیاتی روی هر سفر
+Cohesion: 0.11
+Nodes (17): سناریو ۱ — سوال تکراری آیین‌نامه (مسیر هزینه‌صفر), سناریو ۲ — سوال داده‌ای زنده (L0), سناریو ۳ — سوال جدید و ذخیره در کش, سناریو ۴ — اقدام با ابزار, سناریو ۵ — کنترل بودجه, سناریو ۶ — بهبود مستمر از بازخورد, 🤖 طرح جامع دستیار هوش مصنوعی نسل بعد (AI Assistant Platform), ۱) زیرساخت موجود (نقطه قوت واقعی پروژه) (+9 more)
 
 ### Community 854 - "Community 854"
-Cohesion: 0.50
-Nodes (4): ۱۱) Offline-First و LTE, ۱۱.۱ داده‌هایی که باید آفلاین ذخیره شوند, ۱۱.۲ صف عملیات آفلاین, ۱۱.۳ سیاست تعارض
+Cohesion: 0.11
+Nodes (17): سناریو ۱ — پاسخ بدون پرسش, سناریو ۲ — اعتماد با یک نگاه, سناریو ۳ — استناد زنده, سناریو ۴ — صوت با دستکش, سناریو ۵ — ارتقای آگاهانه, 🎨 طرح UI/UX دستیار هوش مصنوعی — وب و موبایل, ۱) جهت‌گیری طراحی (Design Direction), ۲) توکن‌های اختصاصی دستیار (+9 more)
 
 ### Community 855 - "Community 855"
-Cohesion: 0.50
-Nodes (4): ۱۲) داشبورد سرشیفت و مدیر, ۱۲.۱ داشبورد لحظه‌ای لوحه, ۱۲.۲ نمای گانت عملیاتی, ۱۲.۳ گزارش‌های مدیریتی
+Cohesion: 0.12
+Nodes (16): سناریو ۱ — شکایت رفاهی با گفتگو و رضایت‌سنجی, سناریو ۲ — گزارش ناشناس تخلف با ادامه گفتگو, سناریو ۳ — ارجاع بین‌واحدی با SLA, سناریو ۴ — تابلوی ایده‌ها, سناریو ۵ — پیام مستقیم به مدیرعامل, 💬 طرح جامع سامانه بازخورد و پیام سازمانی (Feedback & Messaging Platform), ۱) زیرساخت موجود که طرح روی آن سوار می‌شود, ۱۰) ملاحظات فنی (+8 more)
 
 ### Community 856 - "Community 856"
-Cohesion: 0.50
-Nodes (4): ۲) شناخت ساختار واقعی فایل لوحه, ۲.۱ مشخصات بالای لوحه, ۲.۲ ساختار دوطرفه جدول, ۲.۳ تکرار ساختار در چند صفحه
+Cohesion: 0.12
+Nodes (16): سناریو ۱ — ملاقات مردمی با مدیر (اسلاتی), سناریو ۲ — میزبان نقشی, سناریو ۳ — تداخل شیفتی و جابه‌جایی, سناریو ۴ — اتاق و ظرفیت, سناریو ۵ — لغو و نظم, 🗓️ طرح جامع سامانه رزرو وقت جلسه (Meeting Booking Platform), ۱) زیرساخت موجود که طرح روی آن سوار می‌شود, ۱۰) ملاحظات فنی (+8 more)
 
 ### Community 857 - "Community 857"
-Cohesion: 0.50
-Nodes (4): ۵) Visual Mapper برای پنل ادمین, ۵.۱ چرا لازم است؟, ۵.۲ امکانات Visual Mapper, ۵.۳ خروجی Mapper
+Cohesion: 0.12
+Nodes (16): سناریو ۱ — نظرسنجی سریع شیفتی, سناریو ۲ — پیمایش رضایت شغلی سالانه (ناشناس واقعی), سناریو ۳ — ارزیابی الزامی پس از بخشنامه, سناریو ۴ — منطق شرطی, سناریو ۵ — نتایج زنده روی تابلو, 🗳️ طرح جامع سامانه نظرسنجی و پیمایش سازمانی (Polls & Surveys Platform), ۱) زیرساخت موجود که طرح روی آن سوار می‌شود, ۱۰) ملاحظات فنی (+8 more)
 
 ### Community 858 - "Community 858"
-Cohesion: 0.50
-Nodes (4): ۸) انتشار لوحه و مدیریت نسخه‌ها, ۸.۱ چرخه انتشار, ۸.۲ مقایسه نسخه‌ها, ۸.۳ اعلان تغییرات
+Cohesion: 0.14
+Nodes (13): Border radius and shadow, Color, Component style, Density, Frontend Aesthetic Direction: Commit to a Look When No Brand Exists, Imagery and iconography, Motion, Phase 1: Confirm there's truly no existing context (+5 more)
 
 ### Community 859 - "Community 859"
 Cohesion: 0.50
@@ -4550,60 +4609,160 @@ Cohesion: 0.50
 Nodes (3): dependencies, @kilocode/plugin, @opencode-ai/plugin
 
 ### Community 867 - "Community 867"
-Cohesion: 0.67
-Nodes (3): destructive, $type, $value
+Cohesion: 0.14
+Nodes (13): 1. Gradients — flat or subtle, on-tone, 2. Emoji — functional or brand-driven only, 3. Cards — shadow, thin border, or background separation, 4. Imagery — real, licensed, or honest placeholder, 5. Type — fonts chosen with intent, 6. Color — subtly toned whites and blacks, 7. Color values — trace to a token or harmonious palette, 8. Spacing — snap to a 4px or 8px scale (+5 more)
 
 ### Community 868 - "Community 868"
-Cohesion: 0.67
-Nodes (3): destructive-foreground, $type, $value
+Cohesion: 0.33
+Nodes (5): ManagerUser, MEETING_ROOMS, MeetingRequest, MeetingsScreen(), TIME_SLOTS
 
 ### Community 869 - "Community 869"
 Cohesion: 0.67
 Nodes (3): destructive-foreground, $type, $value
 
 ### Community 870 - "Community 870"
-Cohesion: 0.67
-Nodes (3): muted, $type, $value
+Cohesion: 0.33
+Nodes (6): MVP پیشنهادی, فاز ۱ — هسته ضروری, فاز ۲ — عملیات روزانه, فاز ۳ — ارتباطات و آموزش, فاز ۴ — پیشرفته, ۱۸) اولویت‌بندی پیشنهادی MVP
 
 ### Community 871 - "Community 871"
 Cohesion: 0.67
 Nodes (3): ring, $type, $value
 
 ### Community 872 - "Community 872"
-Cohesion: 0.67
-Nodes (3): primary-foreground, $type, $value
+Cohesion: 0.60
+Nodes (5): $type, $value, border, border, border
 
 ### Community 875 - "Community 875"
-Cohesion: 0.33
-Nodes (5): RosterDay, RosterScreen(), toPersianDigits(), Trip, TripAssignment
+Cohesion: 0.13
+Nodes (16): ChecklistsScreen(), s, RosterDay, RosterScreen(), toPersianDigits(), Trip, TripAssignment, cachedFetch() (+8 more)
 
 ### Community 876 - "Community 876"
-Cohesion: 0.67
-Nodes (3): secondary-foreground, $type, $value
+Cohesion: 0.60
+Nodes (5): radius, radius, radius, $type, $value
+
+### Community 877 - "Community 877"
+Cohesion: 0.14
+Nodes (13): Border radius and shadow, Color, Component style, Density, Frontend Aesthetic Direction: Commit to a Look When No Brand Exists, Imagery and iconography, Motion, Phase 1: Confirm there's truly no existing context (+5 more)
+
+### Community 878 - "Community 878"
+Cohesion: 0.14
+Nodes (13): Border radius and shadow, Color, Component style, Density, Frontend Aesthetic Direction: Commit to a Look When No Brand Exists, Imagery and iconography, Motion, Phase 1: Confirm there's truly no existing context (+5 more)
 
 ### Community 879 - "Community 879"
-Cohesion: 0.67
-Nodes (3): ring, $type, $value
+Cohesion: 0.40
+Nodes (5): الزامات ایمنی, قابلیت‌ها, نمونه پاسخ استاندارد AI, پیشنهادهای حرفه‌ای, ۱۲.۷ دستیار هوشمند عملیاتی AI
+
+### Community 880 - "Community 880"
+Cohesion: 0.23
+Nodes (8): GeminiAdapter, adapters, AIProviderAdapter, AIResponse, getAdapter(), ProviderConfig, OpenAICompatibleAdapter, AIGateway
 
 ### Community 892 - "Community 892"
 Cohesion: 0.67
-Nodes (4): padding-y, padding-y, $type, $value
+Nodes (4): $type, $value, 50, 50
+
+### Community 893 - "Community 893"
+Cohesion: 0.15
+Nodes (12): 1. Gradients — flat or subtle, on-tone, 2. Emoji — functional or brand-driven only, 3. Cards — shadow, thin border, or background separation, 4. Imagery — real, licensed, or honest placeholder, 5. Type — fonts chosen with intent, 6. Color — subtly toned whites and blacks, 7. Color values — trace to a token or harmonious palette, 8. Spacing — snap to a 4px or 8px scale (+4 more)
+
+### Community 894 - "Community 894"
+Cohesion: 0.15
+Nodes (12): 1. Gradients — flat or subtle, on-tone, 2. Emoji — functional or brand-driven only, 3. Cards — shadow, thin border, or background separation, 4. Imagery — real, licensed, or honest placeholder, 5. Type — fonts chosen with intent, 6. Color — subtly toned whites and blacks, 7. Color values — trace to a token or harmonious palette, 8. Spacing — snap to a 4px or 8px scale (+4 more)
+
+### Community 895 - "Community 895"
+Cohesion: 0.27
+Nodes (8): GET(), CourseData, getCourseDetail(), getCourses(), updateVideoProgress(), POST(), progressSchema, GET()
+
+### Community 896 - "Community 896"
+Cohesion: 0.15
+Nodes (12): سناریو ۰۱ — بهینه‌سازی زمان ارسال بر اساس رفتار هر کاربر, سناریو ۰۲ — پاک‌سازی خودکار توکن‌های مرده, سناریو ۰۳ — سگمنت هوشمند کاربران در حال ریزش, سناریو ۰۴ — آزمایش A/B خودکار عنوان اعلان, طرح و سناریوهای دستیار هوشمند عملیاتی — پلتفرم پوش نوتیفیکیشن (پوش‌کور), ۱. نقش دستیار هوشمند, ۲. سناریوهای توسعه و بهبود, ۳. سناریوهای واکنش به رویداد (Reactive) (+4 more)
 
 ### Community 897 - "Community 897"
 Cohesion: 0.67
-Nodes (3): مزیت, نمونه قوانین, ۱۰) Rule Engine برای برنامه کاری
+Nodes (4): $type, $value, 800, 800
+
+### Community 898 - "Community 898"
+Cohesion: 0.18
+Nodes (10): Colors, Design System Extract: Pull Tokens from Sources, Other tokens, if present, Phase 1: Identify sources, Phase 2: Extract by category, Phase 3: Emit the tokens file, Phase 4: Document findings, Radii and shadows (+2 more)
+
+### Community 899 - "Community 899"
+Cohesion: 0.18
+Nodes (10): Colors, Design System Extract: Pull Tokens from Sources, Other tokens, if present, Phase 1: Identify sources, Phase 2: Extract by category, Phase 3: Emit the tokens file, Phase 4: Document findings, Radii and shadows (+2 more)
+
+### Community 900 - "Community 900"
+Cohesion: 0.18
+Nodes (10): Colors, Design System Extract: Pull Tokens from Sources, Other tokens, if present, Phase 1: Identify sources, Phase 2: Extract by category, Phase 3: Emit the tokens file, Phase 4: Document findings, Radii and shadows (+2 more)
 
 ### Community 909 - "Community 909"
 Cohesion: 0.67
+Nodes (4): padding-y, padding-y, $type, $value
+
+### Community 910 - "Community 910"
+Cohesion: 0.18
+Nodes (9): AdminContentPageContent(), AdminPost, EditorBlock, EMPTY_FORM, FormState, POPULAR_CATEGORIES, QuizQuestionDef, TARGET_ROLES_OPTIONS (+1 more)
+
+### Community 911 - "Community 911"
+Cohesion: 0.67
+Nodes (3): primary, $type, $value
+
+### Community 912 - "Community 912"
+Cohesion: 0.16
+Nodes (17): buildIcsFeed(), getOrCreateIcsToken(), icsDate(), icsDateTimeUtc(), icsEscape(), IcsEvent, renderEvent(), rotateIcsToken() (+9 more)
+
+### Community 913 - "Community 913"
+Cohesion: 0.67
 Nodes (3): destructive, $type, $value
 
+### Community 914 - "Community 914"
+Cohesion: 0.22
+Nodes (8): Accessibility Audit: WCAG and Inclusive Design Review, Pass 1: Contrast and Color, Pass 2: Semantic HTML and Structure, Pass 3: Keyboard Navigation and Focus, Pass 4: Motion, Forms, and Misc, Phase 1: Identify the surface to audit, Phase 2: Run four review passes, Phase 3: Aggregate and fix
+
+### Community 915 - "Community 915"
+Cohesion: 0.22
+Nodes (8): Make a Prototype: Interactive Clickable Prototype, Phase 1: Discovery, Phase 2: Map screens and state, Phase 3: Build screen-by-screen, Phase 4: Wire up interactions, Phase 5: Sub-state and persistence, Phase 6: Verify, Phase 7: Variations (if requested)
+
+### Community 916 - "Community 916"
+Cohesion: 0.22
+Nodes (8): Make Tweakable: Add In-Design Tweak Controls, Phase 1: Identify what should be tweakable, Phase 2: Design the tweak panel, Phase 3: Wire up the live updates, Phase 4: Implement the host protocol, Phase 5: Persist defaults on disk, Phase 6: Hide the controls when off, Phase 7: Verify and summarize
+
+### Community 917 - "Community 917"
+Cohesion: 0.22
+Nodes (8): 1. Identity and role, 2. Workflow, 3. Asking questions first, 4. Rooting designs in existing context, 8. Typography system, 9. Color system, Final principle, Scale rules per medium
+
+### Community 918 - "Community 918"
+Cohesion: 0.22
+Nodes (8): Accessibility Audit: WCAG and Inclusive Design Review, Phase 1: Identify the surface to audit, Phase 3: Aggregate and fix, Agent 1: Contrast and Color, Agent 2: Semantic HTML and Structure, Agent 3: Keyboard Navigation and Focus, Agent 4: Motion, Forms, and Misc, Phase 2: Launch four review agents in parallel
+
+### Community 919 - "Community 919"
+Cohesion: 0.22
+Nodes (8): Make a Prototype: Interactive Clickable Prototype, Phase 1: Discovery, Phase 2: Map screens and state, Phase 3: Build screen-by-screen, Phase 4: Wire up interactions, Phase 5: Sub-state and persistence, Phase 6: Verify, Phase 7: Variations (if requested)
+
+### Community 920 - "Community 920"
+Cohesion: 0.22
+Nodes (8): Make Tweakable: Add In-Design Tweak Controls, Phase 1: Identify what should be tweakable, Phase 2: Design the tweak panel, Phase 3: Wire up the live updates, Phase 4: Implement the host protocol, Phase 5: Persist defaults on disk, Phase 6: Hide the controls when off, Phase 7: Verify and summarize
+
+### Community 921 - "Community 921"
+Cohesion: 0.22
+Nodes (8): 1. Identity and role, 2. Workflow, 3. Asking questions first, 4. Rooting designs in existing context, 8. Typography system, 9. Color system, Final principle, Scale rules per medium
+
+### Community 922 - "Community 922"
+Cohesion: 0.22
+Nodes (8): Accessibility Audit: WCAG and Inclusive Design Review, Pass 1: Contrast and Color, Pass 2: Semantic HTML and Structure, Pass 3: Keyboard Navigation and Focus, Pass 4: Motion, Forms, and Misc, Phase 1: Identify the surface to audit, Phase 2: Run four review passes, Phase 3: Aggregate and fix
+
+### Community 923 - "Community 923"
+Cohesion: 0.22
+Nodes (8): Make a Prototype: Interactive Clickable Prototype, Phase 1: Discovery, Phase 2: Map screens and state, Phase 3: Build screen-by-screen, Phase 4: Wire up interactions, Phase 5: Sub-state and persistence, Phase 6: Verify, Phase 7: Variations (if requested)
+
 ### Community 924 - "Community 924"
-Cohesion: 0.40
-Nodes (4): extractRequestContext(), RequestContext, writeAuditLog(), WriteAuditLogParams
+Cohesion: 0.18
+Nodes (14): extractRequestContext(), RequestContext, writeAuditLog(), WriteAuditLogParams, createPersonalEvent(), deletePersonalEvent(), listPersonalEvents(), updatePersonalEvent() (+6 more)
 
 ### Community 925 - "Community 925"
 Cohesion: 0.67
 Nodes (3): muted, $type, $value
+
+### Community 926 - "Community 926"
+Cohesion: 0.22
+Nodes (8): Make Tweakable: Add In-Design Tweak Controls, Phase 1: Identify what should be tweakable, Phase 2: Design the tweak panel, Phase 3: Wire up the live updates, Phase 4: Implement the host protocol, Phase 5: Persist defaults on disk, Phase 6: Hide the controls when off, Phase 7: Verify and summarize
 
 ### Community 927 - "Community 927"
 Cohesion: 0.67
@@ -4613,65 +4772,337 @@ Nodes (3): primary-foreground, $type, $value
 Cohesion: 0.67
 Nodes (3): secondary-foreground, $type, $value
 
+### Community 929 - "Community 929"
+Cohesion: 0.22
+Nodes (8): 1. Identity and role, 2. Workflow, 3. Asking questions first, 4. Rooting designs in existing context, 8. Typography system, 9. Color system, Final principle, Scale rules per medium
+
+### Community 930 - "Community 930"
+Cohesion: 0.25
+Nodes (7): Anti-patterns, Discovery Questions: Kickoff Question Protocol, Phase 1: Read what's already attached, Phase 2: Decide whether to ask, Phase 3: Build the question set, Phase 4: Format the question round, Phase 5: End the turn, then confirm
+
+### Community 931 - "Community 931"
+Cohesion: 0.25
+Nodes (7): Generate Variations: Produce 3+ Design Options, Phase 1: Establish the baseline, Phase 2: Pick the axes, Phase 3: Build with intent — basic to bold, Phase 4: Vary substantively, not cosmetically, Phase 5: Present in a single file, Phase 6: Annotate and recommend
+
+### Community 932 - "Community 932"
+Cohesion: 0.25
+Nodes (7): Make a Deck: Slide Presentation in HTML, Phase 1: Discovery, Phase 2: Plan the layout system, Phase 3: Build the deck shell, Phase 4: Build slide-by-slide, Phase 5: Speaker notes (only if requested), Phase 6: Verify and deliver
+
 ### Community 933 - "Community 933"
-Cohesion: 0.67
-Nodes (3): توسعه حرفه‌ای طرح اپلیکیشن اطلاع‌رسانی و پرسنلی سیر و حرکت — خط یک مترو, پیشنهادهای حرفه‌ای‌تر, ۱) ارتقای نگاه محصولی: از اپلیکیشن به «پلتفرم عملیاتی»
+Cohesion: 0.25
+Nodes (8): 14. Respecting the medium, Canonical HTML, CSS, HTML, JS, and SVG are amazing — surprise the user, Fixed-size content scales itself, Persist state where it matters, Real interactions, not static mockups, Use CSS for what it's good at, Use SVG for icons and simple graphics
+
+### Community 934 - "Community 934"
+Cohesion: 0.25
+Nodes (7): Anti-patterns, Discovery Questions: Kickoff Question Protocol, Phase 1: Read what's already attached, Phase 2: Decide whether to ask, Phase 3: Build the question set, Phase 4: Format the question round, Phase 5: End the turn, then confirm
 
 ### Community 935 - "Community 935"
-Cohesion: 0.67
-Nodes (3): حل تعارض, قابلیت‌ها, ۱۴) Offline-First برای تقویم کاری
+Cohesion: 0.25
+Nodes (7): Generate Variations: Produce 3+ Design Options, Phase 1: Establish the baseline, Phase 2: Pick the axes, Phase 3: Build with intent — basic to bold, Phase 4: Vary substantively, not cosmetically, Phase 5: Present in a single file, Phase 6: Annotate and recommend
 
 ### Community 936 - "Community 936"
-Cohesion: 0.67
-Nodes (3): روش‌های ثبت حضور, نمایش در تقویم, ۸) حضور و غیاب متصل به تقویم
+Cohesion: 0.25
+Nodes (7): Make a Deck: Slide Presentation in HTML, Phase 1: Discovery, Phase 2: Plan the layout system, Phase 3: Build the deck shell, Phase 4: Build slide-by-slide, Phase 5: Speaker notes (only if requested), Phase 6: Verify and deliver
 
 ### Community 937 - "Community 937"
+Cohesion: 0.25
+Nodes (8): 14. Respecting the medium, Canonical HTML, CSS, HTML, JS, and SVG are amazing — surprise the user, Fixed-size content scales itself, Persist state where it matters, Real interactions, not static mockups, Use CSS for what it's good at, Use SVG for icons and simple graphics
+
+### Community 1021 - "Community 1021"
+Cohesion: 0.25
+Nodes (7): Anti-patterns, Discovery Questions: Kickoff Question Protocol, Phase 1: Read what's already attached, Phase 2: Decide whether to ask, Phase 3: Build the question set, Phase 4: Format the question round, Phase 5: End the turn, then confirm
+
+### Community 1022 - "Community 1022"
+Cohesion: 0.25
+Nodes (7): Generate Variations: Produce 3+ Design Options, Phase 1: Establish the baseline, Phase 2: Pick the axes, Phase 3: Build with intent — basic to bold, Phase 4: Vary substantively, not cosmetically, Phase 5: Present in a single file, Phase 6: Annotate and recommend
+
+### Community 1023 - "Community 1023"
+Cohesion: 0.25
+Nodes (7): Make a Deck: Slide Presentation in HTML, Phase 1: Discovery, Phase 2: Plan the layout system, Phase 3: Build the deck shell, Phase 4: Build slide-by-slide, Phase 5: Speaker notes (only if requested), Phase 6: Verify and deliver
+
+### Community 1024 - "Community 1024"
+Cohesion: 0.25
+Nodes (8): 14. Respecting the medium, Canonical HTML, CSS, HTML, JS, and SVG are amazing — surprise the user, Fixed-size content scales itself, Persist state where it matters, Real interactions, not static mockups, Use CSS for what it's good at, Use SVG for icons and simple graphics
+
+### Community 1025 - "Community 1025"
 Cohesion: 0.67
-Nodes (3): قابلیت‌ها, پیشنهاد حرفه‌ای‌تر, ۳) اتصال تقویم به لوحه کاری
+Nodes (3): destructive-foreground, $type, $value
+
+### Community 1026 - "Community 1026"
+Cohesion: 0.25
+Nodes (8): ۱۳) پیشنهاد ماژول‌های جدید برای حرفه‌ای‌تر شدن محصول, ۱۳.۱ ماژول مدیریت مرخصی و مأموریت, ۱۳.۲ ماژول مدیریت تجهیزات فردی, ۱۳.۳ ماژول Onboarding نیروهای جدید, ۱۳.۴ ماژول فرم‌ساز سازمانی, ۱۳.۵ ماژول مدیریت اسناد رسمی, ۱۳.۶ ماژول مدیریت حوادث و شبه‌حادثه‌ها, ۱۳.۷ ماژول تحلیل خستگی و سلامت کاری
+
+### Community 1027 - "Community 1027"
+Cohesion: 0.29
+Nodes (6): Component Extract: Identify Reusable Components from a Design, Phase 1: Identify the surface, Phase 2: Walk the design and inventory, Phase 3: For each component, document, Phase 4: Identify the gaps, Phase 5: Emit and hand off
+
+### Community 1028 - "Community 1028"
+Cohesion: 0.29
+Nodes (6): Hierarchy and Rhythm Review, Pass 1: Hierarchy review, Pass 2: Rhythm review, Phase 1: Identify the surface, Phase 2: Run two review passes, Phase 3: Aggregate and fix
+
+### Community 1029 - "Community 1029"
+Cohesion: 0.29
+Nodes (6): Interaction States Pass, Phase 1: Inventory interactive elements, Phase 2: Per-element state verification, Phase 3: Verify transitions, Phase 4: Verify feedback for actions, Phase 5: Apply fixes and summarize
+
+### Community 1030 - "Community 1030"
+Cohesion: 0.29
+Nodes (6): Phase 1: Confirm scope, Phase 2: Run four review passes, Phase 3: Aggregate, deduplicate, prioritize, Phase 4: Fix and re-verify, Phase 5: Final summary, Polish Pass: End-of-Design Quality Gate
+
+### Community 1031 - "Community 1031"
+Cohesion: 0.29
+Nodes (6): Phase 1: Understand the goal, Phase 2: Establish wireframe conventions, Phase 3: Sketch variations, Phase 4: Annotate, Phase 5: Capture decisions and hand off, Wireframe: Explore Many Ideas Quickly
+
+### Community 1032 - "Community 1032"
+Cohesion: 0.29
+Nodes (7): 10. Accessibility and inclusivity, Contrast (WCAG), Form design, Keyboard navigation, Motion, Screen reader support, Semantic HTML
 
 ### Community 1033 - "Community 1033"
-Cohesion: 0.67
-Nodes (3): قابلیت‌ها, نکته امنیتی, ۱۲) خروجی و اشتراک‌گذاری تقویم
+Cohesion: 0.29
+Nodes (6): Component Extract: Identify Reusable Components from a Design, Phase 1: Identify the surface, Phase 2: Walk the design and inventory, Phase 3: For each component, document, Phase 4: Identify the gaps, Phase 5: Emit and hand off
+
+### Community 1034 - "Community 1034"
+Cohesion: 0.29
+Nodes (6): Hierarchy and Rhythm Review, Phase 1: Identify the surface, Phase 3: Aggregate and fix, Agent 1: Hierarchy review, Agent 2: Rhythm review, Phase 2: Launch two review agents in parallel
+
+### Community 1035 - "Community 1035"
+Cohesion: 0.29
+Nodes (6): Interaction States Pass, Phase 1: Inventory interactive elements, Phase 2: Per-element state verification, Phase 3: Verify transitions, Phase 4: Verify feedback for actions, Phase 5: Apply fixes and summarize
 
 ### Community 1137 - "Community 1137"
 Cohesion: 0.06
 Nodes (32): اصل کلیدی: Server-Driven UI (SDUI), سناریوی فنی جامع — اپلیکیشن پنل مدیریتی موبایل با سیستم شخصی‌سازی رابط کاربری (UI Builder), نمونه Guard سمت اپ, نمونه Guard سمت سرور (NestJS Decorator), هدف‌های فنی کلیدی, ۱. معرفی و دامنه پروژه, ۱۰. استراتژی تست, ۱۱. ملاحظات عملکرد و مقیاس‌پذیری (+24 more)
 
 ### Community 1143 - "Community 1143"
-Cohesion: 0.67
-Nodes (3): نمای دسکتاپ, نمای موبایل, ۱۳) طراحی UI پیشنهادی تقویم
+Cohesion: 0.29
+Nodes (6): Phase 1: Confirm scope, Phase 3: Aggregate, deduplicate, prioritize, Phase 4: Fix and re-verify, Phase 5: Final summary, Polish Pass: End-of-Design Quality Gate, Phase 2: Launch four review agents in parallel
 
 ### Community 1144 - "Community 1144"
-Cohesion: 0.67
-Nodes (3): نکته مهم, پیشنهادهای حرفه‌ای, ۱۲.۵ گیمیفیکیشن
+Cohesion: 0.29
+Nodes (6): Phase 1: Understand the goal, Phase 2: Establish wireframe conventions, Phase 3: Sketch variations, Phase 4: Annotate, Phase 5: Capture decisions and hand off, Wireframe: Explore Many Ideas Quickly
 
 ### Community 1145 - "Community 1145"
-Cohesion: 0.67
-Nodes (3): هشدارهای مهم, یادآورها, ۷) یادآورها و هشدارهای هوشمند
+Cohesion: 0.29
+Nodes (7): 10. Accessibility and inclusivity, Contrast (WCAG), Form design, Keyboard navigation, Motion, Screen reader support, Semantic HTML
 
 ### Community 1146 - "Community 1146"
 Cohesion: 0.60
 Nodes (5): $type, $value, 700, 700, 700
 
+### Community 1147 - "Community 1147"
+Cohesion: 0.29
+Nodes (6): Component Extract: Identify Reusable Components from a Design, Phase 1: Identify the surface, Phase 2: Walk the design and inventory, Phase 3: For each component, document, Phase 4: Identify the gaps, Phase 5: Emit and hand off
+
+### Community 1148 - "Community 1148"
+Cohesion: 0.29
+Nodes (6): Hierarchy and Rhythm Review, Pass 1: Hierarchy review, Pass 2: Rhythm review, Phase 1: Identify the surface, Phase 2: Run two review passes, Phase 3: Aggregate and fix
+
+### Community 1149 - "Community 1149"
+Cohesion: 0.29
+Nodes (6): Interaction States Pass, Phase 1: Inventory interactive elements, Phase 2: Per-element state verification, Phase 3: Verify transitions, Phase 4: Verify feedback for actions, Phase 5: Apply fixes and summarize
+
+### Community 1150 - "Community 1150"
+Cohesion: 0.29
+Nodes (6): Phase 1: Confirm scope, Phase 2: Run four review passes, Phase 3: Aggregate, deduplicate, prioritize, Phase 4: Fix and re-verify, Phase 5: Final summary, Polish Pass: End-of-Design Quality Gate
+
+### Community 1151 - "Community 1151"
+Cohesion: 0.29
+Nodes (6): Phase 1: Understand the goal, Phase 2: Establish wireframe conventions, Phase 3: Sketch variations, Phase 4: Annotate, Phase 5: Capture decisions and hand off, Wireframe: Explore Many Ideas Quickly
+
+### Community 1152 - "Community 1152"
+Cohesion: 0.29
+Nodes (7): 10. Accessibility and inclusivity, Contrast (WCAG), Form design, Keyboard navigation, Motion, Screen reader support, Semantic HTML
+
+### Community 1153 - "Community 1153"
+Cohesion: 0.67
+Nodes (3): muted, $type, $value
+
+### Community 1154 - "Community 1154"
+Cohesion: 0.67
+Nodes (3): primary-foreground, $type, $value
+
+### Community 1155 - "Community 1155"
+Cohesion: 0.67
+Nodes (3): ring, $type, $value
+
+### Community 1156 - "Community 1156"
+Cohesion: 0.67
+Nodes (3): secondary-foreground, $type, $value
+
+### Community 1157 - "Community 1157"
+Cohesion: 0.06
+Nodes (28): approveInputSchema, prisma, fixTextIfReversed(), main(), { PDFParse }, POST(), POST(), GET() (+20 more)
+
+### Community 1158 - "Community 1158"
+Cohesion: 0.40
+Nodes (5): 11. Interaction and feedback, Form feedback, State visibility, States, Transitions
+
+### Community 1159 - "Community 1159"
+Cohesion: 0.40
+Nodes (5): 17. Output principles, Give multiple variations, One file, many variants, Pick the right format, Use the right scale
+
+### Community 1160 - "Community 1160"
+Cohesion: 0.40
+Nodes (5): 18. Collaboration and delivery, Brief summaries, Honest progress reports, Show work early and often, Verify your own work
+
+### Community 1161 - "Community 1161"
+Cohesion: 0.40
+Nodes (5): 20. Available skills, Production skills (build something), Review skills (audit and fix), System skills (extract structure), When to invoke which
+
+### Community 1162 - "Community 1162"
+Cohesion: 0.40
+Nodes (5): 6. Aesthetic principles — purposeful visuals, Color discipline, Defaults that avoid AI slop, Icons, Imagery
+
+### Community 1163 - "Community 1163"
+Cohesion: 0.67
+Nodes (3): نمای دسکتاپ, نمای موبایل, ۱۳) طراحی UI پیشنهادی تقویم
+
+### Community 1164 - "Community 1164"
+Cohesion: 0.40
+Nodes (5): 11. Interaction and feedback, Form feedback, State visibility, States, Transitions
+
+### Community 1165 - "Community 1165"
+Cohesion: 0.40
+Nodes (5): 17. Output principles, Give multiple variations, One file, many variants, Pick the right format, Use the right scale
+
+### Community 1166 - "Community 1166"
+Cohesion: 0.40
+Nodes (5): 18. Collaboration and delivery, Brief summaries, Delegate verification, Honest progress reports, Show work early and often
+
+### Community 1167 - "Community 1167"
+Cohesion: 0.40
+Nodes (5): 20. Available skills, Production skills (build something), Review skills (audit and fix), System skills (extract structure), When to invoke which
+
+### Community 1168 - "Community 1168"
+Cohesion: 0.40
+Nodes (5): 6. Aesthetic principles — purposeful visuals, Color discipline, Defaults that avoid AI slop, Icons, Imagery
+
+### Community 1169 - "Community 1169"
+Cohesion: 0.40
+Nodes (5): 11. Interaction and feedback, Form feedback, State visibility, States, Transitions
+
+### Community 1170 - "Community 1170"
+Cohesion: 0.40
+Nodes (5): 17. Output principles, Give multiple variations, One file, many variants, Pick the right format, Use the right scale
+
+### Community 1171 - "Community 1171"
+Cohesion: 0.40
+Nodes (5): 18. Collaboration and delivery, Brief summaries, Honest progress reports, Show work early and often, Verify your own work
+
+### Community 1172 - "Community 1172"
+Cohesion: 0.40
+Nodes (5): 20. Available skills, Production skills (build something), Review skills (audit and fix), System skills (extract structure), When to invoke which
+
+### Community 1173 - "Community 1173"
+Cohesion: 0.40
+Nodes (5): 6. Aesthetic principles — purposeful visuals, Color discipline, Defaults that avoid AI slop, Icons, Imagery
+
+### Community 1174 - "Community 1174"
+Cohesion: 0.50
+Nodes (4): 12. Simplicity and one clear CTA, Hide secondary options, Reduce options, The 5-second test
+
+### Community 1175 - "Community 1175"
+Cohesion: 0.50
+Nodes (4): 13. System thinking, Components, Design tokens, Document patterns
+
+### Community 1176 - "Community 1176"
+Cohesion: 0.50
+Nodes (4): 15. Understanding users, Ask before assuming, Design for one persona, not "everyone", Test assumptions
+
+### Community 1177 - "Community 1177"
+Cohesion: 0.50
+Nodes (4): 16. Quality over quantity, Depth over breadth, One strong choice beats many safe ones, Polish every visible detail
+
+### Community 1178 - "Community 1178"
+Cohesion: 0.50
+Nodes (4): 19. IP and content boundaries, Don't add scope without permission, Don't pad with filler to fill space, Don't recreate copyrighted designs
+
+### Community 1179 - "Community 1179"
+Cohesion: 0.50
+Nodes (4): 5. Content principles — no filler, Asking before adding, The five-question test, What counts as filler
+
+### Community 1180 - "Community 1180"
+Cohesion: 0.67
+Nodes (3): GeminiResponse, generateAIResponse(), generateLocalSmartResponse()
+
+### Community 1181 - "Community 1181"
+Cohesion: 0.50
+Nodes (4): 12. Simplicity and one clear CTA, Hide secondary options, Reduce options, The 5-second test
+
+### Community 1182 - "Community 1182"
+Cohesion: 0.50
+Nodes (4): 13. System thinking, Components, Design tokens, Document patterns
+
+### Community 1183 - "Community 1183"
+Cohesion: 0.50
+Nodes (4): 15. Understanding users, Ask before assuming, Design for one persona, not "everyone", Test assumptions
+
+### Community 1184 - "Community 1184"
+Cohesion: 0.50
+Nodes (4): 16. Quality over quantity, Depth over breadth, One strong choice beats many safe ones, Polish every visible detail
+
+### Community 1185 - "Community 1185"
+Cohesion: 0.50
+Nodes (4): 19. IP and content boundaries, Don't add scope without permission, Don't pad with filler to fill space, Don't recreate copyrighted designs
+
+### Community 1186 - "Community 1186"
+Cohesion: 0.50
+Nodes (4): 5. Content principles — no filler, Asking before adding, The five-question test, What counts as filler
+
+### Community 1187 - "Community 1187"
+Cohesion: 0.50
+Nodes (4): 12. Simplicity and one clear CTA, Hide secondary options, Reduce options, The 5-second test
+
+### Community 1188 - "Community 1188"
+Cohesion: 0.50
+Nodes (4): 13. System thinking, Components, Design tokens, Document patterns
+
+### Community 1189 - "Community 1189"
+Cohesion: 0.50
+Nodes (4): 15. Understanding users, Ask before assuming, Design for one persona, not "everyone", Test assumptions
+
+### Community 1190 - "Community 1190"
+Cohesion: 0.50
+Nodes (4): 16. Quality over quantity, Depth over breadth, One strong choice beats many safe ones, Polish every visible detail
+
+### Community 1191 - "Community 1191"
+Cohesion: 0.50
+Nodes (4): 19. IP and content boundaries, Don't add scope without permission, Don't pad with filler to fill space, Don't recreate copyrighted designs
+
+### Community 1192 - "Community 1192"
+Cohesion: 0.50
+Nodes (4): 5. Content principles — no filler, Asking before adding, The five-question test, What counts as filler
+
+### Community 1195 - "Community 1195"
+Cohesion: 0.67
+Nodes (3): 7. Visual hierarchy and rhythm, Hierarchy signals, Rhythm
+
+### Community 1196 - "Community 1196"
+Cohesion: 0.67
+Nodes (3): 7. Visual hierarchy and rhythm, Hierarchy signals, Rhythm
+
+### Community 1197 - "Community 1197"
+Cohesion: 0.67
+Nodes (3): 7. Visual hierarchy and rhythm, Hierarchy signals, Rhythm
+
 ## Knowledge Gaps
-- **8846 isolated node(s):** `$schema`, `$value`, `$type`, `$value`, `$type` (+8841 more)
+- **9748 isolated node(s):** `$schema`, `$value`, `$type`, `$value`, `$type` (+9743 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **241 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **202 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cachedFetch()` connect `Tooling Configuration` to `Community 134`?**
+- **Why does `cachedFetch()` connect `Community 875` to `Community 321`, `Community 778`, `Community 187`?**
+  _High betweenness centrality (0.010) - this node is a cross-community bridge._
+- **Why does `prisma` connect `Community 1157` to `Service Layer & Validation`, `Tooling Configuration`, `Community 776`, `Auth & Bulletin Routes`, `Community 14`, `Community 527`, `Community 912`, `Community 17`, `Community 529`, `Community 19`, `Community 789`, `Community 410`, `Community 26`, `Community 28`, `Community 924`, `Community 803`, `Community 558`, `Community 562`, `Community 53`, `Community 826`, `Community 59`, `Community 61`, `Community 832`, `Community 705`, `Community 66`, `Community 852`, `Community 219`, `Community 220`, `Community 492`, `Community 880`, `Community 755`, `Community 372`, `Community 895`?**
+  _High betweenness centrality (0.006) - this node is a cross-community bridge._
+- **Why does `getFieldDefs()` connect `Community 321` to `Community 62`?**
   _High betweenness centrality (0.005) - this node is a cross-community bridge._
-- **Why does `getFieldDefs()` connect `Tooling Configuration` to `Community 33`?**
-  _High betweenness centrality (0.003) - this node is a cross-community bridge._
-- **Why does `useAuthStore` connect `Community 789` to `Pages & Client State`, `Community 134`, `Session & Auth Store`, `Community 875`, `Community 752`, `Community 242`, `Community 187`?**
-  _High betweenness centrality (0.002) - this node is a cross-community bridge._
-- **Are the 62 inferred relationships involving `getSessionUser()` (e.g. with `GET()` and `POST()`) actually correct?**
-  _`getSessionUser()` has 62 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 60 inferred relationships involving `authErrorResponse()` (e.g. with `GET()` and `POST()`) actually correct?**
-  _`authErrorResponse()` has 60 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 162 inferred relationships involving `getSessionUser()` (e.g. with `GET()` and `POST()`) actually correct?**
+  _`getSessionUser()` has 162 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 159 inferred relationships involving `authErrorResponse()` (e.g. with `GET()` and `POST()`) actually correct?**
+  _`authErrorResponse()` has 159 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 64 inferred relationships involving `requireRole()` (e.g. with `GET()` and `PATCH()`) actually correct?**
+  _`requireRole()` has 64 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 2 inferred relationships involving `cn()` (e.g. with `AdminShiftsPage()` and `ShiftsPage()`) actually correct?**
   _`cn()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 30 inferred relationships involving `requireRole()` (e.g. with `GET()` and `PUT()`) actually correct?**
-  _`requireRole()` has 30 INFERRED edges - model-reasoned connections that need verification._

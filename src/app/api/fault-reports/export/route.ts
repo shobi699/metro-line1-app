@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
 import { prisma } from '@/server/db'
 import { getSessionUser, requirePermission, authErrorResponse } from '@/server/rbac/guard'
 import { getSettingValue } from '@/server/modules/settings/service'

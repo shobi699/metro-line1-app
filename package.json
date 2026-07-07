@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "NODE_OPTIONS=--max-old-space-size=2048 next build",
-    "build:ci": "NODE_OPTIONS=--max-old-space-size=1536 next build --no-lint",
+    "build": "NODE_OPTIONS=--max-old-space-size=4048 next build",
+    "build:ci": "NODE_OPTIONS=--max-old-space-size=3536 next build --no-lint",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
@@ -46,7 +46,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "latest",
+    "@opennextjs/cloudflare": "^1.20.1",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",

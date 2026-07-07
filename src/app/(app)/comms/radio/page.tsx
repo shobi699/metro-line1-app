@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { toFa } from '@/lib/fa'
+import { useAuthStore } from '@/features/auth'
 import {
   Radio,
   Wifi,
@@ -16,14 +17,20 @@ import { Badge } from '@/components/ui/badge'
 
 interface RadioLog {
   id: string
-  time: string
-  sender: string
+  createdAt: string
+  senderName: string
   message: string
-  channel: string
+  kind: string
 }
 
 export default function RadioSimulatorPage() {
-  const [channel, setChannel] = useState('OCC MAIN')
+  const accessToken = useAuthStore((s) => s.accessToken)
+  const currentUser = useAuthStore((s) => s.user)
+  
+  const [channels, setChannels] = useState<any[]>([])
+  const [activeChannel, setActiveChannel] = useState<any | null>(null)
+  const [phrases, setPhrases] = useState<any[]>([])
+
   const [dialedCode, setDialedCode] = useState('1000') // default TETRA frequency band code
   const [state, setState] = useState<'IDLE' | 'TRANSMITTING' | 'RECEIVING'>('IDLE')
   const [vol, setVol] = useState(80)
@@ -34,18 +41,40 @@ export default function RadioSimulatorPage() {
   const [config, setConfig] = useState<any>(null)
 
   useEffect(() => {
+    if (!accessToken) return
+
     fetch('/api/config')
       .then((res) => res.json())
       .then((data) => {
         if (data.data) {
           setConfig(data.data)
-          if (data.data.comms?.radioDefaultChannel) {
-            setChannel(data.data.comms.radioDefaultChannel)
-          }
         }
       })
       .catch(() => {})
-  }, [])
+
+    fetch('/api/comms/radio/channels', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.data) {
+          setChannels(data.data)
+          setActiveChannel(data.data[0] || null)
+        }
+      })
+      .catch(() => {})
+
+    fetch('/api/comms/radio/phrases', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.data) {
+          setPhrases(data.data)
+        }
+      })
+      .catch(() => {})
+  }, [accessToken])
 
   const audioCtxRef = useRef<AudioContext | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -61,14 +90,27 @@ export default function RadioSimulatorPage() {
     return numStr.replace(/\d/g, (x) => farsiDigits[parseInt(x)])
   }
 
-  // Load initial logs
+  // Load logs for the active channel, with polling every 5 seconds
   useEffect(() => {
-    setRadioLogs([
-      { id: '1', time: '۰۳:۴۰', sender: 'مرکز فرمان OCC', message: 'کلیه راهبران سرعت در بلاک امام خمینی به دلیل بازرسی فنی تقلیل یابد.', channel: 'OCC MAIN' },
-      { id: '2', time: '۰۳:۴۱', sender: 'راهبر رام ۱۰۴', message: 'OCC رام ۱۰۴ دستور را دریافت کرد. در حال تقلیل سرعت به ۳۰ کیلومتر.', channel: 'OCC MAIN' },
-      { id: '3', time: '۰۳:۴۲', sender: 'ایستگاه هفت تیر', message: 'دیسپاچینگ، سوزن خط ۲ با موفقیت آزاد شد. مسیر تخلیه است.', channel: 'STATION TALK' }
-    ])
-  }, [])
+    if (!accessToken || !activeChannel) return
+
+    const loadLogs = () => {
+      fetch(`/api/comms/radio/logs?channelId=${activeChannel.id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.data) {
+            setRadioLogs(data.data)
+          }
+        })
+        .catch(() => {})
+    }
+
+    loadLogs()
+    const interval = setInterval(loadLogs, 5000)
+    return () => clearInterval(interval)
+  }, [accessToken, activeChannel])
 
   // Audio helper
   const initAudio = () => {
@@ -353,6 +395,30 @@ export default function RadioSimulatorPage() {
     setDialedCode('')
   }
 
+  const transmitMessage = async (msgText: string) => {
+    if (!accessToken || !activeChannel) return
+    try {
+      const res = await fetch('/api/comms/radio/transmit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          channelId: activeChannel.id,
+          message: msgText,
+          kind: msgText.includes('توقف اضطراری') || msgText.includes('حادثه') ? 'EMERGENCY' : 'TEXT',
+        })
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setRadioLogs((prev) => [json.data, ...prev])
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   // Simulate dispatcher warnings randomly based on dialed code
   useEffect(() => {
     const intervalTime = (config?.comms?.radioTransmissionInterval ?? 10) * 1000
@@ -363,7 +429,6 @@ export default function RadioSimulatorPage() {
       if (trigger) {
         // Generate message dynamically related to the current code
         const isCustomCode = dialedCode.length > 0
-        const activeBand = isCustomCode ? `باند اختصاصی ${dialedCode}` : channel
         
         let message = ''
         let sender = ''
@@ -375,17 +440,17 @@ export default function RadioSimulatorPage() {
             `رئیس ایستگاه دروازه دولت در فرکانس اختصاصی ${dialedCode}؛ در انتظار تایید خروج قطار عملیاتی.`,
             `تکنسین پست علائم؛ ولتاژ تغذیه فرستنده در فرکانس ${dialedCode} پایدار گزارش شد.`
           ]
-message = codes[Math.floor(Math.random() * codes.length)]
+          message = codes[Math.floor(Math.random() * codes.length)]
           sender = Math.random() > 0.5 ? 'مرکز فرمان OCC' : `راهبر سیستم (کد ${dialedCode})`
         } else {
           const randomMessages = [
-            { sender: 'مرکز فرمان OCC', message: 'سوزن ایستگاه دروازه دولت در وضعیت انحراف دستی قرار گرفت. اعزام قطار ۴۰۲ با احتیاط.', channel: 'OCC MAIN' },
-            { sender: 'دپو کهریزک', message: 'قطار فنی جهت شستشوی تجهیزات خط به پارکینگ ۱۲ وارد شد. دیسپاچ تمام.', channel: 'DEPOT & TECH' },
-            { sender: 'راهبر رام ۱۰۸', message: 'OCC رام ۱۰۸. سیستم ترمز اضطراری مجدداً تست شد. نقص برطرف شده است.', channel: 'OCC MAIN' },
-            { sender: 'ایستگاه تجریش', message: 'رئیس ایستگاه تجریش. ازدحام روی سکو بیش از ظرفیت عادی است، لطفاً سرفاصله قطارها را کنترل کنید.', channel: 'STATION TALK' }
+            { sender: 'مرکز فرمان OCC', message: 'سوزن ایستگاه دروازه دولت در وضعیت انحراف دستی قرار گرفت. اعزام قطار ۴۰۲ با احتیاط.', channelKey: 'occ-main' },
+            { sender: 'دپو کهریزک', message: 'قطار فنی جهت شستشوی تجهیزات خط به پارکینگ ۱۲ وارد شد. دیسپاچ تمام.', channelKey: 'depot-tech' },
+            { sender: 'راهبر رام ۱۰۸', message: 'OCC رام ۱۰۸. سیستم ترمز اضطراری مجدداً تست شد. نقص برطرف شده است.', channelKey: 'occ-main' },
+            { sender: 'ایستگاه تجریش', message: 'رئیس ایستگاه تجریش. ازدحام روی سکو بیش از ظرفیت عادی است، لطفاً سرفاصله قطارها را کنترل کنید.', channelKey: 'station-talk' }
           ]
           const selected = randomMessages[Math.floor(Math.random() * randomMessages.length)]
-          if (selected.channel !== channel) return
+          if (selected.channelKey !== activeChannel?.key) return
           message = selected.message
           sender = selected.sender
         }
@@ -399,9 +464,6 @@ message = codes[Math.floor(Math.random() * codes.length)]
           drawFakeWaveform(false)
         }, 180)
 
-        const now = new Date()
-        const timeStr = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
-
         setTimeout(() => {
           if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current)
@@ -410,10 +472,10 @@ message = codes[Math.floor(Math.random() * codes.length)]
           setRadioLogs((prev) => [
             {
               id: Date.now().toString(),
-              time: timeStr,
-              sender: sender,
+              createdAt: new Date().toISOString(),
+              senderName: sender,
               message: message,
-              channel: activeBand
+              kind: message.includes('اضطراری') ? 'EMERGENCY' : 'TEXT'
             },
             ...prev
           ])
@@ -431,7 +493,7 @@ message = codes[Math.floor(Math.random() * codes.length)]
       }
       stopStaticNoise()
     }
-  }, [state, channel, dialedCode, muted, config])
+  }, [state, activeChannel, dialedCode, muted, config])
 
   // Handle Push To Talk (PTT) Press
   const handlePttPress = () => {
@@ -501,22 +563,11 @@ message = codes[Math.floor(Math.random() * codes.length)]
     playSquelch()
     setState('IDLE')
 
-    const now = new Date()
-    const timeStr = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
-    const activeBand = dialedCode.length > 0 ? `کد فرکانس ${dialedCode}` : channel
+    const msgText = dialedCode.length > 0 
+      ? `پیام رادیویی با کد اختصاصی فرستنده ${dialedCode} با موفقیت مخابره شد.`
+      : `پیام رادیویی با موفقیت در کانال عمومی ${activeChannel?.label || 'اصلی'} ارسال شد.`
 
-    setRadioLogs((prev) => [
-      {
-        id: Date.now().toString(),
-        time: timeStr,
-        sender: 'شما (راهبر)',
-        message: dialedCode.length > 0 
-          ? `پیام رادیویی با کد اختصاصی فرستنده ${dialedCode} با موفقیت مخابره شد.`
-          : `پیام رادیویی با موفقیت در کانال عمومی ${channel} ارسال شد.`,
-        channel: activeBand
-      },
-      ...prev
-    ])
+    void transmitMessage(msgText)
   }
 
   // Keyboard Spacebar integration for PTT
@@ -541,7 +592,7 @@ message = codes[Math.floor(Math.random() * codes.length)]
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [state, channel, dialedCode])
+  }, [state, activeChannel, dialedCode])
 
   useEffect(() => {
     if (state === 'IDLE') {
@@ -561,20 +612,6 @@ message = codes[Math.floor(Math.random() * codes.length)]
       }
     }
   }, [state])
-
-  const channelFreqs: Record<string, string> = {
-    'OCC MAIN': '385.125 MHz',
-    'STATION TALK': '386.450 MHz',
-    'DEPOT & TECH': '387.900 MHz'
-  }
-
-  // Filter logs to show only currently active band or relevant logs
-  const filteredLogs = radioLogs.filter(log => {
-    if (dialedCode.length > 0) {
-      return log.channel.includes(dialedCode)
-    }
-    return log.channel === channel
-  })
 
   if (config && config.comms?.radioEnabled === false) {
     return (
@@ -629,7 +666,7 @@ message = codes[Math.floor(Math.random() * codes.length)]
                 <span>برخط</span>
               </div>
               <span className="font-mono text-[9px]">
-                {dialedCode ? `${formatFarsiNumber(dialedCode)}.۰۰ MHz` : formatFarsiNumber(channelFreqs[channel])}
+                {dialedCode ? `${formatFarsiNumber(dialedCode)}.۰۰ MHz` : activeChannel ? formatFarsiNumber(activeChannel.code) : ''}
               </span>
               <div className="w-5 h-2.5 border border-foreground-muted/60 rounded-sm relative p-0.5 flex">
                 <div className="h-full bg-success w-full rounded-[1px]" />
@@ -642,7 +679,7 @@ message = codes[Math.floor(Math.random() * codes.length)]
               <span className={`text-[11px] font-bold block ${
                 state === 'TRANSMITTING' ? 'text-critical' : state === 'RECEIVING' ? 'text-warning' : 'text-success'
               }`}>
-                {dialedCode ? `باند فرکانس: ${formatFarsiNumber(dialedCode)}` : channel}
+                {dialedCode ? `باند فرکانس: ${formatFarsiNumber(dialedCode)}` : activeChannel?.label || ''}
               </span>
               <h2 className="text-xs font-bold text-foreground mt-0.5">
                 {state === 'TRANSMITTING'
@@ -718,22 +755,22 @@ message = codes[Math.floor(Math.random() * codes.length)]
           {/* Channel Selector controls */}
           <div className="w-full mt-4 space-y-1.5">
             <span className="text-[10px] font-semibold text-foreground-muted block">کانال عمومی (در صورت عدم وارد کردن فرکانس):</span>
-            <div className="flex gap-1.5">
-              {['OCC MAIN', 'STATION TALK', 'DEPOT & TECH'].map((ch) => (
+            <div className="flex gap-1.5 flex-wrap">
+              {channels.map((ch) => (
                 <button
-                  key={ch}
+                  key={ch.id}
                   onClick={() => {
                     playSystemTone(500, 0.08)
-                    setChannel(ch)
+                    setActiveChannel(ch)
                     setDialedCode('') // reset dialed code to use general channels
                   }}
-                  className={`flex-1 py-1.5 text-[9px] font-semibold rounded-md border transition-all cursor-pointer ${
-                    channel === ch && dialedCode === ''
+                  className={`flex-grow py-1.5 px-2 text-[9px] font-semibold rounded-md border transition-all cursor-pointer ${
+                    activeChannel?.id === ch.id && dialedCode === ''
                       ? 'bg-accent border-accent text-accent-foreground shadow'
                       : 'bg-surface border-border text-foreground-muted hover:text-foreground hover:bg-surface-hover'
                   }`}
                 >
-                  {ch.replace(' ', '\n')}
+                  {ch.label}
                 </button>
               ))}
             </div>
@@ -757,6 +794,38 @@ message = codes[Math.floor(Math.random() * codes.length)]
             <span className="text-[9px] text-foreground-muted font-medium">نگه‌دارید و صحبت کنید</span>
           </div>
 
+          {/* Standard Phrases */}
+          {phrases.length > 0 && (
+            <div className="w-full mt-4 space-y-1.5 border-t border-border pt-3">
+              <span className="text-[10px] font-semibold text-foreground-muted block">پیام‌های سریع:</span>
+              <div className="flex flex-col gap-1 w-full">
+                {phrases.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={async () => {
+                      if (state !== 'IDLE') return
+                      setState('TRANSMITTING')
+                      playStartBeep()
+                      startStaticNoise()
+                      setCurrentTransmittingText(p.text)
+                      
+                      setTimeout(async () => {
+                        await transmitMessage(p.text)
+                        stopStaticNoise()
+                        playSquelch()
+                        setState('IDLE')
+                        setCurrentTransmittingText('')
+                      }, 2000)
+                    }}
+                    className="w-full text-start py-1.5 px-2.5 bg-surface-container-low border border-border rounded-md text-[10px] font-medium text-foreground hover:bg-surface-hover hover:border-accent/40 active:scale-[0.98] transition-all truncate cursor-pointer"
+                  >
+                    ⚡ {p.label}: {p.text}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 
@@ -770,22 +839,24 @@ message = codes[Math.floor(Math.random() * codes.length)]
         </h2>
 
         <div className="flex-1 overflow-y-auto space-y-3 max-h-[460px] pr-1">
-          {filteredLogs.map((log) => (
+          {radioLogs.map((log) => (
             <div key={log.id} className="p-3 bg-surface rounded-lg border border-border-subtle space-y-1 shadow-sm">
               <div className="flex items-center justify-between text-[10px] font-semibold text-accent">
-                <span>{log.sender}</span>
-                <span className="font-mono text-foreground-muted font-medium">{formatFarsiNumber(log.time)}</span>
+                <span>{log.senderName}</span>
+                <span className="font-mono text-foreground-muted font-medium">
+                  {new Date(log.createdAt).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
               </div>
               <p className="text-xs text-foreground font-semibold leading-relaxed">{log.message}</p>
               <div className="flex justify-between items-center text-[10px] text-foreground-muted pt-1.5 border-t border-border-subtle">
-                <span>باند: {formatFarsiNumber(log.channel)}</span>
+                <span>نوع: {log.kind === 'EMERGENCY' ? 'اضطراری 🚨' : 'عادی'}</span>
                 <Badge variant="outline" className="text-[9px] border-accent/20 bg-accent/5 text-accent font-semibold">
                   TETRA Sec
                 </Badge>
               </div>
             </div>
           ))}
-          {filteredLogs.length === 0 && (
+          {radioLogs.length === 0 && (
             <div className="flex flex-col items-center justify-center p-8 text-center text-foreground-muted space-y-2">
               <Radio className="size-8 text-foreground-muted/40 animate-pulse" />
               <p className="text-xs font-semibold">هیچ وقایعی در این باند فرکانسی وجود ندارد.</p>

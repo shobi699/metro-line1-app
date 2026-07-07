@@ -17,6 +17,33 @@ export const createPostSchema = z.object({
   status: z.enum(postStatuses).optional().default('draft'),
   publishAt: z.string().optional().or(z.literal('')),
   nextReviewAt: z.string().optional().or(z.literal('')),
+
+  // New Announcements Platform fields
+  kind: z.enum(['news', 'notice', 'must_read', 'urgent_banner', 'emergency']).optional().default('news'),
+  audience: z.object({
+    roles: z.array(z.string()).optional(),
+    groups: z.array(z.string()).optional(),
+    stations: z.array(z.string()).optional(),
+    shiftCodes: z.array(z.string()).optional(),
+    userIds: z.array(z.string()).optional(),
+  }).nullable().optional(),
+  surfaces: z.array(z.string()).optional(),
+  priority: z.number().optional().default(0),
+  pinnedUntil: z.string().nullable().optional(),
+  expiresAt: z.string().nullable().optional(),
+  ackRequired: z.boolean().optional().default(false),
+  ackDeadline: z.string().nullable().optional(),
+  bannerStyle: z.object({
+    color: z.enum(['red', 'amber', 'blue', 'green']),
+    icon: z.string().optional(),
+    dismissible: z.boolean().optional(),
+  }).nullable().optional(),
+  attachments: z.array(z.object({
+    name: z.string(),
+    url: z.string(),
+    type: z.string(),
+  })).nullable().optional(),
+  notifyRuleKey: z.string().nullable().optional(),
 })
 
 export type CreatePostInput = z.infer<typeof createPostSchema>

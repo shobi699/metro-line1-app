@@ -1,6 +1,19 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
 import { createMeetingRequest, getUserMeetings, getManagerMeetings, reviewMeeting } from '@/server/modules/meetings/service'
+import { z } from 'zod'
+
+const createMeetingSchema = z.object({
+  targetManagerId: z.string(),
+  title: z.string(),
+  description: z.string().optional(),
+  scheduledAt: z.string(),
+  durationMinutes: z.number().optional(),
+  typeId: z.string().optional(),
+  roomId: z.string().optional(),
+  formData: z.any().optional(),
+  attendees: z.array(z.string()).optional(),
+}).strict()
 
 export async function GET(request: Request) {
   const user = await getSessionUser(request)
@@ -22,26 +35,36 @@ export async function POST(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const body = await request.json()
-  const { targetManagerId, title, description, scheduledAt, durationMinutes } = body
+  try {
+    const body = await request.json()
+    const parsed = createMeetingSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: { message: 'داده‌های ارسالی نامعتبر است', details: parsed.error.format() } },
+        { status: 400 }
+      )
+    }
 
-  if (!targetManagerId || !title || !scheduledAt) {
+    const meeting = await createMeetingRequest({
+      requesterId: user.id,
+      targetManagerId: parsed.data.targetManagerId,
+      title: parsed.data.title,
+      description: parsed.data.description,
+      scheduledAt: new Date(parsed.data.scheduledAt),
+      durationMinutes: parsed.data.durationMinutes,
+      typeId: parsed.data.typeId,
+      roomId: parsed.data.roomId,
+      formData: parsed.data.formData,
+      attendees: parsed.data.attendees,
+    })
+
+    return NextResponse.json({ data: meeting }, { status: 201 })
+  } catch (err: any) {
     return NextResponse.json(
-      { error: 'فیلدهای الزامی را پر کنید' },
-      { status: 400 },
+      { error: { message: err?.message || 'خطا در ثبت درخواست جلسه' } },
+      { status: 500 }
     )
   }
-
-  const meeting = await createMeetingRequest({
-    requesterId: user.id,
-    targetManagerId,
-    title,
-    description,
-    scheduledAt: new Date(scheduledAt),
-    durationMinutes,
-  })
-
-  return NextResponse.json({ data: meeting }, { status: 201 })
 }
 
 export async function PATCH(request: Request) {
@@ -49,7 +72,7 @@ export async function PATCH(request: Request) {
   if ('error' in user) return authErrorResponse(user)
 
   if (user.rank < 3) {
-    return NextResponse.json({ error: 'شما دسترسی کافی ندارید' }, { status: 403 })
+    return NextResponse.json({ error: { message: 'شما دسترسی کافی ندارید' } }, { status: 403 })
   }
 
   const body = await request.json()
@@ -57,8 +80,8 @@ export async function PATCH(request: Request) {
 
   if (!meetingId || !status) {
     return NextResponse.json(
-      { error: 'شناسه جلسه و وضعیت الزامی است' },
-      { status: 400 },
+      { error: { message: 'شناسه جلسه و وضعیت الزامی است' } },
+      { status: 400 }
     )
   }
 
@@ -66,6 +89,6 @@ export async function PATCH(request: Request) {
     await reviewMeeting(meetingId, user.id, status, note)
     return NextResponse.json({ data: { success: true } })
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'خطا در ثبت تغییرات' }, { status: 500 })
+    return NextResponse.json({ error: { message: err?.message || 'خطا در ثبت تغییرات' } }, { status: 500 })
   }
 }

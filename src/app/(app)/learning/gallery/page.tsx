@@ -116,86 +116,118 @@ export default function LearningGalleryPage() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
 
+  // ── پخش‌کننده ویدیو تعاملی
+  const [activeVideo, setActiveVideo] = useState<VideoItem | null>(null)
+  const [videoProgress, setVideoProgress] = useState(0)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
   // ── دوره‌های آموزشی ساختاریافته — بخش ۷.۱
-  const [courses, setCourses] = useState<CoursePath[]>([
-    {
-      id: 'course-1',
-      name: 'دوره ایمنی پایه و خودمراقبتی',
-      description: 'ضوابط ایمنی تردد در حریم ریل و حریم برق‌دار راهبران مترو خط ۱.',
-      icon: '🛡️',
-      certificateIssued: true,
-      certificateDate: '۱۴۰۵/۰۲/۱۵',
-      certificateExpiry: '۱۴۰۶/۰۲/۱۵',
-      certificateId: 'CERT-SAF-L1-008',
-      videos: [
-        {
-          id: 'vid-safety-1',
-          title: 'اصول و حریم ایمنی تردد روی ریل سوم برق‌دار',
-          slug: 'ایمنی-تردد-ریل-سوم',
-          excerpt: 'بررسی خطرات جریان ۷۵۰ ولت مستقیم ریل سوم و نحوه استفاده از کفش‌های عایق و ابزار تخلیه بار الکتریکی.',
-          duration: '۰۸:۴۰',
-          durationSeconds: 520,
-          category: 'دوره ایمنی پایه',
-          coverUrl: 'https://images.unsplash.com/photo-1541417904950-b855846fe074?auto=format&fit=crop&w=600&q=80',
-          mediaUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-          mandatory: true,
-          points: 40,
-          isCompleted: true,
-          watchedPercentage: 100,
-          lastWatchedAt: '۱۴۰۵/۰۲/۱۴'
-        }
-      ]
-    },
-    {
-      id: 'course-2',
-      name: 'دوره عیب‌یابی فنی و بایکوت قطار سری ۱۰۰',
-      description: 'نحوه ایزوله کردن سیستم ترمز و برطرف کردن ترمزگیرهای کاذب در سیر خط ۱.',
-      icon: '⚙️',
-      certificateIssued: false,
-      videos: [
-        {
-          id: 'vid-1',
-          title: 'دستورالعمل بایکوت و ایزولاسیون ترمز واگن قطار سری ۱۰۰',
-          slug: 'عیب‌یابی-سیستم-مکانیزم-درب-قطارهای-سری-۱۰۰',
-          excerpt: 'آموزش گام‌به‌گام نحوه ایزولاسیون مکانیکی ترمز در زمان بروز نقص فنی حاد در حین سیر خط ۱.',
-          duration: '۱۲:۴۵',
-          durationSeconds: 765,
-          category: 'دوره بایکوت قطار',
-          coverUrl: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=600&q=80',
-          mediaUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-          mandatory: true,
-          points: 50,
-          isCompleted: false,
-          watchedPercentage: 45,
-          lastWatchedAt: '۱۴۰۵/۰۴/۰۹'
-        }
-      ]
-    },
-    {
-      id: 'course-3',
-      name: 'دوره مدیریت بحران و سناریوهای عملیاتی',
-      description: 'پروتکل‌های خروج اضطراری و هدایت مسافرین در داخل تونل.',
-      icon: '🚨',
-      certificateIssued: false,
-      videos: [
-        {
-          id: 'vid-2',
-          title: 'پروتکل ایمنی تخلیه اضطراری مسافرین در داخل تونل خط ۱',
-          slug: 'پروتکل-ایمنی-تخلیه-مسافرین-در-داخل-تونل-مترو',
-          excerpt: 'رویه‌های هماهنگی با مرکز فرمان (OCC) و چگونگی هدایت امن مسافران به خارج از قطار در مواقع بحرانی.',
-          duration: '۱۸:۲۰',
-          durationSeconds: 1100,
-          category: 'دوره مدیریت بحران',
-          coverUrl: 'https://images.unsplash.com/photo-1519074002996-a69e7ac46a42?auto=format&fit=crop&w=600&q=80',
-          mediaUrl: 'https://www.w3schools.com/html/movie.mp4',
-          mandatory: true,
-          points: 60,
-          isCompleted: false,
-          watchedPercentage: 0
-        }
-      ]
+  const [courses, setCourses] = useState<CoursePath[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const lastSavedPctRef = useRef(0)
+  const lastSavedTimeRef = useRef(0)
+
+  useEffect(() => {
+    if (accessToken) {
+      void loadCourses()
     }
-  ])
+  }, [accessToken])
+
+  async function loadCourses() {
+    if (!accessToken) return
+    setLoading(true)
+    try {
+      const res = await fetch('/api/learning/courses', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const json = await res.json()
+        const rawCourses = json.data || []
+        
+        const detailedCourses = await Promise.all(
+          rawCourses.map(async (c: any) => {
+            const detailRes = await fetch(`/api/learning/courses/${c.id}`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            })
+            if (detailRes.ok) {
+              const detailJson = await detailRes.json()
+              const detail = detailJson.data
+              
+              const videos: VideoItem[] = detail.videos.map((v: any) => {
+                const prog = v.progress?.[0]
+                const completed = prog?.completed || false
+                const watchedPercentage = prog?.watchedPct || 0
+                return {
+                  id: v.id,
+                  title: v.title,
+                  slug: v.title.replace(/\s+/g, '-'),
+                  excerpt: v.excerpt || '',
+                  duration: `${Math.floor(v.durationSeconds / 60)}:${(v.durationSeconds % 60).toString().padStart(2, '0')}`,
+                  durationSeconds: v.durationSeconds,
+                  category: detail.title,
+                  coverUrl: v.coverUrl || 'https://images.unsplash.com/photo-1541417904950-b855846fe074?auto=format&fit=crop&w=600&q=80',
+                  mediaUrl: v.mediaUrl,
+                  mandatory: v.mandatory,
+                  points: v.points,
+                  isCompleted: completed,
+                  prerequisiteId: v.prerequisiteId,
+                  watchedPercentage,
+                  quiz: v.quiz,
+                }
+              })
+              
+              const cert = detail.certificates?.[0]
+              
+              return {
+                id: detail.id,
+                name: detail.title,
+                description: detail.description || '',
+                icon: detail.icon || '🛡️',
+                videos,
+                certificateIssued: !!cert,
+                certificateId: cert?.serial,
+                certificateDate: cert ? new Date(cert.issuedAt).toLocaleDateString('fa-IR') : undefined,
+                certificateExpiry: cert ? new Date(cert.expiresAt).toLocaleDateString('fa-IR') : undefined,
+              }
+            }
+            return null
+          })
+        )
+        
+        setCourses(detailedCourses.filter(Boolean) as CoursePath[])
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const saveProgressToServer = async (pct: number, completed?: boolean, quizScore?: number) => {
+    if (!accessToken || !activeVideo) return
+    try {
+      const res = await fetch('/api/learning/progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          videoId: activeVideo.id,
+          watchedPct: pct,
+          completed,
+          quizScore,
+        }),
+      })
+      if (res.ok) {
+        lastSavedPctRef.current = pct
+        lastSavedTimeRef.current = Date.now()
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   // ── کنترل مصرف دیتا — بخش ۷.۴
   const [videoQuality, setVideoQuality] = useState<'auto' | 'high' | 'low'>('auto')
@@ -204,11 +236,6 @@ export default function LearningGalleryPage() {
     'vid-safety-1': true
   })
   const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({})
-
-  // ── پخش‌کننده ویدیو تعاملی
-  const [activeVideo, setActiveVideo] = useState<VideoItem | null>(null)
-  const [videoProgress, setVideoProgress] = useState(0)
-  const videoRef = useRef<HTMLVideoElement>(null)
 
   // ── آزمون کوئیز حرفه‌ای — بخش ۷.۳
   const [activeQuiz, setActiveQuiz] = useState<any[] | null>(null)
@@ -261,25 +288,57 @@ export default function LearningGalleryPage() {
         )
       }))
     )
+
+    // ذخیره تدریجی پیشرفت هر ۱۰ ثانیه یا در پایان فیلم
+    const now = Date.now()
+    if (pct >= 95 && lastSavedPctRef.current < 95) {
+      void saveProgressToServer(100)
+    } else if (now - lastSavedTimeRef.current > 10000 && pct > lastSavedPctRef.current) {
+      void saveProgressToServer(pct)
+    }
   }
 
   // آغاز شبیه‌ساز کوئیز و بانک سوالات — بخش ۷.۳
   const handleStartQuiz = () => {
     if (!activeVideo) return
-    const questions = QUIZ_QUESTIONS[activeVideo.id] || [
-      {
-        q: 'کدام روش برای تایید قطع دیسپاچینگ OCC معتبر است؟',
-        options: ['تماس با سوپروایزر ایستگاه', 'دریافت برگه تایید فیزیکی', 'کد رادیویی معتبر بیسیم تِترا', 'هر سه مورد'],
-        correct: 2
+    let questions: any[] = []
+    
+    // Read quiz from video if present
+    if ((activeVideo as any).quiz) {
+      const qData = (activeVideo as any).quiz
+      if (typeof qData === 'string') {
+        try {
+          questions = JSON.parse(qData)
+        } catch {
+          questions = []
+        }
+      } else if (Array.isArray(qData)) {
+        questions = qData
       }
-    ]
+    }
+    
+    if (questions.length === 0) {
+      questions = [
+        {
+          q: 'در زمان بروز نقص فنی حاد در سیستم ترمز سری ۱۰۰، اولین اقدام راهبر چیست؟',
+          options: [
+            'ایزوله کردن شیر ترمز کابین جلو و گزارش به OCC',
+            'بایکوت دستی مکانیکی ترمز چرخ‌ها در زیر واگن',
+            'قطع مدار فرمان تخلیه اضطراری',
+            'تست سیستم شانت قطار در سرعت بالا'
+          ],
+          correct: 1
+        }
+      ]
+    }
+    
     setActiveQuiz(questions)
     setCurrentQuizIdx(0)
     setQuizAnswers({})
     setQuizFinished(false)
   }
 
-  const handleFinishQuiz = () => {
+  const handleFinishQuiz = async () => {
     if (!activeQuiz || !activeVideo) return
     let correctCount = 0
     activeQuiz.forEach((q, idx) => {
@@ -291,26 +350,9 @@ export default function LearningGalleryPage() {
     setQuizScore(pct)
     setQuizFinished(true)
 
-    if (pct >= 70) {
-      // پاس شد — علامت زدن ویدئو به عنوان تکمیل شده
-      setCourses((prev) =>
-        prev.map((c) => {
-          const updatedVideos = c.videos.map((v) =>
-            v.id === activeVideo.id ? { ...v, isCompleted: true } : v
-          )
-          // اگر تمام ویدئوهای دوره تکمیل شده باشند، گواهی فعال می‌شود
-          const allDone = updatedVideos.every((v) => v.isCompleted)
-          return {
-            ...c,
-            videos: updatedVideos,
-            certificateIssued: allDone ? true : c.certificateIssued,
-            certificateDate: allDone ? '۱۴۰۵/۰۴/۰۹' : c.certificateDate,
-            certificateExpiry: allDone ? '۱۴۰۶/۰۴/۰۹' : c.certificateExpiry,
-            certificateId: allDone ? `CERT-TEC-${c.id.toUpperCase()}` : c.certificateId
-          }
-        })
-      )
-    }
+    const isPassed = pct >= 70
+    await saveProgressToServer(100, isPassed, pct)
+    void loadCourses()
   }
 
   // دانلود آفلاین شبیه‌ساز — بخش ۷.۴

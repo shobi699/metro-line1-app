@@ -69,7 +69,7 @@ export default function TicketsAdminPage() {
       })
       if (res.ok) {
         const json = await res.json()
-        setTickets(json.data)
+        setTickets(json.data?.tickets ?? [])
       }
     } finally {
       setLoading(false)

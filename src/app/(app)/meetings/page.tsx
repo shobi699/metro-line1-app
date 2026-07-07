@@ -137,8 +137,10 @@ export default function MeetingsPage() {
   const currentUser = useAuthStore((s) => s.user)
 
   const [activeTab, setActiveTab] = useState<'list' | 'new' | 'inbox' | 'minutes'>('list')
-  const [meetings, setMeetings] = useState<Meeting[]>(SAMPLE_MEETINGS)
+  const [meetings, setMeetings] = useState<Meeting[]>([])
   const [managers, setManagers] = useState<UserProfile[]>([])
+  const [meetingTypes, setMeetingTypes] = useState<any[]>([])
+  const [meetingRooms, setMeetingRooms] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
 
   // Form State — بخش ۱۱.۱ و ۱۱.۲
@@ -174,6 +176,45 @@ export default function MeetingsPage() {
                     currentUser?.roleKey === 'chief' ||
                     currentUser?.roleKey === 'supervisor'
 
+  async function loadMeetings() {
+    if (!accessToken) return
+    setLoading(true)
+    try {
+      const url = isManager && activeTab === 'inbox' ? '/api/meetings?view=manager' : '/api/meetings?view=mine'
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setMeetings(json.data || [])
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function loadMeetingTypesAndRooms() {
+    if (!accessToken) return
+    try {
+      const [resTypes, resRooms] = await Promise.all([
+        fetch('/api/meetings/types', { headers: { Authorization: `Bearer ${accessToken}` } }),
+        fetch('/api/meetings/rooms', { headers: { Authorization: `Bearer ${accessToken}` } }),
+      ])
+      if (resTypes.ok) {
+        const json = await resTypes.json()
+        setMeetingTypes(json.data || [])
+      }
+      if (resRooms.ok) {
+        const json = await resRooms.json()
+        setMeetingRooms(json.data || [])
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   async function loadManagers() {
     if (!accessToken) return
     try {
@@ -202,10 +243,12 @@ export default function MeetingsPage() {
 
   useEffect(() => {
     void loadManagers()
-  }, [accessToken])
+    void loadMeetings()
+    void loadMeetingTypesAndRooms()
+  }, [accessToken, activeTab])
 
   // ثبت رزرو جلسه جدید — بخش ۱۱.۱
-  const handleBookMeeting = (e: React.FormEvent) => {
+  const handleBookMeeting = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim() || !meetingDate || !meetingTime) {
       alert('لطفاً فیلدهای الزامی را تکمیل کنید.')
@@ -215,53 +258,72 @@ export default function MeetingsPage() {
     setSubmitting(true)
     const scheduledAt = `${meetingDate}T${meetingTime}:00`
 
-    // شبیه‌ساز رزرو
-    const newMeet: Meeting = {
-      id: `meet-new-${Date.now()}`,
-      title,
-      description: description.trim() || null,
-      scheduledAt,
-      durationMinutes,
-      status: 'pending',
-      note: null,
-      meetingType,
-      priority,
-      groupBooking,
-      requester: { id: currentUser?.id || 'usr-1', name: currentUser?.name || 'راهبر قطار' },
-      targetManager: managers.find(m => m.id === targetManagerId)
-        ? { id: targetManagerId, name: managers.find(m => m.id === targetManagerId)!.name }
-        : { id: 'mgr-default', name: 'سرپرست سیر و حرکت' }
-    }
+    try {
+      const res = await fetch('/api/meetings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          targetManagerId,
+          title,
+          description: description.trim() || undefined,
+          scheduledAt,
+          durationMinutes,
+          typeId: meetingTypes.find(t => t.key === meetingType)?.id,
+          roomId: meetingRooms[0]?.id,
+        }),
+      })
 
-    setMeetings(prev => [newMeet, ...prev])
-    setTitle('')
-    setDescription('')
-    alert('درخواست ملاقات شما با موفقیت ثبت شد و در نوبت تایید قرار گرفت.')
-    setSubmitting(false)
-    setActiveTab('list')
+      if (res.ok) {
+        alert('درخواست ملاقات شما با موفقیت ثبت شد و در نوبت تایید قرار گرفت.')
+        setTitle('')
+        setDescription('')
+        void loadMeetings()
+        setActiveTab('list')
+      } else {
+        const json = await res.json()
+        alert(json.error?.message || json.error || 'خطا در ثبت درخواست')
+      }
+    } catch (err) {
+      alert('خطا در ارتباط با سرور')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   // گردش کار جلسه (تایید / رد / پیشنهاد زمان جایگزین) — بخش ۱۱.۳
-  const handleReviewMeeting = (meetingId: string, action: 'approved' | 'rejected' | 'rescheduled') => {
-    setMeetings(prev =>
-      prev.map(m => {
-        if (m.id === meetingId) {
-          return {
-            ...m,
-            status: action,
-            note: reviewNote.trim() || (action === 'approved' ? 'تایید شد.' : 'رد شد.'),
-            alternativeTimeProposed: action === 'rescheduled' ? `${altProposedDate}T${altProposedTime}:00` : undefined
-          }
-        }
-        return m
+  const handleReviewMeeting = async (meetingId: string, action: 'approved' | 'rejected' | 'rescheduled') => {
+    try {
+      const res = await fetch('/api/meetings', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          meetingId,
+          status: action,
+          note: reviewNote.trim() || (action === 'approved' ? 'تایید شد.' : 'رد شد.'),
+        }),
       })
-    )
-    alert('اقدام مدیریتی با موفقیت اعمال گردید.')
-    setReviewNote('')
-    setAltProposedDate('')
-    setAltProposedTime('')
-    setReviewAction(null)
-    setReviewingId(null)
+
+      if (res.ok) {
+        alert('اقدام مدیریتی با موفقیت اعمال گردید.')
+        setReviewNote('')
+        setAltProposedDate('')
+        setAltProposedTime('')
+        setReviewAction(null)
+        setReviewingId(null)
+        void loadMeetings()
+      } else {
+        const json = await res.json()
+        alert(json.error?.message || json.error || 'خطا در ثبت تغییرات')
+      }
+    } catch (err) {
+      alert('خطا در ارتباط با سرور')
+    }
   }
 
   // مستندسازی صورت‌جلسه پس از پایان — بخش ۱۱.۴

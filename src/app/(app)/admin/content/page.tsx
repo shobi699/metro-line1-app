@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, Suspense } from 'react'
+import { useEffect, useRef, useState, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
 import { Button } from '@/components/ui/button'
@@ -37,6 +37,8 @@ import {
   Video,
   FileCode,
   EyeOff,
+  Send,
+  Download,
 } from 'lucide-react'
 import { toFa } from '@/lib/fa'
 
@@ -71,6 +73,27 @@ interface FormState {
   mandatory: boolean
   status: string
   targetRoles: string[]
+  // New Announcement Platform fields
+  kind: 'news' | 'notice' | 'must_read' | 'urgent_banner' | 'emergency'
+  audience: {
+    roles: string[]
+    groups: string[]
+    stations: string[]
+    shiftCodes: string[]
+    userIds: string[]
+  }
+  surfaces: string[]
+  priority: number
+  pinnedUntil: string
+  expiresAt: string
+  ackRequired: boolean
+  ackDeadline: string
+  bannerStyle: {
+    color: 'red' | 'amber' | 'blue' | 'green'
+    icon: string
+    dismissible: boolean
+  }
+  notifyRuleKey: string
 }
 
 export interface QuizQuestionDef {
@@ -113,6 +136,26 @@ const EMPTY_FORM: FormState = {
   mandatory: false,
   status: 'draft',
   targetRoles: ['all'],
+  kind: 'news',
+  audience: {
+    roles: ['all'],
+    groups: [],
+    stations: [],
+    shiftCodes: [],
+    userIds: [],
+  },
+  surfaces: ['feed'],
+  priority: 0,
+  pinnedUntil: '',
+  expiresAt: '',
+  ackRequired: false,
+  ackDeadline: '',
+  bannerStyle: {
+    color: 'red',
+    icon: '',
+    dismissible: true,
+  },
+  notifyRuleKey: '',
 }
 
 const POPULAR_CATEGORIES = ['مقررات عمومی سیر و حرکت', 'عیب‌یابی فنی واگن', 'آموزش ایمنی ایستگاه', 'اطلاعیه‌های اداری', 'دستورالعمل OCC']
@@ -165,6 +208,50 @@ function AdminContentPageContent() {
   // Autosave notification state
   const [lastAutosaved, setLastAutosaved] = useState<string | null>(null)
   const [hasRecoverableDraft, setHasRecoverableDraft] = useState(false)
+
+  // Tracking Stats State
+  const [trackingStats, setTrackingStats] = useState<any | null>(null)
+  const [loadingTracking, setLoadingTracking] = useState(false)
+
+  const loadTracking = useCallback(async (postId: string) => {
+    if (!accessToken) return
+    setLoadingTracking(true)
+    try {
+      const res = await fetch(`/api/admin/announcements/${postId}/tracking`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setTrackingStats(data.data)
+      }
+    } catch (err) {
+      console.error('Failed to load tracking stats:', err)
+    } finally {
+      setLoadingTracking(false)
+    }
+  }, [accessToken])
+
+  useEffect(() => {
+    if (form.id && isWorkspaceOpen) {
+      loadTracking(form.id)
+    } else {
+      setTrackingStats(null)
+    }
+  }, [form.id, isWorkspaceOpen, loadTracking])
+
+  const handleSendReminder = async (postId: string) => {
+    if (!accessToken) return
+    try {
+      const res = await fetch(`/api/admin/announcements/${postId}/remind`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        alert('یادآوری مجدد با موفقیت ارسال شد.')
+        loadTracking(postId)
+      }
+    } catch {}
+  }
 
   // Markdown to Blocks Parser
   const markdownToBlocks = (markdown: string): EditorBlock[] => {
@@ -390,6 +477,16 @@ function AdminContentPageContent() {
           coverUrl: fullPost.coverUrl || '',
           mediaUrl: fullPost.mediaUrl || '',
           mediaType: fullPost.mediaType || '',
+          kind: fullPost.kind || 'news',
+          audience: fullPost.audience || EMPTY_FORM.audience,
+          surfaces: fullPost.surfaces || EMPTY_FORM.surfaces,
+          priority: fullPost.priority || 0,
+          pinnedUntil: fullPost.pinnedUntil ? new Date(fullPost.pinnedUntil).toISOString().split('T')[0] : '',
+          expiresAt: fullPost.expiresAt ? new Date(fullPost.expiresAt).toISOString().split('T')[0] : '',
+          ackRequired: fullPost.ackRequired || false,
+          ackDeadline: fullPost.ackDeadline ? new Date(fullPost.ackDeadline).toISOString().split('T')[0] : '',
+          bannerStyle: fullPost.bannerStyle || EMPTY_FORM.bannerStyle,
+          notifyRuleKey: fullPost.notifyRuleKey || '',
         }))
 
         // Parse markdown text back to visual blocks
@@ -462,6 +559,16 @@ function AdminContentPageContent() {
         published: form.status === 'published' || form.published,
         mandatory: form.mandatory,
         status: form.status,
+        kind: form.kind,
+        audience: form.audience,
+        surfaces: form.surfaces,
+        priority: form.priority,
+        pinnedUntil: form.pinnedUntil || null,
+        expiresAt: form.expiresAt || null,
+        ackRequired: form.ackRequired,
+        ackDeadline: form.ackDeadline || null,
+        bannerStyle: form.bannerStyle,
+        notifyRuleKey: form.notifyRuleKey || null,
       }
       const url = form.id ? `/api/posts/${form.id}` : '/api/posts'
       const method = form.id ? 'PATCH' : 'POST'
@@ -1617,6 +1724,287 @@ function AdminContentPageContent() {
 
               </CardContent>
             </Card>
+
+            {/* Announcements Custom Settings Card */}
+            {form.type === 'announcement' && (
+              <Card className="border border-border bg-surface shadow-sm rounded-xl overflow-hidden">
+                <CardHeader className="py-3 border-b border-border/50 bg-neutral-900/45 select-none">
+                  <CardTitle className="text-xs font-bold text-foreground">تنظیمات اعلانات سازمانی</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 space-y-4 text-xs">
+                  {/* kind */}
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-foreground-muted font-semibold">قالب نمایش اطلاعیه:</Label>
+                    <select
+                      value={form.kind}
+                      onChange={(e) => {
+                        const val = e.target.value as any
+                        setForm((f) => ({
+                          ...f,
+                          kind: val,
+                          ackRequired: (val === 'must_read' || val === 'emergency') ? true : f.ackRequired,
+                        }))
+                      }}
+                      className="h-8 rounded-lg border border-border bg-background px-2 text-xs outline-none cursor-pointer"
+                    >
+                      <option value="news">اخبار و رویدادهای عمومی</option>
+                      <option value="notice">ابلاغیه اداری عادی</option>
+                      <option value="must_read">دستورالعمل الزامی (قفل کل صفحه)</option>
+                      <option value="urgent_banner">بنر فوری بالا فید</option>
+                      <option value="emergency">اعلان بحران تمام‌صفحه مانیتورها</option>
+                    </select>
+                  </div>
+
+                  {/* surfaces */}
+                  <div className="space-y-2">
+                    <Label className="text-foreground-muted font-semibold">بخش‌های نمایش (Surfaces):</Label>
+                    <div className="space-y-1.5">
+                      {[
+                        { key: 'feed', label: 'فید اصلی نوشته‌ها' },
+                        { key: 'dashboard', label: 'داشبورد پرسنلی' },
+                        { key: 'banner', label: 'نوار اعلان متحرک بالا' },
+                        { key: 'modal', label: 'مودال الزامی غیرقابل رد شدن' },
+                        { key: 'signage', label: 'تلویزیون‌های دپو/ایستگاه' },
+                      ].map((surface) => (
+                        <label key={surface.key} className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={form.surfaces.includes(surface.key)}
+                            onChange={(e) => {
+                              const checked = e.target.checked
+                              setForm((f) => ({
+                                ...f,
+                                surfaces: checked
+                                  ? [...f.surfaces, surface.key]
+                                  : f.surfaces.filter((s) => s !== surface.key),
+                              }))
+                            }}
+                            className="size-3.5 rounded border-border accent-accent"
+                          />
+                          <span>{surface.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Priority & Dates */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-1.5">
+                      <Label className="text-foreground-muted font-semibold">اولویت نمایش:</Label>
+                      <Input
+                        type="number"
+                        value={form.priority}
+                        onChange={(e) => setForm((f) => ({ ...f, priority: parseInt(e.target.value) || 0 }))}
+                        className="h-8 text-xs text-center"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <Label className="text-foreground-muted font-semibold">انقضا (Expires):</Label>
+                      <Input
+                        type="date"
+                        value={form.expiresAt}
+                        onChange={(e) => setForm((f) => ({ ...f, expiresAt: e.target.value }))}
+                        className="h-8 text-xs text-center"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Acknowledgment settings */}
+                  <div className="space-y-3 border-t border-border pt-3">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={form.ackRequired}
+                        onChange={(e) => setForm((f) => ({ ...f, ackRequired: e.target.checked }))}
+                        className="size-3.5 rounded border-border accent-accent"
+                      />
+                      <span className="font-semibold">نیاز به ثبت تاییدخوانی و امضا</span>
+                    </label>
+
+                    {form.ackRequired && (
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-foreground-muted font-semibold">مهلت تاییدخوانی:</Label>
+                        <Input
+                          type="date"
+                          value={form.ackDeadline}
+                          onChange={(e) => setForm((f) => ({ ...f, ackDeadline: e.target.value }))}
+                          className="h-8 text-xs text-center"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Banner Styles */}
+                  {(form.kind === 'urgent_banner' || form.surfaces.includes('banner')) && (
+                    <div className="space-y-3 border-t border-border pt-3 bg-[#18181b]/30 p-2.5 rounded-lg">
+                      <Label className="text-[10px] font-bold text-accent">سبک نمایش بنر فوری:</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[10px]">رنگ بنر:</Label>
+                          <select
+                            value={form.bannerStyle.color}
+                            onChange={(e) => setForm((f) => ({ ...f, bannerStyle: { ...f.bannerStyle, color: e.target.value as any } }))}
+                            className="h-7 rounded border border-border bg-background px-1 text-[11px] outline-none"
+                          >
+                            <option value="red">قرمز (بحرانی)</option>
+                            <option value="amber">نارنجی (هشدار)</option>
+                            <option value="blue">آبی (اطلاعیه)</option>
+                            <option value="green">سبز (عادی)</option>
+                          </select>
+                        </div>
+                        <label className="flex items-center gap-2 cursor-pointer select-none mt-4 text-[10px]">
+                          <input
+                            type="checkbox"
+                            checked={form.bannerStyle.dismissible}
+                            onChange={(e) => setForm((f) => ({ ...f, bannerStyle: { ...f.bannerStyle, dismissible: e.target.checked } }))}
+                            className="size-3.5 rounded border-border accent-accent"
+                          />
+                          <span>قابل بستن</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notify key & Audience Builder */}
+                  <div className="space-y-3 border-t border-border pt-3">
+                    <Label className="text-foreground-muted font-bold text-[10px] uppercase">مخاطبین هدف (Audience Builder)</Label>
+                    <div className="space-y-2">
+                      <Label className="text-[10px]">نقش‌های هدف:</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {TARGET_ROLES_OPTIONS.map((role) => (
+                          <label key={role.value} className="flex items-center gap-1.5 text-[10px] cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={form.audience.roles.includes(role.value)}
+                              onChange={(e) => {
+                                const checked = e.target.checked
+                                setForm((f) => {
+                                  let nextRoles = f.audience.roles
+                                  if (role.value === 'all') {
+                                    nextRoles = checked ? ['all'] : []
+                                  } else {
+                                    const filtered = f.audience.roles.filter((r) => r !== 'all')
+                                    nextRoles = checked ? [...filtered, role.value] : filtered.filter((r) => r !== role.value)
+                                    if (nextRoles.length === 0) nextRoles = ['all']
+                                  }
+                                  return {
+                                    ...f,
+                                    audience: { ...f.audience, roles: nextRoles },
+                                  }
+                                })
+                              }}
+                              className="size-3 rounded border-border accent-accent"
+                            />
+                            <span>{role.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px]">کدهای شیفت (جدا با کاما):</Label>
+                      <Input
+                        value={form.audience.shiftCodes.join(', ')}
+                        onChange={(e) => {
+                          const val = e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
+                          setForm((f) => ({ ...f, audience: { ...f.audience, shiftCodes: val } }))
+                        }}
+                        placeholder="A, B, C"
+                        className="h-7 text-[11px] text-right bg-zinc-950/20"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px]">نام ایستگاه‌ها (جدا با کاما):</Label>
+                      <Input
+                        value={form.audience.stations.join(', ')}
+                        onChange={(e) => {
+                          const val = e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
+                          setForm((f) => ({ ...f, audience: { ...f.audience, stations: val } }))
+                        }}
+                        placeholder="تجریش، کهریزک"
+                        className="h-7 text-[11px] text-right bg-zinc-950/20"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Compliance Report and Tracking Dashboard */}
+            {form.id && form.type === 'announcement' && trackingStats && (
+              <Card className="border border-border bg-surface shadow-sm rounded-xl overflow-hidden">
+                <CardHeader className="py-3 border-b border-border/50 bg-[#8b0000]/10 select-none">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xs font-bold text-foreground">گزارش انطباق و تاییدخوانی</CardTitle>
+                    <Badge variant="outline" className="text-[10px] py-0 font-mono text-accent">
+                      {toFa(trackingStats.complianceRate)}٪
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 space-y-4 text-xs">
+                  {/* Progress Ring / Bar */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[10px] text-foreground-muted">
+                      <span>درصد تاییدخوانی کل جامعه هدف</span>
+                      <span>{toFa(trackingStats.acknowledgedCount)} از {toFa(trackingStats.totalTargetCount)} نفر</span>
+                    </div>
+                    <div className="h-2 w-full bg-border rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-accent transition-all duration-500 rounded-full"
+                        style={{ width: `${trackingStats.complianceRate}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[10px] text-foreground-muted bg-[#18181b]/20 p-2 rounded border border-border/40">
+                    <div>
+                      تایید شده: <span className="font-bold text-success">{toFa(trackingStats.acknowledgedCount)}</span>
+                    </div>
+                    <div>
+                      باقی‌مانده: <span className="font-bold text-destructive">{toFa(trackingStats.remainingCount)}</span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <a
+                      href={`/api/admin/announcements/${form.id}/acks/export`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-1 bg-[#18181b] hover:bg-zinc-800 border border-zinc-700 text-white rounded px-2.5 py-1.5 text-[10px] font-semibold text-center cursor-pointer"
+                    >
+                      <Download className="size-3" />
+                      <span>دانلود اکسل</span>
+                    </a>
+                    <Button
+                      onClick={() => handleSendReminder(form.id!)}
+                      disabled={trackingStats.remainingCount === 0}
+                      className="bg-destructive hover:bg-destructive-hover text-white text-[10px] font-semibold py-1.5 h-auto rounded cursor-pointer gap-1"
+                    >
+                      <Send className="size-3" />
+                      <span>ارسال یادآوری</span>
+                    </Button>
+                  </div>
+
+                  {/* Quick lists */}
+                  <div className="space-y-2 border-t border-border pt-3">
+                    <Label className="text-[10px] text-foreground-muted">لیست پرسنل باقی‌مانده ({toFa(trackingStats.remainingCount)} نفر):</Label>
+                    <div className="max-h-28 overflow-y-auto space-y-1 bg-zinc-950/20 p-2 rounded text-[10px]">
+                      {trackingStats.remainingList.map((user: any) => (
+                        <div key={user.userId} className="flex justify-between border-b border-zinc-800/40 pb-0.5 last:border-0">
+                          <span className="font-medium text-foreground">{user.name}</span>
+                          <span className="text-[9px] text-foreground-muted font-mono">{user.role}</span>
+                        </div>
+                      ))}
+                      {trackingStats.remainingList.length === 0 && (
+                        <p className="text-center text-success text-[9px] py-2">تمامی پرسنل تایید کرده‌اند ✓</p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Sidebar Module 2: Category Manager */}
             <Card className="border border-border bg-surface shadow-sm rounded-xl overflow-hidden">

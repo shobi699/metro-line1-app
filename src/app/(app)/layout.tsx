@@ -6,7 +6,8 @@ import { useAuthStore } from '@/features/auth'
 import { Sidebar, MobileHeader } from '@/components/shared/sidebar'
 import { MobileBottomNav } from '@/components/shared/mobile-bottom-nav'
 import { BulletinGuard } from '@/components/shared/bulletin-guard'
-import { AlertTriangle, X, ShieldAlert } from 'lucide-react'
+import { AnnouncementGuard } from '@/components/shared/announcement-guard'
+import { AlertTriangle, X, ShieldAlert, AlertCircle } from 'lucide-react'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -23,6 +24,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     systemNotice?: string
   } | null>(null)
   const [showNotice, setShowNotice] = useState(true)
+  const [banners, setBanners] = useState<any[]>([])
+
+  useEffect(() => {
+    if (!hydrated || !isAuthenticated || !accessToken) return
+    let cancelled = false
+    async function fetchBanners() {
+      try {
+        const res = await fetch('/api/announcements?surface=banner', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+        if (res.ok && !cancelled) {
+          const data = await res.json()
+          setBanners(data.data || [])
+        }
+      } catch {}
+    }
+    fetchBanners()
+    const bannerInterval = setInterval(fetchBanners, 60 * 1000)
+    return () => {
+      cancelled = true
+      clearInterval(bannerInterval)
+    }
+  }, [isAuthenticated, accessToken, hydrated])
+
+  const dismissBanner = (bannerId: string) => {
+    setBanners((prev) => prev.filter((b) => b.id !== bannerId))
+  }
 
   // منتظر ماندن برای لود شدن وضعیت احراز هویت از LocalStorage
   useEffect(() => {
@@ -166,6 +194,39 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
+      {/* Active Announcement Banners */}
+      {banners.map((b) => {
+        const color = b.bannerStyle?.color || 'red'
+        const isDismissible = b.bannerStyle?.dismissible !== false
+
+        return (
+          <div
+            key={b.id}
+            className={`relative w-full border-b text-xs px-4 py-2 flex items-center justify-between gap-4 animate-in slide-in-from-top duration-300 ${
+              color === 'red' ? 'bg-destructive/10 border-destructive/20 text-destructive' :
+              color === 'amber' ? 'bg-warning/10 border-warning/20 text-warning' :
+              color === 'blue' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' :
+              'bg-success/10 border-success/20 text-success'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <AlertCircle className="size-4 shrink-0" />
+              <span className="font-semibold">{b.title}:</span>
+              <span className="font-medium text-foreground">{b.excerpt || b.body.slice(0, 100)}</span>
+            </div>
+            {isDismissible && (
+              <button
+                onClick={() => dismissBanner(b.id)}
+                className="text-foreground-muted hover:text-current p-1 rounded hover:bg-current/5 transition-colors cursor-pointer shrink-0"
+                title="بستن بنر"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+        )
+      })}
+
       <div className="flex min-h-screen flex-1">
         <a
           href="#main-content"
@@ -177,7 +238,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex min-h-screen flex-1 flex-col min-w-0">
           <MobileHeader />
           <main id="main-content" className="flex flex-1 flex-col pb-14 md:pb-0 min-w-0 w-full">
-            <BulletinGuard>{children}</BulletinGuard>
+            <BulletinGuard>
+              <AnnouncementGuard>{children}</AnnouncementGuard>
+            </BulletinGuard>
           </main>
         </div>
         <MobileBottomNav />

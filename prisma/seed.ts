@@ -990,6 +990,198 @@ async function seedFaultSubsystemData(prisma: any) {
       },
     })
   }
+
+  // ── Seed Feedback Categories ──────────────────────────
+  const feedbackCategories = [
+    { key: 'safety_issue', title: 'گزارش مشکل ایمنی', icon: 'ShieldAlert', assigneeRole: 'supervisor', slaHours: { firstResponse: 12, resolve: 48 }, confidential: true, allowAnonymous: true },
+    { key: 'welfare', title: 'شکایت رفاهی', icon: 'Heart', assigneeRole: 'expert', slaHours: { firstResponse: 24, resolve: 120 }, confidential: false, allowAnonymous: true },
+    { key: 'ceo_message', title: 'پیام به مدیرعامل', icon: 'UserCheck', assigneeRole: 'manager', slaHours: { firstResponse: 72, resolve: 240 }, confidential: true, allowAnonymous: true },
+  ]
+  for (const fc of feedbackCategories) {
+    await prisma.feedbackCategory.upsert({
+      where: { key: fc.key },
+      update: {
+        title: fc.title,
+        icon: fc.icon,
+        assigneeRole: fc.assigneeRole,
+        slaHours: fc.slaHours,
+        confidential: fc.confidential,
+        allowAnonymous: fc.allowAnonymous,
+      },
+      create: {
+        key: fc.key,
+        title: fc.title,
+        icon: fc.icon,
+        assigneeRole: fc.assigneeRole,
+        slaHours: fc.slaHours,
+        confidential: fc.confidential,
+        allowAnonymous: fc.allowAnonymous,
+      },
+    })
+  }
+
+  // ── Seed Meeting Rooms ──────────────────────────
+  const meetingRooms = [
+    { name: 'اتاق جلسات دپو غرب', location: 'ساختمان اداری دپو، طبقه ۱', capacity: 12 },
+    { name: 'اتاق جلسات ایستگاه امام خمینی', location: 'ایستگاه امام خمینی، اتاق سرپرستی', capacity: 6 },
+  ]
+  for (const room of meetingRooms) {
+    const existing = await prisma.meetingRoom.findFirst({ where: { name: room.name } })
+    if (!existing) {
+      await prisma.meetingRoom.create({ data: room })
+    }
+  }
+
+  // ── Seed Meeting Types ──────────────────────────
+  const meetingTypes = [
+    { key: 'public_visit', title: 'ملاقات مردمی با مدیر', durationMin: 15, whoCanBook: ['operator', 'driver'], approval: 'host' },
+    { key: 'technical', title: 'جلسه فنی و هماهنگی', durationMin: 60, whoCanBook: ['supervisor', 'manager'], approval: 'auto' },
+  ]
+  for (const mt of meetingTypes) {
+    await prisma.meetingType.upsert({
+      where: { key: mt.key },
+      update: {
+        title: mt.title,
+        durationMin: mt.durationMin,
+        whoCanBook: mt.whoCanBook,
+        approval: mt.approval,
+      },
+      create: {
+        key: mt.key,
+        title: mt.title,
+        durationMin: mt.durationMin,
+        whoCanBook: mt.whoCanBook,
+        approval: mt.approval,
+      },
+    })
+  }
+
+  // ── Seed Document Types ──────────────────────────
+  const docTypes = [
+    { key: 'national_card', title: 'کارت ملی', hasExpiry: false, needsReview: true },
+    { key: 'health_cert', title: 'کارت سلامت و طب کار', hasExpiry: true, remindDays: [60, 30, 7], needsReview: true },
+    { key: 'operator_license_A', title: 'گواهینامه راهبری پایه ۱', hasExpiry: true, remindDays: [90, 60, 30], needsReview: true },
+  ]
+  for (const dt of docTypes) {
+    await prisma.documentType.upsert({
+      where: { key: dt.key },
+      update: {
+        title: dt.title,
+        hasExpiry: dt.hasExpiry,
+        remindDays: dt.remindDays,
+        needsReview: dt.needsReview,
+      },
+      create: {
+        key: dt.key,
+        title: dt.title,
+        hasExpiry: dt.hasExpiry,
+        remindDays: dt.remindDays,
+        needsReview: dt.needsReview,
+      },
+    })
+  }
+
+  // ── Seed Radio Channels ──────────────────────────
+  const radioChannels = [
+    { key: 'occ-main', label: 'کانال اصلی راهبران (CH 1)', code: '440.125 MHz', color: 'red', sortOrder: 1 },
+    { key: 'station-talk', label: 'کانال خدمات ایستگاهی (CH 2)', code: '442.250 MHz', color: 'blue', sortOrder: 2 },
+    { key: 'depot-tech', label: 'کانال دپو و مانور (CH 3)', code: '445.500 MHz', color: 'green', sortOrder: 3 },
+  ]
+  for (const rc of radioChannels) {
+    await prisma.radioChannel.upsert({
+      where: { key: rc.key },
+      update: {
+        label: rc.label,
+        code: rc.code,
+        color: rc.color,
+        sortOrder: rc.sortOrder,
+      },
+      create: {
+        key: rc.key,
+        label: rc.label,
+        code: rc.code,
+        color: rc.color,
+        sortOrder: rc.sortOrder,
+      },
+    })
+  }
+
+  // ── Seed Radio Phrases ──────────────────────────
+  const radioPhrases = [
+    { label: 'دریافت شد', text: 'پیام شما دریافت شد، تمام.' },
+    { label: 'موقعیت حادثه', text: 'در موقعیت کیلومتر ... متوقف شده‌ام، لطفا پشتیبانی هماهنگ کنید.' },
+    { label: 'توقف اضطراری', text: 'توقف اضطراری اعلام می‌کنم، ریل سوم بی برق شود.' },
+  ]
+  for (const rp of radioPhrases) {
+    const existing = await prisma.radioPhrase.findFirst({ where: { label: rp.label } })
+    if (!existing) {
+      await prisma.radioPhrase.create({ data: rp })
+    }
+  }
+
+  // ── Seed Content Categories ──────────────────────────
+  const contentCategories = [
+    { key: 'news', label: 'اخبار سازمانی', color: 'blue', type: 'news' },
+    { key: 'technical', label: 'آموزش‌های فنی', color: 'green', type: 'training' },
+    { key: 'circular', label: 'بخشنامه‌های عمومی', color: 'purple', type: null },
+  ]
+  for (const cc of contentCategories) {
+    await prisma.contentCategory.upsert({
+      where: { key: cc.key },
+      update: {
+        label: cc.label,
+        color: cc.color,
+        type: cc.type,
+      },
+      create: {
+        key: cc.key,
+        label: cc.label,
+        color: cc.color,
+        type: cc.type,
+      },
+    })
+  }
+
+  // ── Seed Courses and Videos ──────────────────────────
+  const courses = [
+    {
+      title: 'دوره جامع عیب‌یابی درب‌های سری ۳۰۰',
+      description: 'آموزش نحوه عیب‌یابی لیمیت سوئیچ‌ها و شیر بایکوت درب واگن‌ها در زمان اضطراری.',
+      icon: 'GraduationCap',
+      certValidityMonths: 12,
+      passScore: 70,
+    },
+  ]
+  for (const c of courses) {
+    const existing = await prisma.course.findFirst({ where: { title: c.title } })
+    if (!existing) {
+      const course = await prisma.course.create({
+        data: {
+          title: c.title,
+          description: c.description,
+          icon: c.icon,
+          certValidityMonths: c.certValidityMonths,
+          passScore: c.passScore,
+        },
+      })
+      // Add a video
+      await prisma.courseVideo.create({
+        data: {
+          courseId: course.id,
+          title: 'بخش اول: معرفی لیمیت سوئیچ‌های مغناطیسی درب واگن ۳',
+          excerpt: 'معرفی عملکرد و کد خطای مربوط به عدم بسته شدن فیدبک درب.',
+          mediaUrl: '/videos/sample.mp4',
+          coverUrl: '/images/cover.png',
+          durationSeconds: 120,
+          mandatory: true,
+          points: 15,
+          quiz: [
+            { q: 'شیر بایکوت درب در کدام بخش واگن قرار دارد؟', options: ['زیر صندلی مسافران', 'کنار درب خروجی', 'کابین راننده'], correct: 0 },
+          ],
+        },
+      })
+    }
+  }
 }
 
 main().catch(async (e) => {

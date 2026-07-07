@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
 import { transitionSchema } from '@/lib/zod/faults'
 import { executeWorkflowTransition } from '@/server/modules/faults/service'

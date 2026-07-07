@@ -37,6 +37,7 @@
     "metro-line1-app",
     "**/metro-line1-app",
     "metro-line11-app",
-    "stitch_metro_line_1_super_app"
+    "stitch_metro_line_1_super_app",
+    "open-next.config.ts"
   ]
 }

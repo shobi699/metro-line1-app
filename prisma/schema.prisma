@@ -170,9 +170,13 @@ model User {
   postReads         PostRead[]        @relation("PostReadUser")
   postReactions     PostReaction[]    @relation("PostReactionUser")
   comments          Comment[]         @relation("CommentUser")
+  postAcks          PostAck[]         @relation("PostAckUser")
   notifications     Notification[]
   feedback          Feedback[]
   attendance        AttendanceRecord[]
+  notificationDevices     NotificationDevice[]     @relation("UserDevice")
+  notificationOutboxes    NotificationOutbox[]     @relation("UserOutbox")
+  notificationPreferences NotificationPreference?  @relation("UserPreference")
   pollsCreated      Poll[]            @relation("PollCreator")
   pollVotes         PollVote[]
   meetingsInitiated MeetingRequest[]  @relation("MeetingRequester")
@@ -206,6 +210,20 @@ model User {
   formSubmissions           FormSubmission[]  @relation("FormSubmitter")
   formLogsActor             FormLog[]         @relation("FormLogActor")
   formDecisions             FormApproval[]    @relation("FormDecider")
+  feedbackMsgSender         FeedbackMessage[] @relation("FeedbackMsgSender")
+  feedbackLogs              FeedbackLog[]     @relation("FeedbackLogActor")
+  ideaVotes                 IdeaVote[]
+  feedbackAssignee          Feedback[]        @relation("FeedbackAssignee")
+  profileChangeRequests     ProfileChangeRequest[] @relation("ProfileChangeRequester")
+  userDocuments             UserDocument[]
+  credentials               Credential[]
+  userSessions              UserSession[]
+  radioLogs                 RadioLog[]        @relation("RadioLogSender")
+  videoProgress             VideoProgress[]
+  certificates              Certificate[]
+  surveysCreated            Survey[]          @relation("SurveyCreator")
+  surveyInvitees            SurveyInvitee[]
+  surveyResponses           SurveyResponse[]
 
   @@index([roleId])
   @@index([status])
@@ -579,10 +597,25 @@ model Post {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Announcements Platform fields
+  kind          String    @default("news")
+  audience      Json?
+  surfaces      Json?
+  priority      Int       @default(0)
+  pinnedUntil   DateTime?
+  expiresAt     DateTime?
+  ackRequired   Boolean   @default(false)
+  ackDeadline   DateTime?
+  bannerStyle   Json?
+  attachments   Json?
+  notifyRuleKey String?
+
   author    User           @relation("PostAuthor", fields: [authorId], references: [id])
   reads     PostRead[]
   reactions PostReaction[]
   comments  Comment[]
+  acks      PostAck[]      @relation("PostAckPost")
+  audiences PostAudience[]
 
   @@index([type, status])
   @@index([type, published])
@@ -690,20 +723,41 @@ enum FeedbackStatus {
 }
 
 model Feedback {
-  id          String         @id @default(cuid())
-  userId      String?
-  type        FeedbackType   @default(suggestion)
-  title       String
-  body        String
-  isAnonymous Boolean        @default(false)
-  status      FeedbackStatus @default(submitted)
-  reply       String?
-  repliedBy   String?
-  repliedAt   DateTime?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id             String         @id @default(cuid())
+  userId         String?
+  type           FeedbackType   @default(suggestion)
+  title          String
+  body           String
+  isAnonymous    Boolean        @default(false)
+  status         FeedbackStatus @default(submitted)
+  reply          String?
+  repliedBy      String?
+  repliedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
-  user User? @relation(fields: [userId], references: [id])
+  feedbackNo     Int            @unique @default(0)
+  categoryId     String?
+  assigneeId     String?
+  assigneeRole   String?
+  priority       String         @default("normal")
+  formData       Json?
+  attachments    Json?
+  anonToken      String?        @unique
+  slaFirstDue    DateTime?
+  slaResolveDue  DateTime?
+  slaBreached    Boolean        @default(false)
+  satisfaction   Int?
+  closedAt       DateTime?
+  isPublicIdea   Boolean        @default(false)
+  ideaVotesCount Int            @default(0)
+
+  user     User?             @relation(fields: [userId], references: [id])
+  category FeedbackCategory? @relation(fields: [categoryId], references: [id])
+  messages FeedbackMessage[]
+  logs     FeedbackLog[]
+  votes    IdeaVote[]
+  assignee User?             @relation("FeedbackAssignee", fields: [assigneeId], references: [id])
 
   @@index([userId])
   @@index([status])
@@ -741,6 +795,13 @@ model Poll {
   createdById String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  audience    Json?
+  isAnonymous Boolean   @default(false)
+  multiSelect Boolean   @default(false)
+  showResults String    @default("after_vote")
+  allowChange Boolean   @default(false)
+  surfaces    Json?
 
   creator   User         @relation("PollCreator", fields: [createdById], references: [id])
   options   PollOption[]
@@ -799,8 +860,21 @@ model MeetingRequest {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
+  typeId         String?
+  hostRoleKey    String?
+  roomId         String?
+  endAt          DateTime?
+  formData       Json?
+  attendees      Json?
+  cancelReason   String?
+  rescheduleOf   String?
+  remindersSent  Json?
+  outcomeNote    String?
+
   requester     User @relation("MeetingRequester", fields: [requesterId], references: [id])
   targetManager User @relation("MeetingTarget", fields: [targetManagerId], references: [id])
+  room          MeetingRoom? @relation(fields: [roomId], references: [id])
+  meetingType   MeetingType? @relation(fields: [typeId], references: [id])
 
   @@index([requesterId])
   @@index([targetManagerId])
@@ -1284,6 +1358,9 @@ model AiKnowledgeCache {
   isVerified         Boolean  @default(false)
   createdAt          DateTime @default(now())
   lastUsedAt         DateTime @default(now())
+  personaKey         String?
+  ttlAt              DateTime?
+  sourceRefs         Json?
 }
 
 // ── Fleet ──────────────────────────────────────────────
@@ -1641,3 +1718,656 @@ model FormLog {
   @@index([actorId])
 }
 
+// ── Notification Gateway Models ────────────────────────
+model NotificationDevice {
+  id         String   @id @default(cuid())
+  userId     String
+  platform   String                    // android | ios_pwa | web
+  driver     String                    // pushe | najva | selfhosted
+  token      String                    // SDK token or self-hosted connection id
+  deviceName String?
+  lastSeenAt DateTime @default(now())
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  user       User     @relation("UserDevice", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([driver, token])
+  @@index([userId, isActive])
+}
+
+model NotificationTemplate {
+  id        String   @id @default(cuid())
+  eventKey  String   @unique            // "roster.published" | "sos.triggered" ...
+  title     String                     // title template: "لوحه {date} منتشر شد"
+  body      String                     // body template
+  smsText   String?                    // sms template
+  link      String?                    // deep link template
+  isActive  Boolean  @default(true)
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+}
+
+model NotificationRule {
+  id                 String   @id @default(cuid())
+  eventKey           String   @unique
+  severity           String   @default("normal")   // info | normal | important | critical
+  channels           Json                          // stored as Json list: ["inapp", "push", "sms"]
+  audience           Json?                         // default recipient roles/groups: ["driver", "shift_lead"]
+  smsIfUnseenMinutes Int?                          // SMS fallback timer (minutes)
+  respectQuietHours  Boolean  @default(true)
+  isActive           Boolean  @default(true)
+}
+
+model NotificationOutbox {
+  id          String    @id @default(cuid())
+  eventKey    String
+  userId      String
+  channel     String                     // inapp | push | sms
+  driver      String?                    // driver key used
+  payload     Json                       // payload data
+  status      String    @default("queued") // queued | sent | delivered | seen | failed | expired
+  attempts    Int       @default(0)
+  lastError   String?
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  seenAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation("UserOutbox", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([userId, eventKey])
+}
+
+model NotificationPreference {
+  id         String @id @default(cuid())
+  userId     String @unique
+  channels   Json   // preferences Json mapping of eventKey: channel[]
+  quietHours Json?  // { from: "23:00", to: "07:00" }
+
+  user       User   @relation("UserPreference", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PostAck {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  ackAt     DateTime @default(now())
+  device    String?
+  ip        String?
+  location  Json?
+  signature String?
+
+  post      Post     @relation("PostAckPost", fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation("PostAckUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+}
+
+model SignageScreen {
+  id         String   @id @default(cuid())
+  name       String
+  location   String?
+  pairCode   String   @unique
+  playlistId String?
+  isOnline   Boolean  @default(false)
+  lastSeenAt DateTime?
+}
+
+model SignagePlaylist {
+  id       String  @id @default(cuid())
+  name     String
+  items    Json    // [{type:"post"|"roster_today"|"clock"|"weather"|"custom_html", refId?, seconds}]
+  isActive Boolean @default(true)
+}
+
+// ── Feedback Messaging Models ────────────────────────
+model FeedbackCategory {
+  id             String   @id @default(cuid())
+  key            String   @unique
+  title          String
+  icon           String?
+  description    String?
+  assigneeRole   String
+  routingRules   Json?
+  slaHours       Json
+  allowAnonymous Boolean  @default(true)
+  forceAnonymous Boolean  @default(false)
+  confidential   Boolean  @default(false)
+  formFields     Json?
+  whoCanSubmit   Json?
+  ideaBoard      Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  feedbacks      Feedback[]
+}
+
+model FeedbackMessage {
+  id          String   @id @default(cuid())
+  feedbackId  String
+  senderKind  String
+  senderId    String?
+  body        String
+  attachments Json?
+  isInternal  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  feedback    Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  sender      User?    @relation("FeedbackMsgSender", fields: [senderId], references: [id])
+
+  @@index([feedbackId])
+}
+
+model FeedbackLog {
+  id         String   @id @default(cuid())
+  feedbackId String
+  actorId    String?
+  action     String
+  detail     Json?
+  createdAt  DateTime @default(now())
+
+  feedback   Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  actor      User?    @relation("FeedbackLogActor", fields: [actorId], references: [id])
+
+  @@index([feedbackId])
+}
+
+model IdeaVote {
+  feedbackId String
+  userId     String
+  createdAt  DateTime @default(now())
+
+  feedback   Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([feedbackId, userId])
+}
+
+// ── Meeting Booking Models ──────────────────────────
+model MeetingType {
+  id            String   @id @default(cuid())
+  key           String   @unique
+  title         String
+  description   String?
+  durationMin   Int      @default(30)
+  bufferMin     Int      @default(0)
+  hostMode      String   @default("user")
+  hostRoleKey   String?
+  whoCanBook    Json
+  approval      String   @default("auto")
+  minNoticeHrs  Int      @default(4)
+  maxPerWeek    Int?
+  needsRoom     Boolean  @default(false)
+  fields        Json?
+  color         String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  meetings      MeetingRequest[]
+}
+
+model AvailabilityRule {
+  id        String   @id @default(cuid())
+  ownerType String
+  ownerKey  String
+  weekday   Int
+  fromTime  String
+  toTime    String
+  typeKeys  Json?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerType, ownerKey])
+}
+
+model AvailabilityException {
+  id        String   @id @default(cuid())
+  ownerType String
+  ownerKey  String
+  date      DateTime
+  fromTime  String?
+  toTime    String?
+  reason    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerType, ownerKey, date])
+}
+
+model MeetingRoom {
+  id        String   @id @default(cuid())
+  name      String
+  location  String?
+  capacity  Int?
+  amenities Json?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  meetings  MeetingRequest[]
+}
+
+// ── Polls & Surveys Models ──────────────────────────
+model Survey {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  title        String
+  description  String?
+  status       String   @default("draft")
+  schema       Json
+  audience     Json?
+  isAnonymous  Boolean  @default(true)
+  isMandatory  Boolean  @default(false)
+  opensAt      DateTime?
+  closesAt     DateTime?
+  remindDays   Json?
+  quotaPercent Int?
+  createdBy    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  creator      User     @relation("SurveyCreator", fields: [createdBy], references: [id])
+  responses    SurveyResponse[]
+  invitees     SurveyInvitee[]
+}
+
+model SurveyInvitee {
+  id        String  @id @default(cuid())
+  surveyId  String
+  userId    String
+  respondedAt DateTime?
+  remindedAt  DateTime?
+
+  survey    Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([surveyId, userId])
+  @@index([surveyId, respondedAt])
+}
+
+model SurveyResponse {
+  id         String   @id @default(cuid())
+  surveyId   String
+  userId     String?
+  segment    Json?
+  answers    Json
+  durationSec Int?
+  createdAt  DateTime @default(now())
+
+  survey     Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@index([surveyId])
+}
+
+// ── User Profile & Qualifications ────────────────────
+model ProfileSection {
+  id        String  @id @default(cuid())
+  key       String  @unique
+  title     String
+  icon      String?
+  sortOrder Int     @default(0)
+  visibility Json
+  isActive  Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProfileChangeRequest {
+  id          String   @id @default(cuid())
+  userId      String
+  changes     Json
+  status      String   @default("pending")
+  note        String?
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation("ProfileChangeRequester", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([userId])
+}
+
+model UserDocument {
+  id          String   @id @default(cuid())
+  userId      String
+  typeKey     String
+  fileUrl     String
+  status      String   @default("pending")
+  issuedAt    DateTime?
+  expiresAt   DateTime?
+  reviewNote  String?
+  reviewedBy  String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        DocumentType @relation(fields: [typeKey], references: [key])
+
+  @@index([userId, typeKey])
+  @@index([expiresAt])
+}
+
+model DocumentType {
+  id            String  @id @default(cuid())
+  key           String  @unique
+  title         String
+  requiredFor   Json?
+  hasExpiry     Boolean @default(false)
+  remindDays    Json?
+  needsReview   Boolean @default(true)
+  isActive      Boolean @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  documents     UserDocument[]
+}
+
+model Credential {
+  id         String   @id @default(cuid())
+  userId     String
+  typeKey    String
+  number     String?
+  issuedAt   DateTime?
+  expiresAt  DateTime?
+  status     String   @default("valid")
+  meta       Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model UserSession {
+  id         String   @id @default(cuid())
+  userId     String
+  device     String?
+  platform   String?
+  ip         String?
+  lastActive DateTime @default(now())
+  revokedAt  DateTime?
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+}
+
+// ── Comms, Roster Policies & Learning ───────────────
+model ChatRolePolicy {
+  id        String   @id @default(cuid())
+  roleKey   String
+  roomKind  String
+  canSend   Boolean  @default(true)
+  canAttach Boolean  @default(true)
+  canPin    Boolean  @default(false)
+  canUrgent Boolean  @default(false)
+  canCreate Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([roleKey, roomKind])
+}
+
+model QuickReply {
+  id        String   @id @default(cuid())
+  roleKey   String
+  label     String
+  body      String
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RosterRolePolicy {
+  id        String   @id @default(cuid())
+  roleKey   String
+  action    String
+  allowed   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([roleKey, action])
+}
+
+model RadioChannel {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  label     String
+  code      String?
+  color     String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  logs      RadioLog[]
+}
+
+model RadioLog {
+  id         String   @id @default(cuid())
+  channelId  String
+  senderId   String?
+  senderName String
+  message    String
+  kind       String   @default("VOICE_NOTE")
+  createdAt  DateTime @default(now())
+
+  channel    RadioChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  sender     User?        @relation("RadioLogSender", fields: [senderId], references: [id])
+
+  @@index([channelId, createdAt])
+}
+
+model RadioPhrase {
+  id        String   @id @default(cuid())
+  roleKey   String?
+  label     String
+  text      String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RadioRolePolicy {
+  id          String   @id @default(cuid())
+  roleKey     String
+  channelKey  String
+  canListen   Boolean  @default(true)
+  canTransmit Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([roleKey, channelKey])
+}
+
+model DirectoryFieldPolicy {
+  id        String   @id @default(cuid())
+  roleKey   String
+  fieldKey  String
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([roleKey, fieldKey])
+}
+
+model PostAudience {
+  id        String   @id @default(cuid())
+  postId    String
+  roleKey   String
+  createdAt DateTime @default(now())
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, roleKey])
+}
+
+model ContentCategory {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  label     String
+  color     String?
+  type      String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Course {
+  id                 String   @id @default(cuid())
+  title              String
+  description        String?
+  icon               String?
+  sortOrder          Int      @default(0)
+  isActive           Boolean  @default(true)
+  certValidityMonths Int      @default(12)
+  passScore          Int      @default(70)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  videos             CourseVideo[]
+  audiences          CourseAudience[]
+  certificates       Certificate[]
+}
+
+model CourseVideo {
+  id              String   @id @default(cuid())
+  courseId        String
+  title           String
+  excerpt         String?
+  mediaUrl        String
+  coverUrl        String?
+  durationSeconds Int      @default(0)
+  mandatory       Boolean  @default(false)
+  points          Int      @default(0)
+  sortOrder       Int      @default(0)
+  prerequisiteId  String?
+  quiz            Json?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  course          Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress        VideoProgress[]
+}
+
+model VideoProgress {
+  id             String   @id @default(cuid())
+  videoId        String
+  userId         String
+  watchedPct     Int      @default(0)
+  completed      Boolean  @default(false)
+  quizScore      Int?
+  lastWatchedAt  DateTime @updatedAt
+  createdAt      DateTime @default(now())
+
+  video          CourseVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, userId])
+  @@index([userId])
+}
+
+model CourseAudience {
+  id             String   @id @default(cuid())
+  courseId       String
+  roleKey        String
+  createdAt      DateTime @default(now())
+
+  course         Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, roleKey])
+}
+
+model Certificate {
+  id        String   @id @default(cuid())
+  courseId  String
+  userId    String
+  serial    String   @unique
+  issuedAt  DateTime @default(now())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, userId])
+}
+
+
+
+
+// ── AI Assistant Platform ───────────────────────────────
+
+model AiPersona {
+  id              String  @id @default(cuid())
+  key             String  @unique              // "operator" | "supervisor" | ...
+  title           String
+  icon            String?
+  systemPrompt    String
+  roleKeys        String                       // JSON string
+  knowledgeCats   String                       // JSON string
+  tools           String                       // JSON string
+  economyModel    String?
+  strongModel     String?
+  monthlyTokenCap Int?
+  isActive        Boolean @default(true)
+}
+
+model AiKnowledgeSource {                     // اسناد RAG
+  id          String   @id @default(cuid())
+  title       String
+  category    String
+  accessRoles String?                        // JSON string
+  fileUrl     String?
+  version     Int      @default(1)
+  chunkCount  Int      @default(0)
+  indexedAt   DateTime?
+  isActive    Boolean  @default(true)
+  
+  chunks      AiChunk[]
+}
+
+model AiChunk {
+  id         String   @id @default(cuid())
+  sourceId   String
+  text       String
+  embedding  String   // JSON array of floats as string for SQLite compatibility
+  meta       String?  // JSON string
+  
+  source     AiKnowledgeSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+}
+
+model AiInteraction {                         // پایه گزارش‌گیری
+  id          String   @id @default(cuid())
+  userId      String
+  personaKey  String
+  layer       String                          // L0|L1|L2|L3|L4
+  provider    String?
+  model       String?
+  tokensIn    Int      @default(0)
+  tokensOut   Int      @default(0)
+  costEst     Float    @default(0)
+  latencyMs   Int
+  rating      Int?                            // 1 / -1
+  toolUsed    String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([personaKey, layer])
+}

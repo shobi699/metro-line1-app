@@ -65,6 +65,9 @@ describe('content service', () => {
         published: true,
         mandatory: false,
         status: 'draft',
+        kind: 'news',
+        priority: 1,
+        ackRequired: false,
       },
       'author-1',
     )

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useAuthStore } from '@/features/auth'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toFa, jalali } from '@/lib/fa'
-import { Vote, CheckCircle, Plus, Trash, Clock, AlertCircle } from 'lucide-react'
+import { Vote, CheckCircle, Plus, Trash, Clock, AlertCircle, ClipboardList } from 'lucide-react'
 
 interface PollOption {
   id: string
@@ -33,7 +34,9 @@ export default function PollsPage() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const currentUser = useAuthStore((s) => s.user)
   
+  const [activeTab, setActiveTab] = useState<'polls' | 'surveys'>('polls')
   const [polls, setPolls] = useState<Poll[]>([])
+  const [surveys, setSurveys] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   // Creation Form State
@@ -51,13 +54,17 @@ export default function PollsPage() {
                     currentUser?.roleKey === 'chief' || 
                     currentUser?.roleKey === 'supervisor'
 
-  useEffect(() => {
-    void loadPolls()
-  }, [accessToken])
-
-  async function loadPolls() {
+  async function loadData() {
     if (!accessToken) return
     setLoading(true)
+    try {
+      await Promise.all([loadPolls(), loadSurveys()])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function loadPolls() {
     try {
       const res = await fetch('/api/polls', {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -66,10 +73,28 @@ export default function PollsPage() {
         const data = await res.json()
         setPolls(data.data ?? [])
       }
-    } finally {
-      setLoading(false)
+    } catch (err) {
+      console.error(err)
     }
   }
+
+  async function loadSurveys() {
+    try {
+      const res = await fetch('/api/surveys/my-pending', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setSurveys(data.data ?? [])
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  useEffect(() => {
+    void loadData()
+  }, [accessToken])
 
   async function handleVote(pollId: string, optionId: string) {
     if (!accessToken) return
@@ -155,18 +180,47 @@ export default function PollsPage() {
         <div>
           <h1 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-foreground flex items-center gap-2">
             <Vote className="size-6 text-accent" />
-            نظرسنجی‌ها
+            نظرسنجی و پیمایش‌ها
           </h1>
           <p className="text-sm text-foreground-muted mt-1">
-            مشارکت در نظرسنجی‌ها و اخذ آرای پرسنل سیر و حرکت خط ۱ مترو
+            مشارکت در نظرسنجی‌های سریع و پیمایش‌های سازمانی سیر و حرکت خط ۱ مترو
           </p>
         </div>
-        {isManager && (
-          <Button onClick={() => setShowCreateModal(true)} className="font-bold gap-1.5">
-            <Plus className="size-4" />
-            <span>نظرسنجی جدید</span>
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {isManager && (
+            <Link href="/admin/surveys">
+              <Button variant="outline" className="font-bold text-xs">
+                <span>پنل مدیریت پیمایش</span>
+              </Button>
+            </Link>
+          )}
+          {isManager && (
+            <Button onClick={() => setShowCreateModal(true)} className="font-bold gap-1.5 text-xs">
+              <Plus className="size-4" />
+              <span>نظرسنجی جدید</span>
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-border mb-2">
+        <button
+          onClick={() => setActiveTab('polls')}
+          className={`px-4 py-2 text-sm font-bold border-b-2 transition-all ${
+            activeTab === 'polls' ? 'border-accent text-accent' : 'border-transparent text-foreground-muted hover:text-foreground'
+          }`}
+        >
+          نظرسنجی‌های سریع ({toFa(polls.length)})
+        </button>
+        <button
+          onClick={() => setActiveTab('surveys')}
+          className={`px-4 py-2 text-sm font-bold border-b-2 transition-all ${
+            activeTab === 'surveys' ? 'border-accent text-accent' : 'border-transparent text-foreground-muted hover:text-foreground'
+          }`}
+        >
+          پیمایش‌های سازمانی ({toFa(surveys.length)})
+        </button>
       </div>
 
       {loading ? (
@@ -175,6 +229,44 @@ export default function PollsPage() {
             <div key={i} className="h-40 animate-pulse rounded-lg border border-border bg-background-subtle" />
           ))}
         </div>
+      ) : activeTab === 'surveys' ? (
+        surveys.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <ClipboardList className="mb-3 size-10 text-foreground-muted animate-pulse" />
+              <p className="text-sm text-foreground-muted font-bold">هیچ پیمایش فعالی یافت نشد</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {surveys.map((survey) => (
+              <Card key={survey.id} className="flex flex-col justify-between border-accent/10">
+                <CardHeader className="p-4 pb-2">
+                  <div className="flex justify-between items-start gap-2 mb-1.5">
+                    <CardTitle className="text-sm font-bold text-foreground">{survey.title}</CardTitle>
+                    {survey.isMandatory && (
+                      <Badge variant="destructive" className="text-[9px] px-1.5 py-0.5">الزامی</Badge>
+                    )}
+                  </div>
+                  {survey.description && (
+                    <p className="text-xs text-foreground-muted leading-relaxed">{survey.description}</p>
+                  )}
+                </CardHeader>
+                <CardContent className="p-4 pt-2 space-y-4 mt-auto">
+                  <div className="flex justify-between items-center text-[10px] text-foreground-muted">
+                    <span>سازنده: {survey.creator?.name || 'سیستم'}</span>
+                    {survey.isAnonymous && (
+                      <Badge variant="secondary" className="text-[9px] bg-accent/5 text-accent border-accent/10">ناشناس</Badge>
+                    )}
+                  </div>
+                  <Link href={`/surveys/${survey.key}`} className="block w-full">
+                    <Button className="w-full text-xs font-bold py-1.5">شروع پاسخ‌دهی</Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )
       ) : polls.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
