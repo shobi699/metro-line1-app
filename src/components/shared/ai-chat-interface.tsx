@@ -95,7 +95,7 @@ const CITATION_DATABASE: Record<string, { title: string; content: string }> = {
 
 export function AiChatInterface() {
   const user = useAuthStore((s) => s.user)
-  
+
   // Chat history threads (Mock data representing past conversations)
   const [historyThreads, setHistoryThreads] = useState([
     { id: 't-1', title: 'بررسی ترمز اضطراری قطار ۱۱۰', date: 'امروز' },
@@ -117,7 +117,7 @@ export function AiChatInterface() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [isStreaming, setIsStreaming] = useState(false)
-  
+
   // Speech Recognition States
   const [isRecording, setIsRecording] = useState(false)
   const recognitionRef = useRef<any>(null)
@@ -224,7 +224,7 @@ export function AiChatInterface() {
       if (data.data && data.data.items) {
         setKnowledgeList(data.data.items)
       }
-    } catch {}
+    } catch { }
   }
 
   // Fetch user-allowed personas
@@ -243,7 +243,7 @@ export function AiChatInterface() {
           setActivePersona(hasOperator ? 'operator' : data.data[0].key)
         }
       }
-    } catch {}
+    } catch { }
   }
 
   useEffect(() => {
@@ -286,11 +286,31 @@ export function AiChatInterface() {
   // Handle Stop Stream
   const handleStopStream = () => {
     if (readerRef.current) {
-      readerRef.current.cancel().catch(() => {})
+      readerRef.current.cancel().catch(() => { })
       readerRef.current = null
     }
     setIsStreaming(false)
     setLoading(false)
+  }
+
+  // Handle New Chat Thread
+  const handleNewChat = () => {
+    const newId = 't-' + Date.now()
+    setHistoryThreads(prev => [
+      { id: newId, title: 'گفتگوی جدید', date: 'امروز' },
+      ...prev
+    ])
+    setActiveThreadId(newId)
+    setMessages([
+      {
+        id: '1',
+        role: 'ai',
+        content: 'سلام. دستیار هوشمند عملیاتی خط ۱ مترو تهران آماده است. لطفاً سوال فنی، یا شرایط اضطراری خود را وارد نمایید.',
+        confidence: 100,
+        handbookSection: 'دیباگر مرکزی خط ۱'
+      }
+    ])
+    setInput('')
   }
 
   // Send message to AI Route API
@@ -311,6 +331,15 @@ export function AiChatInterface() {
     setMessages((prev) => [...prev, userMsg])
     if (!customText) setInput('')
 
+    // Update active thread title if it's currently default "گفتگوی جدید"
+    setHistoryThreads((prev) =>
+      prev.map((thread) =>
+        thread.id === activeThreadId && thread.title === 'گفتگوی جدید'
+          ? { ...thread, title: userText.substring(0, 30) + (userText.length > 30 ? '...' : '') }
+          : thread
+      )
+    )
+
     const aiMsgId = (Date.now() + 1).toString()
     const aiPlaceholder: Message = {
       id: aiMsgId,
@@ -328,7 +357,7 @@ export function AiChatInterface() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           personaKey: activePersona,
           message: userText,
           stream: true
@@ -352,7 +381,7 @@ export function AiChatInterface() {
         let buffer = ''
         let accumulatedText = ''
 
-        while (isStreaming) {
+        while (true) {
           const { done, value } = await reader.read()
           if (done) break
 
@@ -371,7 +400,7 @@ export function AiChatInterface() {
               } else if (line.startsWith('data: ')) {
                 try {
                   dataVal = JSON.parse(line.substring(6).trim())
-                } catch (e) {}
+                } catch (e) { }
               }
             }
 
@@ -381,12 +410,12 @@ export function AiChatInterface() {
                   prev.map((msg) =>
                     msg.id === aiMsgId
                       ? {
-                          ...msg,
-                          source: dataVal.source,
-                          confidence: dataVal.confidence,
-                          handbookSection: dataVal.handbookSection,
-                          isCritical: dataVal.isCritical,
-                        }
+                        ...msg,
+                        source: dataVal.source,
+                        confidence: dataVal.confidence,
+                        handbookSection: dataVal.handbookSection,
+                        isCritical: dataVal.isCritical,
+                      }
                       : msg
                   )
                 )
@@ -412,10 +441,10 @@ export function AiChatInterface() {
                   prev.map((msg) =>
                     msg.id === aiMsgId
                       ? {
-                          ...msg,
-                          content: dataVal.description,
-                          toolConfirm: dataVal,
-                        }
+                        ...msg,
+                        content: dataVal.description,
+                        toolConfirm: dataVal,
+                      }
                       : msg
                   )
                 )
@@ -439,13 +468,13 @@ export function AiChatInterface() {
             prev.map((msg) =>
               msg.id === aiMsgId
                 ? {
-                    ...msg,
-                    content: reply.content,
-                    source: reply.source,
-                    confidence: reply.confidence,
-                    handbookSection: reply.handbookSection,
-                    toolConfirm: reply.toolConfirm,
-                  }
+                  ...msg,
+                  content: reply.content,
+                  source: reply.source,
+                  confidence: reply.confidence,
+                  handbookSection: reply.handbookSection,
+                  toolConfirm: reply.toolConfirm,
+                }
                 : msg
             )
           )
@@ -457,9 +486,9 @@ export function AiChatInterface() {
         prev.map((msg) =>
           msg.id === aiMsgId
             ? {
-                ...msg,
-                content: err.message || 'خطای شبکه در ارتباط با سرور هوش مصنوعی.',
-              }
+              ...msg,
+              content: err.message || 'خطای شبکه در ارتباط با سرور هوش مصنوعی.',
+            }
             : msg
         )
       )
@@ -487,10 +516,10 @@ export function AiChatInterface() {
           prev.map((msg) =>
             msg.id === messageId
               ? {
-                  ...msg,
-                  content: '✔️ اقدام سیستمی با موفقیت ثبت و تایید شد.',
-                  toolConfirm: undefined,
-                }
+                ...msg,
+                content: '✔️ اقدام سیستمی با موفقیت ثبت و تایید شد.',
+                toolConfirm: undefined,
+              }
               : msg
           )
         )
@@ -507,10 +536,10 @@ export function AiChatInterface() {
       prev.map((msg) =>
         msg.id === messageId
           ? {
-              ...msg,
-              content: '❌ اقدام توسط کاربر لغو شد.',
-              toolConfirm: undefined,
-            }
+            ...msg,
+            content: '❌ اقدام توسط کاربر لغو شد.',
+            toolConfirm: undefined,
+          }
           : msg
       )
     )
@@ -525,9 +554,9 @@ export function AiChatInterface() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           rating: rating === 'up' ? 1 : -1,
-          reason 
+          reason
         }),
       })
       if (res.ok) {
@@ -536,7 +565,7 @@ export function AiChatInterface() {
         )
         setDislikedMessageId(null)
       }
-    } catch {}
+    } catch { }
   }
 
   // Handle Document Ingestion Submit
@@ -607,7 +636,7 @@ export function AiChatInterface() {
     // Clean citation key (e.g. remove spaces or brackets)
     const matchedKey = Object.keys(CITATION_DATABASE).find(k => activeCitation.includes(k)) || 'مقررات ایمنی'
     const citation = CITATION_DATABASE[matchedKey]
-    
+
     return (
       <div className="space-y-4 animate-fade-in">
         <div className="flex items-center justify-between border-b border-border pb-2.5">
@@ -615,7 +644,7 @@ export function AiChatInterface() {
             <BookOpen className="size-4 text-ai-source-doc" />
             مرجع آیین‌نامه
           </h4>
-          <button 
+          <button
             onClick={() => setActiveCitation(null)}
             className="p-1 rounded-md hover:bg-surface-hover text-foreground-muted hover:text-foreground cursor-pointer"
           >
@@ -642,22 +671,22 @@ export function AiChatInterface() {
           ابزارها و اقدامات مرتبط
         </h4>
         <div className="flex flex-col gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="w-full text-right justify-start text-[11px] h-8.5 font-bold cursor-pointer hover:bg-surface-hover"
             onClick={() => handleSend('ثبت گزارش خرابی برای قطار ۱۱۸')}
           >
             🛠 ثبت فالت قطار ۱۱۸
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="w-full text-right justify-start text-[11px] h-8.5 font-bold cursor-pointer hover:bg-surface-hover"
             onClick={() => handleSend('برنامه شیفت فردای من چیست؟')}
           >
             📅 استعلام لوحه شیفت فردا
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="w-full text-right justify-start text-[11px] h-8.5 font-bold cursor-pointer hover:bg-surface-hover"
             onClick={() => handleSend('لیست فالت‌های فعال قطار ۱۱۰')}
           >
@@ -670,17 +699,17 @@ export function AiChatInterface() {
 
   return (
     <section className="relative flex flex-1 h-full w-full flex-col bg-background text-right transition-colors duration-150 overflow-hidden" dir="rtl">
-      
+
       {/* HEADER */}
       <div className="z-10 flex items-center justify-between border-b border-border-subtle bg-surface-container-low px-4 py-3 shadow-sm gap-2">
         <div className="flex items-center gap-2.5">
-          <button 
+          <button
             onClick={() => setHistoryOpen(!historyOpen)}
             className="lg:hidden p-1.5 rounded-md border border-border bg-surface hover:bg-surface-hover cursor-pointer"
           >
             <Menu className="size-4" />
           </button>
-          
+
           <div className="flex size-8.5 items-center justify-center rounded-lg bg-accent/10 border border-accent/25">
             <Bot className="size-4.5 text-accent" />
           </div>
@@ -734,23 +763,31 @@ export function AiChatInterface() {
       </div>
 
       <div className="flex-1 flex overflow-hidden w-full">
-        
+
         {/* COLUMN 1: RIGHT SIDEBAR (Chat history threads) */}
         <div className={cn(
           "w-64 border-e border-border/40 bg-surface-container-low flex flex-col shrink-0 lg:flex h-full",
           historyOpen ? "fixed inset-y-0 start-0 z-40 bg-background/95 w-64 shadow-2xl pt-16" : "hidden"
         )}>
           {historyOpen && (
-            <button 
+            <button
               onClick={() => setHistoryOpen(false)}
               className="absolute top-4 end-4 p-1 rounded-md hover:bg-surface-hover cursor-pointer"
             >
               <X className="size-4" />
             </button>
           )}
-          <div className="p-3 border-b border-border/30 flex items-center gap-1.5 bg-surface/50">
-            <History className="size-3.5 text-foreground-muted" />
-            <span className="text-[11px] font-black text-foreground">تاریخچه گفتگوها</span>
+          <div className="p-3 border-b border-border/30 flex items-center justify-between bg-surface/50">
+            <div className="flex items-center gap-1.5">
+              <History className="size-3.5 text-foreground-muted" />
+              <span className="text-[11px] font-black text-foreground">تاریخچه گفتگوها</span>
+            </div>
+            <button
+              onClick={handleNewChat}
+              className="p-1 px-2 text-[9px] font-bold bg-accent/20 hover:bg-accent/30 text-accent rounded-md border border-accent/30 transition flex items-center gap-1 cursor-pointer"
+            >
+              <Plus className="size-3" /> گفتگوی جدید
+            </button>
           </div>
 
           <div className="p-2 border-b border-border/20">
@@ -792,8 +829,8 @@ export function AiChatInterface() {
                   }}
                   className={cn(
                     "w-full text-right p-2.5 rounded-lg border text-[10.5px] font-bold block transition cursor-pointer",
-                    activeThreadId === thread.id 
-                      ? "bg-accent/10 border-accent/20 text-foreground" 
+                    activeThreadId === thread.id
+                      ? "bg-accent/10 border-accent/20 text-foreground"
                       : "bg-transparent border-transparent hover:bg-surface-hover text-foreground-muted"
                   )}
                 >
@@ -807,7 +844,7 @@ export function AiChatInterface() {
         {/* COLUMN 2: MAIN CHAT PANEL (Center) */}
         <div className="flex-1 flex flex-col overflow-hidden relative bg-surface-container-lowest h-full">
           <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6 pb-28">
-            
+
             {/* ANSWER-FIRST WIDGETS (when chat is newly loaded or empty) */}
             {messages.length === 1 && (
               <div className="space-y-4 max-w-2xl mx-auto">
@@ -815,10 +852,10 @@ export function AiChatInterface() {
                   <h3 className="text-xs font-black text-foreground">دستیار هوشمند عملیاتی - پاسخ پیش از پرسش</h3>
                   <p className="text-[10px] text-foreground-muted">کاربر عملیاتی خط ۱، اطلاعات لحظه‌ای موردنیاز شما قبل از سوال در دسترس است:</p>
                 </div>
-                
+
                 {/* 3 Answer-First Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div 
+                  <div
                     onClick={() => handleSend('برنامه شیفت امروز و فردای من چیست؟')}
                     className="p-3.5 border border-border bg-surface hover:bg-surface-hover hover:border-accent/40 rounded-xl shadow-sm text-right cursor-pointer transition space-y-1.5"
                   >
@@ -829,7 +866,7 @@ export function AiChatInterface() {
                     <span className="text-xs text-foreground block font-bold leading-normal">{liveShiftText}</span>
                   </div>
 
-                  <div 
+                  <div
                     onClick={() => handleSend('وضعیت قطار تخصیص یافته به من')}
                     className="p-3.5 border border-border bg-surface hover:bg-surface-hover hover:border-accent/40 rounded-xl shadow-sm text-right cursor-pointer transition space-y-1.5"
                   >
@@ -840,7 +877,7 @@ export function AiChatInterface() {
                     <span className="text-xs text-foreground block font-bold leading-normal">{liveTrainText}</span>
                   </div>
 
-                  <div 
+                  <div
                     onClick={() => handleSend('آخرین بخشنامه‌های ایمنی خوانده نشده')}
                     className="p-3.5 border border-border bg-surface hover:bg-surface-hover hover:border-accent/40 rounded-xl shadow-sm text-right cursor-pointer transition space-y-1.5"
                   >
@@ -888,7 +925,7 @@ export function AiChatInterface() {
                     <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-surface-container border border-border">
                       <Bot className="size-3.5 text-accent" />
                     </div>
-                    
+
                     <div className={cn(
                       "w-full max-w-2xl overflow-hidden rounded-xl border text-xs bg-ai-bubble-bot",
                       msg.isCritical ? "border-critical/30" : "border-border/60"
@@ -900,7 +937,7 @@ export function AiChatInterface() {
                           درصد اطمینان: {toFa(msg.confidence || 90)}٪
                         </span>
                         {msg.handbookSection && (
-                          <button 
+                          <button
                             onClick={() => setActiveCitation(msg.handbookSection!)}
                             className="flex items-center gap-1 text-ai-source-doc hover:underline cursor-pointer"
                           >
@@ -918,7 +955,7 @@ export function AiChatInterface() {
                         {/* Source type chips below response */}
                         {msg.source && (
                           <div className="flex pt-1.5">
-                            <span 
+                            <span
                               onClick={() => msg.handbookSection && setActiveCitation(msg.handbookSection)}
                               className={cn(
                                 "flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded border cursor-pointer hover:opacity-85 transition",
@@ -926,8 +963,8 @@ export function AiChatInterface() {
                               )}
                             >
                               {msg.source.toLowerCase().includes('faq') ? '📌 پاسخ رسمی (L2)' :
-                               msg.source.toLowerCase().includes('live') || msg.source.toLowerCase().includes('سیستم') ? '⚡ داده زنده سیستم (L0)' :
-                               msg.source.toLowerCase().includes('ai') ? '✨ تولید AI' : '📖 آیین‌نامه مترو خط ۱'}
+                                msg.source.toLowerCase().includes('live') || msg.source.toLowerCase().includes('سیستم') ? '⚡ داده زنده سیستم (L0)' :
+                                  msg.source.toLowerCase().includes('ai') ? '✨ تولید AI' : '📖 آیین‌نامه مترو خط ۱'}
                             </span>
                           </div>
                         )}
@@ -941,16 +978,16 @@ export function AiChatInterface() {
                             </p>
                             <p className="text-[10px] text-foreground-muted leading-relaxed font-bold">{msg.toolConfirm.description}</p>
                             <div className="flex gap-2 justify-end">
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="default"
                                 className="bg-green-600 hover:bg-green-700 text-white font-bold text-[10px] h-7 px-3 cursor-pointer"
                                 onClick={() => handleConfirmTool(msg.toolConfirm!.actionToken, msg.id)}
                               >
                                 تایید و ثبت
                               </Button>
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 className="text-[10px] h-7 px-3 cursor-pointer hover:bg-surface-hover"
                                 onClick={() => handleCancelTool(msg.id)}
@@ -995,19 +1032,19 @@ export function AiChatInterface() {
                             {dislikedMessageId === msg.id && (
                               <div className="flex flex-wrap gap-1.5 p-2 bg-surface border border-border rounded-lg justify-end max-w-sm mt-1 animate-fade-in">
                                 <span className="text-[9.5px] text-foreground-muted block w-full text-right mb-1">لطفاً علت مغایرت یا ضعف پاسخ را انتخاب کنید:</span>
-                                <button 
+                                <button
                                   onClick={() => handleRate(msg.id, 'down', 'نادرست')}
                                   className="text-[9px] font-bold px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded border border-border text-foreground cursor-pointer"
                                 >
                                   ❌ نادرست
                                 </button>
-                                <button 
+                                <button
                                   onClick={() => handleRate(msg.id, 'down', 'ناقص')}
                                   className="text-[9px] font-bold px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded border border-border text-foreground cursor-pointer"
                                 >
                                   ⚠️ ناقص
                                 </button>
-                                <button 
+                                <button
                                   onClick={() => handleRate(msg.id, 'down', 'بی‌ربط')}
                                   className="text-[9px] font-bold px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded border border-border text-foreground cursor-pointer"
                                 >
@@ -1034,7 +1071,7 @@ export function AiChatInterface() {
                 </div>
               </div>
             )}
-            
+
             <div ref={chatEndRef} />
           </div>
 
@@ -1042,7 +1079,7 @@ export function AiChatInterface() {
           <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-background via-background/95 to-transparent pt-8 pb-4">
             <div className="mx-auto max-w-2xl px-4 flex flex-col gap-2">
               <div className="relative rounded-xl border border-border bg-surface/85 backdrop-blur-md p-2.5 shadow-lg flex items-center gap-2">
-                <button 
+                <button
                   onClick={toggleVoiceInput}
                   className={cn(
                     "p-2 text-foreground-muted hover:text-foreground transition-colors hover:bg-surface-hover rounded-lg cursor-pointer",
@@ -1052,7 +1089,7 @@ export function AiChatInterface() {
                 >
                   {isRecording ? <MicOff className="size-4" /> : <Mic className="size-4" />}
                 </button>
-                
+
                 <input
                   className="flex-1 bg-transparent px-3 py-1.5 text-xs text-foreground placeholder:text-foreground-muted focus:outline-none text-right font-bold"
                   placeholder={isRecording ? "در حال شنیدن صدا... صحبت کنید" : "کد خطا (E102)، نقایص قطار یا سوال فنی خود را وارد کنید..."}
@@ -1061,7 +1098,7 @@ export function AiChatInterface() {
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   disabled={isRecording}
                 />
-                
+
                 {isStreaming ? (
                   <button
                     onClick={handleStopStream}
@@ -1097,7 +1134,7 @@ export function AiChatInterface() {
       {showSettings && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-surface border border-border rounded-lg w-full max-w-3xl p-6 space-y-5 shadow-xl animate-fade-in text-right">
-            
+
             <div className="flex justify-between items-center pb-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <Settings className="size-5 text-accent" />
@@ -1119,7 +1156,7 @@ export function AiChatInterface() {
                     <Bot className="size-4 text-accent" />
                     پارامترهای موتور تولید متن
                   </h4>
-                  
+
                   <div className="space-y-1">
                     <label className="text-[11px] text-foreground-muted">مدل هوش مصنوعی فعال:</label>
                     <select

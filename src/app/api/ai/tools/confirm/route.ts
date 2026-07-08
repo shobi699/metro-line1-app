@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: { code: 'BAD_REQUEST', message: 'پارامتر actionToken الزامی است' } }, { status: 400 })
     }
 
-    const result = await AIAssistantService.confirmAction(actionToken, decoded.id as string)
+    const result = await AIAssistantService.confirmAction(actionToken, decoded.sub as string)
 
     return NextResponse.json({ data: result })
   } catch (error: any) {

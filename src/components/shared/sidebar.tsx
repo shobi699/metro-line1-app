@@ -218,6 +218,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         icon: Bot,
         roles: ['admin', 'super_admin'],
         items: [
+          { label: 'داشبورد هوش مصنوعی', href: '/admin/ai', icon: LayoutDashboard },
           { label: 'مدیریت پروایدرها', href: '/admin/ai-providers', icon: Bot },
           { label: 'مدیریت کش معنایی', href: '/admin/ai-cache', icon: HardDrive },
         ]

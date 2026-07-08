@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     })
 
     // Filter by user role if we wanted to (currently just returns all and client filters, or we can filter here)
-    const userRole = decoded.role as string
+    const userRole = decoded.roleKey as string
     const allowedPersonas = personas.filter(p => {
       try {
         const allowedRoles = JSON.parse(p.roleKeys) as string[]

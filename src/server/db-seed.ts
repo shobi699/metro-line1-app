@@ -80,6 +80,19 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
         logSeed(`Failed to seed performance tables on boot: ${msg}`)
       }
 
+      // Also check if AI assistant tables need seeding
+      try {
+        const aiPersonaCount = await prisma.aiPersona.count()
+        if (aiPersonaCount === 0) {
+          logSeed('AI personas table empty. Seeding AI assistant...')
+          await seedAiAssistant(prisma)
+          logSeed('AI assistant seeded successfully.')
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        logSeed(`Failed to seed AI assistant on boot: ${msg}`)
+      }
+
       return
     }
 
@@ -747,6 +760,8 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
     logSeed('Default settings seeded.')
     await seedUiBuilder(prisma)
     logSeed('UI Builder settings seeded.')
+    await seedAiAssistant(prisma)
+    logSeed('AI assistant settings seeded.')
 
     logSeed('Self-seeded database successfully.')
   } catch (error: unknown) {
@@ -1048,4 +1063,61 @@ export async function seedUiBuilder(prisma: PrismaClient) {
       { widgetType: 'list', title: 'آخرین بخشنامه‌های ایمنی', size: 'lg', orderIndex: 2, isVisible: true, configJson: { limit: 3, source: 'bulletins' } },
     ]
   })
+}
+
+export async function seedAiAssistant(prisma: PrismaClient) {
+  // 1. Seed AI Provider
+  const providerCount = await prisma.aiProvider.count()
+  if (providerCount === 0) {
+    await prisma.aiProvider.create({
+      data: {
+        name: 'Google Gemini',
+        providerType: 'gemini',
+        baseUrl: 'https://generativelanguage.googleapis.com',
+        apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || 'fake-key',
+        modelName: 'gemini-2.0-flash',
+        requestFormat: 'gemini',
+        priority: 1,
+        isActive: true,
+        maxRetries: 3,
+        timeoutMs: 10000,
+        costPer1kTokens: 0,
+      }
+    })
+  }
+
+  // 2. Seed AI Personas
+  const personaCount = await prisma.aiPersona.count()
+  if (personaCount === 0) {
+    await prisma.aiPersona.createMany({
+      data: [
+        {
+          key: 'operator',
+          title: 'دستیار هوشمند عملیاتی',
+          icon: '🚇',
+          systemPrompt: 'شما یک دستیار هوشمند عملیاتی ارشد برای راهبران و پرسنل فنی خط ۱ مترو تهران هستید. وظیفه شما پاسخ به سوالات فنی عیب‌یابی قطارها (مانند کدهای خطای درب واگن E102، صدای غیرعادی موتور E205، اعلام حریق E303، سیستم ترمز و سیگنالینگ ATP S301) و ارائه دستورالعمل‌های ایمنی و مقررات سیر و حرکت است. پاسخ‌ها را به زبان فارسی و با تکیه بر اطلاعات رسمی ارائه دهید.',
+          roleKeys: JSON.stringify(['*']),
+          knowledgeCats: JSON.stringify(['general', 'technical', 'safety']),
+          tools: JSON.stringify(['create_fault']),
+          economyModel: 'gemini-2.0-flash',
+          strongModel: 'gemini-2.0-flash',
+          monthlyTokenCap: 100000,
+          isActive: true,
+        },
+        {
+          key: 'supervisor',
+          title: 'دستیار سرشیفت و مدیران',
+          icon: '👨‍✈️',
+          systemPrompt: 'شما دستیار هوشمند سرشیفت، دیسپچرز مرکز فرمان (OCC) و مدیران سیر و حرکت خط ۱ مترو تهران هستید. وظیفه شما کمک به تحلیل تاخیرها، مدیریت بحران و حوادث، هماهنگی شیفت‌ها و وظایف، نظارت بر محدودیت‌های سرعت و برنامه‌ریزی حرکت قطارها است.',
+          roleKeys: JSON.stringify(['admin', 'super_admin', 'manager', 'shift_lead', 'supervisor']),
+          knowledgeCats: JSON.stringify(['general', 'technical', 'safety', 'confidential']),
+          tools: JSON.stringify(['create_fault']),
+          economyModel: 'gemini-2.0-flash',
+          strongModel: 'gemini-2.0-flash',
+          monthlyTokenCap: 200000,
+          isActive: true,
+        }
+      ]
+    })
+  }
 }

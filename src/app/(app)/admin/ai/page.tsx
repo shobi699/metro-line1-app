@@ -27,7 +27,8 @@ import {
   Save,
   CheckCircle,
   AlertTriangle,
-  Play
+  Play,
+  Bot
 } from 'lucide-react'
 import { toFa } from '@/lib/fa'
 import { cn } from '@/lib/utils'
@@ -142,6 +143,8 @@ export default function AdminAIPage() {
 
   const [faqModalOpen, setFaqModalOpen] = useState(false)
   const [newFaq, setNewFaq] = useState({ question: '', answer: '', category: 'general' })
+  const [fileExtracting, setFileExtracting] = useState(false)
+  const [fileExtractError, setFileExtractError] = useState('')
 
   // Processing indicators
   const [loading, setLoading] = useState(false)
@@ -375,6 +378,47 @@ export default function AdminAIPage() {
       }
     } catch (e) {
       alert('خطا در شبکه')
+    }
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setFileExtracting(true)
+    setFileExtractError('')
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res = await fetch('/api/admin/ai/knowledge/import-file', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        },
+        body: formData
+      })
+
+      if (res.ok) {
+        const json = await res.json()
+        if (json.data) {
+          setEditingSource(prev => ({
+            ...prev!,
+            title: prev?.title || json.data.title || '',
+            content: json.data.text || ''
+          }))
+        }
+      } else {
+        const err = await res.json()
+        setFileExtractError(err.error || 'خطا در خواندن فایل')
+      }
+    } catch (err) {
+      setFileExtractError('خطای ارتباط با سرور')
+    } finally {
+      setFileExtracting(false)
+      // reset file input
+      e.target.value = ''
     }
   }
 
@@ -1233,6 +1277,24 @@ export default function AdminAIPage() {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2 border border-dashed border-border/80 rounded-lg p-4 bg-surface-container-low text-center flex flex-col items-center justify-center relative hover:bg-surface-container-low/80 transition group">
+                <input 
+                  type="file" 
+                  accept=".pdf,.docx" 
+                  onChange={handleFileUpload} 
+                  disabled={fileExtracting}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                />
+                <Bot className={cn("size-6 text-foreground-muted group-hover:text-accent transition-colors", fileExtracting && "animate-bounce text-accent")} />
+                <span className="text-[11px] font-bold text-foreground">
+                  {fileExtracting ? "در حال استخراج متن..." : "آپلود و استخراج خودکار فایل (PDF یا Word)"}
+                </span>
+                <span className="text-[9px] text-foreground-muted">فایل‌های .pdf یا .docx را بکشید و رها کنید یا کلیک کنید</span>
+                {fileExtractError && (
+                  <span className="text-[9px] text-red-500 font-bold block mt-1">{fileExtractError}</span>
+                )}
               </div>
 
               <div className="space-y-1 text-right">

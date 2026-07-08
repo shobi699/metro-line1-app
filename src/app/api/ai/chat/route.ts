@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       ;(async () => {
         try {
           const gen = AIAssistantService.processMessageStream({
-            userId: decoded.id as string,
+            userId: decoded.sub as string,
             personaKey,
             message,
             threadId,
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       })
     } else {
       const response = await AIAssistantService.processMessage({
-        userId: decoded.id as string,
+        userId: decoded.sub as string,
         personaKey,
         message,
         threadId,

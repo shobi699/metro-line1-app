@@ -43,7 +43,11 @@ export async function PUT(
 
     const provider = await prisma.aiProvider.update({
       where: { id },
-      data: parsed.data
+      data: {
+        ...parsed.data,
+        consecutiveFailures: 0,
+        healthStatus: 'healthy',
+      }
     })
 
     // Log audit

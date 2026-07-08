@@ -39,7 +39,7 @@ export async function POST(
       console.warn(`Could not find AiInteraction with ID ${id} to rate, trying to find latest user interaction`)
       // Fallback: rate latest user interaction
       const latest = await prisma.aiInteraction.findFirst({
-        where: { userId: decoded.id as string },
+        where: { userId: decoded.sub as string },
         orderBy: { createdAt: 'desc' }
       })
       if (latest) {

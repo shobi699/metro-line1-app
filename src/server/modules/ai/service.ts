@@ -144,7 +144,7 @@ export class AIAssistantService {
       allowedRoles = JSON.parse(persona.roleKeys)
     } catch (e) {}
 
-    if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
+    if (allowedRoles.length > 0 && !allowedRoles.includes('*') && !allowedRoles.includes(userRole)) {
       yield { type: 'error', data: { message: 'شما دسترسی به این دستیار هوشمند را ندارید.' } }
       return
     }

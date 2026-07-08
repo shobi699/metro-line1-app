@@ -1,11 +1,18 @@
 import { prisma } from '@/server/db'
 
 export const getOverallStats = async () => {
-  const [coursesCount, examsCount, certsCount, enrollments] = await Promise.all([
+  const [coursesCount, examsCount, certsCount, enrollments, exams] = await Promise.all([
     prisma.course.count(),
     prisma.exam.count(),
     prisma.certificate.count(),
     prisma.enrollment.findMany({ select: { status: true } }),
+    prisma.exam.findMany({
+      select: {
+        id: true,
+        title: true,
+        course: { select: { title: true } }
+      }
+    })
   ])
 
   const totalEnrollments = enrollments.length
@@ -17,7 +24,12 @@ export const getOverallStats = async () => {
     examsCount,
     certsCount,
     totalEnrollments,
-    completionRate
+    completionRate,
+    exams: exams.map(e => ({
+      id: e.id,
+      title: e.title,
+      courseTitle: e.course?.title || ''
+    }))
   }
 }
 

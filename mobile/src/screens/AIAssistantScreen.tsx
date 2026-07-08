@@ -199,7 +199,7 @@ export function AIAssistantScreen({ navigation }: any) {
     }
     
     if (authStore.accessToken) {
-      headers['Authorization'] = `Bearer={authStore.accessToken}`
+      headers['Authorization'] = `Bearer ${authStore.accessToken}`
     }
 
     let res
