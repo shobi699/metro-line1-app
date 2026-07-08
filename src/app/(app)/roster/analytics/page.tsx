@@ -49,13 +49,21 @@ export default function RosterAnalyticsPage() {
   })
 
   const [activeTab, setActiveTab] = useState<'status' | 'delays' | 'trends'>('status')
+  const [trainDelaysState, setTrainDelaysState] = useState<Array<{ train: string; delay: number; reason?: string; color: string }>>([])
+  const [weeklyTrendsState, setWeeklyTrendsState] = useState<Array<{ day: string; rate: number }>>([])
+  const [kpis, setKpis] = useState({
+    punctualityRate: 98.2,
+    averageDelayMinutes: 2.4,
+    extraTrips: 4,
+    safetyIndex: 100
+  })
 
   // Load today's roster data for analytics
   async function loadData() {
     if (!accessToken) return
     setLoading(true)
     try {
-      const res = await fetch('/api/supervisor/roster/today', {
+      const res = await fetch('/api/roster/analytics', {
         headers: { Authorization: `Bearer ${accessToken}` }
       })
       if (res.ok) {
@@ -63,29 +71,18 @@ export default function RosterAnalyticsPage() {
         const rawTrips = (json.data?.trips || []) as TripData[]
         setTrips(rawTrips)
 
-        // Calculate statistics
-        const total = rawTrips.length
-        const normal = rawTrips.filter(t => t.status === 'NORMAL').length
-        const delayed = rawTrips.filter(t => t.status === 'DELAYED').length
-        const cancelled = rawTrips.filter(t => t.status === 'CANCELLED').length
-
-        let readyCount = 0
-        let totalAssignments = 0
-        rawTrips.forEach(t => {
-          t.assignments.forEach(a => {
-            totalAssignments++
-            if (a.readyAt) readyCount++
-          })
-        })
-
-        setStats({
-          total,
-          normal,
-          delayed,
-          cancelled,
-          readyCount,
-          totalAssignments
-        })
+        if (json.data?.stats) {
+          setStats(json.data.stats)
+        }
+        if (json.data?.trainDelays) {
+          setTrainDelaysState(json.data.trainDelays)
+        }
+        if (json.data?.weeklyTrends) {
+          setWeeklyTrendsState(json.data.weeklyTrends)
+        }
+        if (json.data?.kpis) {
+          setKpis(json.data.kpis)
+        }
       }
     } catch {
       // silent fallback to mock values if API fails/empty
@@ -134,16 +131,16 @@ export default function RosterAnalyticsPage() {
   const strokeDashCancelled = `${pCancelled} ${100 - pCancelled}`
 
   // Delay Bar chart data (Train Numbers)
-  const trainDelays = [
+  const displayTrainDelays = trainDelaysState.length > 0 ? trainDelaysState : [
     { train: 'رام ۵۰۴', delay: 15, color: '#ff3b30' },
     { train: 'رام ۵۰۹', delay: 10, color: '#ffcc00' },
     { train: 'رام ۵۱۲', delay: 8, color: '#ffcc00' },
-    { train: 'رام ۵۰۱', delay: 5, color: '#34c759' },
+    { train: 'رام ۵۰1', delay: 5, color: '#34c759' },
     { train: 'رام ۵۱۸', delay: 4, color: '#34c759' },
   ]
 
   // Trends Line chart data (weekly check-in rates)
-  const weeklyTrends = [
+  const displayWeeklyTrends = weeklyTrendsState.length > 0 ? weeklyTrendsState : [
     { day: 'شنبه', rate: 92 },
     { day: 'یکشنبه', rate: 88 },
     { day: 'دوشنبه', rate: 95 },
@@ -339,7 +336,7 @@ export default function RosterAnalyticsPage() {
               <div className="w-full px-6 flex flex-col gap-3 justify-center">
                 <span className="text-[10px] text-foreground-muted text-center font-semibold mb-2">بیشترین تاخیرهای ثبت شده به تفکیک رام قطار (دقیقه)</span>
                 
-                {trainDelays.map((item, idx) => {
+                {displayTrainDelays.map((item, idx) => {
                   const percent = Math.min((item.delay / 15) * 100, 100)
                   return (
                     <div key={idx} className="space-y-1">
@@ -349,12 +346,12 @@ export default function RosterAnalyticsPage() {
                       </div>
                       <div className="h-2 bg-surface-container rounded-full overflow-hidden">
                         <div
-                          className="h-full rounded-full transition-all duration-1000"
-                          style={{
-                            width: `${percent}%`,
-                            backgroundColor: item.color,
-                            boxShadow: `0 0 8px ${item.color}55`
-                          }}
+                           className="h-full rounded-full transition-all duration-1000"
+                           style={{
+                             width: `${percent}%`,
+                             backgroundColor: item.color,
+                             boxShadow: `0 0 8px ${item.color}55`
+                           }}
                         ></div>
                       </div>
                     </div>
@@ -376,13 +373,13 @@ export default function RosterAnalyticsPage() {
 
                   {/* Line Path */}
                   <path
-                    d={`M 30 ${100 - weeklyTrends[0].rate} 
-                       L 80 ${100 - weeklyTrends[1].rate} 
-                       L 130 ${100 - weeklyTrends[2].rate} 
-                       L 180 ${100 - weeklyTrends[3].rate} 
-                       L 230 ${100 - weeklyTrends[4].rate} 
-                       L 280 ${100 - weeklyTrends[5].rate} 
-                       L 330 ${100 - weeklyTrends[6].rate}`}
+                    d={`M 30 ${100 - displayWeeklyTrends[0].rate} 
+                       L 80 ${100 - displayWeeklyTrends[1].rate} 
+                       L 130 ${100 - displayWeeklyTrends[2].rate} 
+                       L 180 ${100 - displayWeeklyTrends[3].rate} 
+                       L 230 ${100 - displayWeeklyTrends[4].rate} 
+                       L 280 ${100 - displayWeeklyTrends[5].rate} 
+                       L 330 ${100 - displayWeeklyTrends[6].rate}`}
                     fill="none"
                     stroke="#ff3b30"
                     strokeWidth="2.5"
@@ -393,7 +390,7 @@ export default function RosterAnalyticsPage() {
                   />
 
                   {/* Nodes & Labels */}
-                  {weeklyTrends.map((t, idx) => {
+                  {displayWeeklyTrends.map((t, idx) => {
                     const x = 30 + idx * 50
                     const y = 100 - t.rate
                     return (
@@ -449,6 +446,39 @@ export default function RosterAnalyticsPage() {
           </div>
         </div>
 
+      </div>
+
+      {/* KPIs Section */}
+      <div className="bg-surface-container-high border border-outline-variant rounded-xl p-5 shadow-md flex flex-col gap-4">
+        <div className="flex items-center gap-2 border-b border-border pb-3">
+          <TrendingUp className="size-5 text-accent animate-pulse" />
+          <h3 className="text-sm font-bold text-foreground">شاخص‌های کلیدی عملکرد اعزام (Dispatching KPIs)</h3>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-surface/50 border border-outline-variant/60 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center transition-all hover:bg-surface-container shadow-sm hover:scale-[1.02] duration-300">
+            <span className="text-[10px] text-foreground-muted block font-semibold">دقت و زمان‌بندی (Punctuality)</span>
+            <span className="text-2xl font-black text-success">٪{toFa(kpis.punctualityRate)}</span>
+            <span className="text-[9px] text-foreground-muted/80">هدف سازمانی: ۹۸٪+</span>
+          </div>
+
+          <div className="bg-surface/50 border border-outline-variant/60 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center transition-all hover:bg-surface-container shadow-sm hover:scale-[1.02] duration-300">
+            <span className="text-[10px] text-foreground-muted block font-semibold">میانگین تاخیر اعزام</span>
+            <span className="text-2xl font-black text-warning">{toFa(kpis.averageDelayMinutes)} دقیقه</span>
+            <span className="text-[9px] text-foreground-muted/80">هدف سازمانی: زیر ۳ دقیقه</span>
+          </div>
+
+          <div className="bg-surface/50 border border-outline-variant/60 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center transition-all hover:bg-surface-container shadow-sm hover:scale-[1.02] duration-300">
+            <span className="text-[10px] text-foreground-muted block font-semibold">اعزام‌های فوق‌العاده</span>
+            <span className="text-2xl font-black text-accent">{toFa(kpis.extraTrips)} سفر</span>
+            <span className="text-[9px] text-foreground-muted/80">سفرهای ویژه پشتیبان خط</span>
+          </div>
+
+          <div className="bg-surface/50 border border-outline-variant/60 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center transition-all hover:bg-surface-container shadow-sm hover:scale-[1.02] duration-300">
+            <span className="text-[10px] text-foreground-muted block font-semibold">شاخص ایمنی عملکرد</span>
+            <span className="text-2xl font-black text-success">٪{toFa(kpis.safetyIndex)}</span>
+            <span className="text-[9px] text-foreground-muted/80">بدون فالت بحرانی ثبت شده</span>
+          </div>
+        </div>
       </div>
     </div>
   )

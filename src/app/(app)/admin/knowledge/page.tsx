@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -864,13 +865,24 @@ function AdminKnowledgePageContent() {
             ایجاد، ویرایش و مدیریت دستورالعمل‌های فنی، نقشه‌خوانی مسیر و رویه‌های عملیاتی خط ۱ مترو تهران
           </p>
         </div>
-        <Button
-          onClick={openCreate}
-          className="w-full md:w-auto bg-accent hover:bg-accent-hover text-white h-10 text-xs gap-1.5 cursor-pointer rounded-lg shadow-lg shadow-accent/15 font-semibold transition-all"
-        >
-          <Plus className="size-4" />
-          <span>ایجاد مقاله دانشنامه جدید</span>
-        </Button>
+        <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+          <Link href="/admin/knowledge/faqs">
+            <Button
+              variant="outline"
+              className="w-full md:w-auto h-10 text-xs gap-1.5 cursor-pointer rounded-lg border-border font-semibold"
+            >
+              <List className="size-4" />
+              <span>مدیریت سوالات متداول (FAQ)</span>
+            </Button>
+          </Link>
+          <Button
+            onClick={openCreate}
+            className="w-full md:w-auto bg-accent hover:bg-accent-hover text-white h-10 text-xs gap-1.5 cursor-pointer rounded-lg shadow-lg shadow-accent/15 font-semibold transition-all"
+          >
+            <Plus className="size-4" />
+            <span>ایجاد مقاله دانشنامه جدید</span>
+          </Button>
+        </div>
       </div>
 
       {loading ? (

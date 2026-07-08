@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, requireRole, authErrorResponse } from '@/server/rbac/guard'
 import { parseRosterExcelV2, validateRoster, createRosterDayDraft } from '@/server/modules/roster/service'
+import { parseRosterPDF } from '@/server/modules/roster/pdf-parser'
 import { prisma } from '@/server/db'
 import { jdate } from '@/lib/dayjs'
 
@@ -52,9 +53,9 @@ export async function POST(request: Request) {
     }
 
     const ext = file.name.split('.').pop()?.toLowerCase()
-    if (ext !== 'xlsx' && ext !== 'xls') {
+    if (ext !== 'xlsx' && ext !== 'xls' && ext !== 'pdf') {
       return NextResponse.json(
-        { error: 'فرمت فایل نامعتبر است. فقط فایل Excel پذیرفته می‌شود.' },
+        { error: 'فرمت فایل نامعتبر است. فقط فایل‌های Excel و PDF پذیرفته می‌شوند.' },
         { status: 400 },
       )
     }
@@ -105,15 +106,41 @@ export async function POST(request: Request) {
     } : undefined
 
     const buffer = await file.arrayBuffer()
-    const parsed = await parseRosterExcelV2(buffer, finalJalaliDate, {
-      title: title || undefined,
-      schedulingTitle: schedulingTitle || undefined,
-      processingNumber,
-      rightMapping,
-      leftMapping,
-      autoMatchThreshold,
-      reviewMatchThreshold
-    })
+    let parsed
+    if (ext === 'pdf') {
+      let pdfTemplate = await prisma.rosterTemplate.findFirst({
+        where: { sourceType: 'PDF' }
+      })
+      if (!pdfTemplate) {
+        pdfTemplate = await prisma.rosterTemplate.create({
+          data: {
+            name: 'قالب استاندارد PDF خط ۱',
+            sourceType: 'PDF',
+            pageWidth: 800,
+            pageHeight: 600,
+            rightBlock: { x: 400, y: 0, width: 400, height: 600 },
+            leftBlock: { x: 0, y: 0, width: 400, height: 600 },
+            pdfColumns: [],
+            headerZones: []
+          }
+        })
+      }
+
+      parsed = await parseRosterPDF(buffer, finalJalaliDate, pdfTemplate.id, {
+        autoMatchThreshold,
+        reviewMatchThreshold
+      })
+    } else {
+      parsed = await parseRosterExcelV2(buffer, finalJalaliDate, {
+        title: title || undefined,
+        schedulingTitle: schedulingTitle || undefined,
+        processingNumber,
+        rightMapping,
+        leftMapping,
+        autoMatchThreshold,
+        reviewMatchThreshold
+      })
+    }
 
     const issues = await validateRoster(parsed.trips, parsed.assignments)
     

@@ -62,6 +62,19 @@ export interface CalendarOrgEventEntry {
   mandatory: boolean
 }
 
+export interface CalendarMeetingEntry {
+  id: string
+  title: string
+  description: string | null
+  startAt: string
+  endAt: string | null
+  durationMinutes: number
+  status: string
+  role: 'host' | 'requester'
+  otherParty: { id: string; name: string } | null
+  typeKey: string | null
+}
+
 export interface CalendarDay {
   /** میلادی YYYY-MM-DD */
   date: string
@@ -73,6 +86,7 @@ export interface CalendarDay {
   holidays: CalendarHolidayEntry[]
   events: CalendarEventEntry[]
   orgEvents: CalendarOrgEventEntry[]
+  meetings: CalendarMeetingEntry[]
 }
 
 /** ساعات پیش‌فرض هر کد شیفت وقتی جزئیات قالب سیکل در دسترس نیست (هم‌راستا با materialize) */
@@ -90,6 +104,7 @@ const DEFAULT_LAYERS = {
   personal: { on: true },
   org: { on: true },
   tasks: { on: true },
+  meetings: { on: true },
 }
 
 // ── لایه شیفت (بهینه بازه‌ای؛ برخلاف resolveShiftForUser تک‌روزه) ──
@@ -395,6 +410,53 @@ async function resolveOrgLayer(
   return result
 }
 
+// ── لایه جلسات رزرو شده ────────────────────────────────
+
+async function resolveMeetingsLayer(
+  userId: string,
+  start: dayjs.Dayjs,
+  end: dayjs.Dayjs,
+): Promise<Map<string, CalendarMeetingEntry[]>> {
+  const meetings = await prisma.meetingRequest.findMany({
+    where: {
+      OR: [{ requesterId: userId }, { targetManagerId: userId }],
+      status: { in: ['approved', 'completed', 'pending', 'rescheduled'] },
+      scheduledAt: { gte: start.subtract(1, 'day').toDate(), lte: end.add(1, 'day').toDate() },
+    },
+    include: {
+      requester: { select: { id: true, name: true } },
+      targetManager: { select: { id: true, name: true } },
+      meetingType: { select: { key: true } },
+    },
+    orderBy: { scheduledAt: 'asc' },
+  })
+
+  const result = new Map<string, CalendarMeetingEntry[]>()
+  for (const m of meetings) {
+    const key = dayjs(m.scheduledAt).format('YYYY-MM-DD')
+    const list = result.get(key) ?? []
+    
+    const role = m.targetManagerId === userId ? 'host' : 'requester'
+    const otherParty = role === 'host' ? m.requester : m.targetManager
+    
+    list.push({
+      id: m.id,
+      title: m.title,
+      description: m.description,
+      startAt: m.scheduledAt.toISOString(),
+      endAt: m.endAt?.toISOString() ?? new Date(m.scheduledAt.getTime() + m.durationMinutes * 60000).toISOString(),
+      durationMinutes: m.durationMinutes,
+      status: m.status,
+      role,
+      otherParty,
+      typeKey: m.meetingType?.key ?? null,
+    })
+    result.set(key, list)
+  }
+
+  return result
+}
+
 // ── endpoint تجمیعی ────────────────────────────────────
 
 export async function getCalendarRange(params: {
@@ -431,7 +493,7 @@ export async function getCalendarRange(params: {
   })
   const { group } = groupKeyFor((targetUser?.customFields as Record<string, unknown> | null) ?? null)
 
-  const [shiftMap, holidayMap, personalMap, orgMap] = await Promise.all([
+  const [shiftMap, holidayMap, personalMap, orgMap, meetingMap] = await Promise.all([
     active('shift') ? resolveShiftLayer(params.userId, start, end) : new Map<string, CalendarShiftEntry>(),
     active('holidays')
       ? resolveHolidayLayer(dayKeys.map((d) => d.jalali))
@@ -442,6 +504,9 @@ export async function getCalendarRange(params: {
     active('org')
       ? resolveOrgLayer(params.userId, params.roleKey, group, start, end)
       : new Map<string, CalendarOrgEventEntry[]>(),
+    active('meetings')
+      ? resolveMeetingsLayer(params.userId, start, end)
+      : new Map<string, CalendarMeetingEntry[]>(),
   ])
 
   const days: CalendarDay[] = dayKeys.map((d) => ({
@@ -452,6 +517,7 @@ export async function getCalendarRange(params: {
     holidays: holidayMap.get(d.jalali) ?? [],
     events: personalMap.get(d.date) ?? [],
     orgEvents: orgMap.get(d.date) ?? [],
+    meetings: meetingMap.get(d.date) ?? [],
   }))
 
   return { from: params.from, to: params.to, days }

@@ -84,3 +84,35 @@ export const holidaySchema = z
   .strict()
 
 export type HolidayInput = z.infer<typeof holidaySchema>
+
+export const holidayUpdateSchema = holidaySchema.partial()
+export type HolidayUpdateInput = z.infer<typeof holidayUpdateSchema>
+
+export const orgEventAdminSchema = z
+  .object({
+    title: z.string().min(1, 'عنوان الزامی است').max(200),
+    description: z.string().max(2000).optional(),
+    startAt: z.string().min(1, 'تاریخ شروع الزامی است'),
+    endAt: z.string().optional(),
+    allDay: z.boolean().default(true),
+    audience: z
+      .object({
+        roles: z.array(z.string()).optional(),
+        groups: z.array(z.string()).optional(),
+        userIds: z.array(z.string()).optional(),
+      })
+      .default({}),
+    color: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/, 'رنگ نامعتبر است')
+      .optional(),
+    mandatory: z.boolean().default(false),
+  })
+  .strict()
+
+export type OrgEventAdminInput = z.infer<typeof orgEventAdminSchema>
+
+export const orgEventAdminUpdateSchema = orgEventAdminSchema.partial().extend({
+  isActive: z.boolean().optional(),
+})
+export type OrgEventAdminUpdateInput = z.infer<typeof orgEventAdminUpdateSchema>

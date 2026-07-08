@@ -53,14 +53,16 @@ interface IncidentReport {
   correctiveAction: string
   description: string
   status: 'under_review' | 'action_taken' | 'closed'
-  reporterName: string
+  reporterName?: string
+  reporter?: { name: string }
   timeline: Array<{ time: string; text: string }>
 }
 
 // ── مدل اطلاعات سیگنال اضطراری SOS — بخش ۱۲.۲ سند tosee.md
 interface SOSAlert {
   id: string
-  reporterName: string
+  reporter?: { name: string }
+  reporterName?: string
   reporterShift: string
   reporterRole: string
   locationCoordinates: string // مختصات ماهواره‌ای
@@ -123,7 +125,7 @@ export default function CrisisPage() {
   const [activeTab, setActiveTab] = useState<'crisis' | 'sos-alerts' | 'incidents'>('crisis')
 
   // SOS States — بخش ۱۲.۲
-  const [sosAlerts, setSosAlerts] = useState<SOSAlert[]>(SAMPLE_SOS_ALERTS)
+  const [sosAlerts, setSosAlerts] = useState<SOSAlert[]>([])
   const [isPressingSos, setIsPressingSos] = useState(false)
   const [pressProgress, setPressProgress] = useState(0) // ۰ تا ۱۰۰
   const [countdownActive, setCountdownActive] = useState(false)
@@ -165,25 +167,21 @@ export default function CrisisPage() {
 
   useEffect(() => {
     void loadCrisis()
-    if (typeof window !== 'undefined') {
-      const saved = window.localStorage.getItem('metro_incidents')
-      if (saved) {
-        setIncidents(JSON.parse(saved))
-      }
-    }
   }, [accessToken])
 
   async function loadCrisis() {
     if (!accessToken) return
     setLoading(true)
     try {
-      const res = await fetch('/api/crisis', {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      })
-      if (res.ok) {
-        const data = await res.json()
-        setActiveCrisis(data.data)
-      }
+      const [crisisRes, sosRes, incRes] = await Promise.all([
+        fetch('/api/crisis', { headers: { Authorization: `Bearer ${accessToken}` } }),
+        fetch('/api/crisis/sos-alerts', { headers: { Authorization: `Bearer ${accessToken}` } }),
+        fetch('/api/crisis/incidents', { headers: { Authorization: `Bearer ${accessToken}` } })
+      ])
+      
+      if (crisisRes.ok) setActiveCrisis((await crisisRes.json()).data)
+      if (sosRes.ok) setSosAlerts((await sosRes.json()).data)
+      if (incRes.ok) setIncidents((await incRes.json()).data)
     } finally {
       setLoading(false)
     }
@@ -192,58 +190,56 @@ export default function CrisisPage() {
   async function handleCreateIncident(e: React.FormEvent) {
     e.preventDefault()
     if (!accessToken || !incTitle.trim()) return
-    const now = new Date().toISOString()
-    const newIncident: IncidentReport = {
-      id: `inc-${Date.now()}`,
-      title: incTitle,
-      type: incType,
-      dateTime: incDateTime || now,
-      location: incLocation,
-      trainNo: incTrainNo,
-      rootCause: incRootCause,
-      correctiveAction: incCorrectiveAction,
-      description: incDescription,
-      status: 'under_review',
-      reporterName: user?.name ?? 'نامشخص',
-      timeline: [{ time: now, text: 'گزارش ثبت شد' }],
-    }
-    setIncidents((prev) => {
-      const updated = [newIncident, ...prev]
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('metro_incidents', JSON.stringify(updated))
+    
+    try {
+      const res = await fetch('/api/crisis/incidents', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: incTitle,
+          type: incType,
+          dateTime: incDateTime,
+          location: incLocation,
+          trainNo: incTrainNo,
+          rootCause: incRootCause,
+          correctiveAction: incCorrectiveAction,
+          description: incDescription
+        })
+      })
+      
+      if (res.ok) {
+        const { data } = await res.json()
+        setIncidents(prev => [data, ...prev])
+        setShowNewIncidentModal(false)
+        setIncTitle('')
+        setIncDescription('')
+        setIncRootCause('')
+        setIncCorrectiveAction('')
+        setIncLocation('')
+        setIncTrainNo('')
+      } else {
+        alert('خطا در ثبت رویداد')
       }
-      return updated
-    })
-    setShowNewIncidentModal(false)
-    setIncTitle('')
-    setIncDescription('')
-    setIncRootCause('')
-    setIncCorrectiveAction('')
-    setIncLocation('')
-    setIncTrainNo('')
+    } catch (err) {
+      alert('خطا در برقراری ارتباط با سرور')
+    }
   }
 
-  function handleUpdateIncidentStatus(id: string, newStatus: IncidentReport['status']) {
-    setIncidents((prev) => {
-      const updated = prev.map((inc) =>
-        inc.id === id
-          ? {
-              ...inc,
-              status: newStatus,
-              timeline: [...inc.timeline, { time: new Date().toISOString(), text: `وضعیت تغییر کرد به: ${newStatus}` }],
-            }
-          : inc,
-      )
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('metro_incidents', JSON.stringify(updated))
+  async function handleUpdateIncidentStatus(id: string, newStatus: IncidentReport['status']) {
+    try {
+      const res = await fetch('/api/crisis/incidents', {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus })
+      })
+      if (res.ok) {
+        const { data } = await res.json()
+        setIncidents(prev => prev.map(inc => inc.id === id ? data : inc))
+        setSelectedIncident(prev => prev && prev.id === id ? data : prev)
       }
-      return updated
-    })
-    setSelectedIncident((prev) =>
-      prev && prev.id === id
-        ? { ...prev, status: newStatus, timeline: [...prev.timeline, { time: new Date().toISOString(), text: `وضعیت تغییر کرد به: ${newStatus}` }] }
-        : prev,
-    )
+    } catch (err) {
+      alert('خطا در تغییر وضعیت')
+    }
   }
 
   async function handleActivateCrisis(e: React.FormEvent) {
@@ -365,30 +361,31 @@ export default function CrisisPage() {
     await new Promise(resolve => setTimeout(resolve, 3000))
     setSimulatedAudioState('done')
 
-    const newSOS: SOSAlert = {
-      id: `sos-${Date.now()}`,
-      reporterName: user?.name || 'راهبر قطار خط ۱',
-      reporterShift: 'لوحه الف - شابلون ۳۰۲',
-      reporterRole: 'راهبر کابین',
-      locationCoordinates: '۳۵.۸۰۱۲° N, ۵۱.۴۳۰۴° E (محدوده سوزن تجریش بلاک ورودی)',
-      batteryPercentage: 92,
-      networkStatus: 'عالی (4G LTE - 72dBm)',
-      audioMemoUrl: '/assets/new-recorded-sos.mp3',
-      status: 'submitted',
-      createdAt: new Date().toISOString(),
-      timeline: [
-        { time: new Date().toISOString(), text: 'سیگنال اضطراری SOS با تایید کاربر ارسال شد.' },
-        { time: new Date().toISOString(), text: 'ضبط صدای داخل کابین کامل و آپلود گردید.' },
-        { time: new Date().toISOString(), text: 'سیگنال به OCC، سرشیفت و افراد محدوده جغرافیایی مخابره شد.' }
-      ]
+    try {
+      const res = await fetch('/api/crisis/sos-alerts', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reporterShift: 'لوحه الف - شابلون ۳۰۲',
+          reporterRole: 'راهبر کابین',
+          locationCoordinates: '۳۵.۸۰۱۲° N, ۵۱.۴۳۰۴° E (محدوده سوزن تجریش بلاک ورودی)',
+          batteryPercentage: 92,
+          networkStatus: 'عالی (4G LTE - 72dBm)',
+          audioMemoUrl: '/assets/new-recorded-sos.mp3'
+        })
+      })
+      if (res.ok) {
+        const { data } = await res.json()
+        setSosAlerts(prev => [data, ...prev])
+        setSosSentInfo(data)
+      }
+    } catch (err) {
+      alert('خطا در ارسال سیگنال')
     }
-
-    setSosAlerts(prev => [newSOS, ...prev])
-    setSosSentInfo(newSOS)
   }
 
   // به‌روزرسانی گام‌به‌گام وضعیت SOS (ماشین وضعیت)
-  const handleUpdateSOSStatus = (sosId: string, nextStatus: SOSAlert['status']) => {
+  const handleUpdateSOSStatus = async (sosId: string, nextStatus: SOSAlert['status']) => {
     const statusTexts: Record<string, string> = {
       seen: 'سیگنال توسط سرپرست دیسپاچینگ مشاهده گردید.',
       dispatch: 'تیم پشتیبانی فنی و اطفای حریق به موقعیت اعزام شد.',
@@ -396,22 +393,19 @@ export default function CrisisPage() {
       closed: 'پرونده اضطراری SOS بسته و مختومه اعلام گردید.'
     }
 
-    setSosAlerts(prev =>
-      prev.map(s => {
-        if (s.id === sosId) {
-          return {
-            ...s,
-            status: nextStatus,
-            timeline: [...s.timeline, { time: new Date().toISOString(), text: statusTexts[nextStatus] }]
-          }
-        }
-        return s
+    try {
+      const res = await fetch('/api/crisis/sos-alerts', {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: sosId, status: nextStatus, text: statusTexts[nextStatus] })
       })
-    )
-
-    const updated = sosAlerts.find(s => s.id === sosId)
-    if (updated) {
-      setSelectedSOSDetail(prev => prev ? { ...prev, status: nextStatus, timeline: [...prev.timeline, { time: new Date().toISOString(), text: statusTexts[nextStatus] }] } : null)
+      if (res.ok) {
+        const { data } = await res.json()
+        setSosAlerts(prev => prev.map(s => s.id === sosId ? data : s))
+        setSelectedSOSDetail(prev => prev && prev.id === sosId ? data : prev)
+      }
+    } catch (err) {
+      alert('خطا در تغییر وضعیت')
     }
   }
 
@@ -652,7 +646,7 @@ export default function CrisisPage() {
                       {SOS_STATUS_LABELS[item.status]?.label}
                     </Badge>
                   </div>
-                  <h5 className="text-xs font-bold text-foreground">{item.reporterName}</h5>
+                  <h5 className="text-xs font-bold text-foreground">{item.reporter?.name || item.reporterName}</h5>
                   <div className="flex justify-between text-[9px] text-foreground-muted font-bold">
                     <span>ثبت: {jalali(item.createdAt)}</span>
                     <span className="text-accent">{item.reporterShift}</span>
@@ -670,7 +664,7 @@ export default function CrisisPage() {
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-xs font-black text-red-400 flex items-center gap-1.5">
                       <AlertTriangle className="size-4 animate-bounce" />
-                      پرونده وضعیت اضطراری: {selectedSOSDetail.reporterName}
+                      پرونده وضعیت اضطراری: {selectedSOSDetail.reporter?.name || selectedSOSDetail.reporterName}
                     </CardTitle>
                     <Badge className={cn('text-[9px] font-extrabold', SOS_STATUS_LABELS[selectedSOSDetail.status]?.color)}>
                       {SOS_STATUS_LABELS[selectedSOSDetail.status]?.label}
@@ -998,7 +992,7 @@ export default function CrisisPage() {
                 <p className="text-foreground-muted">موقعیت: <strong className="text-foreground font-sans">{selectedIncident.location}</strong></p>
                 <p className="text-foreground-muted">رام قطار: <strong className="text-accent">{toFa(selectedIncident.trainNo)}</strong></p>
                 <p className="text-foreground-muted">تاریخ: <strong className="text-foreground">{jalali(selectedIncident.dateTime)}</strong></p>
-                <p className="text-foreground-muted">گزارش‌دهنده: <strong className="text-foreground font-sans">{selectedIncident.reporterName}</strong></p>
+                <p className="text-foreground-muted">گزارش‌دهنده: <strong className="text-foreground font-sans">{selectedIncident.reporter?.name || selectedIncident.reporterName}</strong></p>
               </div>
 
               <div className="space-y-1">

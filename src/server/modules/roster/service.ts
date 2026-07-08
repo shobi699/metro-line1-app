@@ -4,6 +4,7 @@ import type { ShiftCode } from '@/generated/prisma/client'
 import { jalaliToDate, fuzzyMatchScore, normalizeFarsiString } from '@/lib/fa'
 import { jdate, dayjs, gregStr } from '@/lib/dayjs'
 import { getSettingValue } from '@/server/modules/settings'
+import { checkForMeetingShiftConflicts } from '../meetings/service'
 
 export interface ColumnMapping {
   block: 'RIGHT' | 'LEFT'
@@ -86,7 +87,7 @@ function formatExcelTime(val: any): string {
 }
 
 // Fuzzy matches a raw name against active database users
-async function matchDriver(
+export async function matchDriver(
   rawName: string,
   dbUsers: any[],
   autoMatchThreshold = 85,
@@ -425,46 +426,83 @@ export async function validateRoster(trips: any[], assignments: any[]): Promise<
     return issues
   }
 
+  // Load rules configuration from database
+  const dbRules = prisma.rosterValidationRule
+    ? await prisma.rosterValidationRule.findMany({ where: { isEnabled: true } })
+    : []
+  const ruleMap = new Map(dbRules.map(r => [r.key, r]))
+
+  const isRuleEnabled = (key: string) => {
+    if (dbRules.length === 0) return true
+    return ruleMap.has(key)
+  }
+
+  const getRuleSeverity = (key: string, defaultSeverity: 'error' | 'warning' | 'info') => {
+    const rule = ruleMap.get(key)
+    if (!rule) return defaultSeverity.toUpperCase() as 'ERROR' | 'WARNING' | 'INFO'
+    return rule.severity.toUpperCase() as 'ERROR' | 'WARNING' | 'INFO'
+  }
+
+  const getRuleParam = <T>(key: string, paramKey: string, defaultValue: T): T => {
+    const rule = ruleMap.get(key)
+    if (rule && rule.params) {
+      try {
+        const parsed = JSON.parse(rule.params)
+        if (parsed && parsed[paramKey] !== undefined) {
+          return parsed[paramKey] as T
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return defaultValue
+  }
+
   // ۲. اعتبارسنجی شماره پرسنلی (کد ملی ۱۰ رقمی) — بخش ۸.۱
   const activeUsers = await prisma.user.findMany({
     where: { status: 'active' },
     select: { id: true, name: true, nationalId: true, role: { select: { key: true } } }
   })
 
-  // تشخیص کدهای پرسنلی نامعتبر کلاینت‌های تخصیص‌یافته
-  for (const assign of assignments) {
-    if (assign.matchedUserId) {
-      const matched = activeUsers.find((u) => u.id === assign.matchedUserId)
-      if (matched) {
-        const personnelNo = matched.nationalId || ''
-        const isValid10Digits = /^\d{10}$/.test(personnelNo)
-        if (!isValid10Digits) {
-          issues.push({
-            severity: 'ERROR',
-            type: 'invalid_personnel_no',
-            message: `شماره ملی/پرسنلی راهبر "${matched.name}" نامعتبر است (${personnelNo || 'خالی'}). کد ملی باید دقیقاً ۱۰ رقم عددی باشد.`,
-            affectedUserId: matched.id,
-            suggestedAction: 'اطلاعات پرسنلی کاربر را در دفتر تلفن ویرایش و تصحیح نمایید.'
-          })
+  if (isRuleEnabled('invalid_personnel_no')) {
+    const severity = getRuleSeverity('invalid_personnel_no', 'error')
+    for (const assign of assignments) {
+      if (assign.matchedUserId) {
+        const matched = activeUsers.find((u) => u.id === assign.matchedUserId)
+        if (matched) {
+          const personnelNo = matched.nationalId || ''
+          const isValid10Digits = /^\d{10}$/.test(personnelNo)
+          if (!isValid10Digits) {
+            issues.push({
+              severity,
+              type: 'invalid_personnel_no',
+              message: `شماره ملی/پرسنلی راهبر "${matched.name}" نامعتبر است (${personnelNo || 'خالی'}). کد ملی باید دقیقاً ۱۰ رقم عددی باشد.`,
+              affectedUserId: matched.id,
+              suggestedAction: 'اطلاعات پرسنلی کاربر را در دفتر تلفن ویرایش و تصحیح نمایید.'
+            })
+          }
         }
       }
     }
   }
 
   // ۳. تشخیص افراد بدون شیفت / راهبران بدون تخصیص — بخش ۸.۱
-  const assignedUserIds = new Set(assignments.map((a) => a.matchedUserId).filter(Boolean))
-  const idleOperators = activeUsers.filter(
-    (u) => (u.role?.key === 'user' || u.role?.key === 'operator') && !assignedUserIds.has(u.id)
-  )
+  if (isRuleEnabled('idle_driver')) {
+    const severity = getRuleSeverity('idle_driver', 'info')
+    const assignedUserIds = new Set(assignments.map((a) => a.matchedUserId).filter(Boolean))
+    const idleOperators = activeUsers.filter(
+      (u) => (u.role?.key === 'user' || u.role?.key === 'operator') && !assignedUserIds.has(u.id)
+    )
 
-  for (const idle of idleOperators) {
-    issues.push({
-      severity: 'INFO',
-      type: 'idle_driver',
-      message: `راهبر فعال "${idle.name}" در این لوحه به هیچ قطاری تخصیص داده نشده و در حالت آماده‌باش است.`,
-      affectedUserId: idle.id,
-      suggestedAction: 'در صورت نیاز به شانت یا پشتیبانی، این راهبر را به قطارهای کمکی اختصاص دهید.'
-    })
+    for (const idle of idleOperators) {
+      issues.push({
+        severity,
+        type: 'idle_driver',
+        message: `راهبر فعال "${idle.name}" در این لوحه به هیچ قطاری تخصیص داده نشده و در حالت آماده‌باش است.`,
+        affectedUserId: idle.id,
+        suggestedAction: 'در صورت نیاز به شانت یا پشتیبانی، این راهبر را به قطارهای کمکی اختصاص دهید.'
+      })
+    }
   }
 
   const seenRows = new Map<string, string>()
@@ -507,13 +545,16 @@ export async function validateRoster(trips: any[], assignments: any[]): Promise<
     const dep = timeToMinutes(trip.departureTime)
     const arr = timeToMinutes(trip.arrivalTime)
     if (dep !== null && arr !== null && arr < dep) {
-      issues.push({
-        severity: 'WARNING',
-        type: 'arrival_before_departure',
-        message: `زمان رسیدن ردیف ${trip.rowNo} قبل از زمان حرکت ثبت شده است.`,
-        affectedTripId: tripId,
-        suggestedAction: 'در صورت عبور از نیمه‌شب، زمان عملیاتی را دستی بررسی کنید.'
-      })
+      if (isRuleEnabled('chronological_order')) {
+        const severity = getRuleSeverity('chronological_order', 'warning')
+        issues.push({
+          severity,
+          type: 'arrival_before_departure',
+          message: `زمان رسیدن ردیف ${trip.rowNo} قبل از زمان حرکت ثبت شده است.`,
+          affectedTripId: tripId,
+          suggestedAction: 'در صورت عبور از نیمه‌شب، زمان عملیاتی را دستی بررسی کنید.'
+        })
+      }
     }
 
     if (!directionBuckets.has(trip.direction || 'UNKNOWN')) {
@@ -522,34 +563,27 @@ export async function validateRoster(trips: any[], assignments: any[]): Promise<
     directionBuckets.get(trip.direction || 'UNKNOWN')!.push(trip)
   }
 
-  for (const [, bucket] of directionBuckets.entries()) {
-    const sorted = [...bucket].sort((a, b) => a.rowNo - b.rowNo)
-    for (let i = 1; i < sorted.length; i++) {
-      const prev = sorted[i - 1]
-      const current = sorted[i]
-      const prevDep = timeToMinutes(prev.departureTime)
-      const currentDep = timeToMinutes(current.departureTime)
-      if (prevDep !== null && currentDep !== null && currentDep < prevDep) {
-        issues.push({
-          severity: 'WARNING',
-          type: 'non_ascending_time',
-          message: `زمان حرکت در ردیف ${current.rowNo} نسبت به ردیف قبل صعودی نیست.`,
-          affectedTripId: current.tempId || current.id,
-          suggestedAction: 'ترتیب صفحات و ترکیب ردیف‌های لوحه را بررسی کنید.'
-        })
+  if (isRuleEnabled('chronological_order')) {
+    const severity = getRuleSeverity('chronological_order', 'warning')
+    for (const [, bucket] of directionBuckets.entries()) {
+      const sorted = [...bucket].sort((a, b) => a.rowNo - b.rowNo)
+      for (let i = 1; i < sorted.length; i++) {
+        const prev = sorted[i - 1]
+        const current = sorted[i]
+        const prevDep = timeToMinutes(prev.departureTime)
+        const currentDep = timeToMinutes(current.departureTime)
+        if (prevDep !== null && currentDep !== null && currentDep < prevDep) {
+          issues.push({
+            severity,
+            type: 'non_ascending_time',
+            message: `زمان حرکت در ردیف ${current.rowNo} نسبت به ردیف قبل صعودی نیست.`,
+            affectedTripId: current.tempId || current.id,
+            suggestedAction: 'ترتیب صفحات و ترکیب ردیف‌های لوحه را بررسی کنید.'
+          })
+        }
       }
     }
   }
-
-  const enableWarnings = await getSettingValue<boolean>('roster.enableFatigueWarnings', true)
-  if (!enableWarnings) {
-    return issues
-  }
-
-  const minRestTime = await getSettingValue<number>('roster.minRestTimeBetweenTrips', 5)
-  const maxDailyDrivingHours = await getSettingValue<number>('roster.maxDailyDrivingHours', 8)
-  const maxDailyMinutes = maxDailyDrivingHours * 60
-  const maxConsecutiveTrips = await getSettingValue<number>('roster.maxConsecutiveTrips', 4)
 
   const driverMap = new Map<string, any[]>()
   assignments.forEach((assign) => {
@@ -564,91 +598,108 @@ export async function validateRoster(trips: any[], assignments: any[]): Promise<
   })
 
   // Validate driver active status (§۷.۲)
-  const driverUserIds = Array.from(driverMap.keys())
-  if (driverUserIds.length > 0) {
-    const users = await prisma.user.findMany({
-      where: { id: { in: driverUserIds } },
-      select: { id: true, name: true, status: true }
-    })
-    for (const u of users) {
-      if (u.status !== 'active') {
-        issues.push({
-          severity: 'ERROR',
-          type: 'inactive_driver',
-          message: `راهبر تخصیص‌یافته "${u.name}" در وضعیت فعال (Active) قرار ندارد.`,
-          affectedUserId: u.id,
-          suggestedAction: 'وضعیت راهبر را در دفتر تلفن بررسی و فعال کنید.'
-        })
+  if (isRuleEnabled('inactive_driver')) {
+    const severity = getRuleSeverity('inactive_driver', 'error')
+    const driverUserIds = Array.from(driverMap.keys())
+    if (driverUserIds.length > 0) {
+      const users = await prisma.user.findMany({
+        where: { id: { in: driverUserIds } },
+        select: { id: true, name: true, status: true }
+      })
+      for (const u of users) {
+        if (u.status !== 'active') {
+          issues.push({
+            severity,
+            type: 'inactive_driver',
+            message: `راهبر تخصیص‌یافته "${u.name}" در وضعیت فعال (Active) قرار ندارد.`,
+            affectedUserId: u.id,
+            suggestedAction: 'وضعیت راهبر را در دفتر تلفن بررسی و فعال کنید.'
+          })
+        }
       }
     }
   }
 
   // Validate interday shift transition rest (§۷.۳)
-  let targetDate: Date | null = null
-  const firstTrip = trips[0]
-  if (firstTrip && firstTrip.rosterVersionId) {
-    const version = await prisma.rosterVersion.findUnique({
-      where: { id: firstTrip.rosterVersionId },
-      include: { rosterDay: true }
-    })
-    if (version) targetDate = version.rosterDay.gregorianDate
-  }
+  if (isRuleEnabled('rest_time')) {
+    const severity = getRuleSeverity('rest_time', 'warning')
+    const minInterdayRestHours = getRuleParam<number>('rest_time', 'minInterdayRestHours', 11)
 
-  if (targetDate) {
-    const yesterday = new Date(targetDate)
-    yesterday.setDate(yesterday.getDate() - 1)
+    let targetDate: Date | null = null
+    const firstTrip = trips[0]
+    if (firstTrip && firstTrip.rosterVersionId) {
+      const version = await prisma.rosterVersion.findUnique({
+        where: { id: firstTrip.rosterVersionId },
+        include: { rosterDay: true }
+      })
+      if (version) targetDate = version.rosterDay.gregorianDate
+    }
 
-    const yesterdayVersion = await prisma.rosterVersion.findFirst({
-      where: {
-        rosterDay: { gregorianDate: yesterday },
-        status: 'PUBLISHED'
-      },
-      orderBy: { versionNo: 'desc' },
-      include: {
-        trips: {
-          include: { assignments: true }
+    if (targetDate) {
+      const yesterday = new Date(targetDate)
+      yesterday.setDate(yesterday.getDate() - 1)
+
+      const yesterdayVersion = await prisma.rosterVersion.findFirst({
+        where: {
+          rosterDay: { gregorianDate: yesterday },
+          status: 'PUBLISHED'
+        },
+        orderBy: { versionNo: 'desc' },
+        include: {
+          trips: {
+            include: { assignments: true }
+          }
         }
-      }
-    })
+      })
 
-    if (yesterdayVersion) {
-      const minInterdayRestHours = await getSettingValue<number>('roster.minInterdayRestHours', 11)
-      
-      for (const [userId, todayTrips] of driverMap.entries()) {
-        const yesterdayTrips = yesterdayVersion.trips.filter((t) =>
-          t.assignments.some((a) => a.matchedUserId === userId)
-        )
-        if (yesterdayTrips.length > 0) {
-          yesterdayTrips.sort((a, b) => (a.arrivalTime || '').localeCompare(b.arrivalTime || ''))
-          const lastYesterdayTrip = yesterdayTrips[yesterdayTrips.length - 1]
-          
-          todayTrips.sort((a, b) => (a.trip.departureTime || '').localeCompare(b.trip.departureTime || ''))
-          const firstTodayTrip = todayTrips[0].trip
-
-          if (lastYesterdayTrip.arrivalTime && firstTodayTrip.departureTime) {
-            const lastArrParts = lastYesterdayTrip.arrivalTime.split(':').map(Number)
-            const firstDepParts = firstTodayTrip.departureTime.split(':').map(Number)
+      if (yesterdayVersion) {
+        for (const [userId, todayTrips] of driverMap.entries()) {
+          const yesterdayTrips = yesterdayVersion.trips.filter((t) =>
+            t.assignments.some((a) => a.matchedUserId === userId)
+          )
+          if (yesterdayTrips.length > 0) {
+            yesterdayTrips.sort((a, b) => (a.arrivalTime || '').localeCompare(b.arrivalTime || ''))
+            const lastYesterdayTrip = yesterdayTrips[yesterdayTrips.length - 1]
             
-            const lastArrMinutes = lastArrParts[0] * 60 + lastArrParts[1]
-            const firstDepMinutes = firstDepParts[0] * 60 + firstDepParts[1]
-            const restMinutes = (1440 - lastArrMinutes) + firstDepMinutes
-            const restHours = restMinutes / 60
+            todayTrips.sort((a, b) => (a.trip.departureTime || '').localeCompare(b.trip.departureTime || ''))
+            const firstTodayTrip = todayTrips[0].trip
 
-            if (restHours < minInterdayRestHours) {
-              issues.push({
-                severity: 'WARNING',
-                type: 'fatigue_interday_rest',
-                message: `استراحت بین‌روزی بسیار کوتاه (${restHours.toFixed(1)} ساعت) بین آخرین سفر دیروز ساعت ${lastYesterdayTrip.arrivalTime} و اولین سفر امروز ساعت ${firstTodayTrip.departureTime} برای این راهبر. (حداقل مجاز: ${minInterdayRestHours} ساعت)`,
-                affectedUserId: userId,
-                affectedTripId: firstTodayTrip.tempId || firstTodayTrip.id,
-                suggestedAction: 'این راهبر را از اولین سفرها معاف کرده یا شیفت او را ویرایش کنید.'
-              })
+            if (lastYesterdayTrip.arrivalTime && firstTodayTrip.departureTime) {
+              const lastArrParts = lastYesterdayTrip.arrivalTime.split(':').map(Number)
+              const firstDepParts = firstTodayTrip.departureTime.split(':').map(Number)
+              
+              const lastArrMinutes = lastArrParts[0] * 60 + lastArrParts[1]
+              const firstDepMinutes = firstDepParts[0] * 60 + firstDepParts[1]
+              const restMinutes = (1440 - lastArrMinutes) + firstDepMinutes
+              const restHours = restMinutes / 60
+
+              if (restHours < minInterdayRestHours) {
+                issues.push({
+                  severity,
+                  type: 'fatigue_interday_rest',
+                  message: `استراحت بین‌روزی بسیار کوتاه (${restHours.toFixed(1)} ساعت) بین آخرین سفر دیروز ساعت ${lastYesterdayTrip.arrivalTime} و اولین سفر امروز ساعت ${firstTodayTrip.departureTime} برای این راهبر. (حداقل مجاز: ${minInterdayRestHours} ساعت)`,
+                  affectedUserId: userId,
+                  affectedTripId: firstTodayTrip.tempId || firstTodayTrip.id,
+                  suggestedAction: 'این راهبر را از اولین سفرها معاف کرده یا شیفت او را ویرایش کنید.'
+                })
+              }
             }
           }
         }
       }
     }
   }
+
+  // Validate turnaround and max daily driving
+  const checkRestTime = isRuleEnabled('rest_time')
+  const minRestTime = getRuleParam<number>('rest_time', 'minRestMinutes', 5)
+  const checkMaxDriving = isRuleEnabled('max_driving_hours')
+  const maxDailyDrivingHours = getRuleParam<number>('max_driving_hours', 'maxHours', 8)
+  const maxDailyMinutes = maxDailyDrivingHours * 60
+  const maxConsecutiveTrips = getRuleParam<number>('max_driving_hours', 'maxConsecutiveTrips', 4)
+
+  const restSeverity = getRuleSeverity('rest_time', 'warning')
+  const drivingSeverity = getRuleSeverity('max_driving_hours', 'warning')
 
   for (const [userId, tripsList] of driverMap.entries()) {
     tripsList.sort((a, b) => a.trip.departureTime.localeCompare(b.trip.departureTime))
@@ -677,9 +728,9 @@ export async function validateRoster(trips: any[], assignments: any[]): Promise<
         const nextMinutes = timeToMinutes(next.trip.departureTime)
         const diff = currMinutes !== null && nextMinutes !== null ? nextMinutes - currMinutes : null
 
-        if (diff !== null && diff >= 0 && diff < minRestTime) {
+        if (checkRestTime && diff !== null && diff >= 0 && diff < minRestTime) {
           issues.push({
-            severity: 'WARNING',
+            severity: restSeverity,
             type: 'fatigue_turnaround',
             message: `زمان شانت و استراحت بسیار کوتاه (${diff} دقیقه) بین قطار ${current.trip.trainNumber} و قطار ${next.trip.trainNumber} برای این راهبر. (حداقل مجاز: ${minRestTime} دقیقه)`,
             affectedTripId: next.trip.tempId || next.trip.id,
@@ -694,9 +745,9 @@ export async function validateRoster(trips: any[], assignments: any[]): Promise<
           consecutiveTrips += 1
         }
 
-        if (consecutiveTrips > maxConsecutiveTrips) {
+        if (checkMaxDriving && consecutiveTrips > maxConsecutiveTrips) {
           issues.push({
-            severity: 'WARNING',
+            severity: drivingSeverity,
             type: 'fatigue_consecutive_trips',
             message: `تعداد سفرهای پشت‌سرهم راهبر از ${maxConsecutiveTrips} سفر بیشتر شده است.`,
             affectedTripId: next.trip.tempId || next.trip.id,
@@ -707,23 +758,25 @@ export async function validateRoster(trips: any[], assignments: any[]): Promise<
       }
     }
 
-    let totalMinutes = 0
-    tripsList.forEach((item) => {
-      const dep = timeToMinutes(item.trip.departureTime)
-      const arr = timeToMinutes(item.trip.arrivalTime)
-      if (dep !== null && arr !== null && arr >= dep) {
-        totalMinutes += arr - dep
-      }
-    })
-
-    if (totalMinutes > maxDailyMinutes) {
-      issues.push({
-        severity: 'ERROR',
-        type: 'fatigue_limit',
-        message: `مجموع زمان رانندگی روزانه راهبر (${Math.round(totalMinutes / 60)} ساعت) از حد مجاز قانونی (${maxDailyDrivingHours} ساعت) فراتر رفته است.`,
-        affectedUserId: userId,
-        suggestedAction: 'برخی از سفرهای این راهبر را حذف یا جابجا کنید.'
+    if (checkMaxDriving) {
+      let totalMinutes = 0
+      tripsList.forEach((item) => {
+        const dep = timeToMinutes(item.trip.departureTime)
+        const arr = timeToMinutes(item.trip.arrivalTime)
+        if (dep !== null && arr !== null && arr >= dep) {
+          totalMinutes += arr - dep
+        }
       })
+
+      if (totalMinutes > maxDailyMinutes) {
+        issues.push({
+          severity: drivingSeverity,
+          type: 'fatigue_limit',
+          message: `مجموع زمان رانندگی روزانه راهبر (${Math.round(totalMinutes / 60)} ساعت) از حد مجاز قانونی (${maxDailyDrivingHours} ساعت) فراتر رفته است.`,
+          affectedUserId: userId,
+          suggestedAction: 'برخی از سفرهای این راهبر را حذف یا جابجا کنید.'
+        })
+      }
     }
   }
 
@@ -951,12 +1004,22 @@ export async function publishRosterVersion(rosterVersionId: string, publisherId:
       versionNo: version.versionNo,
       jalaliDate: version.rosterDay.jalaliDate,
       rosterDayId: version.rosterDayId,
+      rosterDate: version.rosterDay.gregorianDate,
       allDriverUserIds: [...allDriverUserIds],
       previousPublishedId: previousPublished?.id ?? null,
     }
   })
 
-  // 7. Send targeted notifications OUTSIDE transaction (§۸.۳)
+  // 7. Check for meeting shift conflicts
+  for (const userId of result.allDriverUserIds) {
+    try {
+      await checkForMeetingShiftConflicts(userId, result.rosterDate)
+    } catch (e) {
+      console.error(`Error checking meeting conflicts for user ${userId}:`, e)
+    }
+  }
+
+  // 8. Send targeted notifications OUTSIDE transaction (§۸.۳)
   const { createNotification, createBulkNotifications } = await import('@/server/modules/notifications/service')
   const { diffRosterVersions } = await import('./diff')
 
@@ -993,6 +1056,15 @@ export async function publishRosterVersion(rosterVersionId: string, publisherId:
         link: rosterLink,
       })
     }
+  }
+
+  // 8. Precompute Snapshots for fast reads (Roster Platform v2 — فاز ۱)
+  try {
+    const { precomputeOnPublish } = await import('./precompute')
+    await precomputeOnPublish(rosterVersionId)
+  } catch (error) {
+    console.error(`[RosterPublish] Precompute failed for version ${rosterVersionId}:`, error)
+    // Don't throw, let the publish succeed. It can be retried or fallback to live query.
   }
 
   return { success: true, notifiedUserIds: result.allDriverUserIds }

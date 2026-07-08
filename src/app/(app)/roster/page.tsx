@@ -1,14 +1,16 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { toFa } from '@/lib/fa'
+import { toFa, jalali } from '@/lib/fa'
 import { useAuthStore } from '@/features/auth'
 import { RosterGanttView } from '@/components/shared/roster-gantt-view'
+import { RegionalBoard } from '@/features/roster/components/RegionalBoard'
 import { useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { jdate } from '@/lib/dayjs'
+import { jdate, gregStr } from '@/lib/dayjs'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import Link from 'next/link'
 import {
   Calendar,
   Clock,
@@ -22,7 +24,6 @@ import {
   ChevronRight,
   ArrowUpRight,
   ArrowDownLeft,
-  Settings,
   Shield,
   MessageSquare,
   Download,
@@ -38,7 +39,8 @@ import {
   GitCompare,
   Send,
   UploadCloud,
-  BellRing
+  BellRing,
+  Inbox
 } from 'lucide-react'
 
 interface TripAssignment {
@@ -143,7 +145,7 @@ export default function FullRosterPage() {
   const [pickerMonth, setPickerMonth] = useState(() => jdate(new Date()).month() + 1)
   const [showDatePicker, setShowDatePicker] = useState(false)
 
-  const [viewMode, setViewMode] = useState<'tabs' | 'sideBySide' | 'sheet' | 'gantt'>('sheet')
+  const [viewMode, setViewMode] = useState<'tabs' | 'sideBySide' | 'sheet' | 'gantt' | 'board'>('sheet')
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'unassigned' | 'disputed' | 'delayed'>('all')
   const [versionDiff, setVersionDiff] = useState<RosterDiff | null>(null)
@@ -159,7 +161,8 @@ export default function FullRosterPage() {
   const [uploadErrorMessage, setUploadErrorMessage] = useState('')
   const [publishingRoster, setPublishingRoster] = useState(false)
   const [notifyingDrivers, setNotifyingDrivers] = useState(false)
-  const [notifySuccess, setNotifySuccess] = useState(false)
+  
+  // handleOpenSwapModal is defined below
 
   // شبیه‌ساز وضعیت چک‌لیست قبل از حرکت رانندگان — اتصال به بخش ۱۲.۳
   const getDriverChecklistStatus = (trainNumber: string | null, driverName: string | null) => {
@@ -279,6 +282,8 @@ export default function FullRosterPage() {
       setViewMode('tabs')
     } else if (viewParam === 'sideBySide') {
       setViewMode('sideBySide')
+    } else if (viewParam === 'board') {
+      setViewMode('board')
     }
   }, [viewParam])
 
@@ -318,7 +323,7 @@ export default function FullRosterPage() {
       .year(pickerYear)
       .month(pickerMonth - 1)
       .date(day)
-    const greg = d.calendar('gregory').format('YYYY-MM-DD')
+    const greg = gregStr(d)
     setDataDate(greg)
     setShowDatePicker(false)
   }
@@ -477,14 +482,14 @@ export default function FullRosterPage() {
     }
 
     try {
-      const res = await fetch('/api/trips/swap', {
+      const res = await fetch('/api/roster/swap', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          targetUserId,
+          targetId: targetUserId,
           sourceAssignmentId: sourceAssignment.id,
           targetAssignmentId: selectedTargetAssignmentId,
           note: swapNote,
@@ -686,9 +691,7 @@ export default function FullRosterPage() {
     // شبیه‌ساز ارسال نوتیفیکیشن و پیامک
     setTimeout(() => {
       setNotifyingDrivers(false)
-      setNotifySuccess(true)
       alert('📢 پیامک و نوتیفیکیشن لایو برای تمامی رانندگان تخصیص‌یافته به لوحه امروز ارسال شد.')
-      setTimeout(() => setNotifySuccess(false), 3000)
     }, 1500)
   }
 
@@ -756,6 +759,15 @@ export default function FullRosterPage() {
 
         {/* Date & Calendar Selector */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Swap Inbox */}
+          <Link
+            href="/swap/inbox"
+            className="flex items-center gap-1.5 bg-accent/10 border border-accent/20 hover:bg-accent/20 px-3 py-1.5 rounded-lg shadow-sm text-xs font-bold text-accent cursor-pointer transition-colors"
+          >
+            <Inbox className="size-4" />
+            <span>کارتابل جابجایی</span>
+          </Link>
+
           {/* iCal Calendar Sync */}
           <button
             onClick={() => setSyncModalVisible(true)}
@@ -783,7 +795,7 @@ export default function FullRosterPage() {
             >
               <span className="text-xs text-foreground-muted">تاریخ مشاهده:</span>
               <span className="font-bold text-accent font-data-mono">
-                {toFa(jdate(dataDate).format('YYYY/MM/DD'))}
+                {jalali(dataDate)}
               </span>
             </button>
 
@@ -833,8 +845,8 @@ export default function FullRosterPage() {
                         .year(pickerYear)
                         .month(pickerMonth - 1)
                         .date(dayNo)
-                      const isSelected = d.calendar('gregory').format('YYYY-MM-DD') === dataDate
-                      const isToday = d.calendar('gregory').format('YYYY-MM-DD') === jdate().calendar('gregory').format('YYYY-MM-DD')
+                      const isSelected = gregStr(d) === dataDate
+                      const isToday = gregStr(d) === gregStr(jdate())
                       
                       return (
                         <button
@@ -1294,6 +1306,19 @@ export default function FullRosterPage() {
                 >
                   <TrendingUp className="size-3.5" />
                   <span className="hidden sm:inline">نمای گانت</span>
+                </button>
+                <button
+                  onClick={() => setViewMode('board')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all",
+                    viewMode === 'board'
+                      ? "bg-accent text-accent-foreground shadow-sm font-bold"
+                      : "text-foreground-muted hover:text-foreground"
+                  )}
+                  title="تابلوی ناحیه (OCC)"
+                >
+                  <Columns className="size-3.5" />
+                  <span className="hidden sm:inline">تابلوی ناحیه</span>
                 </button>
               </div>
 
@@ -1755,6 +1780,20 @@ export default function FullRosterPage() {
                 setCommentText(note || '')
                 setTripStatusVal(status || 'NORMAL')
                 setCommentModalVisible(true)
+              }}
+            />
+          )}
+
+          {viewMode === 'board' && (
+            <RegionalBoard 
+              trips={filteredTrips}
+              issues={issues}
+              searchQuery={searchTerm}
+              onCrewClick={(trip, role) => {
+                const ass = trip.assignments.find(a => a.role === role)
+                if (ass && (ass.matchedUserId === user?.id || isAdmin)) {
+                  handleOpenSwapModal(ass)
+                }
               }}
             />
           )}

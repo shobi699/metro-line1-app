@@ -29,6 +29,7 @@ function day(
       : [],
     events: [],
     orgEvents: [],
+    meetings: [],
   }
 }
 

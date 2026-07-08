@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { StatusBar } from 'expo-status-bar'
-import { View } from 'react-native'
+import { View, Platform } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
@@ -10,6 +11,7 @@ import { Text, TextInput } from 'react-native'
 import { useAuthStore } from './src/stores/auth'
 import { useConfigStore } from './src/stores/config'
 import { LoginScreen } from './src/screens/LoginScreen'
+import { API_URL } from './src/shared/config'
 import { useUIBuilderStore } from './src/stores/ui-builder'
 import { HomeScreen } from './src/screens/HomeScreen'
 import { DirectoryScreen } from './src/screens/DirectoryScreen'
@@ -36,9 +38,20 @@ import { CustomPageScreen } from './src/screens/CustomPageScreen'
 import { LearningScreen } from './src/screens/LearningScreen'
 import { GuideScreen } from './src/screens/GuideScreen'
 import { MeetingsScreen } from './src/screens/MeetingsScreen'
+import { PollsScreen } from './src/screens/PollsScreen'
 import { PlateSearchScreen } from './src/screens/PlateSearchScreen'
+import { FormsScreen } from './src/screens/FormsScreen'
+import { FormSubmitScreen } from './src/screens/FormSubmitScreen'
+import { MyFormsScreen } from './src/screens/MyFormsScreen'
+import { FormsInboxScreen } from './src/screens/FormsInboxScreen'
+import { FormReviewScreen } from './src/screens/FormReviewScreen'
 import { SubmitRequestScreen } from './src/screens/requests/SubmitRequestScreen'
 import { MonthlyReportScreen } from './src/screens/requests/MonthlyReportScreen'
+import { CabinModeScreen } from './src/screens/CabinModeScreen'
+import FatigueScreen from './src/screens/FatigueScreen'
+import LeaderboardScreen from './src/screens/LeaderboardScreen'
+import EquipmentScreen from './src/screens/EquipmentScreen'
+import SwapScreen from './src/screens/SwapScreen'
 import { OfflineBanner } from './src/shared/OfflineBanner'
 import { BulletinGuard } from './src/shared/BulletinGuard'
 import { CustomTabBar } from './src/shared/CustomTabBar'
@@ -71,6 +84,7 @@ export type RootStackParamList = {
   UIBuilder: undefined
   CustomPage: { slug: string }
   MeetingsScreen: undefined
+  PollsScreen: undefined
   ProfileScreen: undefined
   SubmitRequestScreen: undefined
   MonthlyReportScreen: undefined
@@ -78,9 +92,19 @@ export type RootStackParamList = {
   LifeCalendarScreen: undefined
   LeaveReportScreen: undefined
   PlateSearch: undefined
+  Forms: undefined
+  FormSubmit: { formKey: string }
+  MyForms: undefined
+  FormsInbox: undefined
+  FormReview: { submissionId: string }
   'راهنمای کاربری': undefined
   DirectoryScreen: undefined
   ChecklistsScreen: undefined
+  CabinMode: undefined
+  Fatigue: undefined
+  Leaderboard: undefined
+  Equipment: undefined
+  Swap: undefined
 }
 
 const Tab = createBottomTabNavigator()
@@ -116,6 +140,7 @@ function HomeStackScreen() {
       <Stack.Screen name="UIBuilder" component={UIBuilderScreen} />
       <Stack.Screen name="CustomPage" component={CustomPageScreen} />
       <Stack.Screen name="MeetingsScreen" component={MeetingsScreen} />
+      <Stack.Screen name="PollsScreen" component={PollsScreen} />
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
       <Stack.Screen name="SubmitRequestScreen" component={SubmitRequestScreen} />
       <Stack.Screen name="MonthlyReportScreen" component={MonthlyReportScreen} />
@@ -123,9 +148,19 @@ function HomeStackScreen() {
       <Stack.Screen name="LifeCalendarScreen" component={LifeCalendarScreen} />
       <Stack.Screen name="LeaveReportScreen" component={LeaveReportScreen} />
       <Stack.Screen name="PlateSearch" component={PlateSearchScreen} />
+      <Stack.Screen name="Forms" component={FormsScreen} />
+      <Stack.Screen name="FormSubmit" component={FormSubmitScreen} />
+      <Stack.Screen name="MyForms" component={MyFormsScreen} />
+      <Stack.Screen name="FormsInbox" component={FormsInboxScreen} />
+      <Stack.Screen name="FormReview" component={FormReviewScreen} />
       <Stack.Screen name="راهنمای کاربری" component={GuideScreen} />
       <Stack.Screen name="DirectoryScreen" component={DirectoryScreen} />
       <Stack.Screen name="ChecklistsScreen" component={ChecklistsScreen} />
+      <Stack.Screen name="CabinMode" component={CabinModeScreen} />
+      <Stack.Screen name="Fatigue" component={FatigueScreen} />
+      <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
+      <Stack.Screen name="Equipment" component={EquipmentScreen} />
+      <Stack.Screen name="Swap" component={SwapScreen} />
     </Stack.Navigator>
   )
 }
@@ -137,9 +172,10 @@ function getComponentForRoute(route: string) {
       return HomeStackScreen
     case 'CalendarScreen':
     case 'Calendar':
+      return CalendarScreen
     case 'RosterScreen':
     case 'Roster':
-      return CalendarScreen
+      return RosterScreen
     case 'LifeCalendarScreen':
     case 'LifeCalendar':
       return LifeCalendarScreen
@@ -193,6 +229,57 @@ function getComponentForRoute(route: string) {
     case 'UIBuilderScreen':
     case 'UIBuilder':
       return UIBuilderScreen
+    case 'PollsScreen':
+    case 'Polls':
+      return PollsScreen
+    case 'FormsScreen':
+    case 'Forms':
+      return FormsScreen
+    case 'MyFormsScreen':
+    case 'MyForms':
+      return MyFormsScreen
+    case 'FormsInboxScreen':
+    case 'FormsInbox':
+      return FormsInboxScreen
+    case 'FormReviewScreen':
+    case 'FormReview':
+      return FormReviewScreen
+    case 'CabinModeScreen':
+    case 'CabinMode':
+      return CabinModeScreen
+    case 'LearningScreen':
+    case 'Learning':
+      return LearningScreen
+    case 'LeaveReportScreen':
+    case 'LeaveReport':
+      return LeaveReportScreen
+    case 'MeetingsScreen':
+    case 'Meetings':
+      return MeetingsScreen
+    case 'PlateSearchScreen':
+    case 'PlateSearch':
+      return PlateSearchScreen
+    case 'GuideScreen':
+    case 'Guide':
+      return GuideScreen
+    case 'MonthlyReportScreen':
+    case 'MonthlyReport':
+      return MonthlyReportScreen
+    case 'SubmitRequestScreen':
+    case 'SubmitRequest':
+      return SubmitRequestScreen
+    case 'FatigueScreen':
+    case 'Fatigue':
+      return FatigueScreen
+    case 'LeaderboardScreen':
+    case 'Leaderboard':
+      return LeaderboardScreen
+    case 'EquipmentScreen':
+    case 'Equipment':
+      return EquipmentScreen
+    case 'SwapScreen':
+    case 'Swap':
+      return SwapScreen
     default:
       return HomeStackScreen
   }
@@ -222,7 +309,15 @@ function MainTabs() {
     'FeedbackScreen', 'Feedback', 'TicketsScreen', 'Tickets', 
     'BulletinsScreen', 'Bulletins', 'ChecklistsScreen', 'Checklists', 
     'VoiceConferenceScreen', 'VoiceConference', 'RadioSimulatorScreen', 'RadioSimulator', 'Radio', 
-    'PerformanceScreen', 'Performance', 'ContentScreen', 'Content', 'UIBuilderScreen', 'UIBuilder'
+    'PerformanceScreen', 'Performance', 'ContentScreen', 'Content', 'UIBuilderScreen', 'UIBuilder',
+    'PollsScreen', 'Polls', 'FormsScreen', 'Forms', 'MyFormsScreen', 'MyForms',
+    'FormsInboxScreen', 'FormsInbox', 'FormReviewScreen', 'FormReview',
+    'CabinModeScreen', 'CabinMode', 'LearningScreen', 'Learning', 'LeaveReportScreen', 'LeaveReport',
+    'MeetingsScreen', 'Meetings', 'PlateSearchScreen', 'PlateSearch', 'GuideScreen', 'Guide',
+    'MonthlyReportScreen', 'MonthlyReport', 'SubmitRequestScreen', 'SubmitRequest',
+    'RosterScreen', 'Roster',
+    'FatigueScreen', 'Fatigue', 'LeaderboardScreen', 'Leaderboard', 'EquipmentScreen', 'Equipment',
+    'SwapScreen', 'Swap'
   ]
 
   return (
@@ -268,6 +363,42 @@ export function AppContent() {
     })
     loadPersistedAuth()
   }, [])
+
+  const accessToken = useAuthStore((s) => s.accessToken)
+
+  useEffect(() => {
+    const registerDevice = async () => {
+      if (!accessToken || !user) return
+      try {
+        let token = await AsyncStorage.getItem('@device_token')
+        if (!token) {
+          token = 'dev-' + Math.random().toString(36).substring(2, 15)
+          await AsyncStorage.setItem('@device_token', token)
+        }
+
+        const platform = Platform.OS === 'ios' ? 'ios_pwa' : 'android'
+        await fetch(`${API_URL}/notifications/devices/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            platform,
+            driver: 'selfhosted',
+            token,
+            deviceName: `${Platform.OS} Device`,
+          }),
+        })
+      } catch (err) {
+        console.error('Error registering device token:', err)
+      }
+    }
+
+    if (user && accessToken) {
+      void registerDevice()
+    }
+  }, [user, accessToken])
 
   if (isLoading || !fontsLoaded) return null
   if (!user) return <LoginScreen />

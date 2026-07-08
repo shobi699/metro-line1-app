@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { toFa } from '@/lib/fa'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/features/auth'
@@ -61,6 +61,7 @@ interface RosterGanttViewProps {
   trips: Trip[]
   issues?: ValidationIssue[]
   isAdmin?: boolean
+  searchQuery?: string
   onCommentClick?: (tripId: string, operationalNote: string | null, status: string) => void
   onRefresh?: () => void
 }
@@ -82,12 +83,26 @@ export function RosterGanttView({
   trips,
   issues = [],
   isAdmin = false,
+  searchQuery = '',
   onCommentClick,
   onRefresh
 }: RosterGanttViewProps) {
   const [groupBy, setGroupBy] = useState<'train' | 'driver'>('train')
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+
+  const [nowMinutes, setNowMinutes] = useState(() => {
+    const d = new Date()
+    return d.getHours() * 60 + d.getMinutes()
+  })
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const d = new Date()
+      setNowMinutes(d.getHours() * 60 + d.getMinutes())
+    }, 60000)
+    return () => clearInterval(interval)
+  }, [])
 
   // 1. Group trips
   const groups = useMemo(() => {
@@ -153,6 +168,15 @@ export function RosterGanttView({
     const hasDisputed = trip.assignments.some(a => a.disputed)
     const hasUnassignedH1 = !trip.assignments.some(a => a.role === 'H1' && a.matchedUserId)
 
+    // Check if trip matches search query
+    let isMatched = true
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      const tNum = trip.trainNumber?.toLowerCase() || ''
+      const names = trip.assignments.map(a => (a.matchedUser?.name || a.rawName || '').toLowerCase()).join(' ')
+      isMatched = tNum.includes(q) || names.includes(q)
+    }
+
     let borderClass = 'border-accent/40 bg-accent/15 text-accent'
     let statusDot = 'bg-accent'
 
@@ -168,6 +192,12 @@ export function RosterGanttView({
     } else if (trip.assignments.some(a => a.role === 'H1' && a.readyAt)) {
       borderClass = 'border-success/60 bg-success/20 text-success'
       statusDot = 'bg-success'
+    }
+
+    if (!isMatched) {
+      borderClass += ' opacity-20'
+    } else if (searchQuery) {
+      borderClass += ' ring-2 ring-accent shadow-[0_0_8px_rgba(255,255,255,0.4)] z-20'
     }
 
     return {
@@ -264,6 +294,20 @@ export function RosterGanttView({
 
             {/* Timeline rows */}
             <div className="divide-y divide-outline-variant/60 relative">
+              
+              {/* Now Line */}
+              {nowMinutes >= TIMELINE_START_HOUR * 60 && nowMinutes <= TIMELINE_END_HOUR * 60 && (
+                <div className="absolute top-0 bottom-0 left-[96px] right-0 pointer-events-none z-30">
+                   <div 
+                     className="absolute top-0 bottom-0 flex flex-col items-center -ml-[4px]"
+                     style={{ left: `${((nowMinutes - (TIMELINE_START_HOUR * 60)) / TOTAL_MINUTES) * 100}%` }}
+                   >
+                      <div className="size-2 rounded-full bg-critical shadow-[0_0_8px_rgba(220,38,38,0.8)] animate-pulse -mt-1" />
+                      <div className="w-[1.5px] bg-critical/60 h-full shadow-[0_0_5px_rgba(220,38,38,0.5)]" />
+                   </div>
+                </div>
+              )}
+
               {groups.map((group) => (
                 <div key={group.id} className="flex hover:bg-surface-container-high/15 transition-colors group/row" dir="ltr">
                   

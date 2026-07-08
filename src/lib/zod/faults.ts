@@ -60,6 +60,7 @@ export const createFaultReportSchema = z.object({
   locationNote: z.string().optional().nullable(),
   occurredAt: z.string().transform((str) => new Date(str)),
   serviceImpact: z.enum(['none', 'delay', 'evacuated', 'removed_from_service']).default('none'),
+  priority: ticketPrioritySchema.optional(),
   photoUrls: z.array(z.string()).optional().default([]),
   annotations: z.array(z.any()).optional().default([]),
 })

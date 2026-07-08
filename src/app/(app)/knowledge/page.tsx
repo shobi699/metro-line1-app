@@ -65,65 +65,39 @@ export default function KnowledgePage() {
   const [selectedDocCategory, setSelectedDocCategory] = useState<string>('all')
   const [documents, setDocuments] = useState<OfficialDocument[]>([])
 
-  const defaultDocs: OfficialDocument[] = [
-    {
-      id: 'doc-1',
-      title: 'آیین‌نامه رانندگی و علائم خط ۱ مترو',
-      filename: 'metro-driving-rules-v2.pdf',
-      category: 'rules',
-      size: '۴.۸ مگابایت',
-      downloadCount: 142,
-      acknowledgedUsers: [
-        { name: 'علیرضا کریمی', date: '۱۴۰۵/۰۴/۰۲' },
-        { name: 'مجید رضایی', date: '۱۴۰۵/۰۴/۰۳' },
-      ]
-    },
-    {
-      id: 'doc-2',
-      title: 'دستورالعمل بایکوت و عبور اضطراری از بلاک مسدود',
-      filename: 'emergency-bypass-procedures.pdf',
-      category: 'bypass',
-      size: '۲.۱ مگابایت',
-      downloadCount: 95,
-      acknowledgedUsers: [
-        { name: 'حمید ابراهیمی', date: '۱۴۰۵/۰۴/۰۵' },
-      ]
-    },
-    {
-      id: 'doc-3',
-      title: 'دفترچه تلفن‌های اضطراری و دیسپاچینگ OCC',
-      filename: 'occ-emergency-numbers-1405.pdf',
-      category: 'phone',
-      size: '۸۵۰ کیلوبایت',
-      downloadCount: 210,
-      acknowledgedUsers: [
-        { name: 'سهراب مرادی', date: '۱۴۰۵/۰۴/۰۲' },
-        { name: 'علیرضا کریمی', date: '۱۴۰۵/۰۴/۰۲' },
-      ]
-    },
-    {
-      id: 'doc-4',
-      title: 'دستورالعمل فنی و کاتالوگ عیب‌یابی سیستم ترمز واگن‌ها',
-      filename: 'technical-brake-manual.pdf',
-      category: 'technical',
-      size: '۱۲.۴ مگابایت',
-      downloadCount: 64,
-      acknowledgedUsers: []
-    }
-  ]
+  const defaultDocs: OfficialDocument[] = []
 
   useEffect(() => {
     void loadArticles()
-    // Load official documents
-    if (typeof window !== 'undefined') {
-      const savedDocs = window.localStorage.getItem('metro_official_documents')
-      if (savedDocs) setDocuments(JSON.parse(savedDocs))
-      else {
-        setDocuments(defaultDocs)
-        window.localStorage.setItem('metro_official_documents', JSON.stringify(defaultDocs))
-      }
-    }
+    void loadBulletins()
   }, [accessToken, selectedCategory])
+
+  async function loadBulletins() {
+    if (!accessToken) return
+    try {
+      const res = await fetch('/api/safety/bulletins/directory', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      })
+      if (res.ok) {
+        const { data } = await res.json()
+        const mappedDocs: OfficialDocument[] = data.map((b: any) => ({
+          id: b.id,
+          title: b.title,
+          filename: `bulletin-${b.id.slice(-6)}.pdf`,
+          category: 'safety',
+          size: '۱.۲ مگابایت',
+          downloadCount: 0,
+          acknowledgedUsers: b.readReceipts?.map((r: any) => ({
+            name: r.user?.name || 'ناشناس',
+            date: jalali(r.readAt).split(' ')[0]
+          })) || []
+        }))
+        setDocuments(mappedDocs)
+      }
+    } catch (e) {
+      console.error('Failed to load bulletins', e)
+    }
+  }
 
   async function loadArticles() {
     if (!accessToken) return
@@ -161,25 +135,34 @@ export default function KnowledgePage() {
     }
   }
 
-  const handleAcknowledgeDoc = (docId: string) => {
-    if (!user) return
-    const updated = documents.map(doc => {
-      if (doc.id === docId) {
-        const alreadySigned = doc.acknowledgedUsers.some(u => u.name === user.name)
-        if (alreadySigned) return doc
-        
-        return {
-          ...doc,
-          acknowledgedUsers: [
-            ...doc.acknowledgedUsers,
-            { name: user.name, date: jalali(new Date().toISOString()).split(' ')[0] }
-          ]
-        }
+  async function handleAcknowledgeDocument(docId: string) {
+    if (!user || !accessToken) return
+    try {
+      const res = await fetch(`/api/safety/bulletins/${docId}/receipts`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` }
+      })
+      if (res.ok) {
+        setDocuments(prev => prev.map(doc => {
+          if (doc.id === docId) {
+            const alreadySigned = doc.acknowledgedUsers.some(u => u.name === user.name)
+            if (alreadySigned) return doc
+            return {
+              ...doc,
+              acknowledgedUsers: [
+                ...doc.acknowledgedUsers,
+                { name: user.name, date: jalali(new Date().toISOString()).split(' ')[0] }
+              ]
+            }
+          }
+          return doc
+        }))
+      } else {
+        alert('خطا در ثبت تاییدیه')
       }
-      return doc
-    })
-    setDocuments(updated)
-    window.localStorage.setItem('metro_official_documents', JSON.stringify(updated))
+    } catch (e) {
+      alert('خطا در برقراری ارتباط با سرور')
+    }
   }
 
   const categories = [
@@ -464,7 +447,7 @@ export default function KnowledgePage() {
                       ) : (
                         <Button
                           size="sm"
-                          onClick={() => handleAcknowledgeDoc(doc.id)}
+                          onClick={() => handleAcknowledgeDocument(doc.id)}
                           className="h-8 text-[10px] font-bold bg-accent hover:bg-accent-hover text-white cursor-pointer"
                         >
                           تأیید مطالعه و آگاهی

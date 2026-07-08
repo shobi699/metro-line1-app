@@ -318,3 +318,19 @@ export async function getFeedbackByToken(anonToken: string) {
   return feedback
 }
 
+export async function createFeedbackCategory(data: any) {
+  return prisma.feedbackCategory.create({ data })
+}
+
+export async function updateFeedbackCategory(id: string, data: any) {
+  return prisma.feedbackCategory.update({
+    where: { id },
+    data,
+  })
+}
+
+export async function deleteFeedbackCategory(id: string) {
+  return prisma.feedbackCategory.delete({
+    where: { id },
+  })
+}

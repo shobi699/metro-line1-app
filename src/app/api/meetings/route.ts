@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const view = searchParams.get('view') ?? 'mine'
 
-  if (view === 'manager' && user.rank >= 3) {
+  if (view === 'manager' && user.rank >= 1) {
     const meetings = await getManagerMeetings(user.id)
     return NextResponse.json({ data: meetings })
   }
@@ -71,7 +71,7 @@ export async function PATCH(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  if (user.rank < 3) {
+  if (user.rank < 1) {
     return NextResponse.json({ error: { message: 'شما دسترسی کافی ندارید' } }, { status: 403 })
   }
 

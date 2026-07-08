@@ -83,6 +83,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
           { label: 'پروفایل کاربری', href: '/profile', icon: User },
           { label: 'رزرو وقت جلسه', href: '/meetings', icon: Calendar },
           { label: 'نظرسنجی‌ها', href: '/polls', icon: Vote },
+          { label: 'ثبت ایده و پیشنهاد', href: '/ideas', icon: MessageSquare },
           { label: 'پایش خستگی و سلامت کاری', href: '/fatigue', icon: Activity },
           { label: 'جدول برترها (رتبه)', href: '/leaderboard', icon: Trophy },
           { label: 'کارنامه و ارزیابی عملکرد', href: '/performance', icon: Award },
@@ -98,11 +99,15 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         items: [
           { label: 'شیفت و تقویم من', href: '/shifts', icon: Calendar },
           { label: 'تقویم زندگی', href: '/calendar', icon: CalendarDays },
+          { label: 'برنامه روزانه من', href: '/roster/my-day', icon: Clock },
           { label: 'لوحه اعزام روزانه خط ۱', href: '/roster', icon: Clock },
+          { label: 'بورد لوحه', href: '/roster/board', icon: CalendarDays },
+          { label: 'جابه‌جایی شیفت (Swap)', href: '/swap', icon: ArrowLeftRight },
           { label: 'درخواست تعویض شیفت', href: '/swap/inbox', icon: ArrowLeftRight },
           { label: 'حضور و غیاب هوشمند', href: '/attendance', icon: UserCheck },
           { label: 'چک‌لیست حرکت قطار', href: '/checklists', icon: ClipboardCheck },
           { label: 'ثبت خرابی و تیکتینگ', href: '/tickets', icon: AlertTriangle },
+          { label: 'گزارش خرابی‌ها', href: '/reports/faults', icon: AlertTriangle },
           { label: 'تجهیزات انفرادی من', href: '/equipment', icon: HardDrive },
           { label: 'مرخصی و مأموریت‌ها', href: '/leaves', icon: Calendar },
         ]
@@ -147,6 +152,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         icon: GraduationCap,
         items: [
           { label: 'آموزش بدو خدمت (Onboarding)', href: '/onboarding', icon: GraduationCap },
+          { label: 'داشبورد اصلی آموزش (LMS)', href: '/learning', icon: GraduationCap },
           { label: 'دوره‌ها و مقالات آموزشی', href: '/content', icon: Newspaper },
           { label: 'گالری ویدیوهای آموزشی', href: '/learning/gallery', icon: Video },
           { label: 'کارنامه و آزمون‌های من', href: '/learning/exams', icon: Award },
@@ -179,10 +185,17 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         roles: ['admin', 'super_admin'],
         items: [
           { label: 'مدیریت درخواست‌ها', href: '/admin/requests', icon: FileSpreadsheet },
+          { label: 'مدیریت مرخصی‌ها', href: '/admin/leaves', icon: Calendar },
+          { label: 'تنظیمات مرخصی', href: '/admin/settings/leaves', icon: Settings },
           { label: 'مدیریت شیفت‌ها', href: '/admin/shifts', icon: Calendar },
+          { label: 'مدیریت تقویم', href: '/admin/calendar', icon: CalendarDays },
           { label: 'بارگذاری اکسل لوحه', href: '/roster/upload', icon: FileSpreadsheet },
           { label: 'نمای گانت لوحه', href: '/roster?view=gantt', icon: TrendingUp },
           { label: 'آمار و تحلیل اعزام‌ها', href: '/roster/analytics', icon: BarChart3 },
+          { label: 'قوانین اعتبارسنجی لوحه', href: '/admin/roster/validation-rules', icon: Settings },
+          { label: 'قوانین اصلاح لوحه', href: '/admin/roster/amendment-rules', icon: Settings },
+          { label: 'ماتریس دیداری لوحه', href: '/admin/roster/visibility-matrix', icon: Settings },
+          { label: 'مدیریت تابلوهای اعلانات', href: '/admin/signage', icon: Radio },
           { label: 'مدیریت چک‌لیست‌ها', href: '/admin/checklists', icon: ClipboardCheck },
         ]
       },
@@ -192,6 +205,9 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         icon: GraduationCap,
         roles: ['admin', 'super_admin'],
         items: [
+          { label: 'مدیریت جامع آموزش', href: '/admin/learning', icon: GraduationCap },
+          { label: 'مدیریت ایمنی (Safety)', href: '/admin/safety', icon: ShieldCheck },
+          { label: 'مدیریت دانشنامه', href: '/admin/knowledge', icon: BookOpen },
           { label: 'بخشنامه‌های ایمنی', href: '/admin/bulletins', icon: ShieldCheck },
           { label: 'بانک سوالات و آزمون‌ها', href: '/admin/exams-editor', icon: Settings },
         ]
@@ -213,9 +229,13 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         roles: ['admin', 'super_admin'],
         items: [
           { label: 'فرم‌ساز سازمانی', href: '/admin/form-builder', icon: Settings },
+          { label: 'مدیریت نظرسنجی‌ها', href: '/admin/surveys', icon: Vote },
+          { label: 'ویرایشگر UI', href: '/admin/ui-builder', icon: LayoutDashboard },
+          { label: 'گزارشات جلسات', href: '/admin/meetings/reports', icon: BarChart3 },
           { label: 'مدیریت تیکت‌های خرابی', href: '/admin/tickets', icon: AlertTriangle },
           { label: 'داشبورد تحلیلی', href: '/admin/analytics', icon: BarChart3 },
           { label: 'پیکربندی کاتالوگ عملکرد', href: '/admin/performance-config', icon: Award },
+          { label: 'درخواست تجدیدنظر عملکرد', href: '/admin/performance-appeals', icon: FileText },
           { label: 'ثبت و بررسی عملکرد', href: '/admin/performance', icon: FileSpreadsheet },
           { label: 'سیگنالینگ و شبکه برق', href: '/admin/infrastructure', icon: HardDrive },
           { label: 'ثبت خودروها و پلاک‌خوان', href: '/admin/license-plates', icon: Settings },

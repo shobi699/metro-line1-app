@@ -182,7 +182,7 @@ export default function RegisterPage() {
                 {/* National ID */}
                 <div className="col-span-1">
                   <label className="block text-xs font-semibold text-foreground-muted mb-1" htmlFor="nationalId">
-                    کد ملی <span className="text-critical">*</span>
+                    کد پرسنلی <span className="text-critical">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted">
@@ -192,7 +192,7 @@ export default function RegisterPage() {
                       className="w-full bg-surface-container-low border border-outline-variant text-foreground text-xs rounded-xl focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent block pr-10 p-2.5 font-mono"
                       id="nationalId"
                       type="text"
-                      placeholder="۰۰۰۰۰۰۰۰۰۰"
+                      placeholder="کد پرسنلی خود را وارد کنید"
                       maxLength={10}
                       value={form.nationalId}
                       onChange={(e) => update('nationalId', e.target.value)}

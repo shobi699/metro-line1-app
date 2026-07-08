@@ -100,28 +100,33 @@ export async function GET(request: Request) {
       if (isUnassigned) unassignedCount++
     })
 
-    return NextResponse.json({
-      data: {
-        rosterDay: {
-          id: rosterDay.id,
-          jalaliDate: rosterDay.jalaliDate,
-          gregorianDate: rosterDay.gregorianDate,
-          title: rosterDay.title,
-          schedulingTitle: rosterDay.schedulingTitle,
-          status: rosterDay.status,
-          versionId: publishedVersion.id,
-          versionNo: publishedVersion.versionNo
-        },
-        trips,
-        issues,
-        stats: {
-          totalTrips,
-          acknowledgedCount,
-          readyCount,
-          disputeCount,
-          unassignedCount
-        }
+    const resultPayload = {
+      rosterDay: {
+        id: rosterDay.id,
+        jalaliDate: rosterDay.jalaliDate,
+        gregorianDate: rosterDay.gregorianDate,
+        title: rosterDay.title,
+        schedulingTitle: rosterDay.schedulingTitle,
+        status: rosterDay.status,
+        versionId: publishedVersion.id,
+        versionNo: publishedVersion.versionNo
+      },
+      trips,
+      issues,
+      stats: {
+        totalTrips,
+        acknowledgedCount,
+        readyCount,
+        disputeCount,
+        unassignedCount
       }
+    }
+
+    const { applyVisibilityMatrix } = await import('@/server/modules/roster/visibility-filter')
+    const filteredPayload = await applyVisibilityMatrix(resultPayload, user.roleKey)
+
+    return NextResponse.json({
+      data: filteredPayload
     })
   } catch (error: any) {
     return NextResponse.json(

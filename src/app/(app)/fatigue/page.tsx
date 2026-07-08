@@ -24,78 +24,90 @@ interface WarningAlert {
   severity: 'low' | 'medium' | 'high'
 }
 
-const defaultLogs: SelfCheckLog[] = [
-  { sleepHours: 7.5, sleepQuality: 'good', fatigueLevel: 1, hasHeadacheOrColds: false, timestamp: new Date(Date.now() - 3600000 * 24).toISOString() },
-  { sleepHours: 6.0, sleepQuality: 'fair', fatigueLevel: 3, hasHeadacheOrColds: true, timestamp: new Date(Date.now() - 3600000 * 48).toISOString() },
-]
-
-const warnings: WarningAlert[] = [
-  { id: 'w-1', title: 'فاصله استراحت کم بین دو شیفت', desc: 'فاصله شیفت عصر گذشته تا شیفت صبح امروز کمتر از ۱۱ ساعت بوده است (تخلف از حداقل زمان ریکاوری).', severity: 'medium' },
-  { id: 'w-2', title: 'توالی شیفت‌های شبانه', desc: 'شما در ۵ روز گذشته ۲ شیفت شب داشته‌اید. الگوهای خواب نامنظم خطر انحراف از توجه سیگنالینگ را بالا می‌برد.', severity: 'low' },
-]
-
 export default function FatiguePage() {
   const [sleepHours, setSleepHours] = useState(7)
   const [sleepQuality, setSleepQuality] = useState<'good' | 'fair' | 'poor'>('good')
   const [fatigueLevel, setFatigueLevel] = useState(2) // 1 to 5
   const [hasHeadacheOrColds, setHasHeadacheOrColds] = useState(false)
+  
   const [logs, setLogs] = useState<SelfCheckLog[]>([])
+  const [alerts, setAlerts] = useState<WarningAlert[]>([])
   
   const [calculatedScore, setCalculatedScore] = useState(24) // Fatigue score out of 100
   const [submitting, setSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedLogs = window.localStorage.getItem('metro_fatigue_logs')
-      if (savedLogs) setLogs(JSON.parse(savedLogs))
-      else {
-        setLogs(defaultLogs)
-        window.localStorage.setItem('metro_fatigue_logs', JSON.stringify(defaultLogs))
+  const fetchAnalysis = async () => {
+    try {
+      const res = await fetch('/api/fatigue')
+      const json = await res.json()
+      if (json.data) {
+        setCalculatedScore(json.data.score)
+        setAlerts(json.data.alerts || [])
+        if (json.data.latestLog) {
+          // just keeping history simple for now, add latest to array
+          setLogs([{
+            sleepHours: json.data.latestLog.sleepHours,
+            sleepQuality: json.data.latestLog.sleepQuality,
+            fatigueLevel: json.data.latestLog.fatigueLevel,
+            hasHeadacheOrColds: json.data.latestLog.hasHeadacheOrColds,
+            timestamp: json.data.latestLog.createdAt
+          }])
+        }
       }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setIsLoading(false)
     }
-  }, [])
-
-  // Recalculate fatigue risk score based on inputs
-  const recalculateScore = (hrs: number, quality: string, fatigue: number, head: boolean) => {
-    let score = 20
-    // Sleep hours impact
-    if (hrs < 6) score += 30
-    else if (hrs < 8) score += 15
-    // Sleep quality impact
-    if (quality === 'poor') score += 20
-    else if (quality === 'fair') score += 10
-    // Fatigue level
-    score += (fatigue - 1) * 10
-    // Headaches/colds
-    if (head) score += 15
-
-    setCalculatedScore(Math.min(score, 100))
   }
 
-  const handleSelfCheckSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetchAnalysis()
+  }, [])
+
+  const recalculateScore = (sleep: number, qual: string, fatigue: number, sick: boolean) => {
+    let base = 10
+    if (sleep < 5) base += 40
+    else if (sleep < 7) base += 20
+    
+    if (qual === 'poor') base += 20
+    else if (qual === 'fair') base += 10
+    
+    base += fatigue * 5
+    if (sick) base += 20
+    
+    setCalculatedScore(Math.min(100, base))
+  }
+
+  const handleSelfCheckSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
+    setSubmitSuccess('')
 
-    const newLog: SelfCheckLog = {
-      sleepHours,
-      sleepQuality,
-      fatigueLevel,
-      hasHeadacheOrColds,
-      timestamp: new Date().toISOString()
-    }
+    try {
+      const res = await fetch('/api/fatigue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sleepHours,
+          sleepQuality,
+          fatigueLevel,
+          hasHeadacheOrColds,
+        })
+      })
 
-    const updated = [newLog, ...logs]
-    setLogs(updated)
-    window.localStorage.setItem('metro_fatigue_logs', JSON.stringify(updated))
-
-    recalculateScore(sleepHours, sleepQuality, fatigueLevel, hasHeadacheOrColds)
-
-    setTimeout(() => {
+      if (res.ok) {
+        setSubmitSuccess('خودارزیابی آمادگی فیزیکی با موفقیت در کارنامه سلامت شیفت شما ثبت گردید.')
+        await fetchAnalysis() // Refresh score and alerts
+        setTimeout(() => setSubmitSuccess(''), 4000)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
       setSubmitting(false)
-      setSubmitSuccess('خودارزیابی آمادگی فیزیکی با موفقیت در کارنامه سلامت شیفت شما ثبت گردید.')
-      setTimeout(() => setSubmitSuccess(''), 4000)
-    }, 800)
+    }
   }
 
   const getScoreStatus = (score: number) => {
@@ -105,6 +117,10 @@ export default function FatiguePage() {
   }
 
   const statusCfg = getScoreStatus(calculatedScore)
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-foreground-muted" dir="rtl">در حال بارگذاری تحلیل خستگی...</div>
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 max-w-4xl mx-auto" dir="rtl">
@@ -261,7 +277,10 @@ export default function FatiguePage() {
               <CardDescription>مغایرت‌ها و هشدارهای استخراج شده از الگوهای لوحه کاری شما:</CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-0 space-y-3">
-              {warnings.map((w) => (
+              {alerts.length === 0 && (
+                <div className="text-xs text-foreground-muted text-center py-4">بدون هشدار سیستمی جدید</div>
+              )}
+              {alerts.map((w) => (
                 <div key={w.id} className="p-3 border border-border/40 bg-surface-container-low rounded-lg flex items-start gap-3">
                   <AlertTriangle className={`size-5 shrink-0 mt-0.5 ${w.severity === 'high' ? 'text-critical' : 'text-warning'}`} />
                   <div>

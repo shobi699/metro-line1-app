@@ -98,4 +98,3 @@ index 1234567..abcdefg 100644
 -        return mReactViewBackground;
 +        return mBackground;
      }
- 

@@ -54,11 +54,18 @@ function DayCell({ day, isToday, isSelected, onSelect }: DayCellProps) {
         >
           {toFa(jDayNum)}
         </span>
-        {day.orgEvents.length > 0 && (
-          <span className="text-[10px] text-evt-org" title="رویداد سازمانی">
-            ◆
-          </span>
-        )}
+        <div className="flex gap-0.5">
+          {day.meetings?.length > 0 && (
+            <span className="text-[10px] text-sky-500" title="جلسه">
+              👥
+            </span>
+          )}
+          {day.orgEvents.length > 0 && (
+            <span className="text-[10px] text-evt-org" title="رویداد سازمانی">
+              ◆
+            </span>
+          )}
+        </div>
       </div>
 
       {meta && day.shift && (

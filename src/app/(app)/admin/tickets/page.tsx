@@ -203,8 +203,8 @@ export default function TicketsAdminPage() {
                 <div>
                   <h2 className="text-xl font-bold">{selectedTicket.title}</h2>
                   <div className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
-                    <span>گزارش‌دهنده: {selectedTicket.user.name}</span>
-                    <span>({toFa(selectedTicket.user.nationalId)})</span>
+                    <span>گزارش‌دهنده: {selectedTicket.user?.name || 'ناشناس'}</span>
+                    {selectedTicket.user?.nationalId && <span>({toFa(selectedTicket.user.nationalId)})</span>}
                   </div>
                 </div>
                 <div className={`px-3 py-1 text-sm rounded-full ${statusColors[selectedTicket.status]}`}>

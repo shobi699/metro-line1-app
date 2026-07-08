@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   const existing = await prisma.user.findUnique({ where: { nationalId } })
   if (existing) {
     return NextResponse.json(
-      { error: 'کاربری با این کد ملی قبلاً ثبت‌نام کرده است' },
+      { error: 'کاربری با این کد پرسنلی قبلاً ثبت‌نام کرده است' },
       { status: 409 },
     )
   }

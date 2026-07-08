@@ -73,62 +73,15 @@ const LINE1_STATIONS = [
   'کهریزک'
 ]
 
-const SAMPLE_TEMPLATES: Template[] = [
-  {
-    id: 'tpl-1',
-    name: 'چک‌لیست پیش از حرکت واگن‌های قدیمی سری ۱۰۰',
-    trainType: 'سری ۱۰۰',
-    stationLocation: 'دپوی کهریزک',
-    description: 'بازرسی‌های هیدرولیکی، فشار مخازن باد اصلی و تست کمپرسورهای مکانیکی سری ۱۰۰.',
-    items: [
-      { label: 'تست ترمز اضطراری و ترمزهای پارکینگ قطار', required: true, requirePhoto: false },
-      { label: 'بررسی فشار مخازن باد اصلی (حداقل ۷.۵ بار)', required: true, requirePhoto: true },
-      { label: 'کنترل کارکرد صحیح چراغ‌های سیگنال کابین راهبری', required: true, requirePhoto: false },
-      { label: 'تست فیزیکی بایکوت درب واگن شماره ۲', required: false, requirePhoto: true }
-    ]
-  },
-  {
-    id: 'tpl-2',
-    name: 'چک‌لیست شبیه‌ساز قطارهای هوشمند سری ۳۰۰',
-    trainType: 'سری ۳۰۰',
-    stationLocation: 'تجریش',
-    description: 'کالیبره مانیتورهای کابین و ارتباط بی‌سیم دیسپاچینگ سری ۳۰۰.',
-    items: [
-      { label: 'تست مانیتورینگ سیگنال خط کابین جلو', required: true, requirePhoto: false },
-      { label: 'تست سیستم تتا (بی‌سیم هماهنگی OCC)', required: true, requirePhoto: false },
-      { label: 'کنترل فیزیکی کپسول‌های اطفای حریق کابین', required: false, requirePhoto: true }
-    ]
-  }
-]
 
-const SAMPLE_HISTORY: ChecklistRecord[] = [
-  {
-    id: 'rec-1',
-    templateId: 'tpl-1',
-    templateName: 'چک‌لیست پیش از حرکت واگن‌های قدیمی سری ۱۰۰',
-    trainType: 'سری ۱۰۰',
-    items: [
-      { label: 'تست ترمز اضطراری و ترمزهای پارکینگ قطار', checked: true },
-      { label: 'بررسی فشار مخازن باد اصلی (حداقل ۷.۵ بار)', checked: true, photoAttached: true },
-      { label: 'کنترل کارکرد صحیح چراغ‌های سیگنال کابین راهبری', checked: true }
-    ],
-    signedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    trainId: '۱۰۴',
-    stationId: 'دپوی کهریزک',
-    geoLocation: '۳۵.۵۲۱۲° N, ۵۱.۳۹۰۸° E (حریم دپو)',
-    completionTimeSeconds: 120,
-    digitalSignaturePin: '****',
-    reporterName: 'امین سلیمانی (راهبر قطار)'
-  }
-]
 
 export default function ChecklistsPage() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
 
-  const [templates, setTemplates] = useState<Template[]>(SAMPLE_TEMPLATES)
-  const [history, setHistory] = useState<ChecklistRecord[]>(SAMPLE_HISTORY)
-  const [loading, setLoading] = useState(false)
+  const [templates, setTemplates] = useState<Template[]>([])
+  const [history, setHistory] = useState<ChecklistRecord[]>([])
+  const [loading, setLoading] = useState(true)
   const [activeTemplate, setActiveTemplate] = useState<Template | null>(null)
 
   const [activeTab, setActiveTab] = useState<'fill' | 'history' | 'admin'>('fill')
@@ -160,6 +113,43 @@ export default function ChecklistsPage() {
   const [newItemRequired, setNewItemRequired] = useState(true)
   const [newItemRequirePhoto, setNewItemRequirePhoto] = useState(false)
 
+  const fetchChecklistsData = async () => {
+    try {
+      setLoading(true)
+      const tplRes = await fetch('/api/checklists?view=templates', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      const tplData = await tplRes.json()
+      if (tplData.data) {
+        setTemplates(tplData.data)
+      }
+
+      const histRes = await fetch('/api/checklists?view=history', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      const histData = await histRes.json()
+      if (histData.data) {
+        const mappedHistory = histData.data.map((r: any) => ({
+          ...r,
+          templateName: r.template?.name,
+          trainType: r.template?.trainType,
+          reporterName: r.user?.name,
+        }))
+        setHistory(mappedHistory)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (accessToken) {
+      fetchChecklistsData()
+    }
+  }, [accessToken])
+
   // شروع تایمر با باز شدن چک‌لیست
   useEffect(() => {
     if (activeTemplate) {
@@ -178,7 +168,7 @@ export default function ChecklistsPage() {
   }, [activeTemplate])
 
   // ارسال چک‌لیست قبل از حرکت — بخش ۱۲.۳
-  const handleSubmitChecklist = () => {
+  const handleSubmitChecklist = async () => {
     if (!activeTemplate || !trainId) {
       alert('لطفاً شماره رام قطار را وارد کنید.')
       return
@@ -214,23 +204,35 @@ export default function ChecklistsPage() {
       }
     })
 
-    const newRecord: ChecklistRecord = {
-      id: `chk-rec-${Date.now()}`,
+    const newRecordPayload = {
       templateId: activeTemplate.id,
-      templateName: activeTemplate.name,
-      trainType: activeTemplate.trainType,
-      items: parsedItems,
-      signedAt: new Date().toISOString(),
       trainId,
       stationId,
+      items: parsedItems,
       geoLocation: '۳۵.۷۴۱۵° N, ۵۱.۴۰۸۸° E (موقعیت GPS ثبت شده)',
       completionTimeSeconds: elapsedSeconds,
-      digitalSignaturePin: '****',
-      reporterName: user?.name || 'راهبر قطار خط ۱',
       autoTicketGenerated: hasDefects
     }
 
-    setHistory(prev => [newRecord, ...prev])
+    try {
+      const res = await fetch('/api/checklists', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(newRecordPayload),
+      })
+      
+      if (res.ok) {
+        fetchChecklistsData()
+      } else {
+        alert('خطا در ثبت چک‌لیست')
+      }
+    } catch (err) {
+      alert('خطا در ارتباط با سرور')
+    }
+
     setActiveTemplate(null)
     setCheckedItems({})
     setItemNotes({})
@@ -248,22 +250,39 @@ export default function ChecklistsPage() {
   }
 
   // ثبت قالب جدید توسط ادمین
-  const handleCreateTemplate = () => {
+  const handleCreateTemplate = async () => {
     if (!newTemplateName.trim() || newTemplateItems.length === 0) return
-    const newTpl: Template = {
-      id: `tpl-${Date.now()}`,
-      name: newTemplateName,
-      trainType: newTemplateTrainType,
-      stationLocation: newTemplateStation,
-      description: newTemplateDescription.trim() || null,
-      items: newTemplateItems
+    
+    try {
+      const res = await fetch('/api/checklists', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          action: 'create_template',
+          name: newTemplateName,
+          trainType: newTemplateTrainType,
+          stationLocation: newTemplateStation,
+          description: newTemplateDescription.trim() || null,
+          items: newTemplateItems,
+        }),
+      })
+
+      if (res.ok) {
+        fetchChecklistsData()
+        setNewTemplateName('')
+        setNewTemplateDescription('')
+        setNewTemplateItems([])
+        alert('قالب چک‌لیست جدید با موفقیت به بانک اطلاعاتی خط ۱ اضافه شد.')
+        setActiveTab('fill')
+      } else {
+        alert('خطا در ساخت قالب جدید')
+      }
+    } catch (err) {
+      alert('خطا در ارتباط با سرور')
     }
-    setTemplates(prev => [...prev, newTpl])
-    setNewTemplateName('')
-    setNewTemplateDescription('')
-    setNewTemplateItems([])
-    alert('قالب چک‌لیست جدید با موفقیت به بانک اطلاعاتی خط ۱ اضافه شد.')
-    setActiveTab('fill')
   }
 
   const handleAddNewItem = () => {

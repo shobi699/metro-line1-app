@@ -6,6 +6,26 @@ import { getSettingValue } from '@/server/modules/settings/service'
 import { exportToExcel } from '@/server/modules/faults/import-export'
 import { jalali } from '@/lib/fa'
 
+const STATUS_LABELS: Record<string, string> = {
+  submitted: 'ثبت شده',
+  under_review: 'در حال بررسی',
+  needs_info: 'نیاز به اطلاعات',
+  rejected: 'رد شده',
+  approved: 'تایید شده',
+  in_repair: 'در حال تعمیر',
+  repaired: 'تعمیر شده',
+  verified_closed: 'بسته شده',
+  deferred: 'ماندگار (Deferred)',
+  reopened: 'بازگشایی شده',
+}
+
+const PRIORITY_LABELS: Record<string, string> = {
+  low: 'کم',
+  medium: 'متوسط',
+  high: 'زیاد',
+  critical: 'بحرانی',
+}
+
 export async function GET(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
@@ -93,6 +113,26 @@ export async function GET(request: Request) {
         rows.push([t.trainNumber, total, open, Math.round(mttrHours * 10) / 10, breaches])
       }
       filename = 'trains-aging.xlsx'
+    } else if (reportType === 'all' || !reportType) {
+      const reports = await prisma.faultReport.findMany({
+        include: { train: true, wagon: true, faultCode: true, reporter: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      headers = ['شماره فالت', 'قطار', 'واگن', 'کد خطا', 'عنوان خطا', 'شرح خرابی', 'اولویت', 'وضعیت', 'ثبت‌کننده', 'تاریخ ثبت']
+      rows = reports.map((r) => [
+        `F-${r.faultNo}`,
+        r.train.trainNumber,
+        r.wagon?.wagonCode || '—',
+        r.faultCode.code,
+        r.faultCode.title,
+        r.description,
+        PRIORITY_LABELS[r.priority] || r.priority,
+        STATUS_LABELS[r.status] || r.status,
+        r.reporter.name,
+        jalali(r.createdAt),
+      ])
+      filename = 'faults-all.xlsx'
     } else {
       return NextResponse.json({ error: 'نوع گزارش نامعتبر است' }, { status: 400 })
     }

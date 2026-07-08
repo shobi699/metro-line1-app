@@ -60,6 +60,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
           { label: 'اعلانات سیستم', route: 'NotificationsScreen', icon: 'notifications' },
           { label: 'پروفایل کاربری', route: 'ProfileScreen', icon: 'person' },
           { label: 'رزرو وقت جلسه', route: 'MeetingsScreen', icon: 'calendar-today' },
+          { label: 'نظرسنجی و پیمایش‌ها', route: 'PollsScreen', icon: 'poll' },
           { label: 'کارنامه و ارزیابی عملکرد', route: 'عملکرد', icon: 'star' },
           { label: 'ثبت بازخورد و پیام', route: 'بازخورد', icon: 'message' },
         ]

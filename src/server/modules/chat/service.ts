@@ -81,36 +81,43 @@ export async function listRoomsForUser(userId: string): Promise<RoomSummary[]> {
     },
   })
 
-  const summaries = await Promise.all(
-    memberships.map(async (m) => {
-      const room = m.room
-      const unreadCount = await prisma.message.count({
-        where: {
-          roomId: room.id,
-          senderId: { not: userId },
-          ...(m.lastReadAt ? { createdAt: { gt: m.lastReadAt } } : {}),
-        },
-      })
-      const last = room.messages[0]
-      return {
-        id: room.id,
-        name: roomDisplayName(room, userId),
-        type: room.type as 'direct' | 'group',
-        kind: room.kind,
-        memberCount: room.members.length,
-        unreadCount,
-        lastMessage: last
-          ? {
-              body: last.body,
-              attachmentType: last.attachmentType,
-              senderName: last.sender.name,
-              createdAt: last.createdAt,
-            }
-          : null,
-        updatedAt: room.updatedAt,
-      }
-    }),
-  )
+  // Solve N+1 unread counts in a single query
+  const unreadCountsRaw = await prisma.$queryRaw<Array<{ roomId: string; count: bigint | number }>>`
+    SELECT m.roomId, COUNT(*) as count
+    FROM Message m
+    JOIN ChatMember cm ON m.roomId = cm.roomId
+    WHERE cm.userId = ${userId}
+      AND m.senderId != ${userId}
+      AND (cm.lastReadAt IS NULL OR m.createdAt > cm.lastReadAt)
+    GROUP BY m.roomId
+  `
+  const unreadMap = new Map<string, number>()
+  for (const item of unreadCountsRaw) {
+    unreadMap.set(item.roomId, Number(item.count))
+  }
+
+  const summaries = memberships.map((m) => {
+    const room = m.room
+    const unreadCount = unreadMap.get(room.id) ?? 0
+    const last = room.messages[0]
+    return {
+      id: room.id,
+      name: roomDisplayName(room, userId),
+      type: room.type as 'direct' | 'group',
+      kind: room.kind,
+      memberCount: room.members.length,
+      unreadCount,
+      lastMessage: last
+        ? {
+            body: last.body,
+            attachmentType: last.attachmentType,
+            senderName: last.sender.name,
+            createdAt: last.createdAt,
+          }
+        : null,
+      updatedAt: room.updatedAt,
+    }
+  })
 
   // مرتب‌سازی بر اساس آخرین فعالیت
   return summaries.sort((a, b) => {

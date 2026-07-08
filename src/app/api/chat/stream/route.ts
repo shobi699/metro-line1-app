@@ -67,15 +67,23 @@ export async function GET(request: Request) {
         }
       }
 
+      const onNotification = (event: any) => {
+        if (event.userId === userId) {
+          send(`event: notification\ndata: ${JSON.stringify(event.notification)}\n\n`)
+        }
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { chatBus } = require('@/server/realtime/bus')
       chatBus.on('message', onMessage)
+      chatBus.on('notification', onNotification)
 
       const heartbeat = setInterval(() => send(': ping\n\n'), 25_000)
 
       request.signal.addEventListener('abort', () => {
         clearInterval(heartbeat)
         chatBus.off('message', onMessage)
+        chatBus.off('notification', onNotification)
         try {
           controller.close()
         } catch {

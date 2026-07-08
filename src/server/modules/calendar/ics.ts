@@ -89,7 +89,7 @@ export async function buildIcsFeed(token: string): Promise<string | null> {
   const from = dayjs().subtract(FEED_PAST_DAYS, 'day')
   const to = dayjs().add(FEED_FUTURE_DAYS, 'day')
 
-  const activeLayers = ['shift', 'holidays', 'personal', 'org'].filter(layerOn)
+  const activeLayers = ['shift', 'holidays', 'personal', 'org', 'meetings'].filter(layerOn)
   const range = await getCalendarRange({
     userId: user.id,
     roleKey: user.role.key,
@@ -158,6 +158,25 @@ export async function buildIcsFeed(token: string): Promise<string | null> {
         allDayDate: o.allDay ? dayD : undefined,
         startAt: o.allDay ? undefined : new Date(o.startAt),
         endAt: o.allDay ? undefined : o.endAt ? new Date(o.endAt) : undefined,
+      })
+    }
+
+    for (const m of day.meetings ?? []) {
+      const uid = `meeting-${m.id}@metro-line1`
+      if (seenEvents.has(uid)) continue
+      seenEvents.add(uid)
+      
+      const roleText = m.role === 'host' ? 'میزبان' : 'درخواست‌کننده'
+      const statusText = m.status === 'approved' ? 'تایید شده' : m.status === 'pending' ? 'در انتظار' : m.status
+      const summary = `جلسه: ${m.title} (${statusText})`
+      const description = `موضوع: ${m.description || 'ندارد'}\nنقش شما: ${roleText}\nشخص دیگر: ${m.otherParty?.name || '-'}`
+      
+      events.push({
+        uid,
+        summary,
+        description,
+        startAt: new Date(m.startAt),
+        endAt: m.endAt ? new Date(m.endAt) : undefined,
       })
     }
   }

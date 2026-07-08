@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
+import { ImageUploader } from '@/components/shared/image-uploader'
 
 interface UserRef {
   id: string
@@ -100,6 +102,7 @@ const IMPACT_LABELS: Record<string, string> = {
 
 export default function TicketsPage() {
   const { accessToken, user } = useAuthStore()
+  const isSupervisorOrAbove = user?.roleKey === 'super_admin' || user?.roleKey === 'admin' || user?.roleKey === 'manager' || user?.roleKey === 'supervisor'
   const [reports, setReports] = useState<FaultReport[]>([])
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState<string>('')
@@ -121,6 +124,8 @@ export default function TicketsPage() {
   const [faultLocation, setFaultLocation] = useState('')
   const [faultDesc, setFaultDesc] = useState('')
   const [serviceImpact, setServiceImpact] = useState('none')
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium')
+  const [faultPhoto, setFaultPhoto] = useState<string>('')
   const [nlpMatching, setNlpMatching] = useState(false)
 
   // Dialog Action states
@@ -271,6 +276,8 @@ export default function TicketsPage() {
           locationNote: faultLocation || null,
           occurredAt: new Date().toISOString(),
           serviceImpact,
+          priority,
+          photoUrls: faultPhoto ? [faultPhoto] : [],
         }),
       })
 
@@ -297,6 +304,8 @@ export default function TicketsPage() {
     setFaultLocation('')
     setFaultDesc('')
     setServiceImpact('none')
+    setPriority('medium')
+    setFaultPhoto('')
   }
 
   // Workflows action execution
@@ -407,9 +416,16 @@ export default function TicketsPage() {
           <p className="text-sm text-foreground-muted">پیگیری چرخه عمر خرابی‌ها، بازبینی فنی، اقدامات نگهداری و تایید کیفی</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button onClick={() => setImportDialogOpen(true)} variant="outline" className="text-xs">
-            وارد کردن اکسل
-          </Button>
+          {isSupervisorOrAbove && (
+            <>
+              <Button onClick={() => window.open('/api/fault-reports/export?type=all', '_blank')} variant="outline" className="text-xs border-zinc-800 hover:bg-zinc-800">
+                خروجی اکسل
+              </Button>
+              <Button onClick={() => setImportDialogOpen(true)} variant="outline" className="text-xs border-zinc-800 hover:bg-zinc-800">
+                وارد کردن اکسل
+              </Button>
+            </>
+          )}
           <Button onClick={() => setWizardOpen(true)} className="bg-red-600 hover:bg-red-700 text-white font-semibold">
             + ثبت فالت جدید
           </Button>
@@ -648,173 +664,226 @@ export default function TicketsPage() {
         </div>
       )}
 
-      {/* ── DIALOG 1: FAULT CREATION WIZARD ── */}
+      {/* ── DIALOG 1: FAULT CREATION FORM ── */}
       <Dialog open={wizardOpen} onOpenChange={(open) => { setWizardOpen(open); if (!open) resetWizard() }}>
-        <DialogContent className="max-w-2xl bg-zinc-950 text-foreground border border-border">
+        <DialogContent className="max-w-2xl bg-zinc-950 text-foreground border border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>ویزارد ثبت گزارش فالت قطار - گام {wizardStep} از ۴</DialogTitle>
-            <DialogDescription>
-              لطفاً قطار، واگن، کد فالت و مشخصات خرابی را مشخص کنید.
+            <DialogTitle className="text-lg font-bold text-center">گزارش نقص فنی ناوگان (ثبت فالت)</DialogTitle>
+            <DialogDescription className="text-center text-xs text-foreground-muted">
+              لطفاً مشخصات قطار، واگن، کد خطا و سایر اطلاعات فالت را وارد کنید.
             </DialogDescription>
           </DialogHeader>
 
-          {/* STEP 1: SELECT TRAIN */}
-          {wizardStep === 1 && (
-            <div className="space-y-4 py-4">
-              <Label>قطار مورد نظر را انتخاب کنید:</Label>
-              <Select value={selectedTrain} onValueChange={(val) => setSelectedTrain(val || '')}>
-                <SelectTrigger className="w-full text-xs">
-                  <SelectValue placeholder="انتخاب قطار..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {wizardTrains.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      قطار {t.trainNumber} ({t.fleetSeries || 'سری نامشخص'})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* STEP 2: SELECT WAGON */}
-          {wizardStep === 2 && (
-            <div className="space-y-4 py-4">
-              <Label>موقعیت واگن خرابی را مشخص کنید (یا کادر قطار کامل):</Label>
-              <div className="grid grid-cols-7 gap-2">
-                {wizardWagons.map((w) => (
+          <div className="space-y-5 py-4">
+            {/* Train Selection */}
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-foreground">انتخاب قطار *</Label>
+              <div className="flex flex-wrap gap-2">
+                {wizardTrains.map((t) => (
                   <Button
-                    key={w.id}
-                    variant={selectedWagon === w.id ? 'default' : 'outline'}
-                    className="flex flex-col h-16 py-2 text-xs"
-                    onClick={() => setSelectedWagon(w.id === selectedWagon ? '' : w.id)}
+                    key={t.id}
+                    type="button"
+                    variant={selectedTrain === t.id ? 'default' : 'outline'}
+                    className={cn(
+                      "text-xs px-3 py-1.5 h-auto transition-all active:scale-[0.97]",
+                      selectedTrain === t.id ? "bg-accent text-accent-foreground font-bold" : "hover:border-accent hover:bg-accent/10"
+                    )}
+                    onClick={() => setSelectedTrain(t.id)}
                   >
-                    <span className="font-bold">واگن {w.position}</span>
-                    <span className="text-[10px] text-foreground-muted">{w.wagonCode}</span>
+                    قطار {toFa(t.trainNumber)} ({t.fleetSeries || 'سری نامشخص'})
                   </Button>
                 ))}
               </div>
-              <div className="text-center text-xs text-foreground-muted mt-2">
-                عدم انتخاب واگن به این معنی است که خرابی کل قطار یا سیستم ارتباطی را در بر می‌گیرد.
-              </div>
             </div>
-          )}
 
-          {/* STEP 3: MATCH FAULT CODE (NLP) */}
-          {wizardStep === 3 && (
-            <div className="space-y-4 py-4">
-              <Label>توضیح خرابی به زبان روان (مثلاً: باد کولر گرم است، درب گیر کرده):</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={nlpText}
-                  onChange={(e) => setNlpText(e.target.value)}
-                  placeholder="شرح خرابی را وارد کنید..."
-                  className="flex-1 text-xs"
-                />
-                <Button onClick={triggerNlpMatch} disabled={nlpMatching} className="text-xs">
-                  {nlpMatching ? 'در حال تطبیق...' : 'تطبیق کاتالوگ'}
-                </Button>
-              </div>
-
-              {matchingResults.length > 0 ? (
-                <div className="space-y-2 border border-border p-3 rounded-lg bg-zinc-900">
-                  <span className="text-xs font-semibold text-foreground-muted">کدهای پیشنهادی هوش مصنوعی:</span>
-                  {matchingResults.map((r) => (
-                    <div
-                      key={r.faultCodeId}
-                      className={`flex items-center justify-between p-2 rounded border cursor-pointer text-xs ${
-                        selectedFaultCodeId === r.faultCodeId
-                          ? 'border-red-600 bg-red-600/10'
-                          : 'border-zinc-800 bg-zinc-950 hover:bg-zinc-900'
-                      }`}
-                      onClick={() => setSelectedFaultCodeId(r.faultCodeId)}
+            {/* Wagon Selection */}
+            {selectedTrain && (
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-foreground">انتخاب واگن (اختیاری)</Label>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant={selectedWagon === '' ? 'default' : 'outline'}
+                    className={cn(
+                      "text-xs px-3 py-1.5 h-auto transition-all active:scale-[0.97]",
+                      selectedWagon === '' ? "bg-accent text-accent-foreground font-bold" : "hover:border-accent hover:bg-accent/10"
+                    )}
+                    onClick={() => setSelectedWagon('')}
+                  >
+                    کل قطار
+                  </Button>
+                  {wizardWagons.map((w) => (
+                    <Button
+                      key={w.id}
+                      type="button"
+                      variant={selectedWagon === w.id ? 'default' : 'outline'}
+                      className={cn(
+                        "text-xs px-3 py-1.5 h-auto flex flex-col items-center justify-center transition-all active:scale-[0.97] min-w-[70px]",
+                        selectedWagon === w.id ? "bg-accent text-accent-foreground font-bold" : "hover:border-accent hover:bg-accent/10"
+                      )}
+                      onClick={() => setSelectedWagon(w.id)}
                     >
-                      <div>
-                        <span className="font-bold text-foreground block">{r.code} - {r.title}</span>
-                        {r.reason && <span className="text-[10px] text-purple-400 block">{r.reason}</span>}
-                      </div>
-                      <Badge variant="outline">{r.confidence}% تطبیق</Badge>
-                    </div>
+                      <span className="font-bold">واگن {toFa(w.position)}</span>
+                      <span className="text-[9px] opacity-75">{w.wagonCode}</span>
+                    </Button>
                   ))}
                 </div>
-              ) : (
-                <div className="text-center text-xs text-foreground-muted py-2">
-                  پس از تایپ شرح خرابی، دکمه «تطبیق کاتالوگ» را کلیک کنید تا مناسب‌ترین کدهای خطا استخراج شوند.
-                </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
 
-          {/* STEP 4: FINAL DETAILS & SUBMIT */}
-          {wizardStep === 4 && (
-            <div className="space-y-4 py-4">
+            {/* Description & Location */}
+            <div className="space-y-3">
               <div className="space-y-2">
-                <Label>شرح نهایی وقوع خرابی:</Label>
+                <Label className="text-xs font-bold text-foreground">شرح و اثر خرابی *</Label>
                 <Textarea
                   value={faultDesc}
-                  onChange={(e) => setFaultDesc(e.target.value)}
-                  placeholder="جزئیات دقیق خرابی را وارد کنید..."
-                  className="text-xs h-24"
+                  onChange={(e) => {
+                    setFaultDesc(e.target.value)
+                    setNlpText(e.target.value)
+                  }}
+                  placeholder="شرح جزئیات، صدا یا علائم عیب..."
+                  className="text-xs h-20 bg-zinc-900 border-zinc-800"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>موقعیت جغرافیایی وقوع (ایستگاه/بین ایستگاه):</Label>
+                <Label className="text-xs font-bold text-foreground">موقعیت وقوع فالت</Label>
                 <Input
                   value={faultLocation}
                   onChange={(e) => setFaultLocation(e.target.value)}
-                  placeholder="مثال: ایستگاه امام خمینی، خط ۲ سکوی ۱"
-                  className="text-xs"
+                  placeholder="مثال: ایستگاه طالقانی، سوزن خروجی"
+                  className="text-xs bg-zinc-900 border-zinc-800 h-9"
                 />
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label>اثر خرابی بر سیر و حرکت قطار:</Label>
-                <Select value={serviceImpact} onValueChange={(val) => setServiceImpact(val || '')}>
-                  <SelectTrigger className="w-full text-xs">
-                    <SelectValue placeholder="اثر بر حرکت..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">بدون تاثیر بر سیر</SelectItem>
-                    <SelectItem value="delay">تاخیر جزئی در حرکت</SelectItem>
-                    <SelectItem value="evacuated">تخلیه کامل قطار</SelectItem>
-                    <SelectItem value="removed_from_service">خروج قطار از خط</SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* AI Code Matching */}
+            <div className="space-y-2">
+              <Button
+                type="button"
+                onClick={triggerNlpMatch}
+                disabled={nlpMatching || !nlpText.trim()}
+                className="w-full text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+              >
+                {nlpMatching ? 'در حال تحلیل هوشمند کاتالوگ...' : 'تشخیص و انطباق هوشمند کد خطا'}
+              </Button>
+
+              {matchingResults.length > 0 && (
+                <div className="space-y-2 border border-border/50 p-3 rounded-lg bg-zinc-900/50">
+                  <span className="text-[11px] font-bold text-foreground-muted block mb-1">کدهای پیشنهادی کاتالوگ:</span>
+                  <div className="space-y-2">
+                    {matchingResults.map((r) => (
+                      <div
+                        key={r.faultCodeId}
+                        className={cn(
+                          "flex items-center justify-between p-2.5 rounded-lg border cursor-pointer text-xs transition-all",
+                          selectedFaultCodeId === r.faultCodeId
+                            ? 'border-accent bg-accent/10 shadow-sm'
+                            : 'border-zinc-800 bg-zinc-950 hover:bg-zinc-900'
+                        )}
+                        onClick={() => {
+                          setSelectedFaultCodeId(r.faultCodeId)
+                          if (r.defaultPriority) {
+                            setPriority(r.defaultPriority)
+                          }
+                        }}
+                      >
+                        <div>
+                          <span className="font-bold text-foreground block">{r.code} - {r.title}</span>
+                          {r.reason && <span className="text-[10px] text-accent block mt-0.5">{r.reason}</span>}
+                        </div>
+                        <Badge variant="outline" className="border-accent text-accent text-[10px] font-bold">
+                          {Math.round(r.confidence || r.similarity * 100)}% تطبیق
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Priority Selection */}
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-foreground">اولویت گزارش فالت</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { key: 'low', label: 'کم' },
+                  { key: 'medium', label: 'متوسط' },
+                  { key: 'high', label: 'زیاد' },
+                  { key: 'critical', label: 'بحرانی' },
+                ].map((p) => (
+                  <Button
+                    key={p.key}
+                    type="button"
+                    variant={priority === p.key ? 'default' : 'outline'}
+                    className={cn(
+                      "text-xs py-1.5 h-auto transition-all active:scale-[0.97]",
+                      priority === p.key ? "bg-accent text-accent-foreground font-bold" : "hover:border-accent hover:bg-accent/10"
+                    )}
+                    onClick={() => setPriority(p.key as any)}
+                  >
+                    {p.label}
+                  </Button>
+                ))}
               </div>
             </div>
-          )}
+
+            {/* Service Impact Selection */}
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-foreground">اثر بر سیر قطار</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { key: 'none', label: 'بدون اثر' },
+                  { key: 'delay', label: 'تاخیر در سیر' },
+                  { key: 'evacuated', label: 'تخلیه مسافر' },
+                  { key: 'removed_from_service', label: 'خروج از سرویس' },
+                ].map((imp) => (
+                  <Button
+                    key={imp.key}
+                    type="button"
+                    variant={serviceImpact === imp.key ? 'default' : 'outline'}
+                    className={cn(
+                      "text-xs py-1.5 h-auto transition-all active:scale-[0.97]",
+                      serviceImpact === imp.key ? "bg-accent text-accent-foreground font-bold" : "hover:border-accent hover:bg-accent/10"
+                    )}
+                    onClick={() => setServiceImpact(imp.key)}
+                  >
+                    {imp.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Photo Attachment Uploader */}
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-foreground">افزودن تصویر خرابی</Label>
+              <ImageUploader
+                value={faultPhoto}
+                onChange={setFaultPhoto}
+                placeholder="تصویری از خرابی بارگذاری کنید..."
+                accept="image/*"
+              />
+            </div>
+          </div>
 
           <DialogFooter className="flex justify-between gap-2 border-t border-border pt-4">
             <Button
               variant="outline"
-              disabled={wizardStep === 1}
-              onClick={() => setWizardStep(wizardStep - 1)}
+              onClick={() => {
+                setWizardOpen(false)
+                resetWizard()
+              }}
               className="text-xs"
             >
-              قبلی
+              انصراف
             </Button>
-
-            {wizardStep < 4 ? (
-              <Button
-                disabled={
-                  (wizardStep === 1 && !selectedTrain) ||
-                  (wizardStep === 3 && !selectedFaultCodeId)
-                }
-                onClick={() => setWizardStep(wizardStep + 1)}
-                className="text-xs"
-              >
-                بعدی
-              </Button>
-            ) : (
-              <Button
-                disabled={!faultDesc.trim()}
-                onClick={submitNewFault}
-                className="bg-red-600 hover:bg-red-700 text-white text-xs"
-              >
-                ثبت و ارسال گزارش
-              </Button>
-            )}
+            <Button
+              disabled={!selectedTrain || !selectedFaultCodeId || !faultDesc.trim()}
+              onClick={submitNewFault}
+              className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold active:scale-[0.98]"
+            >
+              ثبت گزارش خرابی
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

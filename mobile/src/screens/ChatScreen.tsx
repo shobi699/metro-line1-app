@@ -36,13 +36,77 @@ export function ChatScreen({ route, navigation }: any) {
   const roomIsAdmin = useChatStore((s) => s.roomIsAdmin)
   const loadingRooms = useChatStore((s) => s.loadingRooms)
   const loadingMessages = useChatStore((s) => s.loadingMessages)
+  const loadingOlderMessages = useChatStore((s) => s.loadingOlderMessages)
+  const cursorsByRoom = useChatStore((s) => s.cursorsByRoom)
+  const hasMoreByRoom = useChatStore((s) => s.hasMoreByRoom)
   
   const loadRooms = useChatStore((s) => s.loadRooms)
   const selectRoom = useChatStore((s) => s.selectRoom)
+  const loadOlderMessages = useChatStore((s) => s.loadOlderMessages)
   const sendMessage = useChatStore((s) => s.sendMessage)
   const toggleReaction = useChatStore((s) => s.toggleReaction)
   const connect = useChatStore((s) => s.connect)
   const disconnect = useChatStore((s) => s.disconnect)
+
+  const hasMore = activeRoomId ? hasMoreByRoom[activeRoomId] ?? false : false
+
+  useEffect(() => {
+    if (!loadingMessages && messages.length > 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: false })
+      }, 100)
+    }
+  }, [loadingMessages])
+
+  const handleRetry = async (failedMsg: ChatMessage) => {
+    if (!accessToken || !activeRoomId) return
+    useChatStore.setState((s) => ({
+      messagesByRoom: {
+        ...s.messagesByRoom,
+        [activeRoomId]: (s.messagesByRoom[activeRoomId] ?? []).filter((m) => m.id !== failedMsg.id),
+      },
+    }))
+    const ok = await sendMessage(
+      accessToken,
+      activeRoomId,
+      failedMsg.body || '',
+      failedMsg.attachmentUrl ? { url: failedMsg.attachmentUrl, type: failedMsg.attachmentType || '' } : undefined
+    )
+    if (ok) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true })
+      }, 100)
+    }
+  }
+
+  const renderListHeader = () => {
+    if (!hasMore) return null
+    if (loadingOlderMessages) {
+      return (
+        <View style={{ paddingVertical: 12, alignItems: 'center' }}>
+          <ActivityIndicator size="small" color={theme.colors.primary} />
+        </View>
+      )
+    }
+    return (
+      <TouchableOpacity
+        onPress={() => accessToken && activeRoomId && loadOlderMessages(accessToken, activeRoomId)}
+        style={{
+          paddingVertical: 8,
+          alignItems: 'center',
+          backgroundColor: theme.colors.surfaceContainerLow,
+          borderRadius: theme.borderRadius.md,
+          marginVertical: 8,
+          borderWidth: 1,
+          borderColor: theme.colors.surfaceVariant,
+        }}
+      >
+        <Text style={{ fontSize: 12, color: theme.colors.primary, fontFamily: theme.typography.bodyMd.fontFamily }}>
+          بارگذاری پیام‌های قدیمی‌تر
+        </Text>
+      </TouchableOpacity>
+    )
+  }
 
   const config = useConfigStore((s) => s.config)
   const voiceChatEnabled = config?.comms?.voiceChatEnabled !== false
@@ -575,7 +639,7 @@ export function ChatScreen({ route, navigation }: any) {
       <ScreenWrapper title="گفتگوها و اتاق‌ها" navigation={navigation}>
         <View style={styles.container}>
 
-          {loadingRooms ? (
+          {loadingRooms && rooms.length === 0 ? (
             <View style={styles.centerContainer}>
               <ActivityIndicator size="large" color={theme.colors.primary} />
             </View>
@@ -632,7 +696,7 @@ export function ChatScreen({ route, navigation }: any) {
         style={styles.container}
       >
 
-        {loadingMessages ? (
+        {loadingMessages && messages.length === 0 ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
           </View>
@@ -642,7 +706,7 @@ export function ChatScreen({ route, navigation }: any) {
             data={messages}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.messagesList}
-            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            ListHeaderComponent={renderListHeader}
             renderItem={({ item }) => {
               const isMine = item.senderId === user?.id
               const isSelected = selectedMessageId === item.id
@@ -660,12 +724,12 @@ export function ChatScreen({ route, navigation }: any) {
                     <View style={[styles.reactionToolbar, isMine ? { right: 0 } : { left: 0 }]}>
                       {['👍', '❤️', '😂', '🔥', '🚨'].map((emoji) => (
                         <TouchableOpacity
-                          key={emoji}
-                          onPress={() => {
-                            handleReact(item.id, emoji)
-                            setSelectedMessageId(null)
-                          }}
-                          style={styles.toolbarEmojiBtn}
+                           key={emoji}
+                           onPress={() => {
+                             handleReact(item.id, emoji)
+                             setSelectedMessageId(null)
+                           }}
+                           style={styles.toolbarEmojiBtn}
                         >
                           <Text style={{ fontSize: 16 }}>{emoji}</Text>
                         </TouchableOpacity>
@@ -711,12 +775,23 @@ export function ChatScreen({ route, navigation }: any) {
                       <Text style={[styles.messageText, isMine ? { color: theme.colors.onPrimary } : { color: theme.colors.onSurface }]}>{item.body}</Text>
                     )}
 
-                    <Text style={[styles.messageTime, isMine ? { color: theme.colors.onPrimary + '90' } : { color: theme.colors.secondary }]}>
-                      {toFa(new Date(item.createdAt).toLocaleTimeString('fa-IR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      }))}
-                    </Text>
+                    <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                      <Text style={[styles.messageTime, isMine ? { color: theme.colors.onPrimary + '90' } : { color: theme.colors.secondary }]}>
+                        {toFa(new Date(item.createdAt).toLocaleTimeString('fa-IR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        }))}
+                      </Text>
+                      {item.status === 'sending' && (
+                        <ActivityIndicator size="small" color={isMine ? theme.colors.onPrimary : theme.colors.primary} style={{ transform: [{ scale: 0.7 }] }} />
+                      )}
+                      {item.status === 'failed' && (
+                        <TouchableOpacity onPress={() => handleRetry(item)} style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 2 }}>
+                          <MaterialIcons name="error" size={14} color={theme.colors.error} />
+                          <Text style={{ fontSize: 10, color: theme.colors.error, fontFamily: theme.typography.captionSm.fontFamily }}>ارسال نشد (تلاش مجدد)</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   </TouchableOpacity>
 
                   {Object.entries(grouped).length > 0 && (

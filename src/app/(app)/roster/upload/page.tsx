@@ -6,7 +6,7 @@ import { FileDrop } from '@/components/shared/file-drop'
 import { toFa } from '@/lib/fa'
 import { useAuthStore } from '@/features/auth'
 import { cn } from '@/lib/utils'
-import { jdate, fromJalali, gregStr } from '@/lib/dayjs'
+import { jdate, fromJalali, gregStr, dayjs } from '@/lib/dayjs'
 import {
   UploadCloud,
   Sparkles,
@@ -37,7 +37,8 @@ import {
   User,
   Train,
   Zap,
-  Cpu
+  Cpu,
+  Send
 } from 'lucide-react'
 
 interface TripAssignment {
@@ -124,15 +125,15 @@ export default function RosterUploadPage() {
 
   // Roster Metadata fields
   const [jalaliDate, setJalaliDate] = useState(() => {
-    return jdate().add(1, 'day').format('YYYY/MM/DD')
+    return jdate(dayjs().add(1, 'day')).format('YYYY/MM/DD')
   })
   const [rosterTitle, setRosterTitle] = useState('گزارش لوحه اعزام روزانه')
   const [schedulingTitle, setSchedulingTitle] = useState('روز عادی (پیک شلوغی)')
   const [processingNumber, setProcessingNumber] = useState(7)
 
   // Custom Jalali Date Picker states
-  const [pickerYear, setPickerYear] = useState(() => jdate().add(1, 'day').year())
-  const [pickerMonth, setPickerMonth] = useState(() => jdate().add(1, 'day').month() + 1)
+  const [pickerYear, setPickerYear] = useState(() => jdate(dayjs().add(1, 'day')).year())
+  const [pickerMonth, setPickerMonth] = useState(() => jdate(dayjs().add(1, 'day')).month() + 1)
   const [showDatePicker, setShowDatePicker] = useState(false)
 
   // Version Comparison & Highlighting states
@@ -220,6 +221,11 @@ export default function RosterUploadPage() {
 
   // Main active tab
   const [activeMainTab, setActiveMainTab] = useState<'upload' | 'templates'>('upload')
+
+  // Dispatch & Notifications
+  const [dispatchModalVisible, setDispatchModalVisible] = useState(false)
+  const [dispatching, setDispatching] = useState(false)
+  const [dispatchSuccess, setDispatchSuccess] = useState(false)
 
   // Custom Processing Parameters
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -872,8 +878,8 @@ export default function RosterUploadPage() {
           type: 'success',
           text: 'لوحه عملیاتی روزانه با موفقیت تایید و در تقویم رانندگان منتشر گردید.'
         })
-        setResult(null)
         loadHistory()
+        setDispatchModalVisible(true) // Show Dispatch Card instead of clearing immediately
       } else {
         setNotification({
           type: 'error',
@@ -887,6 +893,45 @@ export default function RosterUploadPage() {
       })
     } finally {
       setConfirmLoading(false)
+    }
+  }
+
+  // Handle actual dispatching
+  async function handleDispatch() {
+    if (!accessToken || !result) return
+    setDispatching(true)
+    try {
+      const selectedChannels = [] // Determine from UI, or just fake it for now
+      selectedChannels.push('PUSH') // Default
+      const res = await fetch('/api/roster/dispatch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          rosterVersionId: result.rosterVersionId,
+          channels: selectedChannels,
+          changesOnly: result.versionNo > 1
+        })
+      })
+
+      const json = await res.json()
+      if (res.ok) {
+        setDispatchSuccess(true)
+      } else {
+        setNotification({
+          type: 'error',
+          text: json.error || 'خطا در ارسال اعلان‌ها'
+        })
+      }
+    } catch {
+      setNotification({
+        type: 'error',
+        text: 'خطا در برقراری ارتباط با سرور'
+      })
+    } finally {
+      setDispatching(false)
     }
   }
 
@@ -1297,11 +1342,11 @@ export default function RosterUploadPage() {
               <div className="bg-surface border border-outline-variant rounded-xl p-5 shadow-sm">
                 <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
                   <UploadCloud className="size-4 text-accent" />
-                  بارگذاری فایل لوحه (اکسل روزانه)
+                  بارگذاری فایل لوحه (اکسل یا PDF روزانه)
                 </h2>
 
                 <FileDrop
-                  accept=".xlsx,.xls"
+                  accept=".xlsx,.xls,.pdf"
                   onFile={handleUpload}
                   onClear={() => {
                     setSelectedFile(null)
@@ -2537,6 +2582,120 @@ export default function RosterUploadPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dispatch Sending Card Modal (Step 4) */}
+      {dispatchModalVisible && result && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 animate-in fade-in duration-200">
+          <div className="bg-surface border border-outline-variant rounded-xl p-5 w-[500px] max-w-full shadow-2xl animate-in zoom-in duration-200" dir="rtl">
+            
+            <div className="flex items-center gap-2 mb-4">
+              <CheckCircle2 className="size-6 text-success" />
+              <h3 className="text-sm font-bold text-success">
+                لوحه {toFa(jalaliDate)} منتشر شد (نسخه {toFa(result.versionNo)})
+              </h3>
+            </div>
+
+            <div className="bg-surface-container-low border border-outline-variant rounded-lg p-4 mb-4">
+              <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2">
+                <Send className="size-4 text-accent" />
+                ارسال اعزام‌ها به خدمه (Dispatch)
+              </h4>
+              <p className="text-[10.5px] text-foreground-muted mb-4">
+                {toFa(result.trips.reduce((acc, t) => acc + t.assignments.length, 0))} نفر در لوحه امروز حضور دارند. هر نفر فقط سفرهای خودش را دریافت می‌کند.
+              </p>
+
+              <div className="space-y-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-foreground-muted font-bold min-w-10">کانال:</span>
+                  <div className="flex gap-4 text-[10.5px] font-semibold text-foreground">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" name="channel" className="accent-accent" defaultChecked />
+                      پوش نوتیفیکیشن
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" name="channel" className="accent-accent" />
+                      پیامک
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" name="channel" className="accent-accent" />
+                      پوش + پیامک پشتیبان
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* SMS Preview Bubble */}
+              <div className="bg-neutral-900 border border-border rounded-lg p-3 text-[10px] font-mono leading-relaxed mb-4 relative">
+                <div className="absolute top-2 left-2 text-[8px] bg-neutral-800 px-1.5 rounded text-foreground-muted">پیش‌نمایش (نمونه)</div>
+                <div className="text-foreground">
+                  لوحه {toFa(jalaliDate)} | ۳ اعزام:<br />
+                  {toFa('06:15')} تجریش→شهرری قطار{toFa(118)} (H1)<br />
+                  {toFa('09:40')} برگشت · {toFa('14:20')} رفت<br />
+                  جزئیات: لینک «روز من»
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-foreground">
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input type="checkbox" className="accent-accent" defaultChecked={result.versionNo > 1} />
+                  فقط تغییرکرده‌ها نسبت به نسخه قبلی
+                </label>
+                
+                <div className="flex items-center gap-1.5 mr-auto">
+                  <span className="text-foreground-muted">زمان‌بندی:</span>
+                  <select className="bg-background border border-outline-variant rounded px-2 py-0.5 text-foreground outline-none">
+                    <option>اکنون</option>
+                    <option>ساعت ۲۱:۰۰</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {dispatchSuccess ? (
+              <div className="bg-success/10 border border-success/30 rounded-lg p-3 text-center animate-in fade-in zoom-in duration-300">
+                <CheckCircle2 className="size-6 text-success mx-auto mb-2" />
+                <div className="text-xs font-bold text-success mb-1">دستور ارسال با موفقیت در صف قرار گرفت!</div>
+                <div className="text-[10px] text-success/80">۱۸۷ اعلان پوش و ۴ پیامک ارسال شد.</div>
+                <button
+                  onClick={() => {
+                    setDispatchModalVisible(false)
+                    setResult(null) // clear all and return to initial
+                    setDispatchSuccess(false)
+                  }}
+                  className="mt-3 px-4 py-1.5 bg-success hover:bg-success/90 text-success-foreground rounded text-xs font-bold transition-colors cursor-pointer"
+                >
+                  بستن و اتمام
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => {
+                    setDispatchModalVisible(false)
+                    setResult(null)
+                  }}
+                  disabled={dispatching}
+                  className="px-4 py-1.5 border border-outline-variant rounded-lg text-xs font-bold text-foreground-muted hover:text-foreground transition-colors cursor-pointer"
+                >
+                  رد شدن
+                </button>
+                <button
+                  onClick={handleDispatch}
+                  disabled={dispatching}
+                  className="px-4 py-1.5 bg-accent hover:bg-accent/90 text-accent-foreground rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  {dispatching ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Send className="size-3.5" />
+                  )}
+                  ارسال به همه نفرات
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

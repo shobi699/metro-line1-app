@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: 'کد ملی یا شماره همراه وارد شده با اطلاعات ثبت‌شده همخوانی ندارد' },
+        { error: 'کد پرسنلی یا شماره همراه وارد شده با اطلاعات ثبت‌شده همخوانی ندارد' },
         { status: 404 },
       )
     }

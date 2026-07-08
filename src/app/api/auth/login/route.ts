@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: 'کد ملی یا رمز عبور اشتباه است' },
+        { error: 'کد پرسنلی یا رمز عبور اشتباه است' },
         { status: 401 },
       )
     }
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     const valid = await verifyPassword(password, user.passwordHash)
     if (!valid) {
       return NextResponse.json(
-        { error: 'کد ملی یا رمز عبور اشتباه است' },
+        { error: 'کد پرسنلی یا رمز عبور اشتباه است' },
         { status: 401 },
       )
     }

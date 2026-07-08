@@ -7,6 +7,7 @@ const querySchema = z.object({
   hostId: z.string(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'فرمت تاریخ باید YYYY-MM-DD باشد'),
   typeKey: z.string(),
+  roomId: z.string().optional(),
 })
 
 export async function GET(request: Request) {
@@ -17,8 +18,9 @@ export async function GET(request: Request) {
   const hostId = searchParams.get('hostId')
   const dateStr = searchParams.get('date')
   const typeKey = searchParams.get('typeKey')
+  const roomId = searchParams.get('roomId') || undefined
 
-  const parsed = querySchema.safeParse({ hostId, date: dateStr, typeKey })
+  const parsed = querySchema.safeParse({ hostId, date: dateStr, typeKey, roomId })
   if (!parsed.success) {
     return NextResponse.json(
       { error: { message: 'پارامترهای ارسالی نامعتبر است', details: parsed.error.format() } },
@@ -30,7 +32,8 @@ export async function GET(request: Request) {
     const slots = await getAvailableSlots(
       parsed.data.hostId,
       new Date(parsed.data.date),
-      parsed.data.typeKey
+      parsed.data.typeKey,
+      parsed.data.roomId
     )
     return NextResponse.json({ data: slots })
   } catch (err: any) {

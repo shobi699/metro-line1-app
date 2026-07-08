@@ -202,7 +202,7 @@ export default function ForgotPasswordPage() {
             <form onSubmit={handleSendOtp} className="mt-6 flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-foreground-muted" htmlFor="nationalId">
-                  کد ملی
+                  کد پرسنلی
                 </label>
                 <div className="relative">
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted">
@@ -212,7 +212,7 @@ export default function ForgotPasswordPage() {
                     className="h-10 w-full rounded-lg border border-border bg-background pe-10 ps-3 text-sm text-foreground transition-colors placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-ring font-mono text-right"
                     id="nationalId"
                     type="text"
-                    placeholder="کد ملی ۱۰ رقمی خود را وارد کنید"
+                    placeholder="کد پرسنلی خود را وارد کنید"
                     maxLength={10}
                     value={nationalId}
                     onChange={(e) => setNationalId(e.target.value)}

@@ -3,10 +3,11 @@ import { randomBytes } from 'node:crypto'
 
 export interface CourseData {
   id: string
+  key: string
   title: string
   description: string | null
-  icon: string | null
-  certValidityMonths: number
+  coverUrl: string | null
+  category: string | null
   passScore: number
 }
 
@@ -14,42 +15,49 @@ export interface CourseData {
  * Get all courses available, optionally filtered by user role
  */
 export async function getCourses(roleKey?: string) {
-  const where: Record<string, any> = { isActive: true }
-  if (roleKey) {
-    where.audiences = {
-      some: {
-        roleKey,
-      },
-    }
-  }
+  const where: Record<string, any> = { status: 'published' }
 
-  return prisma.course.findMany({
+  const courses = await prisma.course.findMany({
     where,
     orderBy: { sortOrder: 'asc' },
     include: {
-      videos: {
-        where: { isActive: true },
+      chapters: {
         orderBy: { sortOrder: 'asc' },
+        include: {
+          lessons: {
+            orderBy: { sortOrder: 'asc' }
+          }
+        }
       },
     },
   })
+  
+  if (roleKey) {
+    return courses.filter(c => !c.audience || c.audience.includes(roleKey))
+  }
+  return courses
 }
 
 /**
- * Get details of a single course with videos and user progress
+ * Get details of a single course
  */
 export async function getCourseDetail(courseId: string, userId: string) {
   const course = await prisma.course.findUnique({
     where: { id: courseId },
     include: {
-      videos: {
-        where: { isActive: true },
+      chapters: {
         orderBy: { sortOrder: 'asc' },
         include: {
-          progress: {
-            where: { userId },
+          lessons: {
+            orderBy: { sortOrder: 'asc' },
           },
         },
+      },
+      enrollments: {
+        where: { userId },
+        include: {
+          attempts: true
+        }
       },
       certificates: {
         where: { userId },
@@ -65,114 +73,34 @@ export async function getCourseDetail(courseId: string, userId: string) {
 }
 
 /**
- * Update user's watching progress on a video, and evaluate for course completion/certification
+ * Update user's enrollment progress on a course
  */
-export async function updateVideoProgress(params: {
+export async function updateEnrollmentProgress(params: {
   userId: string
-  videoId: string
-  watchedPct: number
+  courseId: string
+  progressPct: number
   completed?: boolean
-  quizScore?: number
 }) {
-  const progress = await prisma.videoProgress.upsert({
+  const enrollment = await prisma.enrollment.upsert({
     where: {
-      videoId_userId: {
-        videoId: params.videoId,
+      courseId_userId: {
+        courseId: params.courseId,
         userId: params.userId,
       },
     },
     update: {
-      watchedPct: params.watchedPct,
-      completed: params.completed ?? false,
-      quizScore: params.quizScore !== undefined ? params.quizScore : undefined,
+      progressPct: params.progressPct,
+      status: params.completed ? 'completed' : 'active',
+      completedAt: params.completed ? new Date() : undefined,
     },
     create: {
-      videoId: params.videoId,
+      courseId: params.courseId,
       userId: params.userId,
-      watchedPct: params.watchedPct,
-      completed: params.completed ?? false,
-      quizScore: params.quizScore,
-    },
-    include: {
-      video: {
-        include: {
-          course: true,
-        },
-      },
+      progressPct: params.progressPct,
+      status: params.completed ? 'completed' : 'active',
+      completedAt: params.completed ? new Date() : undefined,
     },
   })
 
-  // Evaluate if course is completed and candidate for certification
-  const course = progress.video.course
-  const mandatoryVideos = await prisma.courseVideo.findMany({
-    where: {
-      courseId: course.id,
-      mandatory: true,
-      isActive: true,
-    },
-    select: {
-      id: true,
-    },
-  })
-
-  const userProgress = await prisma.videoProgress.findMany({
-    where: {
-      userId: params.userId,
-      video: {
-        courseId: course.id,
-        mandatory: true,
-      },
-    },
-  })
-
-  const allMandatoryCompleted = mandatoryVideos.every((mv) => {
-    const up = userProgress.find((p) => p.videoId === mv.id)
-    return up && up.completed
-  })
-
-  if (allMandatoryCompleted) {
-    // Check passing score
-    const scores = userProgress.filter((up) => up.quizScore !== null).map((up) => up.quizScore as number)
-    const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 100
-
-    if (avgScore >= course.passScore) {
-      // Issue certificate if it doesn't already exist
-      const existingCert = await prisma.certificate.findUnique({
-        where: {
-          courseId_userId: {
-            courseId: course.id,
-            userId: params.userId,
-          },
-        },
-      })
-
-      if (!existingCert) {
-        const serial = `CERT-${course.id.substring(0, 4)}-${params.userId.substring(0, 4)}-${randomBytes(4).toString('hex').toUpperCase()}`
-        const expiresAt = new Date()
-        expiresAt.setMonth(expiresAt.getMonth() + course.certValidityMonths)
-
-        await prisma.certificate.create({
-          data: {
-            courseId: course.id,
-            userId: params.userId,
-            serial,
-            expiresAt,
-          },
-        })
-
-        // Also add an audit log
-        await prisma.auditLog.create({
-          data: {
-            actorId: params.userId,
-            entity: 'Course',
-            entityId: course.id,
-            action: 'create',
-            metadata: { event: 'learning:certificate_issued', serial },
-          },
-        })
-      }
-    }
-  }
-
-  return progress
+  return enrollment
 }

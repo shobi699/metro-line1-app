@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 
     if (!otpData) {
       return NextResponse.json(
-        { error: 'کد تایید معتبری برای این کد ملی درخواست نشده یا منقضی شده است' },
+        { error: 'کد تایید معتبری برای این کد پرسنلی درخواست نشده یا منقضی شده است' },
         { status: 400 },
       )
     }

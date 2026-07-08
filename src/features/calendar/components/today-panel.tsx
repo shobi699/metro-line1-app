@@ -2,6 +2,7 @@
 
 import { toFa } from '@/lib/fa'
 import { cn } from '@/lib/utils'
+import { dayjs } from '@/lib/dayjs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SHIFT_META, type CalendarDay } from '../types'
 
@@ -39,6 +40,7 @@ export function TodayPanel({ today, upcomingDays, loading, onToggleTask }: Today
   const nextOff = daysUntilNextOff(upcomingDays)
   const tasks = today.events.filter((e) => e.type === 'task')
   const events = today.events.filter((e) => e.type !== 'task')
+  const meetings = today.meetings ?? []
 
   return (
     <Card>
@@ -108,8 +110,33 @@ export function TodayPanel({ today, upcomingDays, loading, onToggleTask }: Today
           </ul>
         )}
 
-        {events.length === 0 && tasks.length === 0 && (
-          <p className="text-sm text-foreground-muted">رویدادی برای امروز ندارید ✨</p>
+        {meetings.length > 0 && (
+          <ul className="space-y-1.5 border-t border-border-subtle pt-3">
+            <h4 className="text-xs font-semibold text-sky-500 mb-2">جلسات امروز</h4>
+            {meetings.map((m) => {
+              const statusText = m.status === 'approved' ? 'تایید شده' : m.status === 'pending' ? 'در انتظار' : m.status
+              return (
+                <li key={m.id} className="flex flex-col gap-1 rounded bg-sky-500/10 p-2 text-sm">
+                  <div className="flex items-center gap-2 font-medium text-sky-500">
+                    <span aria-hidden>👥</span>
+                    <span>{m.title}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-foreground-muted">
+                    <span>{m.role === 'host' ? 'شما میزبان هستید' : 'شما درخواست دادید'}</span>
+                    <span>{statusText}</span>
+                  </div>
+                  <div className="font-data-mono text-xs text-foreground" dir="ltr">
+                    {toFa(dayjs(m.startAt).format('HH:mm'))}
+                    {m.endAt ? ` - ${toFa(dayjs(m.endAt).format('HH:mm'))}` : ''}
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+
+        {events.length === 0 && tasks.length === 0 && meetings.length === 0 && (
+          <p className="text-sm text-foreground-muted">رویداد یا جلسه‌ای برای امروز ندارید ✨</p>
         )}
 
         {nextOff !== null && nextOff > 0 && (

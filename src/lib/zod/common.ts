@@ -2,8 +2,9 @@ import { z } from 'zod'
 
 export const nationalIdSchema = z
   .string()
-  .length(10, 'کد ملی باید ۱۰ رقم باشد')
-  .regex(/^\d+$/, 'کد ملی فقط شامل اعداد باشد')
+  .min(4, 'کد پرسنلی باید حداقل ۴ رقم باشد')
+  .max(10, 'کد پرسنلی حداکثر ۱۰ رقم باشد')
+  .regex(/^\d+$/, 'کد پرسنلی فقط شامل اعداد باشد')
 
 export const phoneSchema = z
   .string()

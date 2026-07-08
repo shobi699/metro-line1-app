@@ -7,6 +7,7 @@ export interface RadioChannelData {
   code: string | null
   color: string | null
   isActive: boolean
+  sortOrder?: number
 }
 
 export interface RadioLogData {
@@ -30,11 +31,45 @@ export interface RadioPhraseData {
 /**
  * Get all active radio channels
  */
-export async function getRadioChannels(): Promise<RadioChannelData[]> {
+export async function getRadioChannels(includeInactive = false): Promise<RadioChannelData[]> {
   return prisma.radioChannel.findMany({
-    where: { isActive: true },
+    where: includeInactive ? undefined : { isActive: true },
     orderBy: { sortOrder: 'asc' },
   })
+}
+
+/**
+ * Admin: Create/Update Radio Channel
+ */
+export async function saveRadioChannel(data: any) {
+  if (data.id) {
+    return prisma.radioChannel.update({
+      where: { id: data.id },
+      data: {
+        key: data.key,
+        label: data.label,
+        code: data.code,
+        color: data.color,
+        isActive: data.isActive,
+        sortOrder: data.sortOrder,
+      }
+    })
+  } else {
+    return prisma.radioChannel.create({
+      data: {
+        key: data.key,
+        label: data.label,
+        code: data.code,
+        color: data.color,
+        isActive: data.isActive ?? true,
+        sortOrder: data.sortOrder ?? 0,
+      }
+    })
+  }
+}
+
+export async function deleteRadioChannel(id: string) {
+  return prisma.radioChannel.delete({ where: { id } })
 }
 
 /**
@@ -110,4 +145,77 @@ export async function getRadioPhrases(roleKey?: string): Promise<RadioPhraseData
     },
     orderBy: { sortOrder: 'asc' },
   })
+}
+
+/**
+ * Admin: Get all phrases
+ */
+export async function getAllRadioPhrases() {
+  return prisma.radioPhrase.findMany({
+    orderBy: { sortOrder: 'asc' }
+  })
+}
+
+/**
+ * Admin: Save phrase
+ */
+export async function saveRadioPhrase(data: any) {
+  if (data.id) {
+    return prisma.radioPhrase.update({
+      where: { id: data.id },
+      data: {
+        roleKey: data.roleKey || null,
+        label: data.label,
+        text: data.text,
+        isActive: data.isActive,
+        sortOrder: data.sortOrder,
+      }
+    })
+  } else {
+    return prisma.radioPhrase.create({
+      data: {
+        roleKey: data.roleKey || null,
+        label: data.label,
+        text: data.text,
+        isActive: data.isActive ?? true,
+        sortOrder: data.sortOrder ?? 0,
+      }
+    })
+  }
+}
+
+export async function deleteRadioPhrase(id: string) {
+  return prisma.radioPhrase.delete({ where: { id } })
+}
+
+/**
+ * Admin: Analytics and Reports
+ */
+export async function getRadioAnalytics(options?: { fromDate?: Date, toDate?: Date }) {
+  const where: any = {}
+  if (options?.fromDate || options?.toDate) {
+    where.createdAt = {}
+    if (options.fromDate) where.createdAt.gte = options.fromDate
+    if (options.toDate) where.createdAt.lte = options.toDate
+  }
+
+  const [totalCount, emergencyCount, voiceCount, logs] = await Promise.all([
+    prisma.radioLog.count({ where }),
+    prisma.radioLog.count({ where: { ...where, kind: 'EMERGENCY' } }),
+    prisma.radioLog.count({ where: { ...where, kind: 'VOICE_NOTE' } }),
+    prisma.radioLog.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 1000,
+      include: { channel: { select: { label: true } } }
+    })
+  ])
+
+  return {
+    totalCount,
+    emergencyCount,
+    voiceCount,
+    textCount: totalCount - voiceCount - emergencyCount, // Roughly
+    logs,
+  }
 }

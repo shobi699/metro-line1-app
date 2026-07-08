@@ -11,6 +11,7 @@ import {
 import { useTheme } from '../shared/ThemeProvider'
 import { useAuthStore } from '../stores/auth'
 import { ScreenWrapper } from '../shared/ScreenWrapper'
+import { useRadioStore } from '../stores/radio'
 import {
   Radio,
   Wifi,
@@ -32,14 +33,59 @@ interface RadioLog {
 
 export function RadioSimulatorScreen({ navigation }: any) {
   const user = useAuthStore((s) => s.user)
-  const [channel, setChannel] = useState('OCC MAIN')
-  const [dialedCode, setDialedCode] = useState('1000') // Default frequency code
+  const radioStore = useRadioStore()
+  
+  const [dialedCode, setDialedCode] = useState('') // Default empty, meaning active channel
   const [state, setState] = useState<'IDLE' | 'TRANSMITTING' | 'RECEIVING'>('IDLE')
   const [muted, setMuted] = useState(false)
-  const [radioLogs, setRadioLogs] = useState<RadioLog[]>([])
   const [currentTransmittingText, setCurrentTransmittingText] = useState('')
+  const [channel, setChannel] = useState('OCC MAIN')
+  const [radioLogs, setRadioLogs] = useState<RadioLog[]>([])
+  
+  const handlePttPress = () => {
+    if (state !== 'IDLE') return
+    setState('TRANSMITTING')
+    playStartBeep()
+  }
+
+  const handlePttRelease = () => {
+    if (state !== 'TRANSMITTING') return
+    setState('IDLE')
+    playSquelch()
+    const timeStr = new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
+    const activeBand = dialedCode.length > 0 ? `باند اختصاصی ${dialedCode}` : channel
+    setRadioLogs(prev => [
+      {
+        id: Date.now().toString(),
+        time: timeStr,
+        sender: 'شما (راهبر)',
+        message: dialedCode.length > 0 
+          ? `پیام رادیویی با کد اختصاصی فرستنده ${dialedCode} با موفقیت مخابره شد.`
+          : `پیام رادیویی با موفقیت در کانال عمومی ${channel} ارسال شد.`,
+        channel: activeBand
+      },
+      ...prev
+    ])
+  }
+
   const { theme } = useTheme()
   const styles = React.useMemo(() => getStyles(theme), [theme])
+
+  // Initialize store
+  useEffect(() => {
+    radioStore.fetchChannels()
+    radioStore.fetchPhrases()
+  }, [])
+
+  // Poll for logs
+  useEffect(() => {
+    if (!radioStore.activeChannel) return
+    const interval = setInterval(() => {
+      radioStore.fetchLogs(radioStore.activeChannel!.id)
+    }, 5000)
+    radioStore.fetchLogs(radioStore.activeChannel.id)
+    return () => clearInterval(interval)
+  }, [radioStore.activeChannel?.id])
 
   // Web Audio Context for tone synthesis (works on React Native Web)
   const audioCtxRef = useRef<any>(null)
@@ -67,41 +113,22 @@ export function RadioSimulatorScreen({ navigation }: any) {
       const now = ctx.currentTime
       const duration = 0.05
       
-      // Chirp 1 (800Hz)
-      const osc1 = ctx.createOscillator()
-      const gain1 = ctx.createGain()
-      osc1.type = 'sine'
-      osc1.frequency.setValueAtTime(800, now)
-      gain1.gain.setValueAtTime(0.08, now)
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + duration)
-      osc1.connect(gain1)
-      gain1.connect(ctx.destination)
-      osc1.start(now)
-      osc1.stop(now + duration)
+      const playChirp = (freq: number, delay: number) => {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(freq, now + delay)
+        gain.gain.setValueAtTime(0.08, now + delay)
+        gain.gain.exponentialRampToValueAtTime(0.001, now + delay + duration)
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.start(now + delay)
+        osc.stop(now + delay + duration)
+      }
 
-      // Chirp 2 (900Hz)
-      const osc2 = ctx.createOscillator()
-      const gain2 = ctx.createGain()
-      osc2.type = 'sine'
-      osc2.frequency.setValueAtTime(900, now + 0.06)
-      gain2.gain.setValueAtTime(0.08, now + 0.06)
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.06 + duration)
-      osc2.connect(gain2)
-      gain2.connect(ctx.destination)
-      osc2.start(now + 0.06)
-      osc2.stop(now + 0.06 + duration)
-
-      // Chirp 3 (1000Hz)
-      const osc3 = ctx.createOscillator()
-      const gain3 = ctx.createGain()
-      osc3.type = 'sine'
-      osc3.frequency.setValueAtTime(1000, now + 0.12)
-      gain3.gain.setValueAtTime(0.08, now + 0.12)
-      gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.12 + duration)
-      osc3.connect(gain3)
-      gain3.connect(ctx.destination)
-      osc3.start(now + 0.12)
-      osc3.stop(now + 0.12 + duration)
+      playChirp(800, 0)
+      playChirp(900, 0.06)
+      playChirp(1000, 0.12)
     } catch {}
   }
 
@@ -182,7 +209,6 @@ export function RadioSimulatorScreen({ navigation }: any) {
     if (dtmfFrequencies[key]) {
       playDtmfTone(dtmfFrequencies[key][0], dtmfFrequencies[key][1])
     }
-    
     setDialedCode((prev) => {
       if (prev.length >= 6) return prev
       return prev + key
@@ -203,25 +229,17 @@ export function RadioSimulatorScreen({ navigation }: any) {
     try {
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
+      osc.type = 'square'
+      osc.frequency.value = freq
+      gain.gain.setValueAtTime(0.03, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
       osc.connect(gain)
       gain.connect(ctx.destination)
-      osc.type = 'sine'
-      osc.frequency.setValueAtTime(freq, ctx.currentTime)
-      gain.gain.setValueAtTime(0.05, ctx.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
       osc.start()
       osc.stop(ctx.currentTime + duration)
     } catch {}
   }
 
-  // Load initial logs
-  useEffect(() => {
-    setRadioLogs([
-      { id: '1', time: '۰۳:۴۰', sender: 'مرکز فرمان OCC', message: 'کلیه راهبران سرعت در بلاک امام خمینی به دلیل بازرسی فنی تقلیل یابد.', channel: 'OCC MAIN' },
-      { id: '2', time: '۰۳:۴۱', sender: 'راهبر رام ۱۰۴', message: 'OCC رام ۱۰۴ دستور را دریافت کرد. در حال تقلیل سرعت به ۳۰ کیلومتر.', channel: 'OCC MAIN' },
-      { id: '3', time: '۰۳:۴۲', sender: 'ایستگاه هفت تیر', message: 'دیسپاچینگ، سوزن خط ۲ با موفقیت آزاد شد. مسیر تخلیه است.', channel: 'STATION TALK' }
-    ])
-  }, [])
 
   // Simulate incoming messages based on channels or codes
   useEffect(() => {
@@ -284,38 +302,7 @@ export function RadioSimulatorScreen({ navigation }: any) {
     }, 9000)
 
     return () => clearInterval(interval)
-  }, [state, channel, dialedCode, muted])
-
-  const handlePttPress = () => {
-    if (state !== 'IDLE') return
-    Vibration.vibrate([0, 100])
-    setState('TRANSMITTING')
-    playStartBeep()
-  }
-
-  const handlePttRelease = () => {
-    if (state !== 'TRANSMITTING') return
-    Vibration.vibrate(50)
-    playSquelch()
-    setState('IDLE')
-
-    const now = new Date()
-    const timeStr = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
-    const activeBand = dialedCode.length > 0 ? `کد فرکانس ${dialedCode}` : channel
-
-    setRadioLogs((prev) => [
-      {
-        id: Date.now().toString(),
-        time: timeStr,
-        sender: 'شما (راهبر)',
-        message: dialedCode.length > 0 
-          ? `پیام رادیویی با کد اختصاصی فرستنده ${dialedCode} با موفقیت مخابره شد.`
-          : `پیام رادیویی با موفقیت در کانال عمومی ${channel} ارسال شد.`,
-        channel: activeBand
-      },
-      ...prev
-    ])
-  }
+  }, [state, radioStore.activeChannel?.label, dialedCode, muted])
 
   const formatFarsiNumber = (numStr: string) => {
     const farsiDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']

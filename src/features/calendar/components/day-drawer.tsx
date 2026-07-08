@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Trash2, TriangleAlert, ArrowLeftRight } from 'lucide-react'
 import { toFa } from '@/lib/fa'
 import { cn } from '@/lib/utils'
-import { jdate } from '@/lib/dayjs'
+import { jdate, dayjs } from '@/lib/dayjs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -45,7 +45,7 @@ export function DayDrawer({
 
   const meta = day.shift ? SHIFT_META[day.shift.code] : null
   const jalaliLabel = toFa(jdate(day.date).format('dddd D MMMM YYYY'))
-  const gregorianLabel = jdate(day.date).calendar('gregory').locale('en').format('D MMM YYYY')
+  const gregorianLabel = dayjs(day.date).locale('en').format('D MMM YYYY')
 
   async function submitQuickAdd() {
     if (!day || title.trim().length === 0) return
@@ -119,6 +119,31 @@ export function DayDrawer({
                   )}
                 </li>
               ))}
+            </ul>
+          )}
+
+          {(day.meetings ?? []).length > 0 && (
+            <ul className="space-y-2">
+              <h3 className="text-sm font-medium text-sky-500">جلسات</h3>
+              {(day.meetings ?? []).map((m) => {
+                const statusText = m.status === 'approved' ? 'تایید شده' : m.status === 'pending' ? 'در انتظار' : m.status
+                return (
+                  <li key={m.id} className="flex flex-col gap-1 rounded bg-sky-500/10 p-2 text-sm border border-sky-500/20">
+                    <div className="flex items-center gap-2 font-medium text-sky-500">
+                      <span aria-hidden>👥</span>
+                      <span>{m.title}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-foreground-muted">
+                      <span>{m.role === 'host' ? 'شما میزبان هستید' : 'شما درخواست دادید'}</span>
+                      <span>{statusText}</span>
+                    </div>
+                    <div className="font-data-mono text-xs text-foreground" dir="ltr">
+                      {toFa(dayjs(m.startAt).format('HH:mm'))}
+                      {m.endAt ? ` - ${toFa(dayjs(m.endAt).format('HH:mm'))}` : ''}
+                    </div>
+                  </li>
+                )
+              })}
             </ul>
           )}
 

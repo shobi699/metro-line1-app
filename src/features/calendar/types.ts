@@ -70,6 +70,19 @@ export interface CalendarOrgEventEntry {
   mandatory: boolean
 }
 
+export interface CalendarMeetingEntry {
+  id: string
+  title: string
+  description: string | null
+  startAt: string
+  endAt: string | null
+  durationMinutes: number
+  status: string
+  role: 'host' | 'requester'
+  otherParty: { id: string; name: string } | null
+  typeKey: string | null
+}
+
 export interface CalendarDay {
   date: string
   jalali: string
@@ -78,6 +91,7 @@ export interface CalendarDay {
   holidays: CalendarHolidayEntry[]
   events: CalendarEventEntry[]
   orgEvents: CalendarOrgEventEntry[]
+  meetings: CalendarMeetingEntry[]
 }
 
 export interface CalendarRangeResponse {

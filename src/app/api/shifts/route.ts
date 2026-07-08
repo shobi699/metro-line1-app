@@ -7,6 +7,7 @@ import {
 import { getAllShifts } from '@/server/modules/roster/shifts'
 import { prisma } from '@/server/db'
 import { assignShiftSchema } from '@/lib/zod/shifts'
+import { checkForMeetingShiftConflicts } from '@/server/modules/meetings/service'
 
 // GET /api/shifts - دریافت شیفت‌ها در یک بازه زمانی خاص
 export async function GET(request: Request) {
@@ -116,6 +117,9 @@ export async function POST(request: Request) {
         },
       }),
     ])
+
+    // Trigger meeting shift conflict detection in background
+    checkForMeetingShiftConflicts(userId, dateObj).catch(() => {})
 
     return NextResponse.json({ data: shift, message: 'شیفت با موفقیت ثبت و به‌روزرسانی شد' })
   } catch (error: unknown) {

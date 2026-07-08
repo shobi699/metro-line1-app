@@ -18,6 +18,7 @@ interface Notification {
   type: string
   title: string
   body: string | null
+  link?: string | null
   isRead: boolean
   createdAt: string
 }
@@ -122,7 +123,14 @@ export function NotificationsScreen({ navigation }: any) {
               return (
                 <TouchableOpacity
                   style={[styles.card, !item.isRead && styles.cardUnread]}
-                  onPress={() => !item.isRead && markAsRead(item.id)}
+                  onPress={() => {
+                    if (!item.isRead) markAsRead(item.id)
+                    // Basic Deep Linking Simulation
+                    if (item.link && item.link.startsWith('/schedule/')) {
+                      // Navigate to RosterScreen
+                      navigation.navigate('RosterScreen')
+                    }
+                  }}
                   activeOpacity={0.7}
                 >
                   <View style={[styles.iconContainer, { backgroundColor: `${config.color}1A` }]}>

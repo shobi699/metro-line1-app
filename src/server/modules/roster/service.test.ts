@@ -13,6 +13,9 @@ vi.mock('@/server/db', () => ({
     setting: {
       findUnique: vi.fn(),
     },
+    rosterValidationRule: {
+      findMany: vi.fn(() => Promise.resolve([])),
+    },
   },
 }))
 

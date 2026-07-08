@@ -296,8 +296,8 @@ export async function createFaultReport(data: CreateFaultReportInput, reporterId
     const recurrence = await detectRecurrence(data.trainId, data.faultCodeId, data.occurredAt)
     
     // Determine priority (escalate by 1 level if recurrence count >= 2)
-    let priority: TicketPriority = faultCode.defaultPriority
-    if (recurrence.count >= 2) {
+    let priority: TicketPriority = data.priority || (faultCode.defaultPriority as TicketPriority)
+    if (!data.priority && recurrence.count >= 2) {
       if (priority === 'low') priority = 'medium'
       else if (priority === 'medium') priority = 'high'
       else if (priority === 'high' || priority === 'critical') priority = 'critical'
