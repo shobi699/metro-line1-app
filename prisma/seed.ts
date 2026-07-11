@@ -58,8 +58,16 @@ async function main() {
     'imports:create',
     'imports:read',
     'settings:read',
+    'settings:update',
+    'meetings:create',
     'meetings:read',
     'meetings:manage',
+    'calendar:personal',
+    'calendar:view',
+    'calendar:view-team',
+    'calendar-admin:holidays',
+    'calendar-admin:events',
+    'calendar-admin:config',
     'feedback:read',
     'feedback:respond',
     'notifications:send',
@@ -117,7 +125,7 @@ async function main() {
       update: { permissions: JSON.stringify(perms), rank, isSystem: true },
       create: {
         key,
-        name,
+        title: name,
         permissions: JSON.stringify(perms),
         rank,
         isSystem: true,
@@ -127,20 +135,20 @@ async function main() {
   }
 
   // ── Users ──────────────────────────────────────────────
-  const operatorNames: Array<{ name: string; nationalId: string; phone: string }> = [
-    { name: 'علی رضایی', nationalId: '1111111111', phone: '09121000001' },
-    { name: 'محمد حسینی', nationalId: '2222222222', phone: '09121000002' },
-    { name: 'زهرا کریمی', nationalId: '3333333333', phone: '09121000003' },
-    { name: 'فاطمه محمدی', nationalId: '4444444444', phone: '09121000004' },
-    { name: 'امیر نوری', nationalId: '5555555555', phone: '09121000005' },
-    { name: 'سارا احمدی', nationalId: '6666666666', phone: '09121000006' },
+  const operatorNames: Array<{ name: string; personnelCode: string; phone: string }> = [
+    { name: 'علی رضایی', personnelCode: '1111111111', phone: '09121000001' },
+    { name: 'محمد حسینی', personnelCode: '2222222222', phone: '09121000002' },
+    { name: 'زهرا کریمی', personnelCode: '3333333333', phone: '09121000003' },
+    { name: 'فاطمه محمدی', personnelCode: '4444444444', phone: '09121000004' },
+    { name: 'امیر نوری', personnelCode: '5555555555', phone: '09121000005' },
+    { name: 'سارا احمدی', personnelCode: '6666666666', phone: '09121000006' },
   ]
 
   const superAdmin = await prisma.user.upsert({
-    where: { nationalId: '0000000000' },
+    where: { personnelCode: '0000000000' },
     update: {},
     create: {
-      nationalId: '0000000000',
+      personnelCode: '0000000000',
       name: 'مدیر سیستم',
       phone: '09120000000',
       email: 'admin@metro.ir',
@@ -151,10 +159,10 @@ async function main() {
   })
 
   const admin = await prisma.user.upsert({
-    where: { nationalId: '9999999999' },
+    where: { personnelCode: '9999999999' },
     update: {},
     create: {
-      nationalId: '9999999999',
+      personnelCode: '9999999999',
       name: 'مدیر خط',
       phone: '09120000009',
       email: 'lineadmin@metro.ir',
@@ -172,10 +180,10 @@ async function main() {
     const group = isStaff ? 'ستادی' : (['A', 'B', 'C'][i % 3])
     const shiftType = isStaff ? 'ستادی' : (i % 2 === 0 ? '9-15' : '12-24')
     const user = await prisma.user.upsert({
-      where: { nationalId: op.nationalId },
+      where: { personnelCode: op.personnelCode },
       update: {},
       create: {
-        nationalId: op.nationalId,
+        personnelCode: op.personnelCode,
         name: op.name,
         phone: op.phone,
         passwordHash,
@@ -396,7 +404,7 @@ async function main() {
         entity: 'User',
         entityId: op.id,
         action: 'create',
-        after: { name: op.name, nationalId: op.nationalId },
+        after: { name: op.name, personnelCode: op.personnelCode },
       },
     })
   }
@@ -878,7 +886,7 @@ async function main() {
 
   console.log('Seed complete:')
   console.log(`  Roles: super_admin, admin, operator`)
-  console.log(`  Users: ${allOperators.length} (${superAdmin.nationalId} / admin123)`)
+  console.log(`  Users: ${allOperators.length} (${superAdmin.personnelCode} / admin123)`)
   console.log(`  Shifts: ${15 * allOperators.length} rows (today +/- 7 days)`)
   console.log(`  Bulletins: ${bulletins.length}`)
   console.log(`  Tickets: ${tickets.length}`)

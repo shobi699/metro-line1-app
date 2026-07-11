@@ -42,6 +42,13 @@ vi.mock('@/server/db', () => ({
     aiChunk: {
       findMany: vi.fn(),
     },
+    aiConversation: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    aiMessage: {
+      create: vi.fn(),
+    },
   },
 }))
 
@@ -69,6 +76,8 @@ describe('AIAssistantService Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     pendingActions.clear()
+    vi.mocked(prisma.aiConversation.create).mockResolvedValue({ id: 'mock-thread-id' } as any)
+    vi.mocked(prisma.aiConversation.findUnique).mockResolvedValue({ id: 'mock-thread-id', userId: 'u1' } as any)
   })
 
   const mockPersona = {
@@ -105,7 +114,7 @@ describe('AIAssistantService Tests', () => {
         chunks.push(chunk)
       }
 
-      expect(chunks[0]).toEqual({
+      expect(chunks.find(c => c.type === 'error')).toEqual({
         type: 'error',
         data: { message: 'پرسونای مورد نظر یافت نشد یا غیرفعال است.' },
       })
@@ -129,7 +138,7 @@ describe('AIAssistantService Tests', () => {
         chunks.push(chunk)
       }
 
-      expect(chunks[0]).toEqual({
+      expect(chunks.find(c => c.type === 'error')).toEqual({
         type: 'error',
         data: { message: 'شما دسترسی به این دستیار هوشمند را ندارید.' },
       })
@@ -158,7 +167,7 @@ describe('AIAssistantService Tests', () => {
         chunks.push(chunk)
       }
 
-      const infoChunk = chunks.find((c) => c.type === 'info')
+      const infoChunk = chunks.find((c) => c.type === 'info' && c.data.layer)
       const tokenChunk = chunks.find((c) => c.type === 'token')
       const doneChunk = chunks.find((c) => c.type === 'done')
 
@@ -197,7 +206,7 @@ describe('AIAssistantService Tests', () => {
         chunks.push(chunk)
       }
 
-      const infoChunk = chunks.find((c) => c.type === 'info')
+      const infoChunk = chunks.find((c) => c.type === 'info' && c.data.layer)
       const tokenChunk = chunks.find((c) => c.type === 'token')
 
       expect(infoChunk?.data.layer).toBe('L0')
@@ -269,7 +278,7 @@ describe('AIAssistantService Tests', () => {
         chunks.push(chunk)
       }
 
-      const infoChunk = chunks.find((c) => c.type === 'info')
+      const infoChunk = chunks.find((c) => c.type === 'info' && c.data.layer)
       const tokenChunk = chunks.find((c) => c.type === 'token')
 
       expect(infoChunk?.data.layer).toBe('L1')
@@ -312,7 +321,7 @@ describe('AIAssistantService Tests', () => {
         chunks.push(chunk)
       }
 
-      const infoChunk = chunks.find((c) => c.type === 'info')
+      const infoChunk = chunks.find((c) => c.type === 'info' && c.data.layer)
       const tokenChunk = chunks.find((c) => c.type === 'token')
 
       expect(infoChunk?.data.layer).toBe('L2')
@@ -347,7 +356,7 @@ describe('AIAssistantService Tests', () => {
         chunks.push(chunk)
       }
 
-      const infoChunk = chunks.find((c) => c.type === 'info')
+      const infoChunk = chunks.find((c) => c.type === 'info' && c.data.layer)
       expect(infoChunk?.data.layer).toBe('BudgetExceeded')
       expect(chunks.find((c) => c.type === 'token')?.data.text).toContain('سهمیه مصرف هوش مصنوعی شما')
     })
@@ -399,7 +408,7 @@ describe('AIAssistantService Tests', () => {
       expect(callPrompt).not.toContain('1234567890')
 
       // Check chunk retrieval output
-      const infoChunk = chunks.find((c) => c.type === 'info')
+      const infoChunk = chunks.find((c) => c.type === 'info' && c.data.layer)
       expect(infoChunk?.data.layer).toBe('L3') // Normal length, economy model
 
       const tokens = chunks.filter((c) => c.type === 'token').map((c) => c.data.text).join('')

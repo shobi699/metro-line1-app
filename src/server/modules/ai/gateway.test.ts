@@ -36,7 +36,7 @@ describe('AIGateway', () => {
     const response = await AIGateway.routeRequest('تست')
     expect(response.text).toBe('پاسخ هوش مصنوعی')
     expect(response.usedProvider).toBe('Gemini')
-    expect(mockAdapter.chat).toHaveBeenCalledWith('تست', mockProviders[0])
+    expect(mockAdapter.chat).toHaveBeenCalledWith('تست', mockProviders[0], undefined)
   })
 
   it('should fallback to second provider if first one fails', async () => {

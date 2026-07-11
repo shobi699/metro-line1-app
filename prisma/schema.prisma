@@ -141,7 +141,7 @@ enum PostType {
 
 model User {
   id           String     @id @default(cuid())
-  nationalId   String     @unique
+  personnelCode   String     @unique @map("nationalId")
   name         String
   phone        String?
   email        String?
@@ -150,14 +150,17 @@ model User {
   roleId       String
   customFields Json?
   plateSearch  String     @default("")
+  homeUnitId   String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
   role       Role        @relation(fields: [roleId], references: [id])
+  homeUnit   OrgUnit?    @relation("UserHomeUnit", fields: [homeUnitId], references: [id])
   importJobs ImportJob[] @relation("ImportActor")
 
   shifts                     Shift[]                 @relation("ShiftAssignee")
   swapRequestsInit           SwapRequest[]           @relation("SwapRequester")
+  catalogs                   TechnicalCatalog[]      @relation("CatalogAuthor")
   swapRequestsTarget         SwapRequest[]           @relation("SwapTarget")
   tripSwapRequestsInit       TripSwapRequest[]       @relation("TripSwapRequester")
   tripSwapRequestsTarget     TripSwapRequest[]       @relation("TripSwapTarget")
@@ -230,6 +233,13 @@ model User {
   fatigueLogs                FatigueLog[]
   sosAlerts                  SOSAlert[]              @relation("SOSReporter")
   incidentReports            IncidentReport[]        @relation("IncidentReporter")
+  
+  roleAssignments            RoleAssignment[]
+  permissionOverrides        PermissionOverride[]
+  lifecycleEvents            UserLifecycleEvent[]
+  transfersRequested         TransferRequest[]       @relation("TransferRequester")
+  transfersTarget            TransferRequest[]       @relation("TransferTarget")
+  transfersApproved          TransferRequest[]       @relation("TransferApprover")
 
   @@index([roleId])
   @@index([status])
@@ -241,14 +251,18 @@ model User {
 model Role {
   id          String   @id @default(cuid())
   key         String   @unique
-  name        String
+  title       String   @map("name")
+  description String?
   permissions Json
-  rank        Int      @default(0)
   isSystem    Boolean  @default(false)
+  color       String?
+  isActive    Boolean  @default(true)
+  rank        Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  users User[]
+  users            User[]
+  roleAssignments  RoleAssignment[]
 
   @@map("roles")
 }
@@ -590,6 +604,7 @@ model Post {
   excerpt        String?
   body           String
   category       String?
+  tags           String?
   coverUrl       String?
   mediaUrl       String?
   mediaType      String?
@@ -793,6 +808,109 @@ model AttendanceRecord {
   @@index([userId, checkInTime])
   @@index([stationId])
 }
+
+// ── Identity & Access Management (IAM) ─────────────────
+
+model OrgUnit {
+  id        String   @id @default(cuid())
+  kind      String   // "line" | "station" | "shift_group" | "unit"
+  key       String   @unique // e.g. "st-tajrish", "st-tajrish-shift-a"
+  title     String
+  parentId  String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]   @relation("UserHomeUnit")
+  parent    OrgUnit? @relation("OrgUnitParent", fields: [parentId], references: [id])
+  children  OrgUnit[] @relation("OrgUnitParent")
+
+  @@index([parentId])
+  @@index([kind])
+}
+
+model RoleAssignment {
+  id        String    @id @default(cuid())
+  userId    String
+  roleId    String
+  scopeType String    @default("all") // "all" | "region" | "station" | "unit"
+  scopeKey  String?
+  validFrom DateTime  @default(now())
+  validTo   DateTime?
+  reason    String?
+  grantedBy String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([roleId, scopeType, scopeKey])
+}
+
+model PermissionOverride {
+  id        String    @id @default(cuid())
+  userId    String
+  permKey   String
+  effect    String    // "grant" | "deny"
+  scopeType String    @default("all")
+  scopeKey  String?
+  validTo   DateTime?
+  reason    String
+  grantedBy String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AccessPolicy {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  config    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserLifecycleEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String   // "registered" | "approved" | "activated" | "suspended" | "role_changed" | "offboarded"
+  detail    Json?
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model TransferRequest {
+  id            String   @id @default(cuid())
+  userId        String
+  fromUnitId    String?
+  toUnitId      String
+  effectiveDate DateTime
+  status        String   @default("pending") // "pending" | "approved" | "rejected"
+  requestedById String
+  approvedById  String?
+  reason        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  targetUser    User     @relation("TransferTarget", fields: [userId], references: [id], onDelete: Cascade)
+  requestedBy   User     @relation("TransferRequester", fields: [requestedById], references: [id])
+  approvedBy    User?    @relation("TransferApprover", fields: [approvedById], references: [id])
+
+  @@index([userId])
+  @@index([toUnitId])
+  @@index([status])
+}
+
 
 // ── Polls ──────────────────────────────────────────────
 
@@ -2636,3 +2754,25 @@ model IncidentReport {
   @@index([type])
   @@index([status])
 }
+
+// ── Technical Catalogs (Live Guide & Flowcharts) ─────────────────
+
+model TechnicalCatalog {
+  id          String   @id @default(cuid())
+  title       String
+  category    String   // e.g. "AC", "DC", "عمومی"
+  content     String   // The Mermaid code
+  authorId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author      User?    @relation("CatalogAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([authorId])
+}
+
+
+
+
+

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   getMeetingTypes,
   getMeetingRooms,
@@ -65,6 +65,12 @@ vi.mock('@/server/modules/notifications/gateway', () => ({
 describe('meetings service', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-07-10T00:00:00Z'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   describe('getMeetingTypes & getMeetingRooms', () => {
