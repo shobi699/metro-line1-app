@@ -5,6 +5,7 @@
 import dayjs from 'dayjs'
 import { fromJalali, gregStr } from '@/lib/dayjs'
 import { getCalendarRange, type CalendarDay } from './service'
+import { getCalendarConfig } from './admin-service'
 
 export interface MonthShiftStats {
   counts: Record<string, number> // morning/evening/night/off/office
@@ -134,13 +135,18 @@ export async function getCalendarInsights(params: {
 
   // پل تعطیلات و شمارش معکوس روی افق ۹۰ روز از امروز (مستقل از ماه نمایشی)
   const today = dayjs().startOf('day')
-  const horizon = await getCalendarRange({
-    userId,
-    roleKey,
-    from: today.format('YYYY-MM-DD'),
-    to: today.add(89, 'day').format('YYYY-MM-DD'),
-    layers: ['shift', 'holidays'],
-  })
+  const [horizon, calendarConfig] = await Promise.all([
+    getCalendarRange({
+      userId,
+      roleKey,
+      from: today.format('YYYY-MM-DD'),
+      to: today.add(89, 'day').format('YYYY-MM-DD'),
+      layers: ['shift', 'holidays'],
+    }),
+    getCalendarConfig().catch(() => null),
+  ])
+
+  const bridgeFinderEnabled = calendarConfig?.smartRules?.bridgeFinder ?? true
 
   const upcoming = horizon.days.filter((d) => d.date > today.format('YYYY-MM-DD'))
   const nextOffIdx = upcoming.findIndex(isRestDay)
@@ -153,7 +159,7 @@ export async function getCalendarInsights(params: {
     jMonth,
     stats: computeStats(current),
     prevStats: computeStats(previous),
-    bridges: findBridges(horizon.days),
+    bridges: bridgeFinderEnabled ? findBridges(horizon.days) : [],
     countdown: {
       daysToNextOff: nextOffIdx === -1 ? null : nextOffIdx + 1,
       nextShift: nextWork?.shift

@@ -11,6 +11,7 @@ import { calculateShiftForDate } from '@/server/modules/roster/materialize'
 import type { CycleShiftDetail, ShiftTemplateData, ShiftAssignmentData } from '@/features/shifts/types'
 import type { PersonalEventInput, PersonalEventUpdateInput, CalendarPreferenceInput } from '@/lib/zod/calendar'
 import { Prisma } from '@/generated/prisma/client'
+import { getCalendarConfig } from './admin-service'
 
 // ── انواع خروجی ────────────────────────────────────────
 
@@ -89,13 +90,26 @@ export interface CalendarDay {
   meetings: CalendarMeetingEntry[]
 }
 
-/** ساعات پیش‌فرض هر کد شیفت وقتی جزئیات قالب سیکل در دسترس نیست (هم‌راستا با materialize) */
-const FALLBACK_HOURS: Record<string, number> = {
+/** ساعات پیش‌فرض هر کد شیفت — اگر تنظیمات ادمین موجود باشد از آنجا خوانده می‌شود */
+const HARDCODED_FALLBACK: Record<string, number> = {
   morning: 9,
   evening: 9,
   night: 12,
   office: 8.75,
   off: 0,
+}
+
+async function getFallbackHours(): Promise<Record<string, number>> {
+  try {
+    const config = await getCalendarConfig()
+    const result: Record<string, number> = {}
+    for (const [code, sh] of Object.entries(config.shiftHours)) {
+      result[code] = sh.hours
+    }
+    return { ...HARDCODED_FALLBACK, ...result }
+  } catch {
+    return HARDCODED_FALLBACK
+  }
 }
 
 const DEFAULT_LAYERS = {
@@ -115,6 +129,7 @@ async function resolveShiftLayer(
   end: dayjs.Dayjs,
 ): Promise<Map<string, CalendarShiftEntry>> {
   const result = new Map<string, CalendarShiftEntry>()
+  const fallbackHours = await getFallbackHours()
 
   // شیفت‌های ثبت‌شده در DB — یک کوئری برای کل بازه (با یک روز حاشیه برای اختلاف منطقه زمانی)
   const dbShifts = await prisma.shift.findMany({
@@ -175,7 +190,7 @@ async function resolveShiftLayer(
         label: detail?.label ?? dbShift.code,
         startTime: detail?.startTime ?? '',
         endTime: detail?.endTime ?? '',
-        hours: detail?.hours ?? FALLBACK_HOURS[dbShift.code] ?? 0,
+        hours: detail?.hours ?? fallbackHours[dbShift.code] ?? 0,
         source: (dbShift.source as 'cycle' | 'roster' | 'manual') ?? 'manual',
         forecast: false,
       })
@@ -190,7 +205,7 @@ async function resolveShiftLayer(
           label: detail.label,
           startTime: detail.startTime,
           endTime: detail.endTime,
-          hours: detail.hours ?? FALLBACK_HOURS[detail.code] ?? 0,
+          hours: detail.hours ?? fallbackHours[detail.code] ?? 0,
           source: 'cycle',
           forecast: true,
         })

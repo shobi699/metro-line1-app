@@ -86,6 +86,12 @@ export const calendarApi = {
     return res.blob()
   },
 
+  markOrgEventSeen(accessToken: string, eventId: string) {
+    return apiFetch<{ id: string }>(`/api/calendar/org-events/${eventId}/seen`, accessToken, {
+      method: 'POST',
+    })
+  },
+
   getPreferences(accessToken: string) {
     return apiFetch<{ layers: Record<string, { on: boolean }>; defaultView: string }>(
       '/api/calendar/preferences',
