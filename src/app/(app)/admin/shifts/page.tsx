@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { jdate, dayjs } from '@/lib/dayjs'
 import {
   ChevronRight,
@@ -274,7 +274,7 @@ export default function AdminShiftsPage() {
   const activeDays = viewType === 'weekly' ? weekDays : monthlyDays
 
   // Fetch all required data from server
-  async function loadData() {
+  const loadData = useCallback(async () => {
     if (!accessToken) return
     setLoading(true)
     try {
@@ -320,10 +320,10 @@ export default function AdminShiftsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [accessToken, activeDays])
 
   // Fetch settings from database on mount
-  async function fetchSettings() {
+  const fetchSettings = useCallback(async () => {
     if (!accessToken) return
     setSettingsLoading(true)
     try {
@@ -334,9 +334,9 @@ export default function AdminShiftsPage() {
         const settingsData = await settingsRes.json()
         const list = settingsData.data || []
 
-        const restSetting = list.find((s: any) => s.key === 'shifts.minRestHours')
-        const nightsSetting = list.find((s: any) => s.key === 'shifts.maxConsecutiveNights')
-        const paritySetting = list.find((s: any) => s.key === 'shifts.roleParity')
+        const restSetting = list.find((s: { key: string; value: string }) => s.key === 'shifts.minRestHours')
+        const nightsSetting = list.find((s: { key: string; value: string }) => s.key === 'shifts.maxConsecutiveNights')
+        const paritySetting = list.find((s: { key: string; value: string }) => s.key === 'shifts.roleParity')
 
         if (restSetting) setDbMinRestHours(JSON.parse(restSetting.value))
         if (nightsSetting) setDbMaxConsecutiveNights(JSON.parse(nightsSetting.value))
@@ -347,15 +347,15 @@ export default function AdminShiftsPage() {
     } finally {
       setSettingsLoading(false)
     }
-  }
-
-  useEffect(() => {
-    void fetchSettings()
   }, [accessToken])
 
   useEffect(() => {
+    void fetchSettings()
+  }, [fetchSettings])
+
+  useEffect(() => {
     void loadData()
-  }, [weekOffset, selectedYear, selectedMonth, viewType, accessToken])
+  }, [loadData])
 
   // Save Settings to database
   async function handleSaveSettings() {
@@ -1922,6 +1922,7 @@ export default function AdminShiftsPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <Label className="text-xs font-bold flex justify-start">نوع هدف انتساب</Label>
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         <Select value={assignTargetType} onValueChange={(v: any) => setAssignTargetType(v)}>
                           <SelectTrigger className="h-10 text-xs">
                             <SelectValue />

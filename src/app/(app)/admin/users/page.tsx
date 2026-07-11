@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useAuthStore } from '@/features/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -109,6 +109,7 @@ interface ColumnHeaderFilterProps {
 }
 
 function ColumnHeaderFilter({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   columnKey,
   columnLabel,
   uniqueValues,
@@ -341,6 +342,7 @@ function toEn(str: string | null | undefined): string {
     .replace(/[۹]/g, '9')
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getFieldIcon(fieldName: string) {
   switch (fieldName) {
     case 'personnelNo': return <CreditCard className="size-4 text-accent" />
@@ -435,6 +437,7 @@ export default function AdminUsersPage() {
   const [editingUserId, setEditingUserId] = useState<string | null>(null)
 
   const [roleModalOpen, setRoleModalOpen] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [fieldModalOpen, setFieldModalOpen] = useState(false)
 
   // Form Fields - User
@@ -470,23 +473,25 @@ export default function AdminUsersPage() {
   const [editFieldRequired, setEditFieldRequired] = useState(false)
   const [editFieldDefaultValue, setEditFieldDefaultValue] = useState('')
 
-  function getUserFieldValue(user: User, fieldName: string) {
+  const getUserFieldValue = useCallback((user: User, fieldName: string) => {
     const val = user.customFields?.[fieldName]
     if (val !== undefined && val !== null && val !== '') {
       return val
     }
     const def = customFieldDefs.find((d) => d.name === fieldName)
     return def?.defaultValue ?? ''
-  }
+  }, [customFieldDefs])
 
   // User Detail Sheet States
   const [selectedUserForDetail, setSelectedUserForDetail] = useState<User | null>(null)
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [userAuditLogs, setUserAuditLogs] = useState<any[]>([])
   const [loadingUserAuditLogs, setLoadingUserAuditLogs] = useState(false)
   const [detailTab, setDetailTab] = useState<'profile' | 'vehicles' | 'logs'>('profile')
 
   // Global Audit Logs States
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [globalAuditLogs, setGlobalAuditLogs] = useState<any[]>([])
   const [loadingGlobalAuditLogs, setLoadingGlobalAuditLogs] = useState(false)
   const [auditLogSearch, setAuditLogSearch] = useState('')
@@ -509,7 +514,13 @@ export default function AdminUsersPage() {
   const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>({})
   const [columnSearchTerms, setColumnSearchTerms] = useState<Record<string, string>>({})
 
-  function getColumnValue(user: User, key: string): string {
+  const statusLabels = useMemo<Record<string, { text: string; color: string; badgeColor: string }>>(() => ({
+    pending: { text: 'در حال بررسی', color: 'text-warning bg-warning/15 border-warning/30', badgeColor: 'bg-warning' },
+    active: { text: 'فعال', color: 'text-success bg-success/10 border-success/20', badgeColor: 'bg-success' },
+    suspended: { text: 'معلق', color: 'text-critical bg-critical/10 border-critical/20', badgeColor: 'bg-critical' },
+  }), [])
+
+  const getColumnValue = useCallback((user: User, key: string): string => {
     switch (key) {
       case 'name':
         return user.name || ''
@@ -583,7 +594,7 @@ export default function AdminUsersPage() {
         return val !== undefined && val !== null ? String(val) : '—'
       }
     }
-  }
+  }, [getUserFieldValue, statusLabels])
 
   function getUniqueValues(columnKey: string): { value: string; count: number }[] {
     const values = users.map((user) => getColumnValue(user, columnKey))
@@ -691,7 +702,7 @@ export default function AdminUsersPage() {
     }
 
     return result
-  }, [users, searchTerm, statusFilter, roleFilter, columnFilters, sortConfig])
+  }, [users, searchTerm, statusFilter, roleFilter, columnFilters, sortConfig, getColumnValue])
 
   useEffect(() => {
     if (notification) {
@@ -701,7 +712,7 @@ export default function AdminUsersPage() {
   }, [notification])
 
   // Fetch Users
-  async function loadUsers() {
+  const loadUsers = useCallback(async () => {
     if (!accessToken) return
     setLoadingUsers(true)
     try {
@@ -720,10 +731,10 @@ export default function AdminUsersPage() {
     } finally {
       setLoadingUsers(false)
     }
-  }
+  }, [accessToken])
 
   // Fetch Roles
-  async function loadRoles() {
+  const loadRoles = useCallback(async () => {
     if (!accessToken) return
     setLoadingRoles(true)
     try {
@@ -746,10 +757,10 @@ export default function AdminUsersPage() {
     } finally {
       setLoadingRoles(false)
     }
-  }
+  }, [accessToken, selectedRole])
 
   // Fetch Custom Field Definitions
-  async function loadCustomFieldDefs() {
+  const loadCustomFieldDefs = useCallback(async () => {
     if (!accessToken) return
     setLoadingFields(true)
     try {
@@ -768,7 +779,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoadingFields(false)
     }
-  }
+  }, [accessToken])
 
   // Fetch User-Specific Audit Logs
   async function loadUserAuditLogs(userId: string) {
@@ -790,7 +801,7 @@ export default function AdminUsersPage() {
   }
 
   // Fetch Global Audit Logs
-  async function loadGlobalAuditLogs() {
+  const loadGlobalAuditLogs = useCallback(async () => {
     if (!accessToken) return
     setLoadingGlobalAuditLogs(true)
     try {
@@ -811,7 +822,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoadingGlobalAuditLogs(false)
     }
-  }
+  }, [accessToken, auditLogSearch, auditLogAction, auditLogEntity])
 
   function selectRoleItem(role: Role) {
     setSelectedRole(role)
@@ -839,13 +850,13 @@ export default function AdminUsersPage() {
       void loadRoles()
       void loadCustomFieldDefs()
     }
-  }, [accessToken])
+  }, [accessToken, loadUsers, loadRoles, loadCustomFieldDefs])
 
   useEffect(() => {
     if (activeTab === 'audit_logs' && accessToken) {
       void loadGlobalAuditLogs()
     }
-  }, [activeTab, auditLogSearch, auditLogAction, auditLogEntity, accessToken])
+  }, [activeTab, accessToken, loadGlobalAuditLogs])
 
   // Export Users to Excel
   async function handleExcelExport() {
@@ -1207,6 +1218,7 @@ export default function AdminUsersPage() {
       const userToUpdate = users.find((u) => u.id === userId) || selectedUserForDetail
       if (!userToUpdate) return
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const currentCustomFields = (userToUpdate.customFields as Record<string, any>) || {}
       const updatedCustomFields = {
         ...currentCustomFields,
@@ -1682,6 +1694,7 @@ export default function AdminUsersPage() {
   }
 
   // Convert Audit Log payload to Persian description
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function getAuditLogDescription(log: any) {
     const actorName = log.actor?.name || 'سیستم'
     const action = log.action
@@ -1735,12 +1748,6 @@ export default function AdminUsersPage() {
     }
 
     return `${entityStr} توسط ${actorName} ${actionStr}.`
-  }
-
-  const statusLabels: Record<string, { text: string; color: string; badgeColor: string }> = {
-    pending: { text: 'در حال بررسی', color: 'text-warning bg-warning/15 border-warning/30', badgeColor: 'bg-warning' },
-    active: { text: 'فعال', color: 'text-success bg-success/10 border-success/20', badgeColor: 'bg-success' },
-    suspended: { text: 'معلق', color: 'text-critical bg-critical/10 border-critical/20', badgeColor: 'bg-critical' },
   }
 
   const fieldTypeLabels: Record<string, string> = {

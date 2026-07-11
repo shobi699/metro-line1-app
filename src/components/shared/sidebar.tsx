@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
+import { useConfigStore } from '@/features/config'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
@@ -436,12 +437,14 @@ export function SidebarContent() {
 }
 
 export function Sidebar() {
+  const config = useConfigStore((s) => s.config)
+
   return (
     <aside className="hidden w-64 shrink-0 border-s border-border-subtle bg-surface-container-low lg:flex lg:flex-col" dir="rtl">
       <div className="flex h-16 items-center gap-2.5 border-b border-border-subtle px-6 select-none">
-        <img src="/logo.png" className="size-8 object-contain rounded-full bg-background p-0.5 border border-border" alt="Logo" />
+        <img src={config?.appLogoUrl || "/logo.png"} className="size-8 object-contain rounded-full bg-background p-0.5 border border-border" alt="Logo" />
         <span className="font-headline-md text-headline-md font-bold text-accent">
-          مترو خط ۱
+          {config?.appName || "مترو خط ۱"}
         </span>
       </div>
       <SidebarContent />
@@ -453,6 +456,7 @@ export function MobileHeader() {
   const pathname = usePathname()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
+  const config = useConfigStore((s) => s.config)
   const [open, setOpen] = useState(false)
 
   // بستن سایدبار پس از تغییر مسیر
@@ -480,9 +484,9 @@ export function MobileHeader() {
             <SidebarContent />
           </SheetContent>
         </Sheet>
-        <img src="/logo.png" className="size-8 object-contain rounded-full bg-background p-0.5 border border-border" alt="Logo" />
+        <img src={config?.appLogoUrl || "/logo.png"} className="size-8 object-contain rounded-full bg-background p-0.5 border border-border" alt="Logo" />
         <span className="font-headline-md text-headline-md font-bold text-accent">
-          مترو خط ۱
+          {config?.appName || "مترو خط ۱"}
         </span>
       </div>
       <div className="flex items-center gap-2">

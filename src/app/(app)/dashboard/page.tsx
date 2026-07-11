@@ -1,17 +1,16 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/features/auth'
+import { useConfigStore } from '@/features/config'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toFa, jalali, faTime } from '@/lib/fa'
 import { cn } from '@/lib/utils'
-import { SystemHealthPips } from '@/components/shared/system-health-pips'
 import {
   Users,
   Calendar,
-  ArrowLeftRight,
   AlertTriangle,
   FileSpreadsheet,
   MessageCircle,
@@ -25,8 +24,6 @@ import {
   ClipboardCheck,
   Activity,
   Database,
-  ArrowUpRight,
-  Info,
   ChevronLeft,
   Server,
   Cpu,
@@ -42,7 +39,6 @@ import {
   Plus,
   Send,
   Wrench,
-  CheckCircle2,
 } from 'lucide-react'
 
 // ── Types ───────────────────────────────────────────────────────────
@@ -294,7 +290,8 @@ function RecommendedContentWidget({ accessToken }: { accessToken: string | null 
 export default function DashboardPage() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
-  
+  const config = useConfigStore((s) => s.config)
+
   const [activeTab, setActiveTab] = useState<'overview' | 'analytics'>('overview')
   
   // General Dashboard States
@@ -309,6 +306,7 @@ export default function DashboardPage() {
   const [todayShift, setTodayShift] = useState<TodayShift | null>(null)
   const [recentBulletins, setRecentBulletins] = useState<RecentBulletin[]>([])
   const [loading, setLoading] = useState(true)
+  const [statsError, setStatsError] = useState('')
 
   // Analytics states
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
@@ -413,6 +411,14 @@ export default function DashboardPage() {
       if (updated) setSelectedStation(updated)
     }
   }, [emergencyMode])
+
+  // Sync the admin-managed system notice into the live announcement ticker
+  useEffect(() => {
+    const notice = config?.systemNotice?.trim()
+    if (!notice) return
+    setAnnouncements((prev) => (prev.includes(notice) ? prev : [notice, ...prev]))
+    setMarqueeIndex(0)
+  }, [config?.systemNotice])
 
   // Rotate announcements
   useEffect(() => {
@@ -565,9 +571,10 @@ export default function DashboardPage() {
           setRecentBulletins(
             Array.isArray(bulletinsData.data) ? bulletinsData.data.slice(0, 3) : [],
           )
+          setStatsError('')
         }
       } catch {
-        // silent
+        if (!cancelled) setStatsError('خطا در دریافت آمار پیشخوان. اتصال شبکه را بررسی کنید.')
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -882,6 +889,26 @@ export default function DashboardPage() {
     )
   }
 
+  if (loading) {
+    return (
+      <div className="flex flex-1 flex-col gap-5 p-4 lg:p-6" dir="rtl" aria-busy="true">
+        <div className="h-14 rounded-xl bg-surface-container-low/60 border border-border-subtle/50 animate-pulse" />
+        <div className="h-10 w-64 rounded-lg bg-surface-container-low/50 animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-[140px] rounded-2xl bg-surface-container-low/50 border border-border-subtle/40 animate-pulse" />
+          ))}
+        </div>
+        <div className="h-64 rounded-2xl bg-surface-container-low/40 border border-border-subtle/40 animate-pulse" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-40 rounded-2xl bg-surface-container-low/40 border border-border-subtle/40 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       className={cn(
@@ -890,6 +917,12 @@ export default function DashboardPage() {
       )}
       dir="rtl"
     >
+      {statsError && (
+        <div className="w-full bg-critical/10 border border-critical/30 rounded-xl p-3 text-critical text-xs flex items-center gap-2" role="alert">
+          <AlertTriangle className="size-4 shrink-0" />
+          <span>{statsError}</span>
+        </div>
+      )}
       {/* ── Mobile PWA Dashboard (matches mobile app experience) ─────────── */}
       <div className="flex md:hidden flex-col gap-5 w-full">
         {/* Compact greeting card */}
@@ -1310,7 +1343,7 @@ export default function DashboardPage() {
                 })}
 
                 {/* Stations buttons */}
-                {stations.map((st, i) => (
+                {stations.map((st) => (
                   <button
                     key={st.id}
                     onClick={() => setSelectedStation(st)}

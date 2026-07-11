@@ -5,6 +5,11 @@ import { prisma } from '@/server/db'
 export async function GET(request: Request) {
   try {
     const appName = await getSettingValue('general.appName', 'سیر و حرکت خط یک مترو')
+    const appLogoUrl = await getSettingValue('general.appLogoUrl', '/logo.png')
+    const authBackgroundUrl = await getSettingValue('general.authBackgroundUrl', '')
+    const authWelcomeText = await getSettingValue('general.authWelcomeText', 'به سامانه یکپارچه سیر و حرکت مترو خط ۱ خوش آمدید')
+    const sidebarStyle = await getSettingValue('ui.sidebarStyle', 'expanded')
+    const dashboardLayout = await getSettingValue('ui.dashboardLayout', 'standard')
     const brandColor = await getSettingValue('general.brandColor', '#e53935')
     const maintenanceMode = await getSettingValue('general.maintenanceMode', false)
     const systemNotice = await getSettingValue('general.systemNotice', 'کلیه راهبران خط ۱ با توجه به برودت هوا موظف به رعایت سرعت مطمئنه در بخش روباز ریل هستند.')
@@ -93,6 +98,11 @@ export async function GET(request: Request) {
     return NextResponse.json({
       data: {
         appName,
+        appLogoUrl,
+        authBackgroundUrl,
+        authWelcomeText,
+        sidebarStyle,
+        dashboardLayout,
         brandColor,
         maintenanceMode,
         systemNotice,

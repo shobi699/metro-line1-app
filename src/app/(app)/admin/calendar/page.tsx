@@ -15,7 +15,6 @@ import {
   Trash2,
   Pencil,
   Upload,
-  Download,
   Eye,
   Settings2,
   Calendar,

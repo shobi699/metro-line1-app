@@ -43,6 +43,7 @@ interface AuditLog {
 
 const CATEGORY_MAP: Record<string, { label: string; icon: string }> = {
   general: { label: 'تنظیمات عمومی', icon: '⚙️' },
+  ui: { label: 'طراحی و رابط کاربری', icon: '🎨' },
   shifts: { label: 'مدیریت شیفت‌ها', icon: '📅' },
   tickets: { label: 'خرابی و تیکتینگ', icon: '🎫' },
   chat: { label: 'پیام‌رسان و گفت‌وگو', icon: '💬' },
@@ -599,11 +600,27 @@ export default function AdminSettingsPage() {
                             onChange={(e) => handleValueChange(setting.key, e.target.value)}
                             className="w-48 md:w-64 h-9 rounded-lg border border-border bg-background/50 px-2.5 text-sm outline-none focus-visible:border-accent"
                           >
-                            {(JSON.parse(setting.options) as string[]).map((opt) => (
-                              <option key={opt} value={opt}>
-                                {toFa(opt)}
-                              </option>
-                            ))}
+                            {(() => {
+                              let parsed: any;
+                              try {
+                                parsed = JSON.parse(setting.options)
+                              } catch {
+                                parsed = setting.options
+                              }
+                              
+                              let opts: string[] = []
+                              if (Array.isArray(parsed)) {
+                                opts = parsed
+                              } else if (typeof parsed === 'string') {
+                                opts = parsed.split(',')
+                              }
+
+                              return opts.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {toFa(opt)}
+                                </option>
+                              ))
+                            })()}
                           </select>
                         )}
 

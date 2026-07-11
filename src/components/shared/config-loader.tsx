@@ -1,14 +1,21 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useConfigStore } from '@/features/config'
 
 export function ConfigLoader() {
+  const setConfig = useConfigStore((s) => s.setConfig)
+
   useEffect(() => {
     async function loadConfig() {
       try {
         const res = await fetch('/api/config')
         if (res.ok) {
           const { data } = await res.json()
+          
+          // Populate global config store
+          setConfig(data)
+
           if (data.appName) {
             document.title = data.appName
           }
@@ -32,7 +39,7 @@ export function ConfigLoader() {
       }
     }
     loadConfig()
-  }, [])
+  }, [setConfig])
 
   return null
 }

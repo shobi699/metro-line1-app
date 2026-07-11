@@ -25,6 +25,9 @@ export default function LoginPage() {
   const [appName, setAppName] = useState('خط‌ یار')
   const [brandColor, setBrandColor] = useState('')
   const [allowRegistration, setAllowRegistration] = useState(true)
+  const [appLogoUrl, setAppLogoUrl] = useState('/logo.png')
+  const [authBackgroundUrl, setAuthBackgroundUrl] = useState('')
+  const [authWelcomeText, setAuthWelcomeText] = useState('سیستم مدیریت یکپارچه مترو')
 
   useEffect(() => {
     fetch('/api/config')
@@ -33,6 +36,9 @@ export default function LoginPage() {
         if (data.data?.appName) setAppName(data.data.appName)
         if (data.data?.brandColor) setBrandColor(data.data.brandColor)
         if (data.data?.allowRegistration !== undefined) setAllowRegistration(data.data.allowRegistration)
+        if (data.data?.appLogoUrl) setAppLogoUrl(data.data.appLogoUrl)
+        if (data.data?.authBackgroundUrl) setAuthBackgroundUrl(data.data.authBackgroundUrl)
+        if (data.data?.authWelcomeText) setAuthWelcomeText(data.data.authWelcomeText)
       })
       .catch(() => {})
   }, [])
@@ -80,7 +86,7 @@ export default function LoginPage() {
         <div
           className="absolute inset-0 scale-105 bg-cover bg-center"
           style={{
-            backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBrL3E_mh6FZzjFwGI_YGzltX-rQHwPMP_TVSvlIkAM6IfOmJK7xqrxn1sTf5vmJC4dza7R-rntBcL5fwOTHDhcEGFUd0-MYpcDgNEDrBkrOFkGgP0oDqaJpJbygNX7cZ1NiLHAXreAnVA9dhbMpA3lOH8dvzEDx0lwiS3tkcFjyHIN16fx15covGYiK_h-9DIIARvUllvt5AsKqYCM3TcM654NV-mwRmzT465vDEckFNiHUHcytdDrUe5B1fAEokpWJQY2LTWFDSQ')",
+            backgroundImage: `url('${authBackgroundUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuBrL3E_mh6FZzjFwGI_YGzltX-rQHwPMP_TVSvlIkAM6IfOmJK7xqrxn1sTf5vmJC4dza7R-rntBcL5fwOTHDhcEGFUd0-MYpcDgNEDrBkrOFkGgP0oDqaJpJbygNX7cZ1NiLHAXreAnVA9dhbMpA3lOH8dvzEDx0lwiS3tkcFjyHIN16fx15covGYiK_h-9DIIARvUllvt5AsKqYCM3TcM654NV-mwRmzT465vDEckFNiHUHcytdDrUe5B1fAEokpWJQY2LTWFDSQ"}')`,
             filter: 'brightness(0.25) contrast(1.1)',
           }}
         />
@@ -102,13 +108,13 @@ export default function LoginPage() {
             <div
               className="mb-2 flex size-14 items-center justify-center rounded-full shadow-md transition-transform duration-300 hover:scale-105 overflow-hidden bg-background"
             >
-              <img src="/logo.png" className="size-11 object-contain" alt="Logo" />
+              <img src={appLogoUrl || "/logo.png"} className="size-11 object-contain" alt="Logo" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               {appName}
             </h1>
             <p className="text-xs font-semibold uppercase tracking-widest text-foreground-muted">
-              سیستم مدیریت یکپارچه مترو
+              {authWelcomeText}
             </p>
           </div>
 
