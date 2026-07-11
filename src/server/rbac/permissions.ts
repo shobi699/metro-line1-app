@@ -177,6 +177,18 @@ export const PERMISSION_CATALOG: PermissionGroup[] = [
       { key: 'forms-admin:manage', label: 'مدیریت کامل قالب‌ها و گردشکار' },
     ],
   },
+  {
+    resource: 'iam',
+    label: 'مدیریت کاربران و دسترسی‌ها (IAM)',
+    permissions: [
+      { key: 'iam:users-manage', label: 'مدیریت کاربران' },
+      { key: 'iam:roles-manage', label: 'مدیریت نقش‌ها' },
+      { key: 'iam:assign', label: 'اعطای دسترسی' },
+      { key: 'iam:override', label: 'استثنائات (Override)' },
+      { key: 'iam:security-policies', label: 'سیاست‌های امنیتی' },
+      { key: 'iam:reports', label: 'گزارش‌گیری IAM' },
+    ],
+  },
 ]
 
 /** فهرست تخت همهٔ کلیدهای مجوز معتبر. */

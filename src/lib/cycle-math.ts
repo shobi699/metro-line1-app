@@ -43,11 +43,11 @@ export function calculateShiftForDate(
 }
 
 export const MOCK_USERS_LIST = [
-  { id: 'current', name: 'مهندس حسینی (کاربر جاری)', group: 'A', shiftType: '9-15', nationalId: '0012345678', role: 'operator' },
-  { id: 'user-ali', name: 'علی علوی', group: 'A', shiftType: '9-15', nationalId: '0023456789', role: 'operator' },
-  { id: 'user-reza', name: 'رضا رضایی', group: 'B', shiftType: '12-24', nationalId: '0034567890', role: 'operator' },
-  { id: 'user-mohammad', name: 'محمد محمدی', group: 'C', shiftType: '12-24', nationalId: '0045678901', role: 'operator' },
-  { id: 'user-hossein', name: 'حسین حسینی (ستادی)', group: 'ستادی', shiftType: 'ستادی', nationalId: '0056789012', role: 'operator' }
+  { id: 'current', name: 'مهندس حسینی (کاربر جاری)', group: 'A', shiftType: '9-15', personnelCode: '0012345678', role: 'operator' },
+  { id: 'user-ali', name: 'علی علوی', group: 'A', shiftType: '9-15', personnelCode: '0023456789', role: 'operator' },
+  { id: 'user-reza', name: 'رضا رضایی', group: 'B', shiftType: '12-24', personnelCode: '0034567890', role: 'operator' },
+  { id: 'user-mohammad', name: 'محمد محمدی', group: 'C', shiftType: '12-24', personnelCode: '0045678901', role: 'operator' },
+  { id: 'user-hossein', name: 'حسین حسینی (ستادی)', group: 'ستادی', shiftType: 'ستادی', personnelCode: '0056789012', role: 'operator' }
 ]
 
 export const MOCK_GROUPS_LIST = GROUPS_LIST

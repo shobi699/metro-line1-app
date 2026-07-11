@@ -5,6 +5,7 @@ import dayjs from 'dayjs'
 import { getSettingValue } from '@/server/modules/settings/service'
 import { toFa, jalali, faTime, normalizeFarsiString, fuzzyMatchScore } from '@/lib/fa'
 import { createFaultReport } from '@/server/modules/faults/service'
+import { TROUBLESHOOTING_GRAPH_MD } from './troubleshooting-docs'
 
 export interface PendingAction {
   userId: string
@@ -31,7 +32,7 @@ const FAQ_CACHE_TTL_MS = 60000 // Cache FAQ embeddings for 1 minute
 
 function maskSensitiveData(text: string): string {
   // Mask national ID (10 digits)
-  let masked = text.replace(/\b\d{10}\b/g, '[کد ملی ماسک شده]')
+  let masked = text.replace(/\b\d{10}\b/g, '[کد پرسنلی ماسک شده]')
   // Mask phone number (09xxxxxxxx)
   masked = masked.replace(/\b09\d{9}\b/g, '[شماره تلفن ماسک شده]')
   return masked
@@ -67,16 +68,20 @@ export class AIAssistantService {
     personaKey,
     message,
     threadId,
+    history = [],
+    imageUrl
   }: {
     userId: string
     personaKey: string
     message: string
     threadId?: string
+    history?: Array<{ role: 'user' | 'ai', content: string }>
+    imageUrl?: string
   }) {
     let finalContent = ''
     let info: any = {}
     
-    const stream = this.processMessageStream({ userId, personaKey, message, threadId })
+    const stream = this.processMessageStream({ userId, personaKey, message, threadId, history, imageUrl })
     for await (const chunk of stream) {
       if (chunk.type === 'info') {
         info = chunk.data
@@ -97,6 +102,8 @@ export class AIAssistantService {
           confidence: info.confidence || 90,
           handbookSection: info.handbookSection || 'دانش‌نامه'
         }
+      } else if (chunk.type === 'error') {
+        throw new Error(chunk.data.message || 'خطای سرور هوش مصنوعی')
       }
     }
 
@@ -116,13 +123,46 @@ export class AIAssistantService {
     personaKey,
     message,
     threadId,
+    history = [],
+    imageUrl
   }: {
     userId: string
     personaKey: string
     message: string
     threadId?: string
-  }): AsyncGenerator<{ type: string; data: any }, void, unknown> {
+    history?: Array<{ role: 'user' | 'ai', content: string }>
+    imageUrl?: string
+  }): AsyncGenerator<any, void, unknown> {
     const startTime = Date.now()
+
+    // 0. Resolve Conversation Thread
+    let activeThreadId = threadId
+    if (!activeThreadId || activeThreadId === 'new') {
+      const conv = await prisma.aiConversation.create({
+        data: {
+          userId,
+        }
+      })
+      activeThreadId = conv.id
+    } else {
+      const conv = await prisma.aiConversation.findUnique({ where: { id: activeThreadId } })
+      if (!conv || conv.userId !== userId) {
+        yield { type: 'error', data: { message: 'گفتگو یافت نشد یا شما دسترسی ندارید.' } }
+        return
+      }
+    }
+
+    // Yield the thread ID back to the client immediately
+    yield { type: 'info', data: { thread_id: activeThreadId } }
+
+    // Save user message
+    await prisma.aiMessage.create({
+      data: {
+        conversationId: activeThreadId,
+        role: 'user',
+        text: message,
+      }
+    })
 
     // 1. Load Persona
     const persona = await prisma.aiPersona.findUnique({ where: { key: personaKey } })
@@ -195,6 +235,19 @@ export class AIAssistantService {
         data: { layer: 'L0', source: 'سیستم لوحه زنده', confidence: 100, handbookSection: 'برنامه‌ریزی شیفت' }
       }
       yield { type: 'token', data: { text: replyText } }
+
+      // Save AI message
+      await prisma.aiMessage.create({
+        data: {
+          conversationId: activeThreadId,
+          role: 'ai',
+          text: replyText,
+          source: 'سیستم لوحه زنده',
+          confidence: 100,
+          handbookSection: 'برنامه‌ریزی شیفت'
+        }
+      })
+
       yield { type: 'done', data: { content: replyText, id: 'l0-shift' } }
       
       await this.logInteraction(userId, personaKey, 'L0', Date.now() - startTime, 0, 0, 0, 'live_roster')
@@ -202,7 +255,15 @@ export class AIAssistantService {
     }
 
     const trainMatch = cleanMsg.match(/قطار\s*(?:شماره\s*)?(\d+)/)
-    const isFaultQuery = cleanMsg.includes('فالت') || cleanMsg.includes('خرابی') || cleanMsg.includes('مشکل') || cleanMsg.includes('نقص')
+    const isFaultQuery = cleanMsg.includes('فالت') || 
+                         cleanMsg.includes('خرابی') || 
+                         cleanMsg.includes('مشکل') || 
+                         cleanMsg.includes('نقص') ||
+                         cleanMsg.includes('امرجنسی') ||
+                         cleanMsg.includes('ترمز') ||
+                         cleanMsg.includes('فشار هوا') ||
+                         cleanMsg.includes('ترکشن') ||
+                         cleanMsg.includes('ارور')
     const isRegisterFaultAction = (cleanMsg.includes('ثبت') || cleanMsg.includes('گزارش') || cleanMsg.includes('ایجاد')) && isFaultQuery
     
     if (trainMatch && isFaultQuery && !isRegisterFaultAction) {
@@ -264,6 +325,18 @@ export class AIAssistantService {
         data: { layer: 'L0', source: 'سیستم ثبت خرابی', confidence: 100, handbookSection: 'فالت ناوگان' }
       }
       yield { type: 'token', data: { text: replyText } }
+
+      await prisma.aiMessage.create({
+        data: {
+          conversationId: activeThreadId,
+          role: 'ai',
+          text: replyText,
+          source: 'سیستم ثبت خرابی',
+          confidence: 100,
+          handbookSection: 'فالت ناوگان'
+        }
+      })
+
       yield { type: 'done', data: { content: replyText, id: 'l0-faults' } }
       
       await this.logInteraction(userId, personaKey, 'L0', Date.now() - startTime, 0, 0, 0, 'live_fleet')
@@ -375,6 +448,18 @@ export class AIAssistantService {
           }
         }
         yield { type: 'token', data: { text: bestMatch.cache.answerText } }
+        
+        await prisma.aiMessage.create({
+          data: {
+            conversationId: activeThreadId,
+            role: 'ai',
+            text: bestMatch.cache.answerText,
+            source: bestMatch.cache.source,
+            confidence: Math.round(bestMatch.score * 100),
+            handbookSection: 'پاسخ ذخیره شده در کش'
+          }
+        })
+
         yield { type: 'done', data: { content: bestMatch.cache.answerText, id: 'l1-cache' } }
         
         await this.logInteraction(userId, personaKey, 'L1', Date.now() - startTime, 0, 0, 0, 'semantic_cache')
@@ -432,6 +517,18 @@ export class AIAssistantService {
           }
         }
         yield { type: 'token', data: { text: bestFaq.faq.answer } }
+        
+        await prisma.aiMessage.create({
+          data: {
+            conversationId: activeThreadId,
+            role: 'ai',
+            text: bestFaq.faq.answer,
+            source: 'faq',
+            confidence: Math.round(bestFaq.score * 100),
+            handbookSection: section
+          }
+        })
+
         yield { type: 'done', data: { content: bestFaq.faq.answer, id: 'l2-faq' } }
 
         await this.logInteraction(userId, personaKey, 'L2', Date.now() - startTime, 0, 0, 0, 'faq_match')
@@ -482,6 +579,27 @@ export class AIAssistantService {
       return
     }
 
+    // --- L3-G: Local Graph Query (Knowledge Engine) ---
+    let graphFacts: any[] = []
+    try {
+      if (!isFaultQuery && !forceEconomy) {
+        // Query the sidecar Python Knowledge Engine
+        const graphRes = await fetch('http://localhost:8000/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: cleanMsg, access_roles: allowedRoles })
+        })
+        if (graphRes.ok) {
+          const graphData = await graphRes.json()
+          if (graphData.subgraph_facts && graphData.subgraph_facts.length > 0) {
+            graphFacts = graphData.subgraph_facts
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[AI] Graph Knowledge Engine not reachable', e)
+    }
+
     // --- L3/L4: RAG Retrieval & Setup ---
     let contextText = ''
     let sourceRefs: string[] = []
@@ -518,6 +636,14 @@ export class AIAssistantService {
           c.chunk.source.accessRoles?.includes('secret')
         )
       }
+      
+      // Append graph facts to context
+      if (graphFacts.length > 0) {
+        contextText += '\n\n--- اطلاعات مستخرج از گراف دانش (L3-G) ---\n'
+        contextText += JSON.stringify(graphFacts, null, 2)
+        sourceRefs.push('graph_knowledge')
+      }
+      
     } catch (e) {
       console.error('[AI] RAG context error', e)
     }
@@ -530,7 +656,8 @@ export class AIAssistantService {
                       cleanMsg.includes('تحلیل') || 
                       cleanMsg.includes('مقایسه') || 
                       cleanMsg.includes('علت') || 
-                      cleanMsg.includes('چرا')
+                      cleanMsg.includes('چرا') ||
+                      isFaultQuery
 
     if (isComplex && !forceEconomy) {
       modelClass = 'strong'
@@ -549,13 +676,65 @@ export class AIAssistantService {
     // Data privacy masking
     const cleanPrompt = maskSensitiveData(message)
 
-    const finalSystemPrompt = `${persona.systemPrompt}
+    let finalSystemPrompt = persona.systemPrompt
     
-    اطلاعات مرجع آیین‌نامه مترو خط ۱ برای پاسخگویی:
-    ${contextText || 'منبع متنی یافت نشد. پاسخ را بر اساس آیین‌نامه‌های عمومی و با احتساب مسائل ایمنی صادر کنید.'}
-    `
+    if (isFaultQuery) {
+      // Fetch dynamic technical catalogs from database
+      let dynamicCatalogsStr = ''
+      try {
+        const dynamicCatalogs = await prisma.technicalCatalog.findMany({
+          where: { category: 'troubleshooting' }
+        })
+        if (dynamicCatalogs.length > 0) {
+          dynamicCatalogsStr = '\n\n--- کاتالوگ‌های فنی ثبت شده در سیستم ---\n' + dynamicCatalogs.map(c => `عنوان: ${c.title}\n${c.content}`).join('\n\n')
+        }
+      } catch (e) {
+        console.error('Failed to load dynamic catalogs', e)
+      }
 
-    const fullPrompt = `${finalSystemPrompt}\n\nسؤال کاربر: ${cleanPrompt}\nپاسخ:`
+      finalSystemPrompt += `\n\nدستورالعمل بسیار مهم (Interactive Troubleshooting Rule):
+شما یک دستیار فنی خبره برای راهبران قطار هستید. راهبر با یک خرابی مواجه شده است.
+
+وظایف شما:
+1. اصطلاحات محاوره‌ای راهبر را متوجه شوید (مثلاً "امرجنسی" = "ترمز اضطراری" ، "گیج پایین" = "افت فشار هوا" ، "ترکشن نمی‌گیره" = "عدم ترکشن‌گیری" ، "ارور درها" = "خطای در").
+2. ابتدا نوع قطار (AC یا DC) را مشخص کنید. اگر راهبر در پیام خود نگفته است، فقط و فقط بپرسید: "قطار شما AC است یا DC؟" (هیچ سوال اضافی مثل کد دیسپاچینگ نپرسید!).
+3. گراف عیب‌یابی مربوط به مشکل راهبر را از متن زیر پیدا کنید (مثلاً گراف "افت فشار هوا").
+4. اولین سوالی که گراف برای تصمیم‌گیری لازم دارد را از راهبر بپرسید (مثلاً "وضعیت گیج فشار چگونه است؟").
+5. هرگز راهنمایی‌های نامربوط یا سوالات اضافی (مانند "چه صدایی می‌شنوید؟"، "کدام ایستگاه هستید؟") نپرسید مگر اینکه در گراف نوشته شده باشد.
+6. هرگز همهٔ گام‌ها را یک‌جا ندهید. قدم‌به‌قدم بر اساس جواب راهبر پیش بروید.
+7. بسیار مهم: در انتهای هر پیام که سوالی می‌پرسید، حتماً گزینه‌های احتمالی برای جواب راهبر را در قالب [گزینه‌ها: گزینه۱ | گزینه۲] بنویسید تا سیستم آن‌ها را به دکمه تبدیل کند.
+مثال: [گزینه‌ها: AC | DC] یا [گزینه‌ها: روشن | خاموش]
+
+--- درخت تصمیم و گراف‌های عیب‌یابی ---
+${TROUBLESHOOTING_GRAPH_MD}
+${dynamicCatalogsStr}
+
+--- اطلاعات مرجع تکمیلی و راهنمای جامع ---
+${contextText || 'منبع متنی یافت نشد.'}
+-----------------------------------------
+`
+    } else {
+      finalSystemPrompt += `\n\nدستورالعمل بسیار مهم (Grounding & Diagnostic Rule):
+شما یک دستیار فنی تعاملی هستید. پاسخ‌های شما باید منحصراً و فقط بر اساس «اطلاعات مرجع» زیر باشد.
+قانون طلایی ضد توهم: اگر جواب سوال کاربر در متن مرجع وجود ندارد یا متن مرجع خالی است، تحت هیچ شرایطی از خودتان اطلاعات اختراع نکنید (اصطلاحاً هفل‌هشت جواب ندهید). در این حالت صریحاً بگویید: "من در پایگاه دانش خود اطلاعاتی در این زمینه ندارم."
+اگر سوال یا گزارش راهبر گنگ یا ناقص است، سریعاً راه‌حل ندهید؛ بلکه سوال بپرسید تا مشکل شفاف شود.
+اگر واقعاً راه‌حلی یافت نشد، ارجاع به دیسپچر OCC دهید.
+
+--- اطلاعات مرجع آیین‌نامه مترو خط ۱ ---
+${contextText || 'هیچ منبع متنی مستقیمی برای پاسخ به این سوال یافت نشد. اکیداً از خودتان حدس نزنید.'}
+-----------------------------------------
+`
+    }
+
+    // Format history
+    let historyText = ''
+    if (history && history.length > 0) {
+      // Limit to last 5 messages to save tokens
+      const recentHistory = history.slice(-5)
+      historyText = 'تاریخچه گفتگو:\n' + recentHistory.map(h => `${h.role === 'user' ? 'راهبر' : 'دستیار'}: ${h.content}`).join('\n') + '\n\n'
+    }
+
+    const fullPrompt = `${finalSystemPrompt}\n\n${historyText}پیام جدید راهبر: ${cleanPrompt}\nپاسخ دستیار:`
 
     // Emit interaction info
     const currentLayer = modelClass === 'strong' ? 'L4' : 'L3'
@@ -616,6 +795,17 @@ export class AIAssistantService {
     const costEst = actualProviderName.toLowerCase().includes('gemini') ? (tokensIn + tokensOut) * 0.0000001 : 0 // local is free
 
     await this.logInteraction(userId, personaKey, currentLayer, latencyMs, tokensIn, tokensOut, costEst, actualProviderName)
+
+    await prisma.aiMessage.create({
+      data: {
+        conversationId: activeThreadId,
+        role: 'ai',
+        text: finalResponseText,
+        source: preferredModel,
+        confidence: contextText ? 85 : 60,
+        handbookSection: contextText ? 'دستورالعمل ناوگان خط ۱' : 'هوش مصنوعی'
+      }
+    })
 
     yield {
       type: 'done',

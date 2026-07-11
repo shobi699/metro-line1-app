@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     const [users, courses] = await Promise.all([
       prisma.user.findMany({
         where: { status: 'active' },
-        select: { id: true, name: true, nationalId: true }
+        select: { id: true, name: true, personnelCode: true }
       }),
       prisma.course.findMany({
         select: { id: true, title: true, key: true }

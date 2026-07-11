@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server'
 import { verifyAccessToken } from '@/server/auth/jwt'
 import { hasPermission, rankForRoleKey } from './permissions'
+import { hasScopeAccess } from './org-unit'
 
 export interface AuthUser {
   id: string
-  nationalId: string
+  personnelCode: string
   roleKey: string
   rank: number
   permissions: string[]
+  homeUnitId?: string
+  scopes?: { type: string; key: string }[]
 }
 
 export type AuthError = { error: string; status: number }
@@ -25,10 +28,12 @@ export async function getSessionUser(
     const payload = await verifyAccessToken(token)
     return {
       id: payload.sub!,
-      nationalId: payload.nationalId,
-      roleKey: payload.roleKey,
-      rank: typeof payload.rank === 'number' ? payload.rank : rankForRoleKey(payload.roleKey),
+      personnelCode: payload.personnelCode as string || '',
+      roleKey: payload.roleKey as string || 'user',
+      rank: typeof payload.rank === 'number' ? payload.rank : rankForRoleKey(payload.roleKey as string),
       permissions: Array.isArray(payload.permissions) ? payload.permissions : [],
+      homeUnitId: payload.homeUnitId as string | undefined,
+      scopes: Array.isArray(payload.scopes) ? payload.scopes : [],
     }
   } catch {
     return { error: 'توکن نامعتبر یا منقضی شده', status: 401 }
@@ -36,10 +41,10 @@ export async function getSessionUser(
 }
 
 /** گارد مبتنی بر رتبه؛ کلیدهای نقش سیستمی به رتبه نگاشت می‌شوند. */
-export function requireRole(
+export async function requireRole(
   user: AuthUser,
   minRole: string,
-): AuthError | null {
+): Promise<AuthError | null> {
   if (user.rank < rankForRoleKey(minRole)) {
     return {
       error: 'شما دسترسی کافی برای این عملیات را ندارید',
@@ -68,27 +73,53 @@ export function authErrorResponse(err: AuthError) {
 
 /**
  * بررسی دسترسی ویژگی‌محور (ABAC) و محدود شده (Scoped).
- * به عنوان مثال، سرشیفت شیفت الف فقط مجاز به مدیریت پرسنل همان شیفت/گروه است.
+ * جایگزین تابع‌های استاتیک قبلی برای پشتیبانی از معماری IAM.
  */
 export function checkAbacAccess(
   user: AuthUser,
   targetUser: { id: string; group?: string; shift?: string },
   userGroup?: string
 ): boolean {
-  // مدیر ارشد و ادمین به همه دسترسی دارند
   if (user.roleKey === 'super_admin' || user.roleKey === 'admin') {
     return true
   }
 
-  // اگر نقش سرشیفت باشد:
   if (user.roleKey === 'shift_lead') {
     const operatorGroup = userGroup || 'A'
     const targetGroup = targetUser.group || 'A'
-    
-    // سرشیفت فقط پرسنل هم‌گروه خود را مدیریت می‌کند
     return operatorGroup === targetGroup
   }
 
-  // کاربر عادی فقط خودش را مدیریت می‌کند
   return user.id === targetUser.id
+}
+
+/**
+ * بررسی دسترسی اصلی سیستم IAM
+ * مشخص می‌کند آیا کاربر دسترسی خاصی را در یک محدوده (Scope) دارد یا خیر
+ */
+export async function can(
+  user: AuthUser,
+  permissionKey: string,
+  scope?: { type: string; key: string }
+): Promise<boolean> {
+  // مدیر ارشد به همه چیز دسترسی دارد
+  if (hasPermission(user.permissions, '*')) return true
+  
+  // بررسی وجود خود مجوز
+  const hasPerm = hasPermission(user.permissions, permissionKey)
+  if (!hasPerm) return false
+
+  // اگر محدوده خاصی مد نظر نیست، فقط داشتن مجوز کافی است
+  if (!scope) return true
+
+  // اگر کاربر دسترسی global/all دارد
+  const hasGlobalScope = user.scopes?.some(s => s.type === 'global' || s.type === 'all')
+  if (hasGlobalScope) return true
+
+  if (scope.type === 'org_unit') {
+    return hasScopeAccess(user.scopes || [], scope.key)
+  }
+
+  // بررسی تطابق محدوده درخواست شده با محدوده‌های کاربر
+  return user.scopes?.some(s => s.type === scope.type && s.key === scope.key) ?? false
 }

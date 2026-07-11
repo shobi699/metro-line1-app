@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     if ('error' in user) return authErrorResponse(user)
     
     // Only admins/managers can approve swaps
-    const roleErr = requireRole(user, 'admin')
+    const roleErr = await requireRole(user, 'admin')
     if (roleErr) return authErrorResponse(roleErr)
 
     const body = await req.json()

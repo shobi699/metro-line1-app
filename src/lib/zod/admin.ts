@@ -1,10 +1,10 @@
 import { z } from 'zod'
 
 export const createUserSchema = z.object({
-  nationalId: z
+  personnelCode: z
     .string()
-    .length(10, 'کد ملی باید ۱۰ رقم باشد')
-    .regex(/^\d+$/, 'کد ملی فقط شامل اعداد باشد'),
+    .length(10, 'کد پرسنلی باید ۱۰ رقم باشد')
+    .regex(/^\d+$/, 'کد پرسنلی فقط شامل اعداد باشد'),
   name: z.string().min(2, 'نام حداقل ۲ کاراکتر باشد'),
   phone: z
     .string()
@@ -109,7 +109,7 @@ export const createRoleSchema = z.object({
     .string()
     .min(2, 'شناسه نقش حداقل ۲ کاراکتر باشد')
     .regex(/^[a-z_]+$/, 'شناسه نقش فقط باید شامل حروف انگلیسی کوچک و خط تیره پایین (underscore) باشد'),
-  name: z.string().min(2, 'نام نقش حداقل ۲ کاراکتر باشد'),
+  title: z.string().min(2, 'نام نقش حداقل ۲ کاراکتر باشد'),
   permissions: z.array(z.string()),
   rank: z.number().int().min(0).max(100).default(0),
 })
@@ -117,7 +117,7 @@ export const createRoleSchema = z.object({
 export type CreateRoleInput = z.infer<typeof createRoleSchema>
 
 export const updateRoleSchema = z.object({
-  name: z.string().min(2, 'نام نقش حداقل ۲ کاراکتر باشد').optional(),
+  title: z.string().min(2, 'نام نقش حداقل ۲ کاراکتر باشد').optional(),
   permissions: z.array(z.string()).optional(),
   rank: z.number().int().min(0).max(100).optional(),
 })

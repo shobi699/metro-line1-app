@@ -8,7 +8,7 @@ export async function GET(
 ) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
-  const isDenied = requireRole(user, 'admin')
+  const isDenied = await requireRole(user, 'admin')
   if (isDenied) return authErrorResponse(isDenied)
 
   const { id } = await params

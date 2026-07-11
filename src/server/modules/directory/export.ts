@@ -4,13 +4,13 @@ import { prisma } from '@/server/db'
 export async function exportUsersToExcel(): Promise<ArrayBuffer> {
   const users = await prisma.user.findMany({
     select: {
-      nationalId: true,
+      personnelCode: true,
       name: true,
       phone: true,
       email: true,
       status: true,
       customFields: true,
-      role: { select: { key: true, name: true } },
+      role: { select: { key: true, title: true } },
       createdAt: true,
     },
     orderBy: { createdAt: 'desc' },
@@ -22,7 +22,7 @@ export async function exportUsersToExcel(): Promise<ArrayBuffer> {
     'نام خانوادگی',
     'کد پرسنلی',
     'شماره شناسنامه',
-    'کد ملی',
+    'کد پرسنلی',
     'نام پدر',
     'نوع شيفت',
     'نام شيفت',
@@ -66,7 +66,7 @@ export async function exportUsersToExcel(): Promise<ArrayBuffer> {
       return String(val)
     }
 
-    const post = getVal('post') || u.role.name || ''
+    const post = getVal('post') || u.role.title || ''
     const statusText = u.status === 'active' ? 'فعال' : u.status === 'suspended' ? 'معلق' : 'در حال بررسی'
 
     return [
@@ -75,7 +75,7 @@ export async function exportUsersToExcel(): Promise<ArrayBuffer> {
       lastName,                    // نام خانوادگی
       getVal('personnelNo'),       // کد پرسنلی
       getVal('idNumber'),          // شماره شناسنامه
-      u.nationalId,                // کد ملی
+      u.personnelCode,                // کد پرسنلی
       getVal('fatherName'),        // نام پدر
       getVal('shiftType'),         // نوع شيفت
       getVal('shift'),             // نام شيفت

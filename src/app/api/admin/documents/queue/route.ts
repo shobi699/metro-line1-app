@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'admin')
+  const roleErr = await requireRole(user, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { searchParams } = new URL(request.url)
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   const docs = await prisma.userDocument.findMany({
     where,
     include: {
-      user: { select: { id: true, name: true, nationalId: true, phone: true } },
+      user: { select: { id: true, name: true, personnelCode: true, phone: true } },
       type: { select: { key: true, title: true } },
     },
     orderBy: { createdAt: 'desc' },

@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   if ('error' in user) return authErrorResponse(user)
 
   // Requires admin to manage rules
-  const roleErr = requireRole(user, 'admin')
+  const roleErr = await requireRole(user, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {
@@ -75,8 +75,8 @@ export async function GET(request: Request) {
         },
         {
           key: 'invalid_personnel_no',
-          label: 'صحت کد ملی / پرسنلی راهبران',
-          description: 'کد ملی راهبران تخصیص یافته باید دقیقاً ۱۰ رقم عددی باشد.',
+          label: 'صحت کد پرسنلی / پرسنلی راهبران',
+          description: 'کد پرسنلی راهبران تخصیص یافته باید دقیقاً ۱۰ رقم عددی باشد.',
           severity: 'error',
           isEnabled: true,
           category: 'general',
@@ -124,7 +124,7 @@ export async function PUT(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'admin')
+  const roleErr = await requireRole(user, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {

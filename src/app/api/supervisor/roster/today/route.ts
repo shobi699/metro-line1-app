@@ -44,7 +44,7 @@ export async function GET(request: Request) {
                 assignments: {
                   include: {
                     matchedUser: {
-                      select: { id: true, name: true, nationalId: true }
+                      select: { id: true, name: true, personnelCode: true }
                     }
                   }
                 }

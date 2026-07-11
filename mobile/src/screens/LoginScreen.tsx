@@ -20,7 +20,7 @@ import { useTheme } from '../shared/ThemeProvider'
 
 export function LoginScreen() {
   const setAuth = useAuthStore((s) => s.setAuth)
-  const [nationalId, setNationalId] = useState('')
+  const [personnelCode, setNationalId] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -218,12 +218,12 @@ export function LoginScreen() {
   }
 
   async function handleLogin() {
-    if (!nationalId || !password) {
+    if (!personnelCode || !password) {
       setError('لطفاً تمامی فیلدها را پر کنید.')
       return
     }
-    if (nationalId.length !== 10) {
-      setError('کد ملی باید ۱۰ رقم باشد.')
+    if (personnelCode.length !== 10) {
+      setError('کد پرسنلی باید ۱۰ رقم باشد.')
       return
     }
 
@@ -234,7 +234,7 @@ export function LoginScreen() {
       const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nationalId, password }),
+        body: JSON.stringify({ personnelCode, password }),
       })
 
       const data = await res.json()
@@ -291,10 +291,10 @@ export function LoginScreen() {
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>کد ملی</Text>
+            <Text style={styles.label}>کد پرسنلی</Text>
             <TextInput
               style={styles.input}
-              value={nationalId}
+              value={personnelCode}
               onChangeText={setNationalId}
               placeholder="مثال: ۰۰۱۲۳۴۵۶۷۸"
               placeholderTextColor={theme.colors.secondary}

@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const { user } = await authenticate(req)
     if (!user) return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
 
-    requireRole(user, 'admin')
+    await requireRole(user, 'admin')
 
     const body = await req.json()
     const parsed = createChecklistTemplateSchema.safeParse(body)

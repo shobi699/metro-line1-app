@@ -17,7 +17,7 @@ import {
 
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState(1) // 1: Send OTP, 2: Verify OTP, 3: Reset Password, 4: Success
-  const [nationalId, setNationalId] = useState('')
+  const [personnelCode, setNationalId] = useState('')
   const [phone, setPhone] = useState('')
   const [code, setCode] = useState('')
   const [password, setPassword] = useState('')
@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
       const res = await fetch('/api/auth/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nationalId, phone }),
+        body: JSON.stringify({ personnelCode, phone }),
       })
 
       const data = await res.json()
@@ -89,7 +89,7 @@ export default function ForgotPasswordPage() {
       const res = await fetch('/api/auth/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nationalId, code }),
+        body: JSON.stringify({ personnelCode, code }),
       })
 
       const data = await res.json()
@@ -201,7 +201,7 @@ export default function ForgotPasswordPage() {
           {step === 1 && (
             <form onSubmit={handleSendOtp} className="mt-6 flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground-muted" htmlFor="nationalId">
+                <label className="text-xs font-semibold text-foreground-muted" htmlFor="personnelCode">
                   کد پرسنلی
                 </label>
                 <div className="relative">
@@ -210,11 +210,11 @@ export default function ForgotPasswordPage() {
                   </span>
                   <input
                     className="h-10 w-full rounded-lg border border-border bg-background pe-10 ps-3 text-sm text-foreground transition-colors placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-ring font-mono text-right"
-                    id="nationalId"
+                    id="personnelCode"
                     type="text"
                     placeholder="کد پرسنلی خود را وارد کنید"
                     maxLength={10}
-                    value={nationalId}
+                    value={personnelCode}
                     onChange={(e) => setNationalId(e.target.value)}
                     required
                   />

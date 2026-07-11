@@ -99,7 +99,7 @@ export async function getBulletinReceipts(bulletinId: string) {
     prisma.readReceipt.findMany({
       where: { safetyBulletinId: bulletinId },
       include: {
-        user: { select: { id: true, name: true, nationalId: true } },
+        user: { select: { id: true, name: true, personnelCode: true } },
       },
       orderBy: { readAt: 'asc' },
     }),

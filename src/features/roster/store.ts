@@ -6,7 +6,7 @@ interface Shift {
   date: string
   code: string
   note: string | null
-  user?: { id: string; name: string; nationalId: string }
+  user?: { id: string; name: string; personnelCode: string }
 }
 
 interface RosterState {

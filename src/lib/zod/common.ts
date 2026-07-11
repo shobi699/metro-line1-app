@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const nationalIdSchema = z
+export const personnelCodeSchema = z
   .string()
   .min(4, 'کد پرسنلی باید حداقل ۴ رقم باشد')
   .max(10, 'کد پرسنلی حداکثر ۱۰ رقم باشد')

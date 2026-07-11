@@ -15,7 +15,7 @@ interface ShiftOption {
 interface UserOption {
   id: string
   name: string
-  nationalId: string
+  personnelCode: string
 }
 
 interface SwapRequest {
@@ -320,7 +320,7 @@ export default function SwapScreen({ navigation }: any) {
                           setColleagueModalVisible(false)
                         }}
                       >
-                        <Text style={s.modalItemText}>{item.name} (کدملی: {toFa(item.nationalId)})</Text>
+                        <Text style={s.modalItemText}>{item.name} (کدملی: {toFa(item.personnelCode)})</Text>
                       </TouchableOpacity>
                     )}
                   />

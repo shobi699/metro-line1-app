@@ -118,7 +118,7 @@ export async function getEmployeeScorecard(employeeId: string, periodId: string)
       id: true,
       name: true,
       customFields: true,
-      role: { select: { name: true } },
+      role: { select: { title: true } },
     },
   })
   if (!employee) throw new Error('کارمند یافت نشد')

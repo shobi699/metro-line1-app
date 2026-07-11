@@ -512,7 +512,7 @@ ${rawPrompt}
 
     try {
       // ۶. ارسال به AI Gateway
-      const aiResponse = await AIGateway.routeRequest(promptForAI)
+      const aiResponse = await AIGateway.routeRequest(promptForAI, { imageUrl: parsed.data.imageUrl })
 
       // ۷. ذخیره پاسخ جدید در Semantic Cache
       if (questionEmbedding.length > 0) {

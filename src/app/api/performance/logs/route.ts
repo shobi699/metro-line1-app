@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   try {
     const { user } = await authenticate(req)
     if (!user) return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
-    requireRole(user, 'admin')
+    await requireRole(user, 'admin')
 
     const body = await req.json()
     const parsed = createLogSchema.safeParse(body)

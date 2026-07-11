@@ -49,7 +49,7 @@ export async function PATCH(request: Request) {
       },
       select: {
         id: true,
-        nationalId: true,
+        personnelCode: true,
         name: true,
         phone: true,
         email: true,

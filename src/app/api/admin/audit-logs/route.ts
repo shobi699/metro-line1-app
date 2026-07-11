@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const sessionUser = await getSessionUser(request)
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
-  const roleErr = requireRole(sessionUser, 'admin')
+  const roleErr = await requireRole(sessionUser, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { searchParams } = new URL(request.url)
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
           actor: {
             OR: [
               { name: { contains: search } },
-              { nationalId: { contains: search } },
+              { personnelCode: { contains: search } },
             ],
           },
         },
@@ -51,10 +51,10 @@ export async function GET(request: Request) {
           select: {
             id: true,
             name: true,
-            nationalId: true,
+            personnelCode: true,
             role: {
               select: {
-                name: true,
+                title: true,
               },
             },
           },

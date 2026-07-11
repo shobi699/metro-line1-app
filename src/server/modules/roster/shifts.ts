@@ -5,7 +5,7 @@ export interface ShiftWithUser {
   date: Date
   code: string
   note: string | null
-  user: { id: string; name: string; nationalId: string }
+  user: { id: string; name: string; personnelCode: string }
 }
 
 export async function getUserShifts(
@@ -19,7 +19,7 @@ export async function getUserShifts(
       date: { gte: startDate, lte: endDate },
     },
     include: {
-      user: { select: { id: true, name: true, nationalId: true } },
+      user: { select: { id: true, name: true, personnelCode: true } },
     },
     orderBy: { date: 'asc' },
   })
@@ -41,7 +41,7 @@ export async function getAllShifts(
   return prisma.shift.findMany({
     where: where as never,
     include: {
-      user: { select: { id: true, name: true, nationalId: true } },
+      user: { select: { id: true, name: true, personnelCode: true } },
     },
     orderBy: [{ date: 'asc' }, { user: { name: 'asc' } }],
   })

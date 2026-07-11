@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
   const newAccessToken = await issueAccessToken(
     user.id,
-    user.nationalId,
+    user.personnelCode,
     user.role.key,
     user.role.rank ?? rankForRoleKey(user.role.key),
     coercePermissions(user.role.permissions),

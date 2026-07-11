@@ -45,7 +45,7 @@ import {
 interface DocUser {
   id: string
   name: string
-  nationalId: string
+  personnelCode: string
   phone?: string
 }
 
@@ -255,7 +255,7 @@ export default function DocumentsQueuePage() {
     return docs.filter(
       (d) =>
         d.user.name.toLowerCase().includes(q) ||
-        (d.user.nationalId && d.user.nationalId.includes(q)) ||
+        (d.user.personnelCode && d.user.personnelCode.includes(q)) ||
         (d.user.phone && d.user.phone.includes(q)) ||
         d.type.title.toLowerCase().includes(q) ||
         d.id.toLowerCase().includes(q),
@@ -348,7 +348,7 @@ export default function DocumentsQueuePage() {
                           <p className="text-xs text-muted-foreground">
                             {doc.user.phone
                               ? toFa(doc.user.phone)
-                              : toFa(doc.user.nationalId)}
+                              : toFa(doc.user.personnelCode)}
                           </p>
                         </div>
                       </TableCell>
@@ -446,7 +446,7 @@ export default function DocumentsQueuePage() {
                   <div>
                     <p className="text-xs text-muted-foreground mb-0.5">کد پرسنلی</p>
                     <p className="font-medium">
-                      {toFa(previewDoc.user.phone || previewDoc.user.nationalId)}
+                      {toFa(previewDoc.user.phone || previewDoc.user.personnelCode)}
                     </p>
                   </div>
                   <div className="col-span-2">

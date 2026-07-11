@@ -23,7 +23,7 @@ interface LeaveRequest {
   createdAt: string
   user: {
     name: string
-    nationalId: string
+    personnelCode: string
   }
 }
 
@@ -144,7 +144,7 @@ export default function AdminLeavesPage() {
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-lg">{req.user.name}</span>
-                    <span className="text-muted-foreground text-sm px-2 py-0.5 rounded bg-muted">کد: {toFa(req.user.nationalId)}</span>
+                    <span className="text-muted-foreground text-sm px-2 py-0.5 rounded bg-muted">کد: {toFa(req.user.personnelCode)}</span>
                     {getStatusBadge(req.status)}
                   </div>
                   <div className="text-sm flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-muted-foreground">

@@ -25,7 +25,7 @@ export interface FormSubmission {
   submissionNo: number
   status: string
   currentStage: string | null
-  submitter?: { name: string; nationalId: string }
+  submitter?: { name: string; personnelCode: string }
   template: { title: string; key: string }
   submittedAt: string
   createdAt: string

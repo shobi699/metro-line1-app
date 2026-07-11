@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
   // Check if it's an admin template creation action
   if (action === 'create_template' || (!templateId && name && items)) {
-    const adminError = requireRole(user, 'admin')
+    const adminError = await requireRole(user, 'admin')
     if (adminError) return authErrorResponse(adminError)
 
     if (!name || !items || !Array.isArray(items)) {

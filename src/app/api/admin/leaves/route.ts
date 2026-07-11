@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   if ('error' in user) return authErrorResponse(user)
 
   // Requires admin role
-  const roleErr = requireRole(user, 'admin')
+  const roleErr = await requireRole(user, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { searchParams } = new URL(request.url)
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     prisma.leaveRequest.findMany({
       where,
       include: {
-        user: { select: { id: true, name: true, nationalId: true } }
+        user: { select: { id: true, name: true, personnelCode: true } }
       },
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * pageSize,

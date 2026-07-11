@@ -42,7 +42,7 @@ function getStaticPolicyFallback(resource: string, action: string, targetId?: st
   }
 
   if (resource === 'directory') {
-    // action is fieldKey (phone, email, nationalId, vehicles, custom:...)
+    // action is fieldKey (phone, email, personnelCode, vehicles, custom:...)
     if (action === 'phone' || action === 'email') return true
     return false
   }

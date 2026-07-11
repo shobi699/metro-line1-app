@@ -13,7 +13,7 @@ interface PersonnelCardProps {
   user: {
     id: string
     name: string
-    nationalId: string
+    personnelCode: string
     phone: string | null
     email: string | null
     status: string
@@ -180,7 +180,7 @@ export function PersonnelCard({ user, currentUserId, onMessage, onProfile, visib
     return allowedFields.includes(cf.key)
   })
 
-  const canShowNationalId = isAdmin || isOwnProfile || allowedFields.includes('nationalId')
+  const canShowNationalId = isAdmin || isOwnProfile || allowedFields.includes('personnelCode')
   const canShowPhone = isAdmin || isOwnProfile || allowedFields.includes('phone')
   const canShowEmail = isAdmin || isOwnProfile || allowedFields.includes('email')
 
@@ -260,7 +260,7 @@ export function PersonnelCard({ user, currentUserId, onMessage, onProfile, visib
             </div>
             {canShowNationalId && (
               <span className="font-data-mono shrink-0 text-xs bg-surface-container-high text-foreground px-2 py-1 rounded border border-border-subtle">
-                {user.nationalId}
+                {user.personnelCode}
               </span>
             )}
           </div>

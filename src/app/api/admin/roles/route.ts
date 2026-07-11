@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const sessionUser = await getSessionUser(request)
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
-  const roleErr = requireRole(sessionUser, 'admin')
+  const roleErr = await requireRole(sessionUser, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
   // Only super_admin can create new roles
-  const roleErr = requireRole(sessionUser, 'super_admin')
+  const roleErr = await requireRole(sessionUser, 'super_admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { key, name, permissions, rank } = parsed.data
+    const { key, title, permissions, rank } = parsed.data
 
     const existingRole = await prisma.role.findUnique({
       where: { key },
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       prisma.role.create({
         data: {
           key,
-          name,
+          title,
           permissions: JSON.stringify(permissions),
           rank,
           isSystem: false,
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
           before: undefined,
           after: {
             key,
-            name,
+            title,
             permissions,
             rank,
             isSystem: false,

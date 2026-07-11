@@ -75,6 +75,7 @@ import { jdate, dayjs } from '@/lib/dayjs'
 import { toFa, jalali } from '@/lib/fa'
 import { cn } from '@/lib/utils'
 import { PERMISSION_CATALOG } from '@/server/rbac/permissions'
+import { RoleAssignmentModal } from '@/components/shared/RoleAssignmentModal'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 function normalizeText(str: string | null | undefined): string {
@@ -311,7 +312,7 @@ interface Vehicle {
 
 interface User {
   id: string
-  nationalId: string
+  personnelCode: string
   name: string
   phone: string | null
   email: string | null
@@ -435,13 +436,15 @@ export default function AdminUsersPage() {
   const [userModalOpen, setUserModalOpen] = useState(false)
   const [userModalMode, setUserModalMode] = useState<'create' | 'edit'>('create')
   const [editingUserId, setEditingUserId] = useState<string | null>(null)
+  
+  const [roleAssignmentModalOpen, setRoleAssignmentModalOpen] = useState(false)
 
   const [roleModalOpen, setRoleModalOpen] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [fieldModalOpen, setFieldModalOpen] = useState(false)
 
   // Form Fields - User
-  const [nationalId, setNationalId] = useState('')
+  const [personnelCode, setNationalId] = useState('')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -524,8 +527,8 @@ export default function AdminUsersPage() {
     switch (key) {
       case 'name':
         return user.name || ''
-      case 'nationalId':
-        return user.nationalId ? toFa(user.nationalId) : '—'
+      case 'personnelCode':
+        return user.personnelCode ? toFa(user.personnelCode) : '—'
       case 'phone':
         return user.phone ? toFa(user.phone) : '—'
       case 'phone2': {
@@ -644,7 +647,7 @@ export default function AdminUsersPage() {
       const s = normalizeText(searchTerm)
       result = result.filter((user) => {
         if (normalizeText(user.name).includes(s)) return true
-        if (normalizeText(user.nationalId).includes(s)) return true
+        if (normalizeText(user.personnelCode).includes(s)) return true
         if (normalizeText(user.phone).includes(s)) return true
         if (normalizeText(user.email).includes(s)) return true
         if (user.customFields) {
@@ -1002,7 +1005,7 @@ export default function AdminUsersPage() {
     setActionLoading(true)
 
     const payload = userModalMode === 'create'
-      ? { nationalId, name, phone, email, password, roleId, status, customFields: userCustomFields }
+      ? { personnelCode, name, phone, email, password, roleId, status, customFields: userCustomFields }
       : { name, phone, email, roleId, status, customFields: userCustomFields }
 
     const url = userModalMode === 'create'
@@ -1102,13 +1105,14 @@ export default function AdminUsersPage() {
     if (!accessToken) return
     setActionLoading(true)
     try {
-      const res = await fetch(`/api/admin/users/${userId}`, {
-        method: 'PATCH',
+      const action = newStatus === 'active' ? 'activate' : newStatus === 'suspended' ? 'suspend' : 'suspend'
+      const res = await fetch(`/api/admin/iam/users/${userId}/lifecycle`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ action, reason: 'Quick update via Admin UI' }),
       })
       const json = await res.json()
       if (res.ok) {
@@ -1983,7 +1987,7 @@ export default function AdminUsersPage() {
                   if (!label) {
                     switch (colKey) {
                       case 'name': label = 'نام پرسنل'; break
-                      case 'nationalId': label = 'کد ملی'; break
+                      case 'personnelCode': label = 'کد پرسنلی'; break
                       case 'phone': label = 'شماره همراه'; break
                       case 'status': label = 'وضعیت'; break
                       case 'post': label = 'پست سازمانی'; break
@@ -2071,17 +2075,17 @@ export default function AdminUsersPage() {
                         </TableHead>
                         <TableHead className="text-start whitespace-nowrap">
                           <div className="flex items-center gap-1">
-                            <span>کد ملی</span>
+                            <span>کد پرسنلی</span>
                             <ColumnHeaderFilter
-                              columnKey="nationalId"
-                              columnLabel="کد ملی"
-                              uniqueValues={getUniqueValues('nationalId')}
-                              selectedValues={columnFilters['nationalId'] || []}
-                              onFilterChange={(values) => handleFilterChange('nationalId', values)}
-                              onSort={(direction) => handleSort('nationalId', direction)}
-                              currentSort={sortConfig?.key === 'nationalId' ? sortConfig.direction : null}
-                              searchTerm={columnSearchTerms['nationalId'] || ''}
-                              onSearchChange={(val) => handleColumnSearchChange('nationalId', val)}
+                              columnKey="personnelCode"
+                              columnLabel="کد پرسنلی"
+                              uniqueValues={getUniqueValues('personnelCode')}
+                              selectedValues={columnFilters['personnelCode'] || []}
+                              onFilterChange={(values) => handleFilterChange('personnelCode', values)}
+                              onSort={(direction) => handleSort('personnelCode', direction)}
+                              currentSort={sortConfig?.key === 'personnelCode' ? sortConfig.direction : null}
+                              searchTerm={columnSearchTerms['personnelCode'] || ''}
+                              onSearchChange={(val) => handleColumnSearchChange('personnelCode', val)}
                             />
                           </div>
                         </TableHead>
@@ -2294,7 +2298,7 @@ export default function AdminUsersPage() {
                               return pNo ? toFa(String(pNo)) : '—'
                             })()}
                           </TableCell>
-                          <TableCell className="font-mono text-xs text-foreground/80 whitespace-nowrap">{toFa(user.nationalId)}</TableCell>
+                          <TableCell className="font-mono text-xs text-foreground/80 whitespace-nowrap">{toFa(user.personnelCode)}</TableCell>
                           <TableCell className="font-mono text-xs text-foreground/80 whitespace-nowrap">
                             {user.phone ? toFa(user.phone) : '—'}
                           </TableCell>
@@ -2973,7 +2977,7 @@ export default function AdminUsersPage() {
                             <div className="flex flex-col gap-0.5">
                               <span className="text-foreground">{log.actor?.name || 'سیستم'}</span>
                               <span className="text-[10px] text-foreground-muted/60 font-mono tracking-tight text-start">
-                                کدملی: {log.actor?.nationalId ? toFa(log.actor.nationalId) : '—'}
+                                کدملی: {log.actor?.personnelCode ? toFa(log.actor.personnelCode) : '—'}
                               </span>
                             </div>
                           </TableCell>
@@ -3092,8 +3096,8 @@ export default function AdminUsersPage() {
                         <div className="flex items-center gap-2.5">
                           <CreditCard className="size-4 text-foreground-muted shrink-0" />
                           <div className="flex flex-col">
-                            <span className="text-[9px] text-foreground-muted">کد ملی (نام کاربری)</span>
-                            <span className="text-xs font-bold text-foreground font-mono">{toFa(selectedUserForDetail.nationalId)}</span>
+                            <span className="text-[9px] text-foreground-muted">کد پرسنلی (نام کاربری)</span>
+                            <span className="text-xs font-bold text-foreground font-mono">{toFa(selectedUserForDetail.personnelCode)}</span>
                           </div>
                         </div>
 
@@ -3417,7 +3421,8 @@ export default function AdminUsersPage() {
                         variant="outline"
                         className="border-border hover:bg-surface-hover text-foreground text-xs h-9 px-3 rounded-lg cursor-pointer font-bold shrink-0 shadow-sm"
                       >
-                        تغییر نقش
+                        <Shield className="size-3.5 ml-1" />
+                        تغییر نقش سیستم
                       </Button>
                     }
                   />
@@ -3433,6 +3438,14 @@ export default function AdminUsersPage() {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
+
+                <Button
+                  onClick={() => setRoleAssignmentModalOpen(true)}
+                  className="bg-accent/10 border border-accent/20 hover:bg-accent/20 text-accent font-bold text-xs h-9 px-3 rounded-lg cursor-pointer flex items-center gap-1 shrink-0 shadow-sm"
+                >
+                  <UserPlus className="size-3.5" />
+                  انتساب نقش / تفویض موقت
+                </Button>
 
                 <Button
                   onClick={() => openPasswordResetModal(selectedUserForDetail)}
@@ -3466,6 +3479,20 @@ export default function AdminUsersPage() {
         </SheetContent>
       </Sheet>
 
+      {/* Role Assignment Modal */}
+      {selectedUserForDetail && (
+        <RoleAssignmentModal
+          open={roleAssignmentModalOpen}
+          onOpenChange={setRoleAssignmentModalOpen}
+          userId={selectedUserForDetail.id}
+          onAssigned={() => {
+            setRoleAssignmentModalOpen(false)
+            setNotification({ type: 'success', text: 'انتساب نقش/تفویض با موفقیت انجام شد' })
+            loadUsers() // Reload user list
+          }}
+        />
+      )}
+
       {/* User Create/Edit Dialog */}
       <Dialog open={userModalOpen} onOpenChange={setUserModalOpen}>
         <DialogContent className="max-w-2xl w-full max-h-[90vh] overflow-y-auto" dir="rtl">
@@ -3488,15 +3515,15 @@ export default function AdminUsersPage() {
                 
                 {userModalMode === 'create' && (
                   <div className="space-y-1.5">
-                    <Label htmlFor="nationalId" className="text-xs font-semibold text-foreground">
-                      کد ملی (نام کاربری) <span className="text-critical">*</span>
+                    <Label htmlFor="personnelCode" className="text-xs font-semibold text-foreground">
+                      کد پرسنلی (نام کاربری) <span className="text-critical">*</span>
                     </Label>
                     <Input
-                      id="nationalId"
+                      id="personnelCode"
                       required
                       maxLength={10}
                       placeholder="مثلا: ۰۰۱۲۳۴۵۶۷۸"
-                      value={nationalId}
+                      value={personnelCode}
                       onChange={(e) => setNationalId(e.target.value)}
                       className="h-10 text-sm focus-visible:ring-accent border-border font-mono text-start"
                     />

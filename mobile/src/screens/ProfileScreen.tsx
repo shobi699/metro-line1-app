@@ -783,7 +783,7 @@ export function ProfileScreen({ navigation }: any) {
               </View>
               <View style={s.metaChip}>
                 <MaterialIcons name="fingerprint" size={12} color={theme.colors.secondary} />
-                <Text style={s.metaText}>{user?.nationalId}</Text>
+                <Text style={s.metaText}>{user?.personnelCode}</Text>
               </View>
               {user?.customFields?.group ? (
                 <View style={s.metaChip}>

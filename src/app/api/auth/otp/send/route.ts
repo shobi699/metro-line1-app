@@ -15,11 +15,11 @@ export async function POST(request: Request) {
       )
     }
 
-    const { nationalId, phone } = parsed.data
+    const { personnelCode, phone } = parsed.data
 
     const user = await prisma.user.findFirst({
       where: {
-        nationalId,
+        personnelCode,
         phone,
       },
     })
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     const expiresAt = Date.now() + 5 * 60 * 1000 // 5 minutes TTL
 
     // Store via adapter (KV on Cloudflare, in-memory locally)
-    await otpStore.setOtp(nationalId, {
+    await otpStore.setOtp(personnelCode, {
       code: otpCode,
       expiresAt,
       phone,

@@ -217,7 +217,7 @@ export default function ApprovalInboxPage() {
               <div className="space-y-2 border-b border-border/40 pb-4">
                 <div className="grid grid-cols-2 gap-2 text-xs bg-zinc-950 p-3 rounded-lg border border-border/20 mb-3">
                   <div><strong className="text-zinc-500">فرم مربوطه:</strong> {selectedItem.template.title}</div>
-                  <div><strong className="text-zinc-500">متقاضی:</strong> {selectedItem.submitter.name} ({selectedItem.submitter.role.name})</div>
+                  <div><strong className="text-zinc-500">متقاضی:</strong> {selectedItem.submitter.name} ({selectedItem.submitter.role.title})</div>
                 </div>
 
                 <span className="text-xs font-bold text-foreground">داده‌های تکمیل‌شده فرم:</span>

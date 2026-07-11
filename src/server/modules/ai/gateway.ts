@@ -1,12 +1,18 @@
 import { prisma } from '@/server/db'
 import { getAdapter, ProviderConfig, AIResponse } from './adapters'
 
+export interface RouteOptions {
+  preferredModel?: string
+  imageUrl?: string
+}
+
 export class AIGateway {
   /**
    * Routes the prompt to the best available AI provider based on priority and health.
    * Includes fallback and circuit breaker logic.
    */
-  static async routeRequest(prompt: string, preferredModel?: string): Promise<AIResponse> {
+  static async routeRequest(prompt: string, options?: RouteOptions | string): Promise<AIResponse> {
+    const preferredModel = typeof options === 'string' ? options : options?.preferredModel
     let providers: ProviderConfig[] = []
     if (preferredModel) {
       providers = await prisma.aiProvider.findMany({
@@ -21,15 +27,22 @@ export class AIGateway {
         orderBy: { priority: 'asc' },
       })
     }
-    if (providers.length === 0) {
-      providers = await prisma.aiProvider.findMany({
-        where: { isActive: true },
-        orderBy: { priority: 'asc' },
-      })
+    
+    // Fetch all active providers as a fallback
+    const allProviders = await prisma.aiProvider.findMany({
+      where: { isActive: true },
+      orderBy: { priority: 'asc' },
+    })
+
+    // Merge them, keeping preferred ones at the front and avoiding duplicates
+    for (const p of allProviders) {
+      if (!providers.some(existing => existing.id === p.id)) {
+        providers.push(p)
+      }
     }
 
     if (providers.length === 0) {
-      throw new Error('No active AI providers available')
+      throw new Error('هیچ سرویس‌دهنده هوش مصنوعی فعالی یافت نشد.')
     }
 
     for (const provider of providers) {
@@ -45,9 +58,11 @@ export class AIGateway {
       try {
         const adapter = await getAdapter(provider)
         
+        const reqOptions = typeof options === 'string' ? undefined : options
+
         // Timeout wrapper
         const response = await this.withTimeout(
-          adapter.chat(prompt, provider),
+          adapter.chat(prompt, provider, reqOptions),
           provider.timeoutMs
         )
 
@@ -81,13 +96,14 @@ export class AIGateway {
       }
     }
 
-    throw new Error('All AI providers failed to respond')
+    throw new Error('ارتباط با تمامی سرویس‌دهنده‌های هوش مصنوعی قطع می‌باشد. لطفاً دقایقی دیگر تلاش کنید.')
   }
 
   /**
    * Streams the response from the best available AI provider.
    */
-  static async *routeRequestStream(prompt: string, preferredModel?: string): AsyncGenerator<{ token: string; provider: string }, void, unknown> {
+  static async *routeRequestStream(prompt: string, options?: RouteOptions | string): AsyncGenerator<{ token: string; provider: string }, void, unknown> {
+    const preferredModel = typeof options === 'string' ? options : options?.preferredModel
     let providers: ProviderConfig[] = []
     if (preferredModel) {
       providers = await prisma.aiProvider.findMany({
@@ -102,15 +118,22 @@ export class AIGateway {
         orderBy: { priority: 'asc' },
       })
     }
-    if (providers.length === 0) {
-      providers = await prisma.aiProvider.findMany({
-        where: { isActive: true },
-        orderBy: { priority: 'asc' },
-      })
+    
+    // Fetch all active providers as a fallback
+    const allProviders = await prisma.aiProvider.findMany({
+      where: { isActive: true },
+      orderBy: { priority: 'asc' },
+    })
+
+    // Merge them, keeping preferred ones at the front and avoiding duplicates
+    for (const p of allProviders) {
+      if (!providers.some(existing => existing.id === p.id)) {
+        providers.push(p)
+      }
     }
 
     if (providers.length === 0) {
-      throw new Error('No active AI providers available')
+      throw new Error('هیچ سرویس‌دهنده هوش مصنوعی فعالی یافت نشد.')
     }
 
     for (const provider of providers) {
@@ -125,15 +148,17 @@ export class AIGateway {
 
       try {
         const adapter = await getAdapter(provider)
+        const reqOptions = typeof options === 'string' ? undefined : options
+
         if (adapter.chatStream) {
-          const stream = adapter.chatStream(prompt, provider)
+          const stream = adapter.chatStream(prompt, provider, reqOptions)
           for await (const chunk of stream) {
             yield { token: chunk, provider: provider.name }
           }
         } else {
           // Fallback to non-streaming chat
           const response = await this.withTimeout(
-            adapter.chat(prompt, provider),
+            adapter.chat(prompt, provider, reqOptions),
             provider.timeoutMs
           )
           yield { token: response.text, provider: provider.name }
@@ -167,7 +192,7 @@ export class AIGateway {
       }
     }
 
-    throw new Error('All AI providers failed to respond')
+    throw new Error('ارتباط با تمامی سرویس‌دهنده‌های هوش مصنوعی قطع می‌باشد. لطفاً دقایقی دیگر تلاش کنید.')
   }
 
   private static withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {

@@ -5,7 +5,7 @@ import { prisma } from '@/server/db'
 export async function GET(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
-  const isDenied = requireRole(user, 'admin')
+  const isDenied = await requireRole(user, 'admin')
   if (isDenied) return authErrorResponse(isDenied)
 
   try {
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
-  const isDenied = requireRole(user, 'admin')
+  const isDenied = await requireRole(user, 'admin')
   if (isDenied) return authErrorResponse(isDenied)
 
   try {

@@ -52,7 +52,6 @@ import {
 interface RequestUser {
   id: string
   name: string
-  nationalId: string
   personnelCode?: string
 }
 
@@ -301,7 +300,7 @@ export default function AdminRequestsPage() {
       result = result.filter(
         (r) =>
           r.user.name.toLowerCase().includes(q) ||
-          (r.user.nationalId && r.user.nationalId.includes(q)) ||
+          (r.user.personnelCode && r.user.personnelCode.includes(q)) ||
           r.id.toLowerCase().includes(q),
       )
     }
@@ -358,7 +357,7 @@ export default function AdminRequestsPage() {
           <div className="relative flex-1 sm:max-w-xs">
             <Search className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
-              placeholder="جستجوی نام یا کد ملی..."
+              placeholder="جستجوی نام یا کد پرسنلی..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="ps-9"
@@ -415,9 +414,7 @@ export default function AdminRequestsPage() {
                       <TableCell>
                         <div>
                           <p className="font-medium text-sm">{req.user.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {toFa(req.user.nationalId)}
-                          </p>
+                            {toFa(req.user.personnelCode || '')}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -617,7 +614,7 @@ export default function AdminRequestsPage() {
                 <div>
                   <p className="font-bold text-lg">{detailRequest.user.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    کد ملی: {toFa(detailRequest.user.nationalId)}
+                    کد پرسنلی: {toFa(detailRequest.user.personnelCode || '')}
                   </p>
                 </div>
                 <StatusBadge status={detailRequest.status} />

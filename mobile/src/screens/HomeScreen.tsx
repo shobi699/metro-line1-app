@@ -372,6 +372,7 @@ export function HomeScreen({ navigation }: any) {
     { label: 'جدول برترها', icon: 'stars', color: '#fbbf24', bg: '#fef3c7', screen: 'Leaderboard' },
     { label: 'تجهیزات انفرادی من', icon: 'construction', color: '#0f766e', bg: '#ccfbf1', screen: 'Equipment' },
     { label: 'درخواست تعویض شیفت', icon: 'swap-horiz', color: '#4f46e5', bg: '#e0e7ff', screen: 'Swap' },
+    { label: 'کاتالوگ فنی و خطایابی', icon: 'menu-book', color: '#047857', bg: '#d1fae5', screen: 'CatalogsScreen' },
     { label: 'راهنمای کاربری', icon: 'import-contacts', color: '#0f766e', bg: '#f0fdfa', screen: 'راهنمای کاربری' },
   ]
 

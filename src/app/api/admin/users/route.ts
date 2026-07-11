@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const sessionUser = await getSessionUser(request)
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
-  const roleErr = requireRole(sessionUser, 'admin')
+  const roleErr = await requireRole(sessionUser, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { searchParams } = new URL(request.url)
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     if (search) {
       whereClause.OR = [
         { name: { contains: search } },
-        { nationalId: { contains: search } },
+        { personnelCode: { contains: search } },
         { phone: { contains: search } },
       ]
     }
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
           select: {
             id: true,
             key: true,
-            name: true,
+            title: true,
             rank: true,
           },
         },
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
   const sessionUser = await getSessionUser(request)
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
-  const roleErr = requireRole(sessionUser, 'admin')
+  const roleErr = await requireRole(sessionUser, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {
@@ -90,16 +90,16 @@ export async function POST(request: Request) {
       )
     }
 
-    const { nationalId, name, phone, email, password, roleId, status, customFields } = parsed.data
+    const { personnelCode, name, phone, email, password, roleId, status, customFields } = parsed.data
 
-    // Check unique nationalId
+    // Check unique personnelCode
     const existingUser = await prisma.user.findUnique({
-      where: { nationalId },
+      where: { personnelCode },
     })
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'کاربری با این کد ملی از قبل وجود دارد' },
+        { error: 'کاربری با این کد پرسنلی از قبل وجود دارد' },
         { status: 400 }
       )
     }
@@ -135,7 +135,7 @@ export async function POST(request: Request) {
     const [newUser] = await prisma.$transaction([
       prisma.user.create({
         data: {
-          nationalId,
+          personnelCode,
           name,
           phone: phone || null,
           email: email || null,
@@ -146,7 +146,7 @@ export async function POST(request: Request) {
         },
         select: {
           id: true,
-          nationalId: true,
+          personnelCode: true,
           name: true,
           phone: true,
           email: true,
@@ -160,11 +160,11 @@ export async function POST(request: Request) {
         data: {
           actorId: sessionUser.id,
           entity: 'User',
-          entityId: nationalId, // Using national ID as a key reference or fallback to new user ID after creation
+          entityId: personnelCode, // Using national ID as a key reference or fallback to new user ID after creation
           action: 'create',
           before: undefined,
           after: {
-            nationalId,
+            personnelCode,
             name,
             phone,
             email,
@@ -178,7 +178,7 @@ export async function POST(request: Request) {
 
     // Update AuditLog entityId with actual database ID
     await prisma.auditLog.updateMany({
-      where: { actorId: sessionUser.id, entity: 'User', entityId: nationalId },
+      where: { actorId: sessionUser.id, entity: 'User', entityId: personnelCode },
       data: { entityId: newUser.id },
     })
 

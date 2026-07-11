@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuthStore } from '@/features/auth'
 import { toFa } from '@/lib/fa'
@@ -15,13 +15,13 @@ import {
   Trash2,
   Pencil,
   Upload,
-  Eye,
   Settings2,
   Calendar,
   Megaphone,
   X,
   Save,
   Check,
+  Eye,
 } from 'lucide-react'
 
 dayjs.extend(jalaliday)
@@ -62,7 +62,7 @@ interface SeenReport {
   title: string
   mandatory: boolean
   totalSeen: number
-  records: { userId: string; userName: string; nationalId: string; seenAt: string }[]
+  records: { userId: string; userName: string; personnelCode: string; seenAt: string }[]
 }
 
 interface ShiftHours {
@@ -159,6 +159,8 @@ function HolidaysTab({ accessToken }: { accessToken: string | null }) {
     hijriBased: false,
   })
 
+  const [isSyncing, setIsSyncing] = useState(false)
+
   const fetchHolidays = useCallback(async () => {
     if (!accessToken) return
     setLoading(true)
@@ -207,19 +209,53 @@ function HolidaysTab({ accessToken }: { accessToken: string | null }) {
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
     if (!accessToken || !e.target.files?.[0]) return
-    const formData = new FormData()
-    formData.append('file', e.target.files[0])
-    const res = await fetch('/api/admin/calendar/holidays/import', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
-      body: formData,
-    })
-    if (res.ok) {
+    try {
+      const formData = new FormData()
+      formData.append('file', e.target.files[0])
+      const res = await fetch('/api/admin/calendar/holidays/import', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: formData,
+      })
       const json = await res.json()
-      setImportResult(json.data)
-      fetchHolidays()
+      if (res.ok) {
+        setImportResult(json.data)
+        fetchHolidays()
+      } else {
+        alert(json.error?.message || 'خطا در ایمپورت فایل')
+      }
+    } catch (err: any) {
+      alert('خطای ارتباط با سرور: ' + err.message)
+    } finally {
+      e.target.value = ''
     }
-    e.target.value = ''
+  }
+
+  async function handleSyncHolidays() {
+    if (!accessToken) return
+    setIsSyncing(true)
+    try {
+      const res = await fetch('/api/admin/calendar/holidays/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ fromYear: 1405 }),
+      })
+      const json = await res.json()
+      if (res.ok) {
+        setImportResult(json.data)
+        fetchHolidays()
+      } else {
+        const errorMsg = typeof json.error === 'string' ? json.error : json.error?.message
+        alert(errorMsg || 'خطا در هماهنگ‌سازی دیتابیس')
+      }
+    } catch (err: any) {
+      alert('خطای ارتباط با سرور: ' + err.message)
+    } finally {
+      setIsSyncing(false)
+    }
   }
 
   function openEdit(h: Holiday) {
@@ -243,12 +279,20 @@ function HolidaysTab({ accessToken }: { accessToken: string | null }) {
         <Button onClick={() => { setEditId(null); setForm({ jalaliDate: '', title: '', kind: 'official', isOffDay: true, recurring: true, hijriBased: false }); setShowForm(true) }} size="sm">
           <Plus className="w-4 h-4 me-1" /> افزودن تعطیلی
         </Button>
-        <label className="cursor-pointer">
-          <Button variant="outline" size="sm" type="button" className="pointer-events-none">
+        <div className="flex items-center gap-2">
+          <input type="file" id="excel-upload" accept=".xlsx,.xls" className="hidden" onChange={handleImport} />
+          <label htmlFor="excel-upload" className={buttonVariants({ variant: 'outline', size: 'sm', className: 'cursor-pointer' })}>
             <Upload className="w-4 h-4 me-1" /> ایمپورت اکسل
-          </Button>
-          <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImport} />
-        </label>
+          </label>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleSyncHolidays} 
+          disabled={isSyncing}
+        >
+          {isSyncing ? 'در حال هماهنگ‌سازی...' : 'دریافت از PersianHoliday'}
+        </Button>
         <div className="flex items-center gap-1 bg-muted/50 p-0.5 rounded-md border ms-auto">
           {['all', 'official', 'religious', 'occasion'].map((k) => (
             <button
@@ -591,7 +635,7 @@ function OrgEventsTab({ accessToken }: { accessToken: string | null }) {
                   <thead>
                     <tr className="border-b bg-muted/20">
                       <th className="text-start p-2 font-medium">نام</th>
-                      <th className="text-start p-2 font-medium">کد ملی</th>
+                      <th className="text-start p-2 font-medium">کد پرسنلی</th>
                       <th className="text-start p-2 font-medium">زمان رؤیت</th>
                     </tr>
                   </thead>
@@ -599,7 +643,7 @@ function OrgEventsTab({ accessToken }: { accessToken: string | null }) {
                     {seenReport.records.map((r) => (
                       <tr key={r.userId} className="border-b last:border-0">
                         <td className="p-2">{r.userName}</td>
-                        <td className="p-2 font-mono text-xs" dir="ltr">{toFa(r.nationalId)}</td>
+                        <td className="p-2 font-mono text-xs" dir="ltr">{toFa(r.personnelCode)}</td>
                         <td className="p-2 text-xs">{toFa(jdate(r.seenAt).format('YYYY/MM/DD HH:mm'))}</td>
                       </tr>
                     ))}

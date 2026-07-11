@@ -31,7 +31,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       include: {
         template: true,
         version: true,
-        submitter: { select: { name: true, phone: true, role: { select: { name: true } } } },
+        submitter: { select: { name: true, phone: true, role: { select: { title: true } } } },
         steps: {
           orderBy: { createdAt: 'asc' },
           include: { decidedBy: { select: { name: true } } },
@@ -123,7 +123,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
           {/* Submitter */}
           <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 grid grid-cols-2 gap-4 text-sm mb-6">
             <div><strong class="text-gray-600">متقاضی:</strong> ${submission.submitter.name}</div>
-            <div><strong class="text-gray-600">سمت/نقش:</strong> ${submission.submitter.role.name}</div>
+            <div><strong class="text-gray-600">سمت/نقش:</strong> ${submission.submitter.role.title}</div>
             <div><strong class="text-gray-600">شماره تماس:</strong> ${submission.submitter.phone || '-'}</div>
           </div>
 

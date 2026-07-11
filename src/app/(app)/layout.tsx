@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
 import { Sidebar, MobileHeader } from '@/components/shared/sidebar'
 import { MobileBottomNav } from '@/components/shared/mobile-bottom-nav'
@@ -25,6 +25,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   } | null>(null)
   const [showNotice, setShowNotice] = useState(true)
   const [banners, setBanners] = useState<any[]>([])
+  const pathname = usePathname()
+
+  // Scroll to top on navigation
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
 
   useEffect(() => {
     if (!hydrated || !isAuthenticated || !accessToken) return

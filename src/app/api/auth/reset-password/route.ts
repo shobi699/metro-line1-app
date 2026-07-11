@@ -35,11 +35,11 @@ export async function POST(request: Request) {
       )
     }
 
-    const { nationalId } = tokenData
+    const { personnelCode } = tokenData
 
     // Find the user to reset password for
     const user = await prisma.user.findUnique({
-      where: { nationalId },
+      where: { personnelCode },
     })
 
     if (!user) {

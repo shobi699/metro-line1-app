@@ -65,7 +65,7 @@ async function main() {
     console.error('❌ Error: No admin or super_admin user found to assign as author.')
     process.exit(1)
   }
-  console.log(`👤 Author assigned: ${author.name} (${author.nationalId})`)
+  console.log(`👤 Author assigned: ${author.name} (${author.personnelCode})`)
 
   const directories = [
     path.resolve(process.cwd(), 'lohe'),

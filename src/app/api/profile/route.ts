@@ -12,14 +12,14 @@ export async function GET(request: Request) {
       where: { id: user.id },
       select: {
         id: true,
-        nationalId: true,
+        personnelCode: true,
         name: true,
         phone: true,
         email: true,
         status: true,
         role: {
           select: {
-            name: true,
+            title: true,
             key: true,
           }
         },
@@ -200,7 +200,7 @@ export async function PATCH(request: Request) {
       },
       select: {
         id: true,
-        nationalId: true,
+        personnelCode: true,
         name: true,
         phone: true,
         email: true,
@@ -208,7 +208,7 @@ export async function PATCH(request: Request) {
         customFields: true,
         role: {
           select: {
-            name: true,
+            title: true,
             key: true,
           }
         },

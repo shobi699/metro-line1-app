@@ -14,9 +14,9 @@ export async function POST(request: Request) {
       )
     }
 
-    const { nationalId, code } = parsed.data
+    const { personnelCode, code } = parsed.data
 
-    const otpData = await otpStore.getOtp(nationalId)
+    const otpData = await otpStore.getOtp(personnelCode)
 
     if (!otpData) {
       return NextResponse.json(
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     if (otpData.expiresAt < Date.now()) {
-      await otpStore.deleteOtp(nationalId)
+      await otpStore.deleteOtp(personnelCode)
       return NextResponse.json(
         { error: 'کد تایید منقضی شده است. لطفا مجددا تلاش کنید' },
         { status: 400 },
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     // OTP is verified. Remove from store
-    await otpStore.deleteOtp(nationalId)
+    await otpStore.deleteOtp(personnelCode)
 
     // Generate a temporary secure token for password resetting
     const resetToken = crypto.randomUUID()
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
     // Store the reset token
     await otpStore.setReset(resetToken, {
-      nationalId,
+      personnelCode,
       expiresAt,
     })
 

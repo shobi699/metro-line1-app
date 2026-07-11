@@ -41,10 +41,10 @@ describe('roster validation engine', () => {
   })
 
   it('validates personnel code format (national ID length check)', async () => {
-    // Mock active users in DB. user-1 has valid 10-digit, user-2 has invalid nationalId.
+    // Mock active users in DB. user-1 has valid 10-digit, user-2 has invalid personnelCode.
     vi.mocked(prisma.user.findMany).mockResolvedValue([
-      { id: 'user-1', name: 'علی شفیعی', nationalId: '1234567890', role: { key: 'operator' } },
-      { id: 'user-2', name: 'محمود احمدی', nationalId: '98765', role: { key: 'operator' } },
+      { id: 'user-1', name: 'علی شفیعی', personnelCode: '1234567890', role: { key: 'operator' } },
+      { id: 'user-2', name: 'محمود احمدی', personnelCode: '98765', role: { key: 'operator' } },
     ] as any)
 
     const trips = [
@@ -63,8 +63,8 @@ describe('roster validation engine', () => {
   it('identifies active operators with no assigned shifts (idle drivers)', async () => {
     // Mock user-1 (active operator assigned) and user-2 (active operator idle)
     vi.mocked(prisma.user.findMany).mockResolvedValue([
-      { id: 'user-1', name: 'علی شفیعی', nationalId: '1234567890', role: { key: 'operator' } },
-      { id: 'user-2', name: 'محمود احمدی', nationalId: '1029384756', role: { key: 'operator' } },
+      { id: 'user-1', name: 'علی شفیعی', personnelCode: '1234567890', role: { key: 'operator' } },
+      { id: 'user-2', name: 'محمود احمدی', personnelCode: '1029384756', role: { key: 'operator' } },
     ] as any)
 
     const trips = [

@@ -41,7 +41,7 @@ import { cn } from '@/lib/utils'
 
 interface UserRow {
   id: string
-  nationalId: string
+  personnelCode: string
   name: string
   phone: string | null
   email: string | null
@@ -54,7 +54,7 @@ interface UserRow {
 interface ImportResult {
   successCount: number
   errorCount: number
-  errors: Array<{ row: number; nationalId: string; reason: string }>
+  errors: Array<{ row: number; personnelCode: string; reason: string }>
   totalRows: number
   errorReportUrl?: string
 }
@@ -348,7 +348,7 @@ export default function DirectoryPage() {
       const formData = new FormData()
       formData.append('file', file)
 
-      const res = await fetch('/api/import/users', {
+      const res = await fetch('/api/admin/iam/users/import', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
@@ -855,11 +855,11 @@ export default function DirectoryPage() {
                 <h3 className="text-[10px] font-bold text-neutral-400 border-b border-neutral-850 pb-1">اطلاعات پایه سیستم:</h3>
                 
                 <label className="flex items-center justify-between p-2 rounded-xl bg-neutral-950/20 border border-neutral-800 cursor-pointer select-none">
-                  <span className="text-xs text-white">کد ملی</span>
+                  <span className="text-xs text-white">کد پرسنلی</span>
                   <input
                     type="checkbox"
-                    checked={tempVisibleFields.includes('nationalId')}
-                    onChange={() => handleToggleVisibleField('nationalId')}
+                    checked={tempVisibleFields.includes('personnelCode')}
+                    onChange={() => handleToggleVisibleField('personnelCode')}
                     className="accent-red-600 size-4 cursor-pointer"
                   />
                 </label>
@@ -1029,10 +1029,10 @@ export default function DirectoryPage() {
                 return (
                   <>
                     <div className="grid grid-cols-2 gap-3">
-                      {(showSensitive || allowedModalFields.includes('nationalId')) && (
+                      {(showSensitive || allowedModalFields.includes('personnelCode')) && (
                         <div className="bg-neutral-950/20 p-3 rounded-xl border border-neutral-850">
-                          <span className="text-[10px] text-foreground-muted block mb-1">کد ملی راهبر:</span>
-                          <span className="font-mono text-white font-semibold">{toFa(selectedDetailUser.nationalId)}</span>
+                          <span className="text-[10px] text-foreground-muted block mb-1">کد پرسنلی راهبر:</span>
+                          <span className="font-mono text-white font-semibold">{toFa(selectedDetailUser.personnelCode)}</span>
                         </div>
                       )}
                       {(showSensitive || allowedModalFields.includes('phone')) && selectedDetailUser.phone && (

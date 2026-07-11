@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   const meetings = await prisma.meetingRequest.findMany({
     where,
     include: {
-      requester: { select: { name: true, nationalId: true } },
+      requester: { select: { name: true, personnelCode: true } },
       targetManager: { select: { name: true } },
       room: { select: { name: true } },
       meetingType: { select: { title: true } }
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     'موضوع',
     'توضیحات',
     'درخواست‌دهنده',
-    'کد ملی',
+    'کد پرسنلی',
     'میزبان',
     'نوع جلسه',
     'اتاق جلسه',
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
       m.title,
       m.description ?? '',
       m.requester?.name ?? '',
-      m.requester?.nationalId ?? '',
+      m.requester?.personnelCode ?? '',
       m.targetManager?.name ?? '',
       m.meetingType?.title ?? '',
       m.room?.name ?? '',

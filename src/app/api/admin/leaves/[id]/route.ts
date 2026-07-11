@@ -18,7 +18,7 @@ export async function PATCH(
   if ('error' in user) return authErrorResponse(user)
 
   // Requires admin role
-  const roleErr = requireRole(user, 'admin')
+  const roleErr = await requireRole(user, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {

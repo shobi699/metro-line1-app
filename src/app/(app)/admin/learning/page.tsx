@@ -628,7 +628,7 @@ export default function AdminLearningDashboard() {
                     <option value="">-- انتخاب پرسنل --</option>
                     {enrollData.users?.map((u) => (
                       <option key={u.id} value={u.id}>
-                        {u.name} (کد ملی: {toFa(u.nationalId)})
+                        {u.name} (کد پرسنلی: {toFa(u.personnelCode)})
                       </option>
                     ))}
                   </select>

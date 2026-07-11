@@ -637,7 +637,7 @@ export default function MyExamsPage() {
                                       score: exam.score,
                                       date: exam.date,
                                       expiryDate: '۱۴۰۶/۰۴/۰۹',
-                                      id: `CERT-${exam.id.toUpperCase()}-${user?.nationalId || '123'}`,
+                                      id: `CERT-${exam.id.toUpperCase()}-${user?.personnelCode || '123'}`,
                                       isExpired: false,
                                       daysToExpiry: 120
                                     })}
@@ -996,7 +996,7 @@ export default function MyExamsPage() {
                 <div className="space-y-4 my-2 max-w-lg">
                   <h3 className="text-xl md:text-2xl font-bold text-amber-400">گواهی‌نامه رسمی صلاحیت فنی راهبری</h3>
                   <p className="text-xs md:text-sm text-neutral-300 leading-8">
-                    بدین‌وسیله گواهی می‌شود همکار گرامی جناب آقای/سرکار خانم <span className="font-bold text-white text-sm md:text-base underline decoration-accent decoration-2 underline-offset-4">{selectedCert.userName}</span> با کد ملی <span className="font-mono text-neutral-200 font-bold">{toFa(user?.nationalId || '۱۲۳۴۵۶۷۸۹۰')}</span> دوره تخصصی و ارزیابی الکترونیکی:
+                    بدین‌وسیله گواهی می‌شود همکار گرامی جناب آقای/سرکار خانم <span className="font-bold text-white text-sm md:text-base underline decoration-accent decoration-2 underline-offset-4">{selectedCert.userName}</span> با کد پرسنلی <span className="font-mono text-neutral-200 font-bold">{toFa(user?.personnelCode || '۱۲۳۴۵۶۷۸۹۰')}</span> دوره تخصصی و ارزیابی الکترونیکی:
                   </p>
                   <h4 className="text-xs md:text-sm font-bold text-white bg-neutral-800/50 border border-neutral-700/35 px-4 py-2 rounded-lg inline-block my-1 leading-relaxed">
                     {selectedCert.courseTitle}

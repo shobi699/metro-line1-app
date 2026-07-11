@@ -10,7 +10,7 @@ export async function GET(
 ) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
-  const isDenied = requireRole(user, 'admin')
+  const isDenied = await requireRole(user, 'admin')
   if (isDenied) return authErrorResponse(isDenied)
 
   const { id } = await params
@@ -20,7 +20,7 @@ export async function GET(
 
     const headers = [
       'نام و نام خانوادگی',
-      'کد ملی',
+      'کد پرسنلی',
       'نقش/سمت',
       'ایستگاه',
       'وضعیت تایید',
@@ -37,7 +37,7 @@ export async function GET(
       const dateStr = item.ackAt ? `${jalali(item.ackAt)} ${faTime(item.ackAt)}` : ''
       rows.push([
         item.name,
-        item.nationalId,
+        item.personnelCode,
         item.role,
         item.station,
         'تایید شده',
@@ -52,7 +52,7 @@ export async function GET(
     stats.remainingList.forEach((item) => {
       rows.push([
         item.name,
-        item.nationalId,
+        item.personnelCode,
         item.role,
         item.station,
         'منتظر تایید',

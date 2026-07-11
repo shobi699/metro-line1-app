@@ -9,6 +9,7 @@ export const createPostSchema = z.object({
   excerpt: z.string().max(500, 'خلاصه طولانی است').optional().or(z.literal('')),
   body: z.string().min(1, 'متن الزامی است'),
   category: z.string().max(60).optional().or(z.literal('')),
+  tags: z.array(z.string()).optional(),
   coverUrl: z.string().optional().or(z.literal('')),
   mediaUrl: z.string().optional().or(z.literal('')),
   mediaType: z.string().optional().or(z.literal('')),

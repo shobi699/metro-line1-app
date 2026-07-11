@@ -56,7 +56,7 @@ import { cn } from '@/lib/utils'
 interface UserProfile {
   id?: string
   name?: string
-  nationalId?: string
+  personnelCode?: string
   roleId?: string
   customFields?: {
     shift?: string
@@ -1997,8 +1997,8 @@ export default function ShiftsPage() {
                   <strong className="text-foreground">{currentUserProfile?.name || 'مهندس حسینی'}</strong>
                 </div>
                 <div className="flex justify-between items-center border-b border-border/20 pb-2">
-                  <span>کد ملی ثبت شده:</span>
-                  <strong className="text-foreground font-data-mono">{toFa(currentUserProfile?.nationalId || '0012345678')}</strong>
+                  <span>کد پرسنلی ثبت شده:</span>
+                  <strong className="text-foreground font-data-mono">{toFa(currentUserProfile?.personnelCode || '0012345678')}</strong>
                 </div>
                 <div className="flex justify-between items-center border-b border-border/20 pb-2">
                   <span>تعداد مأموریت‌های اعزام اضطراری کهریزک:</span>

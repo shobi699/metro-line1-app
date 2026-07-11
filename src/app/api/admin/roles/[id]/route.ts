@@ -12,7 +12,7 @@ export async function PATCH(
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
   // Only super_admin can update role configurations
-  const roleErr = requireRole(sessionUser, 'super_admin')
+  const roleErr = await requireRole(sessionUser, 'super_admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { id: roleId } = await params
@@ -43,13 +43,13 @@ export async function PATCH(
 
     // Prepare update data
     const dataToUpdate: Record<string, unknown> = {}
-    if (updates.name) dataToUpdate.name = updates.name
+    if (updates.title) dataToUpdate.title = updates.title
     if (updates.rank !== undefined) dataToUpdate.rank = updates.rank
     if (updates.permissions) dataToUpdate.permissions = JSON.stringify(updates.permissions)
 
     // Capture state before change
     const beforeState = {
-      name: targetRole.name,
+      title: targetRole.title,
       rank: targetRole.rank,
       permissions: typeof targetRole.permissions === 'string'
         ? JSON.parse(targetRole.permissions)
@@ -91,7 +91,7 @@ export async function DELETE(
   const sessionUser = await getSessionUser(request)
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
-  const roleErr = requireRole(sessionUser, 'super_admin')
+  const roleErr = await requireRole(sessionUser, 'super_admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { id: roleId } = await params
@@ -129,7 +129,7 @@ export async function DELETE(
 
     const beforeState = {
       key: targetRole.key,
-      name: targetRole.name,
+      title: targetRole.title,
       rank: targetRole.rank,
       permissions: typeof targetRole.permissions === 'string'
         ? JSON.parse(targetRole.permissions)

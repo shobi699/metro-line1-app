@@ -117,14 +117,14 @@ export async function matchDriver(
   if (bestScore >= autoMatchThreshold) {
     return {
       userId: bestUser.id,
-      personnelNo: bestUser.nationalId,
+      personnelNo: bestUser.personnelCode,
       score: bestScore,
       status: 'AUTO_MATCHED'
     }
   } else if (bestScore >= reviewMatchThreshold) {
     return {
       userId: bestUser.id,
-      personnelNo: bestUser.nationalId,
+      personnelNo: bestUser.personnelCode,
       score: bestScore,
       status: 'NEEDS_REVIEW'
     }
@@ -174,7 +174,7 @@ export async function parseRosterExcelV2(
   
   const dbUsers = await prisma.user.findMany({
     where: { status: 'active' },
-    select: { id: true, name: true, nationalId: true }
+    select: { id: true, name: true, personnelCode: true }
   })
   
   const extractedTrips: any[] = []
@@ -458,10 +458,10 @@ export async function validateRoster(trips: any[], assignments: any[]): Promise<
     return defaultValue
   }
 
-  // ۲. اعتبارسنجی شماره پرسنلی (کد ملی ۱۰ رقمی) — بخش ۸.۱
+  // ۲. اعتبارسنجی شماره پرسنلی (کد پرسنلی ۱۰ رقمی) — بخش ۸.۱
   const activeUsers = await prisma.user.findMany({
     where: { status: 'active' },
-    select: { id: true, name: true, nationalId: true, role: { select: { key: true } } }
+    select: { id: true, name: true, personnelCode: true, role: { select: { key: true } } }
   })
 
   if (isRuleEnabled('invalid_personnel_no')) {
@@ -470,13 +470,13 @@ export async function validateRoster(trips: any[], assignments: any[]): Promise<
       if (assign.matchedUserId) {
         const matched = activeUsers.find((u) => u.id === assign.matchedUserId)
         if (matched) {
-          const personnelNo = matched.nationalId || ''
+          const personnelNo = matched.personnelCode || ''
           const isValid10Digits = /^\d{10}$/.test(personnelNo)
           if (!isValid10Digits) {
             issues.push({
               severity,
               type: 'invalid_personnel_no',
-              message: `شماره ملی/پرسنلی راهبر "${matched.name}" نامعتبر است (${personnelNo || 'خالی'}). کد ملی باید دقیقاً ۱۰ رقم عددی باشد.`,
+              message: `شماره ملی/پرسنلی راهبر "${matched.name}" نامعتبر است (${personnelNo || 'خالی'}). کد پرسنلی باید دقیقاً ۱۰ رقم عددی باشد.`,
               affectedUserId: matched.id,
               suggestedAction: 'اطلاعات پرسنلی کاربر را در دفتر تلفن ویرایش و تصحیح نمایید.'
             })

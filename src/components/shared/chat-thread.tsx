@@ -102,7 +102,7 @@ export function ChatThread({
   const [summarizing, setSummarizing] = useState(false)
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [messages.length])
 
   // امضا و تایید رسید رسمی پیام — بخش ۵.۲ سند tosee.md

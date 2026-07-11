@@ -11,7 +11,7 @@ export async function POST(
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'admin') // Allow admin (supervisor)
+  const roleErr = await requireRole(user, 'admin') // Allow admin (supervisor)
   if (roleErr) return authErrorResponse(roleErr)
 
   try {
@@ -31,7 +31,7 @@ export async function POST(
     if (matchedUserId) {
       userToMatch = await prisma.user.findUnique({
         where: { id: matchedUserId },
-        select: { id: true, name: true, nationalId: true }
+        select: { id: true, name: true, personnelCode: true }
       })
     }
 
@@ -45,7 +45,7 @@ export async function POST(
       where: { id },
       data: {
         matchedUserId: matchedUserId || null,
-        personnelNo: userToMatch?.nationalId || null,
+        personnelNo: userToMatch?.personnelCode || null,
         rawName: rawName || userToMatch?.name || assignment.rawName,
         matchStatus: matchedUserId ? 'MANUAL_MATCHED' : 'UNMATCHED',
         confirmedById: user.id,

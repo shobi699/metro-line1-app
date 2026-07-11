@@ -5,7 +5,7 @@ interface OtpEntry {
 }
 
 interface ResetEntry {
-  nationalId: string
+  personnelCode: string
   expiresAt: number
 }
 

@@ -1,15 +1,15 @@
 import { z } from 'zod'
-import { nationalIdSchema, passwordSchema, phoneSchema, emailSchema } from './common'
+import { personnelCodeSchema, passwordSchema, phoneSchema, emailSchema } from './common'
 
 export const loginSchema = z.object({
-  nationalId: nationalIdSchema,
+  personnelCode: personnelCodeSchema,
   password: z.string().min(1, 'رمز عبور الزامی است'),
 })
 
 export type LoginInput = z.infer<typeof loginSchema>
 
 export const registerSchema = z.object({
-  nationalId: nationalIdSchema,
+  personnelCode: personnelCodeSchema,
   name: z.string().min(2, 'نام حداقل ۲ کاراکتر باشد'),
   phone: phoneSchema,
   email: emailSchema,
@@ -34,7 +34,7 @@ export const approveUserSchema = z.object({
 export type ApproveUserInput = z.infer<typeof approveUserSchema>
 
 export const sendOtpSchema = z.object({
-  nationalId: nationalIdSchema,
+  personnelCode: personnelCodeSchema,
   phone: z
     .string()
     .regex(/^09\d{9}$/, 'شماره موبایل نامعتبر است'),
@@ -43,7 +43,7 @@ export const sendOtpSchema = z.object({
 export type SendOtpInput = z.infer<typeof sendOtpSchema>
 
 export const verifyOtpSchema = z.object({
-  nationalId: nationalIdSchema,
+  personnelCode: personnelCodeSchema,
   code: z
     .string()
     .length(6, 'کد تایید باید ۶ رقم باشد')

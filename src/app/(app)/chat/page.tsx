@@ -66,7 +66,7 @@ const PRIORITY_META: Record<MessagePriority, { label: string; color: string; rin
 interface UserOption {
   id: string
   name: string
-  nationalId: string
+  personnelCode: string
   role: { name: string; key: string }
   customFields?: Record<string, unknown> | null
 }

@@ -19,7 +19,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       include: {
         template: { select: { title: true, key: true } },
         version: true,
-        submitter: { select: { name: true, role: { select: { name: true, key: true } } } },
+        submitter: { select: { name: true, role: { select: { title: true, key: true } } } },
         steps: {
           orderBy: { createdAt: 'asc' },
           include: { decidedBy: { select: { name: true } } },

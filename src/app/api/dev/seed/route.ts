@@ -140,15 +140,15 @@ export async function GET() {
 
     // Find our users
     const driverUser = await prisma.user.findFirst({
-      where: { nationalId: '1111111111' } // علی رضایی
+      where: { personnelCode: '1111111111' } // علی رضایی
     })
 
     const superAdminUser = await prisma.user.findFirst({
-      where: { nationalId: '0000000000' } // مدیر سیستم
+      where: { personnelCode: '0000000000' } // مدیر سیستم
     })
 
     const adminUser = await prisma.user.findFirst({
-      where: { nationalId: '9999999999' } // مدیر خط
+      where: { personnelCode: '9999999999' } // مدیر خط
     })
 
     const targetUserIds = [driverUser?.id, superAdminUser?.id, adminUser?.id].filter(Boolean) as string[]

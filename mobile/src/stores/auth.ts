@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 export interface UserProfile {
   id: string
   name: string
-  nationalId: string
+  personnelCode: string
   phone?: string | null
   email?: string | null
   status: 'pending' | 'active' | 'suspended'

@@ -559,12 +559,12 @@ export async function getNonReaders(postId: string) {
 
   const allUsers = await prisma.user.findMany({
     where: { status: 'active' },
-    select: { id: true, name: true, nationalId: true },
+    select: { id: true, name: true, personnelCode: true },
   })
 
   return allUsers
     .filter((u) => !readerIds.has(u.id))
-    .map((u) => ({ id: u.id, name: u.name, nationalId: u.nationalId }))
+    .map((u) => ({ id: u.id, name: u.name, personnelCode: u.personnelCode }))
 }
 
 export async function createPost(data: CreatePostInput, authorId: string) {
@@ -576,6 +576,7 @@ export async function createPost(data: CreatePostInput, authorId: string) {
       excerpt: emptyToNull(data.excerpt),
       body: data.body,
       category: emptyToNull(data.category),
+      tags: data.tags ? data.tags.join(',') : null,
       coverUrl: emptyToNull(data.coverUrl),
       mediaUrl: emptyToNull(data.mediaUrl),
       mediaType: emptyToNull(data.mediaType),
@@ -633,6 +634,7 @@ export async function updatePost(
       ...(data.excerpt !== undefined ? { excerpt: emptyToNull(data.excerpt) } : {}),
       ...(data.body !== undefined ? { body: data.body } : {}),
       ...(data.category !== undefined ? { category: emptyToNull(data.category) } : {}),
+      ...(data.tags !== undefined ? { tags: data.tags ? data.tags.join(',') : null } : {}),
       ...(data.coverUrl !== undefined ? { coverUrl: emptyToNull(data.coverUrl) } : {}),
       ...(data.mediaUrl !== undefined ? { mediaUrl: emptyToNull(data.mediaUrl) } : {}),
       ...(data.mediaType !== undefined ? { mediaType: emptyToNull(data.mediaType) } : {}),
@@ -817,8 +819,8 @@ export async function getPostAckStats(postId: string) {
     select: {
       id: true,
       name: true,
-      nationalId: true,
-      role: { select: { key: true, name: true } },
+      personnelCode: true,
+      role: { select: { key: true, title: true } },
       customFields: true,
     },
   })
@@ -839,7 +841,7 @@ export async function getPostAckStats(postId: string) {
 
   targets.forEach((u) => {
     const isAcked = ackedUserIds.has(u.id)
-    const roleKey = u.role.name || u.role.key
+    const roleKey = u.role.title || u.role.key
     const station = (u.customFields as Record<string, any> | null)?.station || 'سایر'
 
     if (!roleBreakdown[roleKey]) roleBreakdown[roleKey] = { total: 0, acked: 0 }
@@ -855,7 +857,7 @@ export async function getPostAckStats(postId: string) {
     const item = {
       userId: u.id,
       name: u.name,
-      nationalId: u.nationalId,
+      personnelCode: u.personnelCode,
       role: roleKey,
       station,
       ackAt: userAckInfo?.ackAt || null,

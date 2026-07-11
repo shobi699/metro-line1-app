@@ -209,7 +209,7 @@ export function AiChatInterface() {
 
   // Auto-scroll chat area
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [messages])
 
   // Fetch registered knowledge articles

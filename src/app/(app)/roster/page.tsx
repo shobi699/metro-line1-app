@@ -116,7 +116,7 @@ interface RosterStats {
 interface UserSummary {
   id: string
   name: string
-  nationalId?: string
+  personnelCode?: string
 }
 
 interface AssignedTripInfo {
@@ -1135,7 +1135,7 @@ export default function FullRosterPage() {
                           .filter((u) => u.id !== user?.id)
                           .map((u) => (
                             <option key={u.id} value={u.id}>
-                              {u.name} ({u.nationalId ? toFa(u.nationalId) : '—'})
+                              {u.name} ({u.personnelCode ? toFa(u.personnelCode) : '—'})
                             </option>
                           ))}
                       </select>

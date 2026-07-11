@@ -245,7 +245,7 @@ export default function SafetyAdminPage() {
                               </div>
                               <div>
                                 <div className="text-sm font-medium">{r.user.name}</div>
-                                <div className="text-xs text-muted-foreground">{toFa(r.user.nationalId)}</div>
+                                <div className="text-xs text-muted-foreground">{toFa(r.user.personnelCode)}</div>
                               </div>
                             </div>
                             <div className="text-xs text-muted-foreground text-end">

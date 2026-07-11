@@ -8,7 +8,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const { user } = await authenticate(req)
     if (!user) return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
-    const roleErr = requireRole(user, 'admin')
+    const roleErr = await requireRole(user, 'admin')
     if (roleErr) return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 403 })
     const { id } = await params
 

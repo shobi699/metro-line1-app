@@ -384,7 +384,7 @@ describe('AIAssistantService Tests', () => {
       const stream = AIAssistantService.processMessageStream({
         userId: 'u1',
         personaKey: 'operator',
-        message: 'کد ملی من 1234567890 است، راهنما چیه؟',
+        message: 'کد پرسنلی من 1234567890 است، راهنما چیه؟',
       })
 
       const chunks = []
@@ -395,7 +395,7 @@ describe('AIAssistantService Tests', () => {
       // Check masking on gateway call
       expect(AIGateway.routeRequestStream).toHaveBeenCalled()
       const callPrompt = vi.mocked(AIGateway.routeRequestStream).mock.calls[0][0]
-      expect(callPrompt).toContain('[کد ملی ماسک شده]')
+      expect(callPrompt).toContain('[کد پرسنلی ماسک شده]')
       expect(callPrompt).not.toContain('1234567890')
 
       // Check chunk retrieval output

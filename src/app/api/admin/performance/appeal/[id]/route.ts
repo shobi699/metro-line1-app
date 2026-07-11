@@ -12,7 +12,7 @@ export async function PATCH(
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
   // Enforce admin/manager role
-  const roleErr = requireRole(sessionUser, 'admin')
+  const roleErr = await requireRole(sessionUser, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { id: appealId } = await params

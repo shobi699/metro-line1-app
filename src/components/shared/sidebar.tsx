@@ -38,6 +38,7 @@ import {
   ChevronLeft,
   GraduationCap,
   HardDrive,
+  Cpu,
   UserCheck,
   Video,
   Award,
@@ -158,6 +159,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
           { label: 'گالری ویدیوهای آموزشی', href: '/learning/gallery', icon: Video },
           { label: 'کارنامه و آزمون‌های من', href: '/learning/exams', icon: Award },
           { label: 'دستورالعمل‌ها و دانش‌نامه', href: '/knowledge', icon: BookOpen },
+          { label: 'کاتالوگ فنی و راهنما', href: '/catalogs', icon: Cpu },
           { label: 'راهنمای جامع سوپراپ', href: '/docs', icon: FileText },
         ]
       }
@@ -173,9 +175,11 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         icon: Users,
         roles: ['admin', 'super_admin'],
         items: [
+          { label: 'واحد من (زیرمجموعه‌ها)', href: '/admin/my-unit', icon: Users },
+          { label: 'مدیریت کل کاربران', href: '/admin/users', icon: UserCheck },
+          { label: 'ممیزی و گزارشات دسترسی', href: '/admin/iam-reports', icon: FileSpreadsheet },
           { label: 'پیشخوان رویدادهای زنده', href: '/admin/live-actions', icon: Activity },
-          { label: 'مدیریت پرسنل و نقش‌ها', href: '/admin/users', icon: Users },
-          { label: 'صف تایید مدارک', href: '/admin/documents-queue', icon: UserCheck },
+          { label: 'صف تایید مدارک', href: '/admin/documents-queue', icon: ClipboardCheck },
           { label: 'تنظیمات بایومتریک', href: '/admin/biometrics', icon: ShieldCheck },
         ]
       },
@@ -209,6 +213,10 @@ const NAVIGATION_SECTIONS: NavSection[] = [
           { label: 'مدیریت جامع آموزش', href: '/admin/learning', icon: GraduationCap },
           { label: 'مدیریت ایمنی (Safety)', href: '/admin/safety', icon: ShieldCheck },
           { label: 'مدیریت دانشنامه', href: '/admin/knowledge', icon: BookOpen },
+          { label: 'انتشار محتوا و اسناد', href: '/admin/content', icon: Newspaper },
+          { label: 'مدیریت دسته‌بندی محتوا', href: '/admin/content/categories', icon: Settings },
+          { label: 'سیاست‌های امنیتی', href: '/admin/security-policies', icon: Shield },
+          { label: 'ماتریس اختیارات', href: '/admin/delegation-matrix', icon: ShieldCheck },
           { label: 'بخشنامه‌های ایمنی', href: '/admin/bulletins', icon: ShieldCheck },
           { label: 'بانک سوالات و آزمون‌ها', href: '/admin/exams-editor', icon: Settings },
         ]
@@ -288,10 +296,13 @@ export function SidebarContent() {
   })
 
   const toggleGroup = (groupId: string) => {
-    setExpandedGroups((prev) => ({
-      ...prev,
-      [groupId]: !prev[groupId],
-    }))
+    setExpandedGroups((prev) => {
+      if (prev[groupId]) {
+        return { ...prev, [groupId]: false }
+      } else {
+        return { [groupId]: true }
+      }
+    })
   }
 
   // فیلتر نقش‌ها

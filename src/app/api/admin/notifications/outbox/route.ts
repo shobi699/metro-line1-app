@@ -6,7 +6,7 @@ import { attemptPushDelivery, attemptSmsDelivery } from '@/server/modules/notifi
 export async function GET(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
-  const isDenied = requireRole(user, 'admin')
+  const isDenied = await requireRole(user, 'admin')
   if (isDenied) return authErrorResponse(isDenied)
 
   const { searchParams } = new URL(request.url)
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
           user: {
             select: {
               name: true,
-              role: { select: { name: true } },
+              role: { select: { title: true } },
             },
           },
         },
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
-  const isDenied = requireRole(user, 'admin')
+  const isDenied = await requireRole(user, 'admin')
   if (isDenied) return authErrorResponse(isDenied)
 
   try {
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
         user: {
           select: {
             name: true,
-            role: { select: { name: true } },
+            role: { select: { title: true } },
           },
         },
       },

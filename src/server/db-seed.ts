@@ -238,7 +238,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
       const role = await prisma.role.upsert({
         where: { key: key as string },
         update: { permissions: JSON.stringify(perms) },
-        create: { key: key as string, name, permissions: JSON.stringify(perms) },
+        create: { key: key as string, title: name, permissions: JSON.stringify(perms) },
       })
       roles[key] = role.id
     }
@@ -246,7 +246,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
 
     // ── Users ──────────────────────────────────────────────
     const superAdmin = await prisma.user.upsert({
-      where: { nationalId: '0000000000' },
+      where: { personnelCode: '0000000000' },
       update: {
         customFields: {
           personnelNo: '901001',
@@ -262,7 +262,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
         }
       },
       create: {
-        nationalId: '0000000000',
+        personnelCode: '0000000000',
         name: 'مدیر سیستم',
         phone: '09120000000',
         email: 'admin@metro.ir',
@@ -285,7 +285,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
     })
 
     const admin = await prisma.user.upsert({
-      where: { nationalId: '9999999999' },
+      where: { personnelCode: '9999999999' },
       update: {
         customFields: {
           personnelNo: '901002',
@@ -301,7 +301,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
         }
       },
       create: {
-        nationalId: '9999999999',
+        personnelCode: '9999999999',
         name: 'مدیر خط',
         phone: '09120000009',
         email: 'lineadmin@metro.ir',
@@ -326,7 +326,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
     const operatorDefinitions = [
       {
         name: 'علی رضایی',
-        nationalId: '1111111111',
+        personnelCode: '1111111111',
         phone: '09121000001',
         roleKey: 'driver',
         customFields: {
@@ -344,7 +344,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
       },
       {
         name: 'محمد حسینی',
-        nationalId: '2222222222',
+        personnelCode: '2222222222',
         phone: '09121000002',
         roleKey: 'shift_lead',
         customFields: {
@@ -362,7 +362,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
       },
       {
         name: 'زهرا کریمی',
-        nationalId: '3333333333',
+        personnelCode: '3333333333',
         phone: '09121000003',
         roleKey: 'expert',
         customFields: {
@@ -380,7 +380,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
       },
       {
         name: 'فاطمه محمدی',
-        nationalId: '4444444444',
+        personnelCode: '4444444444',
         phone: '09121000004',
         roleKey: 'dispatch_tech',
         customFields: {
@@ -398,7 +398,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
       },
       {
         name: 'امیر نوری',
-        nationalId: '5555555555',
+        personnelCode: '5555555555',
         roleKey: 'supervisor',
         phone: '09121000005',
         customFields: {
@@ -416,7 +416,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
       },
       {
         name: 'سارا احمدی',
-        nationalId: '6666666666',
+        personnelCode: '6666666666',
         roleKey: 'clerical',
         phone: '09121000006',
         customFields: {
@@ -438,13 +438,13 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
     for (const op of operatorDefinitions) {
       const matchedRoleId = roles[op.roleKey] || roles.operator
       const user = await prisma.user.upsert({
-        where: { nationalId: op.nationalId },
+        where: { personnelCode: op.personnelCode },
         update: {
           roleId: matchedRoleId,
           customFields: op.customFields as unknown as Prisma.InputJsonValue
         },
         create: {
-          nationalId: op.nationalId,
+          personnelCode: op.personnelCode,
           name: op.name,
           phone: op.phone,
           passwordHash,

@@ -56,13 +56,13 @@ interface Shift {
   code: 'morning' | 'evening' | 'night' | 'off'
   note: string | null
   userId: string
-  user: { id: string; name: string; nationalId: string }
+  user: { id: string; name: string; personnelCode: string }
 }
 
 interface User {
   id: string
   name: string
-  nationalId: string
+  personnelCode: string
   phone: string | null
   email: string | null
   status: string

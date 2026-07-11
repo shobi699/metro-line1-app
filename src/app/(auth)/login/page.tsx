@@ -16,7 +16,7 @@ import {
 export default function LoginPage() {
   const router = useRouter()
   const setAuth = useAuthStore((s) => s.setAuth)
-  const [nationalId, setNationalId] = useState('')
+  const [personnelCode, setNationalId] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
@@ -52,7 +52,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nationalId, password }),
+        body: JSON.stringify({ personnelCode, password }),
       })
 
       let data
@@ -129,7 +129,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
             {/* National ID */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-foreground-muted" htmlFor="nationalId">
+              <label className="text-xs font-semibold text-foreground-muted" htmlFor="personnelCode">
                 کد پرسنلی
               </label>
               <div className="relative">
@@ -138,12 +138,12 @@ export default function LoginPage() {
                 </span>
                 <input
                   className="h-10 w-full rounded-lg border border-border bg-background pe-10 ps-3 text-sm text-foreground transition-colors placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-ring font-mono"
-                  id="nationalId"
+                  id="personnelCode"
                   type="text"
                   placeholder="کد پرسنلی خود را وارد کنید"
                   maxLength={10}
                   autoFocus
-                  value={nationalId}
+                  value={personnelCode}
                   onChange={(e) => setNationalId(e.target.value)}
                   required
                 />

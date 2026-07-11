@@ -36,7 +36,7 @@ export async function parseRosterPDF(
 
   const dbUsers = await prisma.user.findMany({
     where: { status: 'active' },
-    select: { id: true, name: true, nationalId: true }
+    select: { id: true, name: true, personnelCode: true }
   })
 
   // 1. Parse text using pdf-parse

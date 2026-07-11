@@ -17,8 +17,8 @@ interface SwapRequest {
   status: string
   note: string | null
   createdAt: string
-  requester: { id: string; name: string; nationalId: string }
-  target: { id: string; name: string; nationalId: string }
+  requester: { id: string; name: string; personnelCode: string }
+  target: { id: string; name: string; personnelCode: string }
   sourceShift: { id: string; date: string; code: string }
   targetShift: { id: string; date: string; code: string }
   violations?: { rule: string; message: string }[]
@@ -30,8 +30,8 @@ interface TripSwapRequest {
   note: string | null
   reviewedBy?: string | null
   createdAt: string
-  requester: { id: string; name: string; nationalId: string }
-  target: { id: string; name: string; nationalId: string }
+  requester: { id: string; name: string; personnelCode: string }
+  target: { id: string; name: string; personnelCode: string }
   sourceAssignment: {
     id: string
     role: string

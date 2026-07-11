@@ -14,7 +14,7 @@ vi.mock('@/server/db', () => ({
 const mockUsers = [
   {
     id: 'u1',
-    nationalId: '1111111111',
+    personnelCode: '1111111111',
     name: 'علی رضایی',
     phone: '09121111111',
     email: 'ali@test.com',
@@ -29,7 +29,7 @@ const mockUsers = [
   },
   {
     id: 'u2',
-    nationalId: '2222222222',
+    personnelCode: '2222222222',
     name: 'محمد احمدی',
     phone: '09122222222',
     email: null,
@@ -40,7 +40,7 @@ const mockUsers = [
   },
   {
     id: 'u3',
-    nationalId: '3333333333',
+    personnelCode: '3333333333',
     name: 'حسین محمدی',
     phone: null,
     email: 'hosein@test.com',
@@ -80,13 +80,13 @@ describe('listUsers', () => {
     expect(result.users[0].name).toBe('علی رضایی')
   })
 
-  it('searches by nationalId', async () => {
+  it('searches by personnelCode', async () => {
     vi.mocked(prisma.user.findMany).mockResolvedValue(mockUsers as any)
 
     const result = await listUsers({ q: '2222222222', role: '', status: '', plate: '', page: 1, pageSize: 10 })
 
     expect(result.users).toHaveLength(1)
-    expect(result.users[0].nationalId).toBe('2222222222')
+    expect(result.users[0].personnelCode).toBe('2222222222')
   })
 
   it('searches by vehicle plate', async () => {

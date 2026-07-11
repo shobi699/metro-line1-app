@@ -100,7 +100,7 @@ describe('RBAC policy engine with cache support', () => {
     expect(visiblePhone).toBe(true)
 
     // NationalId is hidden by default
-    const visibleNationalId = await assertPolicy('driver', 'directory', 'nationalId')
+    const visibleNationalId = await assertPolicy('driver', 'directory', 'personnelCode')
     expect(visibleNationalId).toBe(false)
   })
 })

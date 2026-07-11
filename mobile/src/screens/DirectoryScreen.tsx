@@ -26,7 +26,7 @@ import { ScreenWrapper } from '../shared/ScreenWrapper'
 interface DirectoryUser {
   id: string
   name: string
-  nationalId: string
+  personnelCode: string
   phone?: string | null
   email?: string | null
   role: {

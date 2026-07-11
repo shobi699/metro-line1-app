@@ -8,9 +8,11 @@ export interface AIResponse {
   confidence?: number
 }
 
+import { RouteOptions } from '../gateway'
+
 export interface AIProviderAdapter {
-  chat(prompt: string, config: ProviderConfig): Promise<AIResponse>
-  chatStream?(prompt: string, config: ProviderConfig): AsyncGenerator<string, void, unknown>
+  chat(prompt: string, config: ProviderConfig, options?: RouteOptions): Promise<AIResponse>
+  chatStream?(prompt: string, config: ProviderConfig, options?: RouteOptions): AsyncGenerator<string, void, unknown>
 }
 
 // Registry to lazily load adapters

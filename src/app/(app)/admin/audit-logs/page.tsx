@@ -30,7 +30,7 @@ import {
 interface AuditActor {
   id: string
   name: string
-  nationalId: string
+  personnelCode: string
   role?: { name: string }
 }
 
@@ -367,7 +367,7 @@ export default function AuditLogsPage() {
                             <p className="text-[10px] text-foreground-muted flex items-center gap-1"><User className="size-3" /> چه کسی؟</p>
                             <p className="text-xs font-bold">{log.actor.name}</p>
                             <p className="text-[10px] font-mono text-foreground-muted">
-                              {toFa(log.actor.nationalId)} — {log.actor.role?.name || '—'}
+                              {toFa(log.actor.personnelCode)} — {log.actor.role?.name || '—'}
                             </p>
                           </div>
                           <div className="bg-surface/50 rounded-lg border border-border/30 p-2.5 space-y-1">

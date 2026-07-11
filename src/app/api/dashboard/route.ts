@@ -24,7 +24,7 @@ export async function GET(request: Request) {
         orderBy: { createdAt: 'desc' },
         take: 10,
         include: {
-          actor: { select: { name: true, role: { select: { name: true } } } },
+          actor: { select: { name: true, role: { select: { title: true } } } },
         },
       }),
       prisma.user.count(),
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
         scadaSystems,
         recentAuditLogs: recentAuditLogs.map((log) => ({
           id: log.id,
-          message: `${log.actor.name} (${log.actor.role.name}) — ${log.action} on ${log.entity}`,
+          message: `${log.actor.name} (${log.actor.role.title}) — ${log.action} on ${log.entity}`,
           time: log.createdAt.toISOString(),
           type: log.action === 'create' ? 'info' : log.action === 'delete' ? 'error' : 'warning',
         })),

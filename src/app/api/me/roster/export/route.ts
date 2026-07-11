@@ -21,7 +21,7 @@ async function authenticateRequest(request: Request): Promise<AuthUser | { error
     const payload = await verifyAccessToken(token)
     return {
       id: payload.sub!,
-      nationalId: payload.nationalId,
+      personnelCode: payload.personnelCode,
       roleKey: payload.roleKey,
       rank: typeof payload.rank === 'number' ? payload.rank : rankForRoleKey(payload.roleKey),
       permissions: Array.isArray(payload.permissions) ? payload.permissions : [],

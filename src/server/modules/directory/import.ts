@@ -7,7 +7,7 @@ import { toEn } from '@/lib/fa'
 
 export interface ImportError {
   row: number
-  nationalId: string
+  personnelCode: string
   reason: string
 }
 
@@ -64,7 +64,7 @@ export async function importUsersFromExcel(
   const errors: ImportError[] = []
   const validRows: Array<{
     rowNumber: number
-    nationalId: string
+    personnelCode: string
     name: string
     phone: string | null
     email: string | null
@@ -81,18 +81,18 @@ export async function importUsersFromExcel(
     const rawPNo = String(row['کد پرسنلی'] ?? row['personnelNo'] ?? '').trim()
     const personnelNo = toEn(rawPNo)
 
-    const rawNationalId = String(row['کد ملی'] ?? row['nationalId'] ?? '').trim()
-    let nationalId = toEn(rawNationalId)
+    const rawNationalId = String(row['کد پرسنلی'] ?? row['personnelCode'] ?? '').trim()
+    let personnelCode = toEn(rawNationalId)
     
     // Normalize national ID: pad with leading zeros if it's 8 or 9 digits
-    if (nationalId && nationalId !== '0') {
-      nationalId = nationalId.padStart(10, '0')
+    if (personnelCode && personnelCode !== '0') {
+      personnelCode = personnelCode.padStart(10, '0')
     }
 
     // Fallback: if national ID is missing, '0', or invalid, use personnelNo padded to 10 digits
-    if (!nationalId || nationalId === '0' || nationalId === '0000000000' || !/^\d{10}$/.test(nationalId)) {
+    if (!personnelCode || personnelCode === '0' || personnelCode === '0000000000' || !/^\d{10}$/.test(personnelCode)) {
       if (personnelNo) {
-        nationalId = personnelNo.padStart(10, '0')
+        personnelCode = personnelNo.padStart(10, '0')
       }
     }
 
@@ -126,7 +126,7 @@ export async function importUsersFromExcel(
     const defaultPassword = password || 'changeme123'
 
     const parsed = userImportRowSchema.safeParse({
-      nationalId,
+      personnelCode,
       name,
       phone,
       email,
@@ -137,7 +137,7 @@ export async function importUsersFromExcel(
     if (!parsed.success) {
       errors.push({
         row: rowNumber,
-        nationalId: nationalId || '',
+        personnelCode: personnelCode || '',
         reason: parsed.error.issues.map((e) => e.message).join(', '),
       })
       continue
@@ -145,25 +145,25 @@ export async function importUsersFromExcel(
 
     const data = parsed.data
 
-    // Check duplicate nationalId in DB
+    // Check duplicate personnelCode in DB
     const existing = await prisma.user.findUnique({
-      where: { nationalId: data.nationalId },
+      where: { personnelCode: data.personnelCode },
     })
     if (existing) {
       errors.push({
         row: rowNumber,
-        nationalId: data.nationalId,
-        reason: 'کد ملی تکراری است',
+        personnelCode: data.personnelCode,
+        reason: 'کد پرسنلی تکراری است',
       })
       continue
     }
 
     // Check duplicate in current batch
-    if (validRows.some((r) => r.nationalId === data.nationalId)) {
+    if (validRows.some((r) => r.personnelCode === data.personnelCode)) {
       errors.push({
         row: rowNumber,
-        nationalId: data.nationalId,
-        reason: 'کد ملی در فایل تکراری است',
+        personnelCode: data.personnelCode,
+        reason: 'کد پرسنلی در فایل تکراری است',
       })
       continue
     }
@@ -194,7 +194,7 @@ export async function importUsersFromExcel(
 
     validRows.push({
       rowNumber,
-      nationalId: data.nationalId,
+      personnelCode: data.personnelCode,
       name: data.name,
       phone: data.phone || null,
       email: data.email || null,
@@ -251,7 +251,7 @@ export async function importUsersFromExcel(
       if (!resolvedRoleId) {
         let role = await prisma.role.findUnique({ where: { key: row.roleKey } })
         if (!role) {
-          role = await prisma.role.findFirst({ where: { name: row.roleKey } })
+          role = await prisma.role.findFirst({ where: { title: row.roleKey } })
         }
         resolvedRoleId = role?.id ?? defaultRole?.id
       }
@@ -266,7 +266,7 @@ export async function importUsersFromExcel(
 
       await prisma.user.create({
         data: {
-          nationalId: row.nationalId,
+          personnelCode: row.personnelCode,
           name: row.name,
           phone: row.phone,
           email: row.email,
@@ -281,7 +281,7 @@ export async function importUsersFromExcel(
       const message = err instanceof Error ? err.message : String(err)
       errors.push({
         row: row.rowNumber,
-        nationalId: row.nationalId,
+        personnelCode: row.personnelCode,
         reason: `خطا در ایجاد کاربر: ${message}`,
       })
     }
@@ -307,8 +307,8 @@ export async function importUsersFromExcel(
 
 export function generateErrorReport(errors: ImportError[]): ArrayBuffer {
   const ws = XLSX.utils.aoa_to_sheet([
-    ['ردیف', 'کد ملی', 'دلیل خطا'],
-    ...errors.map((e) => [e.row, e.nationalId, e.reason]),
+    ['ردیف', 'کد پرسنلی', 'دلیل خطا'],
+    ...errors.map((e) => [e.row, e.personnelCode, e.reason]),
   ])
 
   const wb = XLSX.utils.book_new()

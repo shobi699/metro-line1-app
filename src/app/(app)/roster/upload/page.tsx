@@ -107,7 +107,7 @@ interface RosterHistoryItem {
 interface UserSummary {
   id: string
   name: string
-  nationalId: string
+  personnelCode: string
 }
 
 export default function RosterUploadPage() {

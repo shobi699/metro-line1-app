@@ -72,7 +72,7 @@ interface AuditLog {
   actor: {
     id: string
     name: string | null
-    nationalId: string
+    personnelCode: string
     role: { name: string } | null
   } | null
 }
@@ -512,7 +512,7 @@ export default function AnalyticsDashboard() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="جستجو نام، کد ملی، شناسه..."
+                  placeholder="جستجو نام، کد پرسنلی، شناسه..."
                   value={auditSearch}
                   onChange={(e) => setAuditSearch(e.target.value)}
                   className="ps-9"

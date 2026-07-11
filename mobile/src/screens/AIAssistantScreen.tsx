@@ -11,7 +11,9 @@ import {
   Platform,
   Animated,
   Modal,
+  Image,
 } from 'react-native'
+import * as ImagePicker from 'expo-image-picker'
 import { useAuthStore } from '../stores/auth'
 import { API_URL } from '../shared/config'
 import { MaterialIcons } from '@expo/vector-icons'
@@ -27,6 +29,7 @@ interface Message {
   source?: string
   isCritical?: boolean
   backendId?: string
+  imageUrl?: string
   feedback?: number
   toolConfirm?: {
     actionToken: string
@@ -91,6 +94,8 @@ export function AIAssistantScreen({ navigation }: any) {
   // Voice recording simulation states
   const [isRecording, setIsRecording] = useState(false)
   const pulseAnim = useRef(new Animated.Value(1)).current
+  
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
   // Bottom Sheet Citation State
   const [selectedCitationSection, setSelectedCitationSection] = useState<string | null>(null)
@@ -189,6 +194,19 @@ export function AIAssistantScreen({ navigation }: any) {
     }, 2500)
   }
 
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.5,
+      base64: true,
+    })
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setSelectedImage(`data:image/jpeg;base64,${result.assets[0].base64}`)
+    }
+  }
+
   async function aiAuthenticatedFetch(path: string, options: RequestInit = {}): Promise<any> {
     const authStore = useAuthStore.getState()
     const url = `${API_URL}${path}`
@@ -249,10 +267,16 @@ export function AIAssistantScreen({ navigation }: any) {
       id: Date.now(),
       text: userText,
       isUser: true,
+      imageUrl: selectedImage || undefined
     }
 
     setMessages((prev) => [...prev, userMsg])
-    if (!customText) setInputText('')
+    
+    const currentImage = selectedImage
+    if (!customText) {
+      setInputText('')
+      setSelectedImage(null)
+    }
     setLoading(true)
 
     // Handle offline local response matching
@@ -302,6 +326,7 @@ export function AIAssistantScreen({ navigation }: any) {
         body: JSON.stringify({
           prompt: userText,
           conversationId,
+          imageUrl: currentImage || undefined
         }),
       })
 
@@ -478,6 +503,13 @@ export function AIAssistantScreen({ navigation }: any) {
       marginBottom: 12,
       borderWidth: 1,
       borderColor: theme.colors.border,
+    },
+    userMessageImage: {
+      width: 200,
+      height: 150,
+      borderRadius: 12,
+      marginBottom: 8,
+      resizeMode: 'cover',
     },
     userText: {
       color: theme.colors.onSurface,
@@ -699,6 +731,27 @@ export function AIAssistantScreen({ navigation }: any) {
       fontFamily: theme.typography.bodyMd.fontFamily,
     },
     // Input bar
+    imagePreviewContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      paddingBottom: 4,
+    },
+    imagePreview: {
+      width: 60,
+      height: 60,
+      borderRadius: 8,
+      marginRight: 8,
+    },
+    removeImageBtn: {
+      position: 'absolute',
+      right: 12,
+      top: 4,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      borderRadius: 12,
+      padding: 2,
+    },
     inputBar: {
       flexDirection: 'row-reverse',
       alignItems: 'center',
@@ -1094,6 +1147,9 @@ export function AIAssistantScreen({ navigation }: any) {
             <View key={item.id}>
               {item.isUser ? (
                 <View style={styles.userBubble}>
+                  {item.imageUrl && (
+                    <Image source={{ uri: item.imageUrl }} style={styles.userMessageImage} />
+                  )}
                   <Text style={styles.userText}>{item.text}</Text>
                 </View>
               ) : (
@@ -1126,8 +1182,32 @@ export function AIAssistantScreen({ navigation }: any) {
                     )}
                     
                     <Text style={styles.botText}>
-                      {renderFormattedText(item.text)}
+                      {renderFormattedText(item.text.replace(/\[گزینه(?:‌)?ها:\s*(.*?)\]/g, '').trim())}
                     </Text>
+
+                    {/* Extract and render Quick Reply Options */}
+                    {(() => {
+                      const optionsMatch = item.text.match(/\[گزینه(?:‌)?ها:\s*(.*?)\]/);
+                      if (optionsMatch && optionsMatch[1] && item.id === messages[messages.length - 1].id) {
+                        const options = optionsMatch[1].split('|').map(s => s.trim()).filter(Boolean);
+                        if (options.length > 0) {
+                          return (
+                            <View style={[styles.quickActionsRow, { marginTop: 12, justifyContent: 'flex-start' }]}>
+                              {options.map((opt, i) => (
+                                <TouchableOpacity
+                                  key={i}
+                                  style={[styles.quickActionBtn, { borderColor: theme.colors.primary + '50', backgroundColor: theme.colors.primary + '15' }]}
+                                  onPress={() => handleSend(opt)}
+                                >
+                                  <Text style={[styles.quickActionText, { color: theme.colors.primary }]}>{opt}</Text>
+                                </TouchableOpacity>
+                              ))}
+                            </View>
+                          );
+                        }
+                      }
+                      return null;
+                    })()}
 
                     {/* Tool Confirm action inside bubble */}
                     {item.toolConfirm && (
@@ -1196,6 +1276,16 @@ export function AIAssistantScreen({ navigation }: any) {
           )}
         </ScrollView>
 
+        {/* Image Preview Area */}
+        {selectedImage && (
+          <View style={styles.imagePreviewContainer}>
+            <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+            <TouchableOpacity style={styles.removeImageBtn} onPress={() => setSelectedImage(null)}>
+              <MaterialIcons name="close" size={16} color="#FFF" />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* باکس ارسال پیام */}
         <View style={styles.inputBar}>
           <TouchableOpacity style={styles.newChatBtn} onPress={handleNewChat} activeOpacity={0.7}>
@@ -1212,6 +1302,14 @@ export function AIAssistantScreen({ navigation }: any) {
             onSubmitEditing={() => handleSend()}
             editable={!isRecording}
           />
+
+          <TouchableOpacity 
+            style={styles.micButton} 
+            onPress={pickImage}
+            activeOpacity={0.7}
+          >
+            <MaterialIcons name="image" size={18} color={theme.colors.secondary} />
+          </TouchableOpacity>
 
           {/* OS Prominent Voice recording button for glove users */}
           <TouchableOpacity 

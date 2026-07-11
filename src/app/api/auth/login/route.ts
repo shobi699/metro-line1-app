@@ -17,10 +17,10 @@ export async function POST(request: Request) {
       )
     }
 
-    const { nationalId, password } = parsed.data
+    const { personnelCode, password } = parsed.data
 
     const user = await prisma.user.findUnique({
-      where: { nationalId },
+      where: { personnelCode },
       include: { role: true },
     })
 
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     const rank = user.role.rank ?? rankForRoleKey(user.role.key)
     const accessToken = await issueAccessToken(
       user.id,
-      user.nationalId,
+      user.personnelCode,
       user.role.key,
       rank,
       permissions,
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
       refreshToken,
       user: {
         id: user.id,
-        nationalId: user.nationalId,
+        personnelCode: user.personnelCode,
         name: user.name,
         roleKey: user.role.key,
       },

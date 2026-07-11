@@ -28,9 +28,18 @@ interface Post {
   mandatory?: boolean
 }
 
+interface ContentCategory {
+  id: string
+  label: string
+  key: string
+  color: string | null
+}
+
 export function ContentScreen({ navigation }: any) {
   const accessToken = useAuthStore((s) => s.accessToken)
   const [posts, setPosts] = useState<Post[]>([])
+  const [categories, setCategories] = useState<ContentCategory[]>([])
+  const [selectedCatKey, setSelectedCatKey] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const { theme } = useTheme()
@@ -39,21 +48,27 @@ export function ContentScreen({ navigation }: any) {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
 
   useEffect(() => {
-    void loadPosts()
+    void loadData()
   }, [accessToken])
 
-  const loadPosts = async () => {
+  const loadData = async () => {
     if (!accessToken) return
     try {
-      const res = await fetch(`${API_URL}/posts`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      })
-      if (res.ok) {
-        const json = await res.json()
-        setPosts(json?.data ?? [])
+      const [postsRes, catsRes] = await Promise.all([
+        fetch(`${API_URL}/posts`, { headers: { Authorization: `Bearer ${accessToken}` } }),
+        fetch(`${API_URL}/content/categories`, { headers: { Authorization: `Bearer ${accessToken}` } })
+      ])
+      
+      if (postsRes.ok) {
+        const pJson = await postsRes.json()
+        setPosts(pJson?.data ?? [])
+      }
+      if (catsRes.ok) {
+        const cJson = await catsRes.json()
+        setCategories(cJson?.data ?? [])
       }
     } catch (err) {
-      console.error('Error fetching posts:', err)
+      console.error('Error fetching content:', err)
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -62,7 +77,7 @@ export function ContentScreen({ navigation }: any) {
 
   const onRefresh = () => {
     setRefreshing(true)
-    void loadPosts()
+    void loadData()
   }
 
   const mapTypeIcon = (type: string) => {
@@ -92,10 +107,52 @@ export function ContentScreen({ navigation }: any) {
     }
   }
 
+  const getCategoryDisplay = (catKey: string | undefined) => {
+    if (!catKey) return null
+    const cat = categories.find(c => c.key === catKey)
+    return {
+      label: cat ? cat.label : catKey,
+      color: cat && cat.color !== 'zinc' ? theme.colors.primary : theme.colors.secondary
+    }
+  }
+
+  const filteredPosts = selectedCatKey 
+    ? posts.filter(p => p.category === selectedCatKey)
+    : posts
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
+    },
+    tabsContainer: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceContainerLowest,
+    },
+    tabBtn: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: theme.colors.surfaceContainerLow,
+      marginLeft: 8,
+      borderWidth: 1,
+      borderColor: 'transparent',
+    },
+    tabBtnActive: {
+      backgroundColor: theme.colors.primaryContainer,
+      borderColor: theme.colors.primary,
+    },
+    tabText: {
+      fontFamily: theme.typography.captionSm.fontFamily,
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+    },
+    tabTextActive: {
+      color: theme.colors.onPrimaryContainer,
+      fontWeight: 'bold',
     },
     list: {
       padding: 16,
@@ -264,11 +321,32 @@ export function ContentScreen({ navigation }: any) {
   return (
     <ScreenWrapper title="محتوا و اخبار خط ۱" navigation={navigation}>
       <View style={styles.container}>
+        {categories.length > 0 && (
+          <View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsContainer}>
+              <TouchableOpacity 
+                style={[styles.tabBtn, selectedCatKey === null && styles.tabBtnActive]}
+                onPress={() => setSelectedCatKey(null)}
+              >
+                <Text style={[styles.tabText, selectedCatKey === null && styles.tabTextActive]}>همه موارد</Text>
+              </TouchableOpacity>
+              {categories.map(cat => (
+                <TouchableOpacity 
+                  key={cat.id}
+                  style={[styles.tabBtn, selectedCatKey === cat.key && styles.tabBtnActive]}
+                  onPress={() => setSelectedCatKey(cat.key)}
+                >
+                  <Text style={[styles.tabText, selectedCatKey === cat.key && styles.tabTextActive]}>{cat.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
         {loading ? (
           <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginTop: 100 }} />
         ) : (
           <FlatList
-            data={posts}
+            data={filteredPosts}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.list}
             refreshControl={
@@ -336,10 +414,10 @@ export function ContentScreen({ navigation }: any) {
                       {mapTypeLabel(selectedPost.type)}
                     </Text>
                   </View>
-                  {selectedPost.category && (
+                  {getCategoryDisplay(selectedPost.category) && (
                     <View style={styles.metaItem}>
-                      <MaterialIcons name="folder" size={13} color={theme.colors.secondary} />
-                      <Text style={styles.metaText}>{selectedPost.category}</Text>
+                      <MaterialIcons name="folder" size={13} color={getCategoryDisplay(selectedPost.category)!.color} />
+                      <Text style={[styles.metaText, { color: getCategoryDisplay(selectedPost.category)!.color }]}>{getCategoryDisplay(selectedPost.category)!.label}</Text>
                     </View>
                   )}
                   <View style={styles.metaItem}>

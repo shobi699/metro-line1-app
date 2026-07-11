@@ -81,21 +81,31 @@ export interface HolidayImportResult {
 export async function importHolidays(rows: HolidayImportRow[], actorId: string): Promise<HolidayImportResult> {
   const result: HolidayImportResult = { total: rows.length, created: 0, updated: 0, errors: [] }
 
+  // 1. Validation Phase
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i]
-    if (!row.jalaliDate || !row.title) {
-      result.errors.push({ row: i + 1, message: 'تاریخ جلالی و عنوان الزامی است' })
+    if (!row.jalaliDate || !row.title || row.jalaliDate === 'undefined' || row.title === 'undefined') {
+      result.errors.push({ row: i + 1, message: 'تاریخ جلالی و عنوان الزامی است (یا نام ستون‌ها مطابقت ندارد)' })
       continue
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(row.jalaliDate)) {
-      result.errors.push({ row: i + 1, message: `قالب تاریخ نامعتبر: ${row.jalaliDate}` })
+      result.errors.push({ row: i + 1, message: `قالب تاریخ نامعتبر: ${row.jalaliDate} (باید فرمت 1405-01-01 باشد)` })
       continue
     }
+  }
 
-    try {
-      const existing = await prisma.holiday.findFirst({ where: { jalaliDate: row.jalaliDate, title: row.title } })
+  // If there are validation errors, abort immediately (No partial commits)
+  if (result.errors.length > 0) {
+    return result
+  }
+
+  // 2. Execution Phase (Transactional)
+  await prisma.$transaction(async (tx) => {
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i]
+      const existing = await tx.holiday.findFirst({ where: { jalaliDate: row.jalaliDate, title: row.title } })
       if (existing) {
-        await prisma.holiday.update({
+        await tx.holiday.update({
           where: { id: existing.id },
           data: {
             kind: row.kind ?? existing.kind,
@@ -106,7 +116,7 @@ export async function importHolidays(rows: HolidayImportRow[], actorId: string):
         })
         result.updated++
       } else {
-        await prisma.holiday.create({
+        await tx.holiday.create({
           data: {
             jalaliDate: row.jalaliDate,
             title: row.title,
@@ -118,13 +128,14 @@ export async function importHolidays(rows: HolidayImportRow[], actorId: string):
         })
         result.created++
       }
-    } catch (e) {
-      result.errors.push({ row: i + 1, message: e instanceof Error ? e.message : String(e) })
     }
-  }
 
-  await prisma.auditLog.create({
-    data: { actorId, entity: 'Holiday', entityId: 'import', action: 'import', before: {}, after: { total: result.total, created: result.created, updated: result.updated, errorCount: result.errors.length } as Prisma.InputJsonValue },
+    await tx.auditLog.create({
+      data: { actorId, entity: 'Holiday', entityId: 'import', action: 'import', before: {}, after: { total: result.total, created: result.created, updated: result.updated, errorCount: result.errors.length } as Prisma.InputJsonValue },
+    })
+  }, {
+    maxWait: 5000,
+    timeout: 60000, // 60 seconds timeout to handle large sync operations
   })
 
   return result
@@ -219,7 +230,7 @@ export async function getOrgEventSeenReport(eventId: string) {
   const seenUsers = seenUserIds.length > 0
     ? await prisma.user.findMany({
         where: { id: { in: seenUserIds } },
-        select: { id: true, name: true, nationalId: true },
+        select: { id: true, name: true, personnelCode: true },
       })
     : []
 
@@ -233,7 +244,7 @@ export async function getOrgEventSeenReport(eventId: string) {
     records: event.seenRecords.map((r) => ({
       userId: r.userId,
       userName: userMap.get(r.userId)?.name ?? '—',
-      nationalId: userMap.get(r.userId)?.nationalId ?? '—',
+      personnelCode: userMap.get(r.userId)?.personnelCode ?? '—',
       seenAt: r.seenAt.toISOString(),
     })),
   }

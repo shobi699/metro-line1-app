@@ -17,7 +17,7 @@ describe('JWT', () => {
     const payload = await verifyAccessToken(token)
 
     expect(payload.sub).toBe('user-1')
-    expect(payload.nationalId).toBe('0000000000')
+    expect(payload.personnelCode).toBe('0000000000')
     expect(payload.roleKey).toBe('admin')
   })
 

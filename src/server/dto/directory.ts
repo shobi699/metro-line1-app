@@ -32,10 +32,10 @@ export type CustomFieldDefInput = z.infer<typeof customFieldDefSchema>
 export const customFieldDefUpdateSchema = customFieldDefSchema.partial()
 
 export const userImportRowSchema = z.object({
-  nationalId: z
+  personnelCode: z
     .string()
-    .length(10, 'کد ملی باید ۱۰ رقم باشد')
-    .regex(/^\d+$/, 'کد ملی فقط شامل اعداد باشد'),
+    .length(10, 'کد پرسنلی باید ۱۰ رقم باشد')
+    .regex(/^\d+$/, 'کد پرسنلی فقط شامل اعداد باشد'),
   name: z.string().min(2, 'نام حداقل ۲ کاراکتر باشد'),
   phone: z
     .string()

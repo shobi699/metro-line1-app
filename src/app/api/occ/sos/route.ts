@@ -24,7 +24,7 @@ export async function GET(request: Request) {
             id: true,
             name: true,
             phone: true,
-            nationalId: true,
+            personnelCode: true,
           },
         },
       },

@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify, type JWTPayload } from 'jose'
 
 export interface AccessTokenPayload extends JWTPayload {
   sub: string
-  nationalId: string
+  personnelCode: string
   roleKey: string
   rank: number
   permissions: string[]
@@ -30,12 +30,12 @@ function getRefreshSecret() {
 
 export async function issueAccessToken(
   userId: string,
-  nationalId: string,
+  personnelCode: string,
   roleKey: string,
   rank: number,
   permissions: string[],
 ): Promise<string> {
-  return new SignJWT({ sub: userId, nationalId, roleKey, rank, permissions })
+  return new SignJWT({ sub: userId, personnelCode, roleKey, rank, permissions })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(ACCESS_EXPIRY)

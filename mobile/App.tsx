@@ -41,6 +41,7 @@ import { MeetingsScreen } from './src/screens/MeetingsScreen'
 import { PollsScreen } from './src/screens/PollsScreen'
 import { PlateSearchScreen } from './src/screens/PlateSearchScreen'
 import { FormsScreen } from './src/screens/FormsScreen'
+import { CatalogsScreen } from './src/screens/CatalogsScreen'
 import { FormSubmitScreen } from './src/screens/FormSubmitScreen'
 import { MyFormsScreen } from './src/screens/MyFormsScreen'
 import { FormsInboxScreen } from './src/screens/FormsInboxScreen'
@@ -105,6 +106,7 @@ export type RootStackParamList = {
   Leaderboard: undefined
   Equipment: undefined
   Swap: undefined
+  CatalogsScreen: undefined
 }
 
 const Tab = createBottomTabNavigator()
@@ -137,6 +139,7 @@ function HomeStackScreen() {
       <Stack.Screen name="محتوا" component={ContentScreen} />
       <Stack.Screen name="لوحه" component={RosterScreen} />
       <Stack.Screen name="آموزش" component={LearningScreen} />
+      <Stack.Screen name="CatalogsScreen" component={CatalogsScreen} />
       <Stack.Screen name="UIBuilder" component={UIBuilderScreen} />
       <Stack.Screen name="CustomPage" component={CustomPageScreen} />
       <Stack.Screen name="MeetingsScreen" component={MeetingsScreen} />
@@ -250,6 +253,9 @@ function getComponentForRoute(route: string) {
     case 'LearningScreen':
     case 'Learning':
       return LearningScreen
+    case 'CatalogsScreen':
+    case 'Catalogs':
+      return CatalogsScreen
     case 'LeaveReportScreen':
     case 'LeaveReport':
       return LeaveReportScreen

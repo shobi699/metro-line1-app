@@ -70,7 +70,7 @@ export async function POST(request: Request) {
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
   // Enforce manager or admin role
-  const roleErr = requireRole(sessionUser, 'admin')
+  const roleErr = await requireRole(sessionUser, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {

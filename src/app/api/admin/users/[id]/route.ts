@@ -12,7 +12,7 @@ export async function PATCH(
   const sessionUser = await getSessionUser(request)
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
-  const roleErr = requireRole(sessionUser, 'admin')
+  const roleErr = await requireRole(sessionUser, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { id: userId } = await params
@@ -94,7 +94,7 @@ export async function PATCH(
         data: prismaData,
         select: {
           id: true,
-          nationalId: true,
+          personnelCode: true,
           name: true,
           phone: true,
           email: true,
@@ -138,7 +138,7 @@ export async function DELETE(
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
   // Only super_admin can delete users for security reasons
-  const roleErr = requireRole(sessionUser, 'super_admin')
+  const roleErr = await requireRole(sessionUser, 'super_admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { id: userId } = await params
@@ -163,7 +163,7 @@ export async function DELETE(
     }
 
     const beforeState = {
-      nationalId: targetUser.nationalId,
+      personnelCode: targetUser.personnelCode,
       name: targetUser.name,
       phone: targetUser.phone,
       email: targetUser.email,

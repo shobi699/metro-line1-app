@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const { nationalId, name, phone, email, password } = parsed.data
+  const { personnelCode, name, phone, email, password } = parsed.data
 
   const passwordPolicyMinLength = await getSettingValue('general.passwordPolicyMinLength', 8)
   if (password.length < passwordPolicyMinLength) {
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const existing = await prisma.user.findUnique({ where: { nationalId } })
+  const existing = await prisma.user.findUnique({ where: { personnelCode } })
   if (existing) {
     return NextResponse.json(
       { error: 'کاربری با این کد پرسنلی قبلاً ثبت‌نام کرده است' },
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
 
   const user = await prisma.user.create({
     data: {
-      nationalId,
+      personnelCode,
       name,
       phone: phone || null,
       email: email || null,
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       status: 'pending',
       roleId: defaultRole.id,
     },
-    select: { id: true, nationalId: true, name: true, status: true },
+    select: { id: true, personnelCode: true, name: true, status: true },
   })
 
   return NextResponse.json(

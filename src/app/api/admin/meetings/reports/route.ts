@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   const meetings = await prisma.meetingRequest.findMany({
     where,
     include: {
-      requester: { select: { name: true, id: true, nationalId: true } },
+      requester: { select: { name: true, id: true, personnelCode: true } },
       targetManager: { select: { name: true, id: true } },
       room: { select: { name: true } },
       meetingType: { select: { title: true } }

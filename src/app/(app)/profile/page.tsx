@@ -41,7 +41,7 @@ import {
 
 interface FullProfile {
   id: string
-  nationalId: string
+  personnelCode: string
   name: string
   phone: string | null
   email: string | null
@@ -776,7 +776,7 @@ export default function ProfilePage() {
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-1.5 text-sm text-foreground-muted">
               <span className="flex items-center gap-1.5">
                 <Contact className="size-4 opacity-75" />
-                <span>کد ملی: <span className="font-data-mono">{toFa(profile.nationalId)}</span></span>
+                <span>کد پرسنلی: <span className="font-data-mono">{toFa(profile.personnelCode)}</span></span>
               </span>
               <span className="hidden md:inline text-border-subtle">•</span>
               <span className="flex items-center gap-1.5">
@@ -962,8 +962,8 @@ export default function ProfilePage() {
                   </CardHeader>
                   <CardContent className="p-4 py-2 divide-y divide-border/30">
                     <div className="flex justify-between items-center py-2.5 text-sm">
-                      <span className="text-foreground-muted">کد ملی</span>
-                      <span className="font-semibold text-foreground font-data-mono">{toFa(profile.nationalId)}</span>
+                      <span className="text-foreground-muted">کد پرسنلی</span>
+                      <span className="font-semibold text-foreground font-data-mono">{toFa(profile.personnelCode)}</span>
                     </div>
                     <div className="flex justify-between items-center py-2.5 text-sm">
                       <span className="text-foreground-muted">نام پدر</span>

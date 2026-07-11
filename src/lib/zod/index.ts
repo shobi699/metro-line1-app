@@ -1,4 +1,4 @@
-export { nationalIdSchema, phoneSchema, emailSchema, passwordSchema } from './common'
+export { personnelCodeSchema, phoneSchema, emailSchema, passwordSchema } from './common'
 export { loginSchema, registerSchema, refreshSchema, approveUserSchema, sendOtpSchema, verifyOtpSchema, resetPasswordSchema } from './auth'
 export type { LoginInput, RegisterInput, RefreshInput, ApproveUserInput, SendOtpInput, VerifyOtpInput, ResetPasswordInput } from './auth'
 export { userSearchSchema, customFieldDefSchema, customFieldDefUpdateSchema, userImportRowSchema } from './directory'

@@ -8,8 +8,8 @@ export interface SwapRequestWithRelations {
   status: SwapRequestStatus
   note: string | null
   createdAt: Date
-  requester: { id: string; name: string; nationalId: string }
-  target: { id: string; name: string; nationalId: string }
+  requester: { id: string; name: string; personnelCode: string }
+  target: { id: string; name: string; personnelCode: string }
   sourceShift: { id: string; date: Date; code: ShiftCode }
   targetShift: { id: string; date: Date; code: ShiftCode }
   reviewedBy: string | null
@@ -179,7 +179,7 @@ export async function validateSwapRules(
   if (requester.roleId !== target.roleId) {
     violations.push({
       rule: 'role_parity',
-      message: `عدم انطباق نقش: نقش متقاضی (${requester.role.name}) با نقش کاربر مقصد (${target.role.name}) یکسان نیست`,
+      message: `عدم انطباق نقش: نقش متقاضی (${requester.role.title}) با نقش کاربر مقصد (${target.role.title}) یکسان نیست`,
     })
   }
 
@@ -236,8 +236,8 @@ export async function createSwapRequest(
       note: note ?? null,
     },
     include: {
-      requester: { select: { id: true, name: true, nationalId: true } },
-      target: { select: { id: true, name: true, nationalId: true } },
+      requester: { select: { id: true, name: true, personnelCode: true } },
+      target: { select: { id: true, name: true, personnelCode: true } },
       sourceShift: true,
       targetShift: true,
     },
@@ -323,8 +323,8 @@ export async function acceptSwapRequest(
   return prisma.swapRequest.findUnique({
     where: { id: swapRequestId },
     include: {
-      requester: { select: { id: true, name: true, nationalId: true } },
-      target: { select: { id: true, name: true, nationalId: true } },
+      requester: { select: { id: true, name: true, personnelCode: true } },
+      target: { select: { id: true, name: true, personnelCode: true } },
       sourceShift: true,
       targetShift: true,
     },
@@ -409,8 +409,8 @@ export async function approveSwapRequest(
   return prisma.swapRequest.findUnique({
     where: { id: swapRequestId },
     include: {
-      requester: { select: { id: true, name: true, nationalId: true } },
-      target: { select: { id: true, name: true, nationalId: true } },
+      requester: { select: { id: true, name: true, personnelCode: true } },
+      target: { select: { id: true, name: true, personnelCode: true } },
       sourceShift: true,
       targetShift: true,
     },
@@ -433,8 +433,8 @@ export async function getSwapInbox(
   const requests = await prisma.swapRequest.findMany({
     where: where as never,
     include: {
-      requester: { select: { id: true, name: true, nationalId: true } },
-      target: { select: { id: true, name: true, nationalId: true } },
+      requester: { select: { id: true, name: true, personnelCode: true } },
+      target: { select: { id: true, name: true, personnelCode: true } },
       sourceShift: true,
       targetShift: true,
     },
@@ -470,8 +470,8 @@ export async function getUserSwapRequests(userId: string) {
       OR: [{ requesterId: userId }, { targetId: userId }],
     },
     include: {
-      requester: { select: { id: true, name: true, nationalId: true } },
-      target: { select: { id: true, name: true, nationalId: true } },
+      requester: { select: { id: true, name: true, personnelCode: true } },
+      target: { select: { id: true, name: true, personnelCode: true } },
       sourceShift: true,
       targetShift: true,
     },
@@ -512,7 +512,7 @@ export async function validateTripSwapRules(
   if (requester.roleId !== target.roleId) {
     violations.push({
       rule: 'role_parity',
-      message: `عدم انطباق نقش: نقش متقاضی (${requester.role.name}) با نقش کاربر مقصد (${target.role.name}) یکسان نیست`,
+      message: `عدم انطباق نقش: نقش متقاضی (${requester.role.title}) با نقش کاربر مقصد (${target.role.title}) یکسان نیست`,
     })
   }
 
@@ -597,8 +597,8 @@ export async function createTripSwapRequest(
       status: 'pending',
     },
     include: {
-      requester: { select: { id: true, name: true, nationalId: true } },
-      target: { select: { id: true, name: true, nationalId: true } },
+      requester: { select: { id: true, name: true, personnelCode: true } },
+      target: { select: { id: true, name: true, personnelCode: true } },
       sourceAssignment: { include: { trip: true } },
       targetAssignment: { include: { trip: true } },
     },
@@ -664,8 +664,8 @@ export async function acceptTripSwapRequest(
   return prisma.tripSwapRequest.findUnique({
     where: { id: swapRequestId },
     include: {
-      requester: { select: { id: true, name: true, nationalId: true } },
-      target: { select: { id: true, name: true, nationalId: true } },
+      requester: { select: { id: true, name: true, personnelCode: true } },
+      target: { select: { id: true, name: true, personnelCode: true } },
       sourceAssignment: { include: { trip: true } },
       targetAssignment: { include: { trip: true } },
     },
@@ -713,7 +713,7 @@ export async function approveTripSwapRequest(
         where: { id: swapRequest.sourceAssignmentId },
         data: {
           matchedUserId: swapRequest.targetId,
-          personnelNo: tarUser.nationalId || null,
+          personnelNo: tarUser.personnelCode || null,
           rawName: tarUser.name,
         },
       }),
@@ -721,7 +721,7 @@ export async function approveTripSwapRequest(
         where: { id: swapRequest.targetAssignmentId },
         data: {
           matchedUserId: swapRequest.requesterId,
-          personnelNo: reqUser.nationalId || null,
+          personnelNo: reqUser.personnelCode || null,
           rawName: reqUser.name,
         },
       }),
@@ -762,8 +762,8 @@ export async function approveTripSwapRequest(
   return prisma.tripSwapRequest.findUnique({
     where: { id: swapRequestId },
     include: {
-      requester: { select: { id: true, name: true, nationalId: true } },
-      target: { select: { id: true, name: true, nationalId: true } },
+      requester: { select: { id: true, name: true, personnelCode: true } },
+      target: { select: { id: true, name: true, personnelCode: true } },
       sourceAssignment: { include: { trip: true } },
       targetAssignment: { include: { trip: true } },
     },
@@ -786,8 +786,8 @@ export async function getTripSwaps(
   const requests = await prisma.tripSwapRequest.findMany({
     where: where as never,
     include: {
-      requester: { select: { id: true, name: true, nationalId: true } },
-      target: { select: { id: true, name: true, nationalId: true } },
+      requester: { select: { id: true, name: true, personnelCode: true } },
+      target: { select: { id: true, name: true, personnelCode: true } },
       sourceAssignment: { include: { trip: true } },
       targetAssignment: { include: { trip: true } },
     },

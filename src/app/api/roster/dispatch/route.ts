@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     const user = await getSessionUser(req)
     if ('error' in user) return authErrorResponse(user)
     
-    const roleErr = requireRole(user, 'admin')
+    const roleErr = await requireRole(user, 'admin')
     if (roleErr) return authErrorResponse(roleErr)
 
     const body = await req.json()

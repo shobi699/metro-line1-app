@@ -73,7 +73,7 @@ export async function GET(request: Request) {
   const requests = await prisma.leaveRequest.findMany({
     where: whereClause,
     include: {
-      user: { select: { id: true, name: true, nationalId: true } },
+      user: { select: { id: true, name: true, personnelCode: true } },
       reviewedBy: { select: { name: true } }
     },
     orderBy: { createdAt: 'desc' },

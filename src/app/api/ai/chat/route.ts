@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { personaKey, message, threadId, stream } = body
+    const { personaKey, message, threadId, stream, history, imageUrl } = body
     if (!personaKey || !message) {
       return NextResponse.json({ error: { code: 'BAD_REQUEST', message: 'پارامترهای personaKey و message الزامی هستند' } }, { status: 400 })
     }
@@ -37,6 +37,8 @@ export async function POST(req: NextRequest) {
             personaKey,
             message,
             threadId,
+            history,
+            imageUrl
           })
 
           for await (const chunk of gen) {
@@ -66,6 +68,7 @@ export async function POST(req: NextRequest) {
         personaKey,
         message,
         threadId,
+        imageUrl
       })
 
       return NextResponse.json({ data: response })

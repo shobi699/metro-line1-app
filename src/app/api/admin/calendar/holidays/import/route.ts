@@ -27,24 +27,25 @@ export async function POST(request: Request) {
   const COLUMN_MAP: Record<string, string> = {
     'تاریخ': 'jalaliDate',
     'تاریخ جلالی': 'jalaliDate',
-    'jalaliDate': 'jalaliDate',
+    'jalalidate': 'jalaliDate',
     'date': 'jalaliDate',
     'عنوان': 'title',
     'title': 'title',
     'نوع': 'kind',
     'kind': 'kind',
     'تعطیل': 'isOffDay',
-    'isOffDay': 'isOffDay',
+    'isoffday': 'isOffDay',
     'تکرار': 'recurring',
     'recurring': 'recurring',
     'قمری': 'hijriBased',
-    'hijriBased': 'hijriBased',
+    'hijribased': 'hijriBased',
   }
 
   const rows: HolidayImportRow[] = rawRows.map((raw) => {
     const mapped: Record<string, unknown> = {}
     for (const [key, val] of Object.entries(raw)) {
-      const normalized = COLUMN_MAP[key.trim()] ?? key.trim()
+      const normalizedKey = key.trim().toLowerCase()
+      const normalized = COLUMN_MAP[normalizedKey] ?? key.trim()
       mapped[normalized] = val
     }
     return {
