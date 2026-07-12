@@ -11,6 +11,9 @@ export interface MonthShiftStats {
   counts: Record<string, number> // morning/evening/night/off/office
   workHours: number
   offDays: number // آف + تعطیل رسمیِ بدون شیفت کاری
+  workLogTotalAmount: number
+  overtimeTotalHours: number
+  movazafiHours: number
 }
 
 export interface HolidayBridge {
@@ -50,10 +53,13 @@ function restLabel(day: CalendarDay): string {
   return 'جمعه'
 }
 
-function computeStats(days: CalendarDay[]): MonthShiftStats {
+function computeStats(days: CalendarDay[], movazafiRules: any = { satTueHours: 8.75, wedHours: 7, thuHours: 7 }): MonthShiftStats {
   const counts: Record<string, number> = {}
   let workHours = 0
   let offDays = 0
+  let movazafiHours = 0
+  let workLogTotalAmount = 0
+  let overtimeTotalHours = 0
 
   for (const day of days) {
     if (day.shift) {
@@ -61,9 +67,40 @@ function computeStats(days: CalendarDay[]): MonthShiftStats {
       workHours += day.shift.code === 'off' ? 0 : day.shift.hours
     }
     if (isRestDay(day)) offDays++
+
+    // Calculate Movazafi Hours
+    const isHoliday = day.holidays.some((h) => h.isOffDay)
+    if (day.weekday >= 0 && day.weekday <= 3 && !isHoliday) {
+      movazafiHours += movazafiRules.satTueHours ?? 8.75
+    } else if (day.weekday === 4 && !isHoliday) {
+      movazafiHours += movazafiRules.wedHours ?? 7
+    } else if (day.weekday === 5) {
+      // User specifically requested: "روزهایی که پنجشنبه تعطیلن هم ۷ ساعت"
+      movazafiHours += movazafiRules.thuHours ?? 7
+    }
+
+    // Sum financials
+    for (const ev of day.events || []) {
+      if (ev.type === 'work_log' || ev.type === 'financial') {
+        const meta = ev.metadata as Record<string, any> | null
+        if (meta?.amount && typeof meta.amount === 'number') {
+          workLogTotalAmount += meta.amount
+        }
+        if (meta?.hours && typeof meta.hours === 'number') {
+          overtimeTotalHours += meta.hours
+        }
+      }
+    }
   }
 
-  return { counts, workHours: Math.round(workHours * 100) / 100, offDays }
+  return {
+    counts,
+    workHours: Math.round(workHours * 100) / 100,
+    offDays,
+    workLogTotalAmount,
+    overtimeTotalHours,
+    movazafiHours: Math.round(movazafiHours * 100) / 100,
+  }
 }
 
 /**
@@ -113,7 +150,7 @@ async function monthDays(
     roleKey,
     from: gregStr(first),
     to: gregStr(last),
-    layers: ['shift', 'holidays'],
+    layers: ['shift', 'holidays', 'personal'],
   })
   return range.days
 }
@@ -147,6 +184,7 @@ export async function getCalendarInsights(params: {
   ])
 
   const bridgeFinderEnabled = calendarConfig?.smartRules?.bridgeFinder ?? true
+  const movazafiRules = (calendarConfig as any)?.movazafiRules ?? { satTueHours: 8.75, wedHours: 7, thuHours: 7 }
 
   const upcoming = horizon.days.filter((d) => d.date > today.format('YYYY-MM-DD'))
   const nextOffIdx = upcoming.findIndex(isRestDay)
@@ -157,8 +195,8 @@ export async function getCalendarInsights(params: {
   return {
     jYear,
     jMonth,
-    stats: computeStats(current),
-    prevStats: computeStats(previous),
+    stats: computeStats(current, movazafiRules),
+    prevStats: computeStats(previous, movazafiRules),
     bridges: bridgeFinderEnabled ? findBridges(horizon.days) : [],
     countdown: {
       daysToNextOff: nextOffIdx === -1 ? null : nextOffIdx + 1,

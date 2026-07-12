@@ -124,6 +124,15 @@ enum PersonalEventType {
   birthday
   task
   note
+  work_log
+  financial
+  on_call
+  overtime
+  leave_sick
+  leave_daily
+  leave_hourly
+  reminder
+  other
 }
 
 enum PostType {
@@ -1671,6 +1680,7 @@ model PersonalEvent {
   isDone      Boolean           @default(false)
   recurrence  Json? // {freq: yearly|monthly|weekly|daily, interval, until, jalali:true}
   reminders   Json? // [{minutesBefore: 60}]
+  metadata    Json? // e.g. {amount: 5000, category: "Kahrizak", hours: 4}
   isPrivate   Boolean           @default(true)
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt

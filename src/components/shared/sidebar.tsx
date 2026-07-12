@@ -194,6 +194,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
           { label: 'تنظیمات مرخصی', href: '/admin/settings/leaves', icon: Settings },
           { label: 'مدیریت شیفت‌ها', href: '/admin/shifts', icon: Calendar },
           { label: 'مدیریت تقویم', href: '/admin/calendar', icon: CalendarDays },
+          { label: 'گزارش وضعیت روزانه', href: '/admin/day-status', icon: FileText },
           { label: 'بارگذاری اکسل لوحه', href: '/roster/upload', icon: FileSpreadsheet },
           { label: 'نمای گانت لوحه', href: '/roster?view=gantt', icon: TrendingUp },
           { label: 'آمار و تحلیل اعزام‌ها', href: '/roster/analytics', icon: BarChart3 },

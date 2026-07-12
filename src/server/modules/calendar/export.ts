@@ -93,3 +93,77 @@ export async function exportMonthToExcel(params: {
 
   return XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
 }
+
+export async function exportDayStatusToExcel(where: any): Promise<ArrayBuffer> {
+  const { prisma } = await import('@/server/db')
+  const { toFa } = await import('@/lib/fa')
+  
+  const events = await prisma.personalEvent.findMany({
+    where,
+    include: {
+      user: { select: { name: true, personnelCode: true } }
+    },
+    orderBy: { startAt: 'desc' },
+  })
+
+  const headers = [
+    'ردیف',
+    'نام و نام خانوادگی',
+    'کد پرسنلی',
+    'نوع رویداد',
+    'تاریخ (شمسی)',
+    'ساعت/مبلغ',
+    'یادداشت/توضیحات',
+  ]
+
+  const typeMap: Record<string, string> = {
+    on_call: 'کشیک',
+    overtime: 'اضافه کار',
+    leave_sick: 'مرخصی استعلاجی',
+    leave_daily: 'مرخصی روزانه',
+    leave_hourly: 'مرخصی ساعتی',
+    note: 'یادداشت',
+    other: 'سایر کارکرد',
+    reminder: 'یادآور',
+  }
+
+  const rows = events.map((e, index) => {
+    const cf = (e.metadata as Record<string, unknown> | null) || {}
+    let amountOrHours = ''
+    if (cf.hours !== undefined) {
+      amountOrHours = toFa(String(cf.hours)) + ' ساعت'
+    } else if (cf.amount !== undefined) {
+      amountOrHours = toFa(String(cf.amount)) + ' تومان'
+    }
+
+    return [
+      index + 1,
+      e.user.name,
+      e.user.personnelCode,
+      typeMap[e.type] || e.type,
+      toFa(jdate(e.startAt).format('YYYY/MM/DD')),
+      amountOrHours,
+      e.title,
+    ]
+  })
+
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows])
+  ws['!cols'] = [
+    { wch: 8 },
+    { wch: 30 },
+    { wch: 15 },
+    { wch: 20 },
+    { wch: 15 },
+    { wch: 15 },
+    { wch: 40 },
+  ]
+  
+  // RTL
+  if (!ws['!views']) ws['!views'] = []
+  ws['!views'].push({ rightToLeft: true })
+  
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'گزارش روزانه')
+
+  return XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
+}

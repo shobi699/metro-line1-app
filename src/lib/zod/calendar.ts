@@ -11,7 +11,7 @@ export type CalendarRangeInput = z.infer<typeof calendarRangeSchema>
 
 export const personalEventSchema = z
   .object({
-    type: z.enum(['event', 'birthday', 'task', 'note']).default('event'),
+    type: z.enum(['event', 'birthday', 'task', 'note', 'work_log', 'financial', 'on_call', 'overtime', 'leave_sick', 'leave_daily', 'leave_hourly', 'reminder', 'other']).default('event'),
     title: z.string().min(1, 'عنوان الزامی است').max(200, 'عنوان حداکثر ۲۰۰ کاراکتر باشد'),
     description: z.string().max(2000).optional(),
     startAt: z.string().min(1, 'تاریخ شروع الزامی است'),
@@ -35,6 +35,7 @@ export const personalEventSchema = z
       .max(5, 'حداکثر ۵ یادآور مجاز است')
       .optional(),
     isPrivate: z.boolean().default(true),
+    metadata: z.record(z.string(), z.unknown()).optional(),
   })
   .strict()
 
@@ -62,6 +63,11 @@ export const calendarPreferenceSchema = z
     defaultView: z.enum(['month', 'week', 'agenda']).optional(),
     weekStart: z.enum(['saturday', 'monday']).optional(),
     widgetConfig: z.record(z.string(), z.unknown()).optional(),
+    quickAddDefaults: z.record(z.string(), z.object({
+      title: z.string().optional(),
+      amount: z.string().optional(),
+      hours: z.string().optional()
+    })).optional(),
   })
   .strict()
 

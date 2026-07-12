@@ -48,6 +48,7 @@ export interface CalendarEventEntry {
   isDone: boolean
   reminders: unknown
   recurrence: unknown
+  metadata: unknown
   /** true اگر این رخداد از تکرار سالانه جلالی بازتولید شده باشد */
   occurrence: boolean
 }
@@ -262,6 +263,7 @@ function toEventEntry(
     isDone: boolean
     reminders: unknown
     recurrence: unknown
+    metadata: unknown
   },
   occurrence = false,
   occurrenceDate?: string,
@@ -279,6 +281,7 @@ function toEventEntry(
     isDone: e.isDone,
     reminders: e.reminders,
     recurrence: e.recurrence,
+    metadata: e.metadata,
     occurrence,
   }
 }
@@ -554,6 +557,7 @@ export async function createPersonalEvent(userId: string, input: PersonalEventIn
       location: input.location,
       recurrence: input.recurrence ? (input.recurrence as Prisma.InputJsonValue) : Prisma.DbNull,
       reminders: input.reminders ? (input.reminders as Prisma.InputJsonValue) : Prisma.DbNull,
+      metadata: input.metadata ? (input.metadata as Prisma.InputJsonValue) : Prisma.DbNull,
       isPrivate: input.isPrivate,
     },
   })
@@ -591,6 +595,9 @@ export async function updatePersonalEvent(
       }),
       ...(input.reminders !== undefined && {
         reminders: input.reminders ? (input.reminders as Prisma.InputJsonValue) : Prisma.DbNull,
+      }),
+      ...(input.metadata !== undefined && {
+        metadata: input.metadata ? (input.metadata as Prisma.InputJsonValue) : Prisma.DbNull,
       }),
       ...(input.isPrivate !== undefined && { isPrivate: input.isPrivate }),
       ...(input.isDone !== undefined && { isDone: input.isDone }),

@@ -14,6 +14,9 @@ export { calendarApi } from './api-client'
 export { useCalendarStore } from './store'
 export { MonthGrid } from './components/month-grid'
 export { TodayPanel } from './components/today-panel'
-export { DayDrawer } from './components/day-drawer'
+export { DayDialog } from './components/day-dialog'
 export { InsightsPanel } from './components/insights-panel'
 export { IcsDialog } from './components/ics-dialog'
+
+
+export * from './components/calendar-settings-dialog'

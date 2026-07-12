@@ -70,9 +70,23 @@ export function InsightsPanel({ insights, loading, onSelectBridge }: InsightsPan
             </span>
           )
         })}
-        <span className="text-xs text-foreground-muted">
-          ≈ {toFa(insights.stats.workHours)} ساعت کارکرد
-        </span>
+        {insights.stats.workHours > 0 || insights.stats.movazafiHours > 0 ? (
+          <span className="text-xs text-foreground-muted bg-surface-container border rounded-full px-2 py-0.5">
+            کارکرد: {toFa(insights.stats.workHours)} / موظفی: {toFa(insights.stats.movazafiHours)}
+          </span>
+        ) : null}
+        
+        {insights.stats.overtimeTotalHours > 0 && (
+          <span className="text-xs text-info bg-info/10 border border-info/20 rounded-full px-2 py-0.5">
+            اضافه‌کار: {toFa(insights.stats.overtimeTotalHours)}h
+          </span>
+        )}
+
+        {insights.stats.workLogTotalAmount > 0 && (
+          <span className="text-xs text-success bg-success/10 border border-success/20 rounded-full px-2 py-0.5" dir="ltr">
+            {toFa(insights.stats.workLogTotalAmount.toLocaleString())} تومان
+          </span>
+        )}
       </div>
 
       {/* بنر پل تعطیلات */}

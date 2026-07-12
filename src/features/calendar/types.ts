@@ -12,6 +12,9 @@ export interface MonthShiftStats {
   counts: Record<string, number>
   workHours: number
   offDays: number
+  workLogTotalAmount: number
+  overtimeTotalHours: number
+  movazafiHours: number
 }
 
 export interface HolidayBridge {
@@ -45,7 +48,7 @@ export interface CalendarHolidayEntry {
 
 export interface CalendarEventEntry {
   id: string
-  type: 'event' | 'birthday' | 'task' | 'note'
+  type: 'event' | 'birthday' | 'task' | 'note' | 'work_log' | 'financial' | 'on_call' | 'overtime' | 'leave_sick' | 'leave_daily' | 'leave_hourly' | 'reminder' | 'other'
   title: string
   description: string | null
   startAt: string
@@ -56,6 +59,7 @@ export interface CalendarEventEntry {
   isDone: boolean
   reminders: unknown
   recurrence: unknown
+  metadata?: { amount?: number; hours?: number; category?: string } | null
   occurrence: boolean
 }
 
@@ -101,7 +105,7 @@ export interface CalendarRangeResponse {
 }
 
 export interface PersonalEventInput {
-  type?: 'event' | 'birthday' | 'task' | 'note'
+  type?: 'event' | 'birthday' | 'task' | 'note' | 'work_log' | 'financial' | 'on_call' | 'overtime' | 'leave_sick' | 'leave_daily' | 'leave_hourly' | 'reminder' | 'other'
   title: string
   description?: string
   startAt: string
@@ -111,6 +115,7 @@ export interface PersonalEventInput {
   location?: string
   recurrence?: { freq: 'yearly' | 'monthly' | 'weekly' | 'daily'; interval?: number; jalali?: boolean }
   reminders?: { minutesBefore: number }[]
+  metadata?: Record<string, unknown>
   isPrivate?: boolean
 }
 

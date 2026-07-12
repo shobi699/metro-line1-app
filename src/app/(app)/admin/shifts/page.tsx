@@ -1198,7 +1198,7 @@ export default function AdminShiftsPage() {
                               >
                                 <div className="text-[11px]">{jdate(day).format('dddd')}</div>
                                 <div className="text-[9px] text-foreground-muted/85 font-data-mono mt-0.5">
-                                  {toFa(jdate(day).format('MM/DD'))}
+                                  {toFa(`${String(jdate(day).month() + 1).padStart(2, '0')}/${String(jdate(day).date()).padStart(2, '0')}`)}
                                 </div>
                               </th>
                             )

@@ -11,9 +11,10 @@ import {
   calendarApi,
   MonthGrid,
   TodayPanel,
-  DayDrawer,
+  DayDialog,
   InsightsPanel,
   IcsDialog,
+  CalendarSettingsDialog,
   JALALI_MONTHS,
   type PersonalEventInput,
 } from '@/features/calendar'
@@ -108,6 +109,7 @@ export default function CalendarPage() {
         </div>
         <div className="flex items-center gap-1.5">
           {accessToken && <IcsDialog accessToken={accessToken} />}
+          <CalendarSettingsDialog />
           <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
             <Download className="size-4" />
             {exporting ? 'در حال آماده‌سازی…' : 'اکسل ماه'}
@@ -165,7 +167,7 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      <DayDrawer
+      <DayDialog
         day={selectedDay}
         open={selectedDay !== null}
         onOpenChange={(open) => {

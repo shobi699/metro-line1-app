@@ -257,6 +257,12 @@ export interface CalendarConfig {
   smartRules: { bridgeFinder: boolean; conflictWarning: boolean }
   widgetPolicy: { enabled: boolean; updateIntervalMinutes: number }
   icsPolicy: { enabled: boolean; maxTokensPerUser: number }
+  movazafiRules: {
+    satTueHours: number
+    wedHours: number
+    thuHours: number
+  }
+  dayStatusRules?: Record<string, { enabled: boolean; defaultHours?: number }>
 }
 
 const DEFAULT_CALENDAR_CONFIG: CalendarConfig = {
@@ -270,13 +276,33 @@ const DEFAULT_CALENDAR_CONFIG: CalendarConfig = {
   smartRules: { bridgeFinder: true, conflictWarning: true },
   widgetPolicy: { enabled: true, updateIntervalMinutes: 30 },
   icsPolicy: { enabled: true, maxTokensPerUser: 1 },
+  movazafiRules: { satTueHours: 8.75, wedHours: 7, thuHours: 7 },
+  dayStatusRules: {
+    on_call: { enabled: true },
+    overtime: { enabled: true },
+    leave_sick: { enabled: true },
+    leave_daily: { enabled: true },
+    leave_hourly: { enabled: true },
+    note: { enabled: true },
+    other: { enabled: true },
+    reminder: { enabled: true },
+  },
 }
 
 export async function getCalendarConfig(): Promise<CalendarConfig> {
   const setting = await prisma.setting.findUnique({ where: { key: 'calendar.config' } })
   if (!setting) return DEFAULT_CALENDAR_CONFIG
   try {
-    return { ...DEFAULT_CALENDAR_CONFIG, ...JSON.parse(setting.value) }
+    const parsed = JSON.parse(setting.value)
+    // Migrate old config if necessary
+    if (parsed.movazafiHoursPerDay && !parsed.movazafiRules) {
+      parsed.movazafiRules = {
+        satTueHours: parsed.movazafiHoursPerDay,
+        wedHours: parsed.movazafiHoursPerDay,
+        thuHours: parsed.movazafiHoursPerDay,
+      }
+    }
+    return { ...DEFAULT_CALENDAR_CONFIG, ...parsed }
   } catch {
     return DEFAULT_CALENDAR_CONFIG
   }
@@ -289,6 +315,8 @@ export async function updateCalendarConfig(partial: Partial<CalendarConfig>, act
     smartRules: { ...current.smartRules, ...(partial.smartRules ?? {}) },
     widgetPolicy: { ...current.widgetPolicy, ...(partial.widgetPolicy ?? {}) },
     icsPolicy: { ...current.icsPolicy, ...(partial.icsPolicy ?? {}) },
+    movazafiRules: { ...current.movazafiRules, ...(partial.movazafiRules ?? {}) },
+    dayStatusRules: { ...current.dayStatusRules, ...(partial.dayStatusRules ?? {}) },
   }
   const serialized = JSON.stringify(merged)
 

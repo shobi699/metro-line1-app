@@ -76,6 +76,11 @@ interface CalendarConfig {
   smartRules: { bridgeFinder: boolean; conflictWarning: boolean }
   widgetPolicy: { enabled: boolean; updateIntervalMinutes: number }
   icsPolicy: { enabled: boolean; maxTokensPerUser: number }
+  movazafiRules: {
+    satTueHours: number
+    wedHours: number
+    thuHours: number
+  }
 }
 
 const KIND_LABELS: Record<string, string> = {
@@ -831,6 +836,55 @@ function ConfigTab({ accessToken }: { accessToken: string | null }) {
               </div>
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">تنظیمات موظفی اداری</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">شنبه تا سه‌شنبه (ساعت)</label>
+              <Input
+                type="number"
+                value={config.movazafiRules?.satTueHours ?? 8.75}
+                onChange={(e) => setConfig({ ...config, movazafiRules: { ...config.movazafiRules, satTueHours: Number(e.target.value) } })}
+                dir="ltr"
+                className="w-full text-xs"
+                step="0.01"
+                min="0"
+                max="24"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">چهارشنبه (ساعت)</label>
+              <Input
+                type="number"
+                value={config.movazafiRules?.wedHours ?? 7}
+                onChange={(e) => setConfig({ ...config, movazafiRules: { ...config.movazafiRules, wedHours: Number(e.target.value) } })}
+                dir="ltr"
+                className="w-full text-xs"
+                step="0.01"
+                min="0"
+                max="24"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">پنجشنبه (ساعت)</label>
+              <Input
+                type="number"
+                value={config.movazafiRules?.thuHours ?? 7}
+                onChange={(e) => setConfig({ ...config, movazafiRules: { ...config.movazafiRules, thuHours: Number(e.target.value) } })}
+                dir="ltr"
+                className="w-full text-xs"
+                step="0.01"
+                min="0"
+                max="24"
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
 
