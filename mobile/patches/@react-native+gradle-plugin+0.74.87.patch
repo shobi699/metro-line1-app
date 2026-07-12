@@ -1,0 +1,22 @@
+diff --git a/node_modules/@react-native/gradle-plugin/react-native-gradle-plugin/build.gradle.kts b/node_modules/@react-native/gradle-plugin/react-native-gradle-plugin/build.gradle.kts
+index abcdef1..1234567 100644
+--- a/node_modules/@react-native/gradle-plugin/react-native-gradle-plugin/build.gradle.kts
++++ b/node_modules/@react-native/gradle-plugin/react-native-gradle-plugin/build.gradle.kts
+@@ -7,7 +7,7 @@
+ 
+ import org.gradle.api.internal.classpath.ModuleRegistry
+ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+-import org.gradle.configurationcache.extensions.serviceOf
++import org.gradle.internal.extensions.core.serviceOf
+ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+ 
+ plugins {
+@@ -70,7 +70,7 @@
+     apiVersion = "1.6"
+     // See comment above on JDK 11 support
+     jvmTarget = "11"
+-    allWarningsAsErrors = true
++    allWarningsAsErrors = false
+   }
+ }
+ 
