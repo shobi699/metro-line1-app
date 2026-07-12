@@ -29,9 +29,14 @@ export async function GET(request: Request) {
     const providers = await prisma.aiProvider.findMany({
       orderBy: { priority: 'asc' }
     })
-    return NextResponse.json({ data: providers })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'خطا در دریافت پروایدرها' }, { status: 500 })
+    const masked = providers.map(({ apiKey, ...rest }) => ({
+      ...rest,
+      apiKeySet: Boolean(apiKey),
+    }))
+    return NextResponse.json({ data: masked })
+  } catch (error) {
+    console.error('[ai-providers] GET failed', error)
+    return NextResponse.json({ error: 'خطا در دریافت پروایدرها' }, { status: 500 })
   }
 }
 
@@ -54,18 +59,24 @@ export async function POST(request: Request) {
     })
 
     // Log audit
+    const redact = <T extends Record<string, any>>(o: T) =>
+      ({ ...o, apiKey: o.apiKey ? '***REDACTED***' : o.apiKey })
+
     await prisma.auditLog.create({
       data: {
         actorId: sessionUser.id,
         entity: 'AiProvider',
         entityId: provider.id,
         action: 'create',
-        after: parsed.data
+        after: redact(parsed.data as Record<string, any>)
       }
     }).catch(() => {})
 
-    return NextResponse.json({ data: provider })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'خطا در ایجاد پروایدر' }, { status: 500 })
+    const safeProvider = { ...provider } as Record<string, any>
+    delete safeProvider.apiKey
+    return NextResponse.json({ data: { ...safeProvider, apiKeySet: Boolean(provider.apiKey) } })
+  } catch (error) {
+    console.error('[ai-providers] POST failed', error)
+    return NextResponse.json({ error: 'خطا در ایجاد پروایدر' }, { status: 500 })
   }
 }

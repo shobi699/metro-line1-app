@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import mermaid from 'mermaid'
 import { cn } from '@/lib/utils'
+import { sanitizeSvg } from '@/lib/sanitize'
 
 interface MermaidGraphProps {
   chart: string
@@ -27,7 +28,7 @@ export function MermaidGraph({ chart, className }: MermaidGraphProps) {
         tertiaryColor: '#2a1a1a',
       },
       fontFamily: 'Vazirmatn, sans-serif',
-      securityLevel: 'loose',
+      securityLevel: 'strict',
     })
 
     const renderChart = async () => {
@@ -61,7 +62,7 @@ export function MermaidGraph({ chart, className }: MermaidGraphProps) {
     <div
       ref={containerRef}
       className={cn("flex justify-center items-center w-full min-h-[300px] overflow-auto p-4 [&>svg]:max-w-full", className)}
-      dangerouslySetInnerHTML={{ __html: svgCode }}
+      dangerouslySetInnerHTML={{ __html: sanitizeSvg(svgCode) }}
     />
   )
 }

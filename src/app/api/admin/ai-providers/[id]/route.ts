@@ -51,20 +51,26 @@ export async function PUT(
     })
 
     // Log audit
+    const redact = <T extends Record<string, any>>(o: T) =>
+      ({ ...o, apiKey: o.apiKey ? '***REDACTED***' : o.apiKey })
+
     await prisma.auditLog.create({
       data: {
         actorId: sessionUser.id,
         entity: 'AiProvider',
         entityId: id,
         action: 'update',
-        before,
-        after: parsed.data
+        before: redact(before as Record<string, any>),
+        after: redact(parsed.data as Record<string, any>)
       }
     }).catch(() => {})
 
-    return NextResponse.json({ data: provider })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'خطا در ویرایش پروایدر' }, { status: 500 })
+    const safeProvider = { ...provider } as Record<string, any>
+    delete safeProvider.apiKey
+    return NextResponse.json({ data: { ...safeProvider, apiKeySet: Boolean(provider.apiKey) } })
+  } catch (error) {
+    console.error('[ai-providers] PUT failed', error)
+    return NextResponse.json({ error: 'خطا در ویرایش پروایدر' }, { status: 500 })
   }
 }
 
@@ -90,18 +96,22 @@ export async function DELETE(
     })
 
     // Log audit
+    const redact = <T extends Record<string, any>>(o: T) =>
+      ({ ...o, apiKey: o.apiKey ? '***REDACTED***' : o.apiKey })
+
     await prisma.auditLog.create({
       data: {
         actorId: sessionUser.id,
         entity: 'AiProvider',
         entityId: id,
         action: 'delete',
-        before
+        before: redact(before as Record<string, any>)
       }
     }).catch(() => {})
 
     return NextResponse.json({ data: { success: true } })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'خطا در حذف پروایدر' }, { status: 500 })
+  } catch (error) {
+    console.error('[ai-providers] DELETE failed', error)
+    return NextResponse.json({ error: 'خطا در حذف پروایدر' }, { status: 500 })
   }
 }

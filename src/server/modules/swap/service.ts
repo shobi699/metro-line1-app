@@ -1,7 +1,7 @@
 import { prisma } from '@/server/db'
 import type { ShiftCode, SwapRequestStatus } from '@/generated/prisma/client'
 import { jalali } from '@/lib/fa'
-import { getSettingValue } from '@/server/modules/settings/service'
+import { getSettingValue } from '@/server/modules/settings'
 
 export interface SwapRequestWithRelations {
   id: string
@@ -24,7 +24,9 @@ export interface RuleViolation {
 
 function getShiftInterval(date: Date, code: ShiftCode): { start: Date; end: Date } | null {
   if (code === 'off') return null
-  const baseTime = new Date(date).getTime()
+  const base = new Date(date)
+  base.setHours(0, 0, 0, 0)
+  const baseTime = base.getTime()
   let startOffset = 0
   let endOffset = 0
   if (code === 'morning') {

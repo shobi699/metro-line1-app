@@ -43,15 +43,6 @@ const DEFAULT_SETTINGS = [
     category: 'general',
   },
   {
-    key: 'general.allowRegistration',
-    label: 'امکان ثبت‌نام عمومی',
-    description: 'در صورت غیرفعال‌سازی، کاربران جدید امکان ثبت‌نام نخواهند داشت',
-    type: 'boolean',
-    value: true,
-    defaultValue: true,
-    category: 'general',
-  },
-  {
     key: 'ui.sidebarStyle',
     label: 'سبک نوار کناری',
     description: 'حالت نمایش پیش‌فرض منوهای سامانه (باز یا بسته)',
@@ -737,107 +728,6 @@ const DEFAULT_SETTINGS = [
     category: 'mobile',
   },
   {
-    key: 'download.title',
-    label: 'عنوان صفحه دانلود',
-    description: 'عنوانی که در صفحه دانلود اپلیکیشن‌ها نمایش داده می‌شود',
-    type: 'text',
-    value: 'دانلود اپلیکیشن پرسنلی خط ۱',
-    defaultValue: 'دانلود اپلیکیشن پرسنلی خط ۱',
-    category: 'download',
-  },
-  {
-    key: 'download.description',
-    label: 'توضیحات صفحه دانلود',
-    description: 'توضیحاتی که زیر عنوان صفحه دانلود نمایش داده می‌شود',
-    type: 'text',
-    value: 'نسخه‌های رسمی اندروید، آیفون و وب‌اپلیکیشن برای استفاده پرسنل و راهبران خط یک متروی تهران',
-    defaultValue: 'نسخه‌های رسمی اندروید، آیفون و وب‌اپلیکیشن برای استفاده پرسنل و راهبران خط یک متروی تهران',
-    category: 'download',
-  },
-  {
-    key: 'download.android.type',
-    label: 'نوع دانلود اندروید',
-    description: 'نحوه دریافت اپلیکیشن اندروید (لینک یا فایل مسقیم)',
-    type: 'select',
-    value: 'url',
-    defaultValue: 'url',
-    category: 'download',
-    options: '["url","file"]',
-  },
-  {
-    key: 'download.android.value',
-    label: 'لینک یا فایل اندروید',
-    description: 'آدرس اینترنتی دانلود اندروید یا آپلود فایل apk',
-    type: 'text',
-    value: 'https://metro.tehran.ir',
-    defaultValue: 'https://metro.tehran.ir',
-    category: 'download',
-  },
-  {
-    key: 'download.ios.type',
-    label: 'نوع دانلود iOS',
-    description: 'نحوه دریافت اپلیکیشن iOS (لینک یا فایل مستقیم)',
-    type: 'select',
-    value: 'url',
-    defaultValue: 'url',
-    category: 'download',
-    options: '["url","file"]',
-  },
-  {
-    key: 'download.ios.value',
-    label: 'لینک یا فایل iOS',
-    description: 'آدرس اینترنتی دریافت iOS یا آپلود فایل',
-    type: 'text',
-    value: 'https://metro.tehran.ir',
-    defaultValue: 'https://metro.tehran.ir',
-    category: 'download',
-  },
-  {
-    key: 'download.web.url',
-    label: 'آدرس وب‌اپلیکیشن',
-    description: 'آدرس دسترسی به نسخه PWA یا وب‌اپلیکیشن',
-    type: 'text',
-    value: 'https://metro.tehran.ir',
-    defaultValue: 'https://metro.tehran.ir',
-    category: 'download',
-  },
-  {
-    key: 'general.appVersion',
-    label: 'نسخه اپلیکیشن موبایل',
-    description: 'نمایش نسخه فعلی اپلیکیشن در فوتر سایت و موبایل',
-    type: 'text',
-    value: 'نسخه ۱.۵.۰',
-    defaultValue: 'نسخه ۱.۵.۰',
-    category: 'general',
-  },
-  {
-    key: 'general.webVersion',
-    label: 'نسخه پنل وب',
-    description: 'نمایش نسخه فعلی پنل مدیریت و تحت وب',
-    type: 'text',
-    value: 'v0.1.1',
-    defaultValue: 'v0.1.1',
-    category: 'general',
-  },
-  {
-    key: 'general.developerText',
-    label: 'متن توسعه‌دهنده (فوتر)',
-    description: 'متن کپی‌رایت نمایش داده شده در فوتر',
-    type: 'text',
-    value: 'توسعه داده شده توسط بخش فناوری سیر و حرکت',
-    defaultValue: 'توسعه داده شده توسط بخش فناوری سیر و حرکت',
-    category: 'general',
-  },
-  {
-    key: 'general.socialLinks',
-    label: 'لینک‌های شبکه‌های اجتماعی',
-    description: 'آرایه JSON از لینک‌های شبکه‌های اجتماعی خط ۱',
-    type: 'text',
-    value: '[]',
-    defaultValue: '[]',
-    category: 'general',
-  },
-  {
     key: 'comms.radioChannel',
     label: 'کانال پیش‌فرض بی‌سیم',
     description: 'کانال ارتباطی پیش‌فرض سیستم PTT',
@@ -858,46 +748,62 @@ const DEFAULT_SETTINGS = [
 ]
 
 
-export async function ensureDefaultSettingsExist() {
-  try {
-    for (const d of DEFAULT_SETTINGS) {
-      const existing = await prisma.setting.findUnique({
-        where: { key: d.key },
-      })
-      if (!existing) {
-        await prisma.setting.create({
-          data: {
-            key: d.key,
-            label: d.label,
-            description: d.description,
-            type: d.type,
-            value: JSON.stringify(d.value),
-            defaultValue: JSON.stringify(d.defaultValue),
-            category: d.category,
-            min: d.min ?? null,
-            max: d.max ?? null,
-            options: d.options ? JSON.stringify(d.options) : null,
-            isEnabled: true,
-          },
+let defaultsEnsured: Promise<void> | null = null
+
+export async function ensureDefaultSettingsExist(): Promise<void> {
+  if (defaultsEnsured) return defaultsEnsured
+  defaultsEnsured = (async () => {
+    try {
+      for (const d of DEFAULT_SETTINGS) {
+        const existing = await prisma.setting.findUnique({
+          where: { key: d.key },
         })
-      } else {
-        // Keep defaultValue in sync with code-level defaults
-        const codeDefault = JSON.stringify(d.defaultValue)
-        if (existing.defaultValue !== codeDefault) {
-          await prisma.setting.update({
-            where: { key: d.key },
-            data: { defaultValue: codeDefault },
+        if (!existing) {
+          await prisma.setting.create({
+            data: {
+              key: d.key,
+              label: d.label,
+              description: d.description,
+              type: d.type,
+              value: JSON.stringify(d.value),
+              defaultValue: JSON.stringify(d.defaultValue),
+              category: d.category,
+              min: d.min ?? null,
+              max: d.max ?? null,
+              options: d.options ? JSON.stringify(d.options) : null,
+              isEnabled: true,
+            },
           })
+        } else {
+          // Keep defaultValue in sync with code-level defaults
+          const codeDefault = JSON.stringify(d.defaultValue)
+          if (existing.defaultValue !== codeDefault) {
+            await prisma.setting.update({
+              where: { key: d.key },
+              data: { defaultValue: codeDefault },
+            })
+          }
         }
       }
+    } catch (err) {
+      defaultsEnsured = null
+      console.error('[settings] ensureDefaultSettingsExist failed', err)
+      throw err
     }
-  } catch {
-    // settings init failed silently
-  }
+  })()
+  return defaultsEnsured
+}
+
+export function __resetSettingsInitForTests() {
+  defaultsEnsured = null
 }
 
 export async function getSettings() {
-  await ensureDefaultSettingsExist()
+  try {
+    await ensureDefaultSettingsExist()
+  } catch (err) {
+    console.error('[settings] getSettings failed to ensure defaults', err)
+  }
   return prisma.setting.findMany({
     orderBy: { key: 'asc' },
   })
@@ -914,7 +820,8 @@ export async function getSettingValue<T = string | number | boolean>(key: string
       return fallback
     }
     return JSON.parse(setting.value) as T
-  } catch {
+  } catch (err) {
+    console.error(`[settings] getSettingValue("${key}") failed; using fallback`, err)
     return fallback
   }
 }

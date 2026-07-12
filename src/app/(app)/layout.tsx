@@ -218,7 +218,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-2">
               <AlertCircle className="size-4 shrink-0" />
               <span className="font-semibold">{b.title}:</span>
-              <span className="font-medium text-foreground">{b.excerpt || b.body.slice(0, 100)}</span>
+              <span className="font-medium text-foreground">{b.excerpt || b.body?.slice(0, 100) || ''}</span>
             </div>
             {isDismissible && (
               <button

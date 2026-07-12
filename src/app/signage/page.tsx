@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { AlertCircle, Clock as ClockIcon, ShieldAlert, Tv, ArrowLeftRight } from 'lucide-react'
 import { toFa } from '@/lib/fa'
+import { sanitizeHtml } from '@/lib/sanitize'
 
 interface PlaylistItem {
   type: 'post' | 'roster_today' | 'clock' | 'weather' | 'custom_html'
@@ -426,7 +427,7 @@ export default function SignagePage() {
             {currentItem.type === 'custom_html' && (
               <div
                 className="w-full h-full text-right"
-                dangerouslySetInnerHTML={{ __html: currentItem.customHtml || '' }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentItem.customHtml || '') }}
               />
             )}
 

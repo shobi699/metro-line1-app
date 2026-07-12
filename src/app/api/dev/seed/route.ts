@@ -2,7 +2,17 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
 import { jdate } from '@/lib/dayjs'
 
-export async function GET() {
+import { getSessionUser, requireRole, authErrorResponse } from '@/server/rbac/guard'
+
+export async function GET(request: Request) {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'در دسترس نیست' }, { status: 404 })
+  }
+  const sessionUser = await getSessionUser(request)
+  if ('error' in sessionUser) return authErrorResponse(sessionUser)
+  const roleErr = await requireRole(sessionUser, 'super_admin')
+  if (roleErr) return authErrorResponse(roleErr)
+
   try {
     // 1. Clear UI Builder tables
     await prisma.uiMenuItem.deleteMany().catch(() => {})

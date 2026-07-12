@@ -702,7 +702,8 @@ export async function validateRoster(trips: any[], assignments: any[]): Promise<
   const drivingSeverity = getRuleSeverity('max_driving_hours', 'warning')
 
   for (const [userId, tripsList] of driverMap.entries()) {
-    tripsList.sort((a, b) => a.trip.departureTime.localeCompare(b.trip.departureTime))
+    tripsList.sort((a, b) =>
+      (a.trip.departureTime || '').localeCompare(b.trip.departureTime || ''))
 
     let consecutiveTrips = 1
     for (let i = 0; i < tripsList.length; i++) {

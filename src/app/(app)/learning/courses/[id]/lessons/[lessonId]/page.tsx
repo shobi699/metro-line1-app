@@ -5,8 +5,9 @@ import { useAuthStore } from '@/features/auth'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { ArrowRight, PlayCircle, BookOpen, FileText, Loader2 } from 'lucide-react'
+import { sanitizeHtml } from '@/lib/sanitize'
 
 export default function LessonPage({ params }: { params: Promise<{ id: string, lessonId: string }> }) {
   const router = useRouter()
@@ -121,7 +122,7 @@ export default function LessonPage({ params }: { params: Promise<{ id: string, l
               ) : (
                 <div className="flex flex-col items-center gap-4 bg-muted/20 w-full h-full justify-center text-foreground p-8 overflow-y-auto">
                   <BookOpen className="w-12 h-12 opacity-50 text-primary mb-2" />
-                  <div className="prose prose-sm dark:prose-invert max-w-none text-right w-full" dangerouslySetInnerHTML={{ __html: contentObj?.content || 'محتوای متنی یافت نشد.' }} />
+                  <div className="prose prose-sm dark:prose-invert max-w-none text-right w-full" dangerouslySetInnerHTML={{ __html: sanitizeHtml(contentObj?.content || 'محتوای متنی یافت نشد.') }} />
                 </div>
               )}
             </div>

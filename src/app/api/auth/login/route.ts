@@ -4,6 +4,7 @@ import { loginSchema } from '@/lib/zod/auth'
 import { verifyPassword } from '@/server/auth/password'
 import { issueAccessToken, issueRefreshToken } from '@/server/auth/jwt'
 import { coercePermissions, rankForRoleKey } from '@/server/rbac/permissions'
+import { checkRateLimit } from '@/server/auth/rate-limit'
 
 export async function POST(request: Request) {
   try {
@@ -18,6 +19,13 @@ export async function POST(request: Request) {
     }
 
     const { personnelCode, password } = parsed.data
+
+    if (!checkRateLimit(`login:${personnelCode}`, 10, 15 * 60 * 1000)) {
+      return NextResponse.json(
+        { error: 'تلاش‌های ورود بیش از حد. لطفاً ۱۵ دقیقه بعد دوباره تلاش کنید' },
+        { status: 429 },
+      )
+    }
 
     const user = await prisma.user.findUnique({
       where: { personnelCode },

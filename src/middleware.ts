@@ -6,8 +6,6 @@ const PUBLIC_API_PATHS = [
   '/api/auth/register',
   '/api/auth/refresh',
   '/api/config',
-  '/api/seed',
-  '/api/dev',
   '/api/ui/bootstrap',
 ]
 

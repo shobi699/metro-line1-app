@@ -33,7 +33,16 @@ export async function POST(request: Request) {
       )
     }
 
+    if ((otpData.attempts ?? 0) >= 5) {
+      await otpStore.deleteOtp(personnelCode)
+      return NextResponse.json(
+        { error: 'تعداد تلاش‌های مجاز به پایان رسید. کد جدید درخواست کنید' },
+        { status: 429 },
+      )
+    }
+
     if (otpData.code !== code) {
+      await otpStore.setOtp(personnelCode, { ...otpData, attempts: (otpData.attempts ?? 0) + 1 })
       return NextResponse.json(
         { error: 'کد تایید وارد شده اشتباه است' },
         { status: 400 },

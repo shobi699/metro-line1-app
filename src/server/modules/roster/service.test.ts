@@ -80,4 +80,23 @@ describe('roster validation engine', () => {
     expect(idleIssue?.severity).toBe('INFO')
     expect(idleIssue?.message).toContain('محمود احمدی')
   })
+
+  it('handles null departureTime gracefully without throwing', async () => {
+    vi.mocked(prisma.user.findMany).mockResolvedValue([
+      { id: 'user-1', name: 'علی شفیعی', personnelCode: '1234567890', role: { key: 'operator' } },
+    ] as any)
+
+    const trips = [
+      { tempId: 'trip-1', rowNo: 1, direction: 'TAJRISH_TO_SHAHRREY', departureTime: '06:00', arrivalTime: '07:15' },
+      { tempId: 'trip-2', rowNo: 2, direction: 'TAJRISH_TO_SHAHRREY', departureTime: null, arrivalTime: '09:00' },
+    ]
+    const assignments = [
+      { tripTempId: 'trip-1', role: 'H1', rawName: 'علی شفیعی', matchedUserId: 'user-1' },
+      { tripTempId: 'trip-2', role: 'H1', rawName: 'علی شفیعی', matchedUserId: 'user-1' },
+    ]
+
+    // Should not throw Error
+    const issues = await validateRoster(trips as any, assignments)
+    expect(issues).toBeDefined()
+  })
 })

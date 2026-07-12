@@ -183,6 +183,25 @@ describe('validateSwapRules', () => {
       })
     )
   })
+
+  it('normalizes non-midnight dates correctly', async () => {
+    const shift1 = { id: 'shift-1', userId: 'req-1', date: new Date('2026-06-01T09:30:00'), code: 'morning' as ShiftCode }
+    const shift2 = { id: 'shift-2', userId: 'target-1', date: new Date('2026-06-02T12:00:00'), code: 'morning' as ShiftCode }
+
+    vi.mocked(prisma.shift.findUnique).mockImplementation((async ({ where }: any) => {
+      if (where.id === 'shift-1') return shift1
+      if (where.id === 'shift-2') return shift2
+      return null
+    }) as any)
+
+    vi.mocked(prisma.user.findUnique).mockImplementation((async ({ where }: any) => {
+      const id = where.id
+      return { id, roleId: 'role-1', role: { id: 'role-1', key: 'operator', name: 'راهبر' } }
+    }) as any)
+
+    const violations = await validateSwapRules('req-1', 'target-1', 'shift-1', 'shift-2')
+    expect(violations).toBeDefined()
+  })
 })
 
 describe('validateTripSwapRules', () => {

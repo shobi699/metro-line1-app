@@ -27,6 +27,7 @@
     "dayjs": "^1.11.21",
     "dayjs-jalali": "^0.0.2",
     "dotenv": "^17.4.2",
+    "isomorphic-dompurify": "^3.18.0",
     "jalaali-js": "^2.0.0",
     "jalaliday": "^3.1.1",
     "jose": "^6.2.3",

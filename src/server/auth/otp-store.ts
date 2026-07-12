@@ -2,6 +2,7 @@ interface OtpEntry {
   code: string
   expiresAt: number
   phone: string
+  attempts?: number
 }
 
 interface ResetEntry {
