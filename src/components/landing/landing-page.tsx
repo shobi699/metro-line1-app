@@ -9,6 +9,7 @@ import { FeaturesSection, type LandingFeature } from './features-section'
 import { StatsSection, type LandingStat } from './stats-section'
 import { LandingFooter, type FooterLink } from './landing-footer'
 import { useAuthStore } from '@/features/auth'
+import { ChevronDown } from 'lucide-react'
 
 const OrbitScene = lazy(() =>
   import('./orbit-scene').then((m) => ({ default: m.OrbitScene })),
@@ -130,80 +131,111 @@ export function LandingPage() {
     ? (data.settings.footerLinks as FooterLink[])
     : []
 
-  return (
-    <div className="relative min-h-screen overflow-hidden bg-black" dir="rtl">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0204] to-black opacity-60 pointer-events-none" />
+  const hasLowerSections = features.length > 0 || stats.length > 0
 
+  return (
+    <div className="relative min-h-screen bg-black" dir="rtl">
+      {/* ── Announcement ── */}
       {announcementEnabled && announcementText && (
         <AnnouncementBar text={announcementText} href={announcementHref || null} />
       )}
 
-      <header className="relative z-20 flex items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-full border border-accent/30 bg-accent/10">
-            <svg viewBox="0 0 40 40" className="size-6 text-accent" fill="currentColor">
-              <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" strokeWidth="2" />
-              <text
-                x="20"
-                y="25"
-                textAnchor="middle"
-                className="fill-current text-[14px] font-bold"
-                style={{ fontFamily: 'sans-serif' }}
-              >
-                M
-              </text>
-            </svg>
+      {/* ── Hero Section ── */}
+      <section className="relative min-h-screen overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0204]/60 to-black pointer-events-none" />
+
+        {/* Header */}
+        <header className="relative z-20 flex items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-full border border-accent/30 bg-accent/10">
+              <svg viewBox="0 0 40 40" className="size-6 text-accent" fill="currentColor">
+                <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" strokeWidth="2" />
+                <text
+                  x="20"
+                  y="25"
+                  textAnchor="middle"
+                  className="fill-current text-[14px] font-bold"
+                  style={{ fontFamily: 'sans-serif' }}
+                >
+                  M
+                </text>
+              </svg>
+            </div>
+            <span className="text-lg font-bold text-white">{headerTitle}</span>
           </div>
-          <span className="text-lg font-bold text-white">{headerTitle}</span>
-        </div>
 
-        {isAuthenticated ? (
-          <a
-            href="/dashboard"
-            className="rounded-lg bg-accent/10 px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/20"
-          >
-            ادامه به داشبورد
-          </a>
-        ) : (
-          <a
-            href="/login"
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover"
-          >
-            ورود
-          </a>
-        )}
-      </header>
+          {isAuthenticated ? (
+            <a
+              href="/dashboard"
+              className="rounded-lg bg-accent/10 px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/20"
+            >
+              ادامه به داشبورد
+            </a>
+          ) : (
+            <a
+              href="/login"
+              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover"
+            >
+              ورود
+            </a>
+          )}
+        </header>
 
-      <div className="relative z-10">
+        {/* Quote */}
         {data?.quotes && data.quotes.length > 0 && (
           <div className="relative z-20">
             <HeroQuote quotes={data.quotes} mode={quoteMode} />
           </div>
         )}
 
-        {shouldShow3D ? (
-          <Suspense fallback={<FallbackPoster title={heroTitle} subtitle={heroSubtitle} />}>
-            <OrbitScene
-              images={data?.images ?? []}
-              settings={{
-                particleCount: (data?.settings?.particleCount as number) ?? 1200,
-                sphereRadius: (data?.settings?.sphereRadius as number) ?? 3,
-                autoRotateSpeed: (data?.settings?.autoRotateSpeed as number) ?? 0.3,
-              }}
-            />
-          </Suspense>
-        ) : (
-          <FallbackPoster title={heroTitle} subtitle={heroSubtitle} />
-        )}
+        {/* 3D Scene / Fallback */}
+        <div className="relative z-10">
+          {shouldShow3D ? (
+            <Suspense fallback={<FallbackPoster title={heroTitle} subtitle={heroSubtitle} />}>
+              <OrbitScene
+                images={data?.images ?? []}
+                settings={{
+                  particleCount: (data?.settings?.particleCount as number) ?? 1200,
+                  sphereRadius: (data?.settings?.sphereRadius as number) ?? 3,
+                  autoRotateSpeed: (data?.settings?.autoRotateSpeed as number) ?? 0.3,
+                }}
+              />
+            </Suspense>
+          ) : (
+            <FallbackPoster title={heroTitle} subtitle={heroSubtitle} />
+          )}
+        </div>
 
+        {/* CTA Buttons */}
         {data?.ctas && data.ctas.length > 0 && (
-          <CtaRow ctas={data.ctas} isAuthenticated={isAuthenticated} />
+          <div className="relative z-20">
+            <CtaRow ctas={data.ctas} isAuthenticated={isAuthenticated} />
+          </div>
         )}
 
+        {/* Scroll hint */}
+        {hasLowerSections && (
+          <div className="relative z-20 flex justify-center pb-6 animate-bounce">
+            <a
+              href="#stats"
+              className="rounded-full bg-white/5 p-2 text-white/40 transition-colors hover:bg-white/10 hover:text-white/70"
+              aria-label="ادامه صفحه"
+            >
+              <ChevronDown className="size-5" />
+            </a>
+          </div>
+        )}
+      </section>
+
+      {/* ── Stats ── */}
+      <div id="stats">
         <StatsSection stats={stats} />
-        <FeaturesSection title={featuresTitle} features={features} />
       </div>
 
+      {/* ── Features ── */}
+      <FeaturesSection title={featuresTitle} features={features} />
+
+      {/* ── Footer ── */}
       <LandingFooter text={footerText} links={footerLinks} />
     </div>
   )

@@ -113,12 +113,10 @@ export function OrbitScene({ images, settings }: OrbitSceneProps) {
             )}
 
             <OrbitControls
-              enableZoom
+              enableZoom={false}
               enablePan={false}
               autoRotate
               autoRotateSpeed={settings?.autoRotateSpeed ?? 0.3}
-              minDistance={5}
-              maxDistance={20}
               maxPolarAngle={Math.PI * 0.75}
               minPolarAngle={Math.PI * 0.25}
             />

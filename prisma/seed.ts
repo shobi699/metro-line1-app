@@ -10,8 +10,11 @@ import bcrypt from 'bcryptjs'
 const DEMO_PASSWORD = 'admin123'
 
 async function main() {
-  const dbPath = path.resolve(process.cwd(), 'prisma', 'dev.db')
-  const adapter = new PrismaLibSql({ url: `file:${dbPath}` })
+  const tursoUrl = process.env.TURSO_DATABASE_URL
+  const tursoToken = process.env.TURSO_AUTH_TOKEN
+  const adapter = (tursoUrl && tursoToken)
+    ? new PrismaLibSql({ url: tursoUrl, authToken: tursoToken })
+    : new PrismaLibSql({ url: `file:${path.resolve(process.cwd(), 'prisma', 'dev.db')}` })
   const prisma = new PrismaClient({ adapter })
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 12)
 
