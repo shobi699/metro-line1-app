@@ -1156,40 +1156,50 @@ async function seedFaultSubsystemData(prisma: any) {
   // ── Seed Courses and Videos ──────────────────────────
   const courses = [
     {
+      key: 'door-troubleshooting-300',
       title: 'دوره جامع عیب‌یابی درب‌های سری ۳۰۰',
       description: 'آموزش نحوه عیب‌یابی لیمیت سوئیچ‌ها و شیر بایکوت درب واگن‌ها در زمان اضطراری.',
-      icon: 'GraduationCap',
-      certValidityMonths: 12,
+      coverUrl: '/images/cover.png',
+      category: 'فنی',
+      status: 'published',
       passScore: 70,
+      recurrenceMonths: 12,
+      estMinutes: 120,
+      sortOrder: 1,
     },
   ]
   for (const c of courses) {
-    const existing = await prisma.course.findFirst({ where: { title: c.title } })
+    const existing = await prisma.course.findUnique({ where: { key: c.key } })
     if (!existing) {
       const course = await prisma.course.create({
-        data: {
-          title: c.title,
-          description: c.description,
-          icon: c.icon,
-          certValidityMonths: c.certValidityMonths,
-          passScore: c.passScore,
-        },
+        data: c,
       })
-      // Add a video
-      await prisma.courseVideo.create({
+      
+      const chap = await prisma.chapter.create({
         data: {
           courseId: course.id,
-          title: 'بخش اول: معرفی لیمیت سوئیچ‌های مغناطیسی درب واگن ۳',
-          excerpt: 'معرفی عملکرد و کد خطای مربوط به عدم بسته شدن فیدبک درب.',
-          mediaUrl: '/videos/sample.mp4',
-          coverUrl: '/images/cover.png',
-          durationSeconds: 120,
-          mandatory: true,
-          points: 15,
-          quiz: [
-            { q: 'شیر بایکوت درب در کدام بخش واگن قرار دارد؟', options: ['زیر صندلی مسافران', 'کنار درب خروجی', 'کابین راننده'], correct: 0 },
-          ],
+          title: 'فصل اول: آشنایی با سیستم مکانیزم درب قطار',
+          sortOrder: 1,
         },
+      })
+
+      await prisma.lesson.createMany({
+        data: [
+          {
+            chapterId: chap.id,
+            title: 'درس اول: معرفی لیمیت سوئیچ‌های مغناطیسی درب واگن ۳',
+            kind: 'video',
+            contentRef: '/videos/sample.mp4',
+            sortOrder: 1,
+          },
+          {
+            chapterId: chap.id,
+            title: 'درس دوم: عیب‌یابی لیمیت سوئیچ‌ها و شیر بایکوت درب واگن‌ها',
+            kind: 'text',
+            contentRef: 'معرفی عملکرد و کد خطای مربوط به عدم بسته شدن فیدبک درب و آموزش نحوه عیب‌یابی لیمیت سوئیچ‌ها در شرایط اضطراری.',
+            sortOrder: 2,
+          },
+        ],
       })
     }
   }
