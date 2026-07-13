@@ -102,7 +102,7 @@ interface FeedbackItem {
 
 const TYPE_CONFIG: Record<
   string,
-  { label: string; icon: React.ElementType; color: string; bgColor: string }
+  { label: string; icon: React.ComponentType<any>; color: string; bgColor: string }
 > = {
   criticism: { label: 'انتقاد', icon: AlertTriangle, color: 'text-critical', bgColor: 'bg-critical/10 border-critical/20' },
   suggestion: { label: 'پیشنهاد', icon: Lightbulb, color: 'text-info', bgColor: 'bg-info/10 border-info/20' },
@@ -458,7 +458,7 @@ export default function FeedbackPage() {
 
   /* ════════════════════════════════ RENDER ════════════════════════════════ */
 
-  const tabs: { key: TabKey; label: string; icon: React.ElementType; adminOnly?: boolean }[] = [
+  const tabs: { key: TabKey; label: string; icon: React.ComponentType<any>; adminOnly?: boolean }[] = [
     { key: 'my', label: 'مکاتبات من', icon: MessageSquare },
     { key: 'track', label: 'پیگیری ناشناس', icon: Lock },
     { key: 'ideas', label: 'تابلوی ایده‌ها', icon: Lightbulb },

@@ -25,6 +25,7 @@ import {
   Settings,
   Bell,
   MessageSquare,
+  Globe,
   ClipboardCheck,
   BookOpen,
   User,
@@ -52,14 +53,14 @@ import {
 interface NavItem {
   label: string
   href: string
-  icon: React.ElementType
+  icon: React.ComponentType<any>
   roles?: string[]
 }
 
 interface NavSubgroup {
   id: string
   label: string
-  icon: React.ElementType
+  icon: React.ComponentType<any>
   items: NavItem[]
   roles?: string[]
 }
@@ -189,6 +190,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         icon: Calendar,
         roles: ['admin', 'super_admin'],
         items: [
+          { label: 'مدیریت صفحهٔ اصلی', href: '/admin/landing', icon: Globe },
           { label: 'مدیریت درخواست‌ها', href: '/admin/requests', icon: FileSpreadsheet },
           { label: 'مدیریت مرخصی‌ها', href: '/admin/leaves', icon: Calendar },
           { label: 'تنظیمات مرخصی', href: '/admin/settings/leaves', icon: Settings },

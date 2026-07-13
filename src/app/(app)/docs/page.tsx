@@ -32,7 +32,7 @@ import { cn } from '@/lib/utils'
 interface DocSection {
   id: string
   title: string
-  icon: React.ElementType
+  icon: React.ComponentType<any>
   category: string
   description: string
   webGuide: string[]

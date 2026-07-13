@@ -104,6 +104,11 @@ export const PERMISSION_CATALOG: PermissionGroup[] = [
     ],
   },
   {
+    resource: 'landing',
+    label: 'صفحهٔ اصلی',
+    permissions: [{ key: 'landing:manage', label: 'مدیریت صفحهٔ اصلی' }],
+  },
+  {
     resource: 'faults',
     label: 'مدیریت خرابی‌ها (فالت)',
     permissions: [

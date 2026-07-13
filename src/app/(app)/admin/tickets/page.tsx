@@ -1018,7 +1018,7 @@ function KpiCard({ title, value, loading, icon, accent }: {
 }
 
 function InfoRow({ icon: Icon, label, value }: {
-  icon: React.ElementType
+  icon: React.ComponentType<any>
   label: string
   value: string
 }) {

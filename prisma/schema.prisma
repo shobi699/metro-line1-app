@@ -2782,6 +2782,52 @@ model TechnicalCatalog {
   @@index([authorId])
 }
 
+// ── Landing Page (Orbit Gallery) ──────────────────────
+
+model OrbitImage {
+  id        String   @id @default(cuid())
+  title     String
+  caption   String?
+  alt       String
+  mediaUrl  String
+  thumbUrl  String?
+  linkUrl   String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([isActive, sortOrder])
+}
+
+model HeroQuote {
+  id        String  @id @default(cuid())
+  text      String
+  author    String?
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+}
+
+model LandingCta {
+  id        String  @id @default(cuid())
+  label     String
+  href      String
+  icon      String?
+  variant   String  @default("primary")
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+  authOnly  Boolean @default(false)
+}
+
+model LandingVersion {
+  id          String    @id @default(cuid())
+  status      String    @default("DRAFT")
+  snapshot    String
+  publishedAt DateTime?
+  publishedBy String?
+  createdAt   DateTime  @default(now())
+}
+
+
 
 
 

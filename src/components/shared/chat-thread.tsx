@@ -42,7 +42,7 @@ const PRIORITY_STYLE: Record<MessagePriority, {
   bubble: string
   badge: string
   label: string
-  icon?: React.ElementType
+  icon?: React.ComponentType<any>
 }> = {
   normal:    { bubble: '',      badge: '',                                          label: '' },
   important: { bubble: 'ring-1 ring-warning/40',  badge: 'bg-warning/15 text-warning border-warning/30',  label: 'مهم', icon: ChevronUp },

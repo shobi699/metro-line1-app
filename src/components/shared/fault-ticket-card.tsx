@@ -11,7 +11,7 @@ interface FaultTicketCardProps {
   status: string
 }
 
-const priorityConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+const priorityConfig: Record<string, { label: string; color: string; icon: React.ComponentType<any> }> = {
   high: { label: 'بالا', color: 'bg-critical/15 text-critical', icon: AlertTriangle },
   medium: { label: 'متوسط', color: 'bg-warning/15 text-warning', icon: Wrench },
   low: { label: 'پایین', color: 'bg-info/15 text-info', icon: Info },

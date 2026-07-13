@@ -355,7 +355,7 @@ export default function PersonnelFormsPage() {
 
   /* ════════════════════════════════ RENDER ════════════════════════════════ */
 
-  const tabs: { key: TabKey; label: string; icon: React.ElementType; badge?: number; adminOnly?: boolean }[] = [
+  const tabs: { key: TabKey; label: string; icon: React.ComponentType<any>; badge?: number; adminOnly?: boolean }[] = [
     { key: 'catalog', label: 'فرم‌های قابل ثبت', icon: FolderOpen },
     { key: 'my', label: 'درخواست‌های من', icon: FileText, badge: stats.needsChanges > 0 ? stats.needsChanges : undefined },
     { key: 'inbox', label: 'کارتابل تاییدات', icon: Inbox, badge: inboxItems.length > 0 ? inboxItems.length : undefined },

@@ -56,11 +56,11 @@ export default function LoginPage() {
       })
 
       let data
+      const responseText = await res.text()
       try {
-        data = await res.json()
+        data = JSON.parse(responseText)
       } catch {
-        const text = await res.text()
-        setError(`خطای سرور (${res.status}): ${text.substring(0, 150)}`)
+        setError(`خطای سرور (${res.status}): ${responseText.substring(0, 150)}`)
         return
       }
 

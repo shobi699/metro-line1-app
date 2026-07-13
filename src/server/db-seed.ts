@@ -80,6 +80,16 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
         logSeed(`Failed to seed performance tables on boot: ${msg}`)
       }
 
+      // Landing page data
+      try {
+        const { seedLandingData } = await import('./modules/landing/service')
+        await seedLandingData()
+        logSeed('Landing data seeded successfully.')
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        logSeed(`Failed to seed landing data on boot: ${msg}`)
+      }
+
       // Also check if AI assistant tables need seeding
       try {
         const aiPersonaCount = await prisma.aiPersona.count()
