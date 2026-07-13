@@ -5,7 +5,7 @@ export interface SettingUpdate {
   value: string | number | boolean
 }
 
-const DEFAULT_SETTINGS = [
+export const DEFAULT_SETTINGS = [
   {
     key: 'general.appName',
     label: 'نام سامانه',
