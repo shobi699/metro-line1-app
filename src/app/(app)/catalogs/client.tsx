@@ -304,64 +304,231 @@ export default function CatalogClient({ initialCatalogs }: { initialCatalogs: Te
 
       {/* AI Generate Modal */}
       {isAiModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-          <Card className="w-full max-w-3xl shadow-2xl border-primary/20 bg-surface-container flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between p-4 border-b border-border/40 bg-surface-container-low shrink-0">
-              <h3 className="font-bold flex items-center gap-2">
-                <Bot className="w-5 h-5 text-primary" />
-                تولید کاتالوگ با هوش مصنوعی
-              </h3>
-              <Button variant="ghost" size="icon" onClick={() => setIsAiModalOpen(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <Card className="w-full max-w-3xl shadow-2xl border-primary/20 bg-surface-container flex flex-col max-h-[92vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-border/40 bg-gradient-to-r from-surface-container-low to-surface-container shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10 ring-1 ring-primary/20">
+                  <Bot className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base">دستیار هوشمند کاتالوگ</h3>
+                  <p className="text-xs text-muted-foreground">ساخت خودکار کاتالوگ فنی با هوش مصنوعی خط ۱</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" className="shrink-0" onClick={() => {
+                setIsAiModalOpen(false)
+                setGeneratedGraph(null)
+                setAiPrompt('')
+                setSelectedFile(null)
+                setAgentText('')
+              }}>
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {!generatedGraph ? (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">شرح فرآیند یا سیستم</label>
-                    <textarea 
-                      className="w-full min-h-[150px] p-3 rounded-md bg-background border border-border/50 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                      placeholder="مثال: روند عیب یابی شامل بررسی سنسور A است. اگر سنسور فعال بود، بررسی شیر B انجام می‌شود وگرنه بررسی رله C..."
-                      value={aiPrompt}
-                      onChange={(e) => setAiPrompt(e.target.value)}
-                    />
+
+            {/* Mode Tabs */}
+            <div className="flex border-b border-border/40 bg-surface-container-low/50 shrink-0">
+              <button
+                onClick={() => { setGeneratedGraph(null); setAiPrompt('') }}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-all duration-200 border-b-2",
+                  !generatedGraph && agentTab === 'upload' || !generatedGraph && agentTab === 'text'
+                    ? "hidden"
+                    : "hidden"
+                )}
+              />
+              {/* Tab: Document Agent */}
+              <button
+                onClick={() => { setGeneratedGraph(null) }}
+                data-active={!generatedGraph || generatedGraph === null}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium transition-all duration-200 border-b-2",
+                  !generatedGraph
+                    ? "border-primary text-primary bg-primary/5"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Sparkles className="w-4 h-4" />
+                ایجنت تحلیل سند
+              </button>
+              {/* Tab: Manual Prompt */}
+              <button
+                onClick={() => { }}
+                data-active={!!generatedGraph}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium transition-all duration-200 border-b-2",
+                  generatedGraph
+                    ? "border-primary text-primary bg-primary/5"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Settings2 className="w-4 h-4" />
+                ساخت دستی
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {/* ====== Document Agent Panel ====== */}
+              {!generatedGraph && (
+                <div className="p-6 space-y-5">
+                  {/* Sub-tabs: File Upload / Raw Text */}
+                  <div className="flex rounded-lg overflow-hidden border border-border/40 bg-background/30">
+                    <button
+                      onClick={() => setAgentTab('upload')}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-2.5 text-sm transition-all duration-200",
+                        agentTab === 'upload'
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <Upload className="w-4 h-4" />
+                      بارگذاری فایل
+                    </button>
+                    <button
+                      onClick={() => setAgentTab('text')}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-2.5 text-sm transition-all duration-200",
+                        agentTab === 'text'
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <FileText className="w-4 h-4" />
+                      متن دستی
+                    </button>
                   </div>
-                  <Button 
-                    className="w-full gap-2" 
-                    onClick={handleGenerate}
-                    disabled={isGenerating || !aiPrompt.trim()}
+
+                  {/* File Drop Zone */}
+                  {agentTab === 'upload' && (
+                    <label
+                      className={cn(
+                        "flex flex-col items-center justify-center gap-3 w-full min-h-[180px] rounded-xl border-2 border-dashed transition-all duration-200 cursor-pointer group",
+                        selectedFile
+                          ? "border-primary/40 bg-primary/5"
+                          : "border-border/40 hover:border-primary/40 hover:bg-primary/5"
+                      )}
+                    >
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.docx,.txt"
+                        onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+                      />
+                      {selectedFile ? (
+                        <>
+                          <div className="p-3 rounded-full bg-primary/10">
+                            <CheckCircle2 className="w-7 h-7 text-primary" />
+                          </div>
+                          <div className="text-center">
+                            <p className="font-medium text-foreground/90 text-sm">{selectedFile.name}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {(selectedFile.size / 1024).toFixed(1)} KB · {selectedFile.type || 'فایل متنی'}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); setSelectedFile(null) }}
+                            className="text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1"
+                          >
+                            <X className="w-3 h-3" /> حذف فایل
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="p-3 rounded-full bg-surface-container-low group-hover:bg-primary/10 transition-colors">
+                            <Upload className="w-7 h-7 text-muted-foreground group-hover:text-primary transition-colors" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-foreground/80 font-medium">فایل را اینجا رها کنید یا کلیک کنید</p>
+                            <p className="text-xs text-muted-foreground mt-1">پشتیبانی از PDF، Word (.docx)، و متن ساده (.txt)</p>
+                          </div>
+                        </>
+                      )}
+                    </label>
+                  )}
+
+                  {/* Raw Text Input */}
+                  {agentTab === 'text' && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground/80">متن مستند یا دستورالعمل فنی</label>
+                      <textarea
+                        className="w-full min-h-[180px] p-4 rounded-xl bg-background border border-border/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none leading-relaxed placeholder:text-muted-foreground/50"
+                        placeholder="متن دستورالعمل عیب‌یابی، روند عملیاتی یا محتوای فنی را اینجا وارد کنید...&#10;&#10;مثال: در صورت بروز خطا در سیستم ترمز، ابتدا فشار اتاق ترمز را بررسی کنید. اگر فشار کافی بود مرحله B را انجام دهید..."
+                        value={agentText}
+                        onChange={(e) => setAgentText(e.target.value)}
+                        dir="rtl"
+                      />
+                      <p className="text-xs text-muted-foreground text-end">{agentText.length.toLocaleString('fa-IR')} کاراکتر</p>
+                    </div>
+                  )}
+
+                  {/* Analysis Progress */}
+                  {isAnalyzing && (
+                    <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20 animate-in fade-in">
+                      <div className="relative shrink-0">
+                        <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                        <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-primary">{analysisStage}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">لطفاً صبر کنید، این عملیات ممکن است چند ثانیه طول بکشد</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Info Banner */}
+                  {!isAnalyzing && (
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-surface-container-low/60 border border-border/30 text-xs text-muted-foreground">
+                      <Sparkles className="w-4 h-4 text-primary/60 mt-0.5 shrink-0" />
+                      <span>
+                        ایجنت هوشمند متن سند را تحلیل می‌کند، گام‌های عیب‌یابی را استخراج می‌کند و به‌صورت خودکار یک یا چند کاتالوگ فنی به همراه نمودار فلوچارت ایجاد می‌کند.
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Action Button */}
+                  <Button
+                    className="w-full gap-2 h-11 text-sm font-semibold"
+                    onClick={handleAnalyzeDocument}
+                    disabled={isAnalyzing || (agentTab === 'upload' ? !selectedFile : !agentText.trim())}
                   >
-                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Settings2 className="w-4 h-4" />}
-                    تولید گراف
+                    {isAnalyzing
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> در حال تحلیل...</>
+                      : <><Sparkles className="w-4 h-4" /> تحلیل و ساخت کاتالوگ</>
+                    }
                   </Button>
                 </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="p-4 border border-primary/20 rounded-lg bg-black/40 overflow-auto max-h-[300px]">
+              )}
+
+              {/* ====== Manual Graph Panel ====== */}
+              {generatedGraph && (
+                <div className="p-6 space-y-6">
+                  <div className="p-4 border border-primary/20 rounded-xl bg-black/40 overflow-auto max-h-[280px]">
                     <MermaidGraph chart={generatedGraph} />
                   </div>
-                  
+
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">عنوان کاتالوگ</label>
-                      <Input 
-                        value={newTitle} 
-                        onChange={(e) => setNewTitle(e.target.value)} 
+                      <Input
+                        value={newTitle}
+                        onChange={(e) => setNewTitle(e.target.value)}
                         placeholder="مثال: مدار ترمز واگن"
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">دسته‌بندی</label>
-                      <Input 
-                        value={newCategory} 
-                        onChange={(e) => setNewCategory(e.target.value)} 
+                      <Input
+                        value={newCategory}
+                        onChange={(e) => setNewCategory(e.target.value)}
                         placeholder="مثال: پنوماتیک"
                       />
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-3 justify-end pt-4 border-t border-border/40">
                     <Button variant="outline" onClick={() => setGeneratedGraph(null)}>
                       بازنویسی پرامپت
@@ -371,6 +538,31 @@ export default function CatalogClient({ initialCatalogs }: { initialCatalogs: Te
                       ذخیره کاتالوگ
                     </Button>
                   </div>
+                </div>
+              )}
+
+              {/* ====== Manual Prompt Input (below agent tabs, when no graph yet) ====== */}
+              {!generatedGraph && (
+                <div className="px-6 pb-6 border-t border-border/20 pt-5 space-y-4">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">یا ساخت دستی از توضیح متنی</p>
+                  <div className="space-y-2">
+                    <textarea
+                      className="w-full min-h-[100px] p-3 rounded-lg bg-background border border-border/50 text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-none placeholder:text-muted-foreground/50"
+                      placeholder="شرح فرآیند یا سیستم را بنویسید تا یک گراف تولید شود..."
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      dir="rtl"
+                    />
+                  </div>
+                  <Button
+                    className="w-full gap-2"
+                    variant="outline"
+                    onClick={handleGenerate}
+                    disabled={isGenerating || !aiPrompt.trim()}
+                  >
+                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Settings2 className="w-4 h-4" />}
+                    تولید گراف از توضیح
+                  </Button>
                 </div>
               )}
             </div>
