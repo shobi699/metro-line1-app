@@ -48,6 +48,7 @@ import {
   TrendingUp,
   Vote,
   Menu,
+  Terminal,
 } from 'lucide-react'
 
 interface NavItem {
@@ -254,6 +255,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
           { label: 'ثبت خودروها و پلاک‌خوان', href: '/admin/license-plates', icon: Settings },
           { label: 'صلاحیت و گواهی راهبران', href: '/admin/operator-licenses', icon: ShieldCheck },
           { label: 'دفتر ثبت وقایع (Audit Log)', href: '/admin/audit-logs', icon: Shield },
+          { label: 'لاگ‌های سیستم و خطاها', href: '/admin/logs', icon: Terminal },
           { label: 'تنظیمات سیستم', href: '/admin/settings', icon: Settings },
         ]
       }

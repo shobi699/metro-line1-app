@@ -176,6 +176,7 @@ model User {
   ticketsCreated             Ticket[]                @relation("TicketCreator")
   ticketLogs                 TicketLog[]             @relation("TicketLogActor")
   auditLogs                  AuditLog[]              @relation("AuditActor")
+  systemLogs                 SystemLog[]             @relation("SystemLogActor")
   readReceipts               ReadReceipt[]           @relation("ReceiptUser")
   chatMemberships            ChatMember[]            @relation("ChatMemberUser")
   messages                   Message[]               @relation("MessageSender")
@@ -527,6 +528,26 @@ model AuditLog {
   @@index([actorId])
   @@index([entity, entityId])
   @@index([action])
+  @@index([createdAt])
+}
+
+model SystemLog {
+  id        String   @id @default(cuid())
+  level     String   // info | warn | error | debug
+  source    String   // server | client | mobile
+  category  String   // e.g. "auth", "uploads", "database", "api"
+  message   String
+  stack     String?  // stack trace or detailed error message
+  metadata  Json?    // any additional info (request body, headers, etc)
+  ipAddress String?
+  userAgent String?
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  actor User? @relation("SystemLogActor", fields: [actorId], references: [id])
+
+  @@index([level])
+  @@index([source])
   @@index([createdAt])
 }
 

@@ -744,6 +744,25 @@ export const DEFAULT_SETTINGS = [
     value: true,
     defaultValue: true,
     category: 'performance',
+  },
+  {
+    key: 'logging.enabled',
+    label: 'فعال‌بودن ثبت لاگ‌های خطا',
+    description: 'آیا خطاهای کلاینت و سرور در دیتابیس ثبت شوند؟',
+    type: 'boolean',
+    value: true,
+    defaultValue: true,
+    category: 'logging',
+  },
+  {
+    key: 'logging.minLevel',
+    label: 'حداقل سطح ثبت لاگ',
+    description: 'حداقل سطح لاگ برای ذخیره‌سازی در دیتابیس',
+    type: 'select',
+    value: 'error',
+    defaultValue: 'error',
+    options: ['debug', 'info', 'warn', 'error'],
+    category: 'logging',
   }
 ]
 

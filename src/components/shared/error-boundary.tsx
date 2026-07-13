@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
+import { logToServer } from '@/lib/logger'
 
 interface ErrorBoundaryProps {
   children: React.ReactNode
@@ -17,11 +18,34 @@ export function ErrorBoundary({ children }: ErrorBoundaryProps) {
 
   useEffect(() => {
     function handleError(event: ErrorEvent) {
-      setErrorState({ error: event.error })
+      const err = event.error || new Error(event.message || 'Unknown error event')
+      setErrorState({ error: err })
+      logToServer({
+        level: 'error',
+        category: 'client-crash',
+        message: err.message,
+        stack: err.stack,
+        metadata: {
+          filename: event.filename,
+          lineno: event.lineno,
+          colno: event.colno,
+        }
+      })
     }
 
     function handleRejection(event: PromiseRejectionEvent) {
-      setErrorState({ error: new Error(String(event.reason)) })
+      const reason = event.reason
+      const err = reason instanceof Error ? reason : new Error(String(reason))
+      setErrorState({ error: err })
+      logToServer({
+        level: 'error',
+        category: 'client-unhandled-rejection',
+        message: err.message,
+        stack: err.stack,
+        metadata: {
+          reason: typeof reason === 'object' ? JSON.stringify(reason) : String(reason),
+        }
+      })
     }
 
     window.addEventListener('error', handleError)
