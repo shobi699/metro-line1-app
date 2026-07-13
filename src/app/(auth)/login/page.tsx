@@ -69,6 +69,11 @@ export default function LoginPage() {
         return
       }
 
+      if (data.error) {
+        setError(data.error)
+        return
+      }
+
       setAuth(data.user, data.accessToken, data.refreshToken)
       router.push('/dashboard')
     } catch (err: unknown) {

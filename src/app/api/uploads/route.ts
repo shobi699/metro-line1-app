@@ -8,7 +8,18 @@ import { getStorage } from '@/server/storage'
 
 const MAX_SIZE = 100 * 1024 * 1024 // ۱۰۰ مگابایت
 const ALLOWED_PREFIXES = ['image/', 'video/', 'audio/']
-const ALLOWED_EXACT = ['application/pdf']
+const ALLOWED_EXACT = [
+  'application/pdf',
+  'application/vnd.android.package-archive',
+  'application/octet-stream',
+  'application/x-ios-app',
+  'application/xml',
+  'text/xml',
+  'application/x-plist',
+  'application/zip',
+  'application/x-zip-compressed',
+  'application/x-rar-compressed',
+]
 
 export async function POST(request: Request) {
   const user = await getSessionUser(request)

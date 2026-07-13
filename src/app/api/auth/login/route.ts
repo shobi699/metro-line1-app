@@ -34,8 +34,8 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: 'کد پرسنلی یا رمز عبور اشتباه است' },
-        { status: 401 },
+        { error: 'کد پرسنلی یا رمز عبور اشتباه است', code: 'INVALID_CREDENTIALS' },
+        { status: 200 },
       )
     }
 
@@ -60,8 +60,8 @@ export async function POST(request: Request) {
     const valid = await verifyPassword(password, user.passwordHash)
     if (!valid) {
       return NextResponse.json(
-        { error: 'کد پرسنلی یا رمز عبور اشتباه است' },
-        { status: 401 },
+        { error: 'کد پرسنلی یا رمز عبور اشتباه است', code: 'INVALID_CREDENTIALS' },
+        { status: 200 },
       )
     }
 

@@ -53,7 +53,10 @@ export default function DownloadPage() {
   const downloadTitle = config?.title || 'دانلود اپلیکیشن پرسنلی خط ۱'
   const downloadDesc = config?.description || 'نسخه‌های رسمی اندروید، آیفون و وب‌اپلیکیشن برای استفاده پرسنل و راهبران خط یک متروی تهران'
   const androidLink = config?.androidValue || '#'
-  const iosLink = config?.iosValue || '#'
+  const androidIsFile = config?.androidType === 'file'
+  const iosLink = config?.iosValue || ''
+  const iosIsFile = config?.iosType === 'file'
+  const iosAvailable = Boolean(iosLink && iosLink !== '#')
   const webLink = config?.webUrl || '/'
 
   return (
@@ -111,32 +114,46 @@ export default function DownloadPage() {
             </div>
             <a 
               href={androidLink}
-              download
+              {...(androidIsFile ? { download: true } : { target: '_blank', rel: 'noopener noreferrer' })}
               className="w-full py-3.5 bg-white text-black hover:bg-neutral-200 active:scale-[0.98] rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg"
             >
               <Download className="size-4" />
-              <span>دانلود نسخه اندروید</span>
+              <span>{androidIsFile ? 'دانلود مستقیم APK' : 'دانلود نسخه اندروید'}</span>
             </a>
           </div>
 
           {/* iOS Card */}
-          <div className="bg-[#121214]/60 backdrop-blur-xl border border-white/5 rounded-3xl p-6 flex flex-col justify-between min-h-[260px] shadow-2xl relative overflow-hidden group transition-all duration-300 opacity-80">
+          <div className={`bg-[#121214]/60 backdrop-blur-xl border rounded-3xl p-6 flex flex-col justify-between min-h-[260px] shadow-2xl relative overflow-hidden group transition-all duration-300 ${iosAvailable ? 'border-white/5 hover:border-blue-500/30' : 'border-white/5 opacity-80'}`}>
             <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
             <div>
-              <div className="size-12 rounded-2xl bg-blue-500/5 flex items-center justify-center mb-5 border border-blue-500/10">
-                <Apple className="size-6 text-neutral-500" />
+              <div className={`size-12 rounded-2xl flex items-center justify-center mb-5 border ${iosAvailable ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-500/5 border-blue-500/10'}`}>
+                <Apple className={`size-6 ${iosAvailable ? 'text-blue-400' : 'text-neutral-500'}`} />
               </div>
-              <h3 className="text-lg font-bold text-neutral-400 mb-2">نسخه آیفون (iOS)</h3>
-              <p className="text-xs text-neutral-500 leading-relaxed mb-6 font-medium">
-                در حال توسعه و بهینه‌سازی نهایی. جهت استفاده در آیفون، از لینک وب‌اپلیکیشن (PWA) زیر استفاده کنید.
+              <h3 className={`text-lg font-bold mb-2 ${iosAvailable ? 'text-white' : 'text-neutral-400'}`}>نسخه آیفون (iOS)</h3>
+              <p className={`text-xs leading-relaxed mb-6 font-medium ${iosAvailable ? 'text-[#a1a1aa]' : 'text-neutral-500'}`}>
+                {iosAvailable
+                  ? 'دریافت نسخه آیفون برای نصب مستقیم یا از طریق آدرس اختصاصی.'
+                  : 'در حال توسعه و بهینه‌سازی نهایی. جهت استفاده در آیفون، از لینک وب‌اپلیکیشن (PWA) زیر استفاده کنید.'
+                }
               </p>
             </div>
-            <button 
-              disabled
-              className="w-full py-3.5 bg-neutral-800 text-neutral-500 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed border border-neutral-700/50"
-            >
-              <span>در حال توسعه (به زودی)</span>
-            </button>
+            {iosAvailable ? (
+              <a
+                href={iosLink}
+                {...(iosIsFile ? { download: true } : { target: '_blank', rel: 'noopener noreferrer' })}
+                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white active:scale-[0.98] rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/10"
+              >
+                <Download className="size-4" />
+                <span>{iosIsFile ? 'دانلود مستقیم IPA' : 'دانلود نسخه آیفون'}</span>
+              </a>
+            ) : (
+              <button
+                disabled
+                className="w-full py-3.5 bg-neutral-800 text-neutral-500 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed border border-neutral-700/50"
+              >
+                <span>در حال توسعه (به زودی)</span>
+              </button>
+            )}
           </div>
 
           {/* Web App Card */}
