@@ -131,6 +131,10 @@ export function MessageComposer({
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    if (file.size > 100 * 1024 * 1024) {
+      alert('حجم فایل بیش از ۱۰۰ مگابایت است')
+      return
+    }
     setUploading(true)
     try {
       const form = new FormData()
@@ -140,12 +144,20 @@ export function MessageComposer({
         headers: { Authorization: `Bearer ${token}` },
         body: form,
       })
-      if (res.ok) {
-        const data = await res.json()
+      
+      let data: { data?: { url: string; type: string }; error?: string } | null = null
+      const contentType = res.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json()
+      }
+      
+      if (res.ok && data?.data?.url) {
         setAttachment({ url: data.data.url, type: data.data.type, name: file.name })
+      } else {
+        alert(data?.error || `خطا در آپلود فایل (${res.status})`)
       }
     } catch {
-      // silent
+      alert('خطا در ارتباط با سرور')
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ''

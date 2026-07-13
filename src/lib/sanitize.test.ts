@@ -21,4 +21,12 @@ describe('sanitize helper', () => {
     expect(clean).toContain('<rect')
     expect(clean).not.toContain('<script>')
   })
+
+  it('preserves foreignObject and inner HTML tags inside SVG', () => {
+    const dirty = '<svg><rect /><foreignObject width="100" height="100"><div xmlns="http://www.w3.org/1999/xhtml">test text</div></foreignObject></svg>'
+    const clean = sanitizeSvg(dirty)
+    expect(clean).toContain('<foreignObject')
+    expect(clean).toContain('<div')
+    expect(clean).toContain('test text')
+  })
 })

@@ -353,13 +353,17 @@ export default function ProfilePage() {
         body: formData,
       })
 
-      const data = await res.json()
+      let data: { data?: { url: string }; error?: string } | null = null
+      const contentType = res.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json()
+      }
 
-      if (res.ok) {
+      if (res.ok && data?.data?.url) {
         const fileUrl = data.data.url
         await handleUpdateDirectField('avatar', fileUrl)
       } else {
-        setError(data.error || 'خطا در بارگذاری تصویر')
+        setError(data?.error || `خطا در بارگذاری تصویر (${res.status})`)
       }
     } catch {
       setError('خطا در ارتباط با سرور هنگام بارگذاری فایل')

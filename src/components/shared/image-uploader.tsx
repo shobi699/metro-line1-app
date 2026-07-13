@@ -39,14 +39,21 @@ export function ImageUploader({ value, onChange, onClear, disabled, className, p
         },
         body: formData,
       })
-      const json = await res.json()
       
-      if (!res.ok) {
-        throw new Error(json.error || 'خطا در آپلود فایل')
+      let data: any = null
+      const contentType = res.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json()
       }
       
-      if (json.data?.url) {
-        onChange(json.data.url)
+      if (!res.ok) {
+        throw new Error(data?.error || `خطا در آپلود فایل (${res.status})`)
+      }
+      
+      if (data?.data?.url) {
+        onChange(data.data.url)
+      } else {
+        throw new Error('پاسخ نامعتبر از سرور')
       }
     } catch (err: any) {
       setError(err.message)

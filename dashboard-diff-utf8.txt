@@ -1,0 +1,441 @@
+﻿diff --git a/src/app/(app)/dashboard/page.tsx b/src/app/(app)/dashboard/page.tsx
+index 34c12f6..b9d7b1f 100644
+--- a/src/app/(app)/dashboard/page.tsx
++++ b/src/app/(app)/dashboard/page.tsx
+@@ -1,16 +1,17 @@
+ 'use client'
+ 
+-import { useEffect, useState } from 'react'
++import { useEffect, useState, useRef } from 'react'
+ import { useAuthStore } from '@/features/auth'
+-import { useConfigStore } from '@/features/config'
+ import Link from 'next/link'
+ import { Badge } from '@/components/ui/badge'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+ import { toFa, jalali, faTime } from '@/lib/fa'
+ import { cn } from '@/lib/utils'
++import { SystemHealthPips } from '@/components/shared/system-health-pips'
+ import {
+   Users,
+   Calendar,
++  ArrowLeftRight,
+   AlertTriangle,
+   FileSpreadsheet,
+   MessageCircle,
+@@ -24,6 +25,8 @@ import {
+   ClipboardCheck,
+   Activity,
+   Database,
++  ArrowUpRight,
++  Info,
+   ChevronLeft,
+   Server,
+   Cpu,
+@@ -39,7 +42,10 @@ import {
+   Plus,
+   Send,
+   Wrench,
++  CheckCircle2,
+ } from 'lucide-react'
++import dayjs from 'dayjs'
++import 'dayjs-jalali'
+ 
+ // ── Types ───────────────────────────────────────────────────────────
+ 
+@@ -162,7 +168,7 @@ function getTrainPosition(train: ActiveTrain) {
+ function playAlertSound(type: 'info' | 'warning' | 'success') {
+   if (typeof window === 'undefined') return
+   try {
+-    const ctx = new (window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)()
++    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+     const osc = ctx.createOscillator()
+     const gain = ctx.createGain()
+ 
+@@ -195,15 +201,15 @@ function playAlertSound(type: 'info' | 'warning' | 'success') {
+       osc.start(ctx.currentTime)
+       osc.stop(ctx.currentTime + 0.2)
+     }
+-  } catch {
+-    // audio context not supported
++  } catch (e) {
++    console.warn('Audio Context blocked or unsupported:', e)
+   }
+ }
+ 
+ function playEmergencyAlarm(active: boolean) {
+   if (typeof window === 'undefined' || !active) return
+   try {
+-    const ctx = new (window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)()
++    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+     const osc = ctx.createOscillator()
+     const gain = ctx.createGain()
+ 
+@@ -220,78 +226,17 @@ function playEmergencyAlarm(active: boolean) {
+ 
+     osc.start(ctx.currentTime)
+     osc.stop(ctx.currentTime + 0.45)
+-  } catch {
+-    // audio context not supported
++  } catch (e) {
++    console.warn('Audio Context blocked or unsupported:', e)
+   }
+ }
+ 
+-// ── Recommended Content Widget ─────────────────────────────────────
+-
+-const TYPE_LABELS: Record<string, string> = {
+-  news: 'اخبار',
+-  blog: 'وبلاگ',
+-  training: 'آموزش',
+-  circular: 'بخش‌نامه',
+-  gallery: 'گالری',
+-  announcement: 'اطلاعیه',
+-  directive: 'دستورالعمل',
+-  form: 'فرم',
+-}
+-
+-function RecommendedContentWidget({ accessToken }: { accessToken: string | null }) {
+-  const [recommended, setRecommended] = useState<Array<{
+-    id: string; type: string; title: string; slug: string; excerpt: string | null
+-    coverUrl: string | null; mandatory: boolean; category: string | null; createdAt: string
+-  }>>([])
+-  const [loading, setLoading] = useState(true)
+-
+-  useEffect(() => {
+-    if (!accessToken) return
+-    fetch('/api/posts/recommended', { headers: { Authorization: `Bearer ${accessToken}` } })
+-      .then((r) => r.json())
+-      .then((d) => setRecommended(d.data ?? []))
+-      .catch(() => {})
+-      .finally(() => setLoading(false))
+-  }, [accessToken])
+-
+-  if (loading || recommended.length === 0) return null
+-
+-  return (
+-    <div className="bg-surface-container-low/40 backdrop-blur border border-border-subtle/50 rounded-2xl p-5 shadow-sm space-y-4">
+-      <div className="flex items-center justify-between border-b border-border/30 pb-2">
+-        <h2 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+-          <Newspaper className="size-4 text-accent" />
+-          <span>محتوای پیشنهادی برای شما</span>
+-        </h2>
+-      </div>
+-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+-        {recommended.slice(0, 4).map((post) => (
+-          <Link key={post.id} href={`/content/${post.slug}`}>
+-            <div className="p-3 bg-surface/30 hover:bg-surface/50 border border-border/40 rounded-xl transition-all flex flex-col gap-2 cursor-pointer hover:border-accent/30">
+-              {post.coverUrl && (
+-                <img src={post.coverUrl} alt="" className="h-20 w-full rounded-lg object-cover" />
+-              )}
+-              <div className="flex items-center gap-1.5">
+-                {post.mandatory && <span className="size-1.5 rounded-full bg-critical animate-pulse" />}
+-                <span className="text-[9px] text-accent font-semibold">{TYPE_LABELS[post.type] ?? post.type}</span>
+-              </div>
+-              <div className="text-[11px] font-bold text-foreground leading-relaxed line-clamp-2">{post.title}</div>
+-              {post.excerpt && <div className="text-[9px] text-foreground-muted line-clamp-2">{post.excerpt}</div>}
+-            </div>
+-          </Link>
+-        ))}
+-      </div>
+-    </div>
+-  )
+-}
+-
+ // ── Main Dashboard Page ─────────────────────────────────────────────
+ 
+ export default function DashboardPage() {
+   const accessToken = useAuthStore((s) => s.accessToken)
+   const user = useAuthStore((s) => s.user)
+-  const config = useConfigStore((s) => s.config)
+-
++  
+   const [activeTab, setActiveTab] = useState<'overview' | 'analytics'>('overview')
+   
+   // General Dashboard States
+@@ -306,7 +251,6 @@ export default function DashboardPage() {
+   const [todayShift, setTodayShift] = useState<TodayShift | null>(null)
+   const [recentBulletins, setRecentBulletins] = useState<RecentBulletin[]>([])
+   const [loading, setLoading] = useState(true)
+-  const [statsError, setStatsError] = useState('')
+ 
+   // Analytics states
+   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
+@@ -317,8 +261,6 @@ export default function DashboardPage() {
+   const [emergencyMode, setEmergencyMode] = useState(false)
+   const [audioEnabled, setAudioEnabled] = useState(true)
+   const [marqueeIndex, setMarqueeIndex] = useState(0)
+-  
+-  const [bannerConfig, setBannerConfig] = useState<{ enabled: boolean; url: string; link: string } | null>(null)
+ 
+   // Interactive Live Dispatcher Console States
+   const [broadcastInput, setBroadcastInput] = useState('')
+@@ -379,18 +321,6 @@ export default function DashboardPage() {
+       })
+       .catch(() => {})
+   }, [accessToken])
+-  
+-  // Fetch banner configuration
+-  useEffect(() => {
+-    fetch('/api/config')
+-      .then((res) => res.json())
+-      .then((json) => {
+-        if (json?.data?.mobile?.dashboardBanner) {
+-          setBannerConfig(json.data.mobile.dashboardBanner)
+-        }
+-      })
+-      .catch(() => {})
+-  }, [])
+ 
+   // Sync Station Status with Emergency Mode
+   useEffect(() => {
+@@ -412,14 +342,6 @@ export default function DashboardPage() {
+     }
+   }, [emergencyMode])
+ 
+-  // Sync the admin-managed system notice into the live announcement ticker
+-  useEffect(() => {
+-    const notice = config?.systemNotice?.trim()
+-    if (!notice) return
+-    setAnnouncements((prev) => (prev.includes(notice) ? prev : [notice, ...prev]))
+-    setMarqueeIndex(0)
+-  }, [config?.systemNotice])
+-
+   // Rotate announcements
+   useEffect(() => {
+     const timer = setInterval(() => {
+@@ -571,10 +493,9 @@ export default function DashboardPage() {
+           setRecentBulletins(
+             Array.isArray(bulletinsData.data) ? bulletinsData.data.slice(0, 3) : [],
+           )
+-          setStatsError('')
+         }
+       } catch {
+-        if (!cancelled) setStatsError('خطا در دریافت آمار پیشخوان. اتصال شبکه را بررسی کنید.')
++        // silent
+       } finally {
+         if (!cancelled) setLoading(false)
+       }
+@@ -889,26 +810,6 @@ export default function DashboardPage() {
+     )
+   }
+ 
+-  if (loading) {
+-    return (
+-      <div className="flex flex-1 flex-col gap-5 p-4 lg:p-6" dir="rtl" aria-busy="true">
+-        <div className="h-14 rounded-xl bg-surface-container-low/60 border border-border-subtle/50 animate-pulse" />
+-        <div className="h-10 w-64 rounded-lg bg-surface-container-low/50 animate-pulse" />
+-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+-          {Array.from({ length: 4 }).map((_, i) => (
+-            <div key={i} className="h-[140px] rounded-2xl bg-surface-container-low/50 border border-border-subtle/40 animate-pulse" />
+-          ))}
+-        </div>
+-        <div className="h-64 rounded-2xl bg-surface-container-low/40 border border-border-subtle/40 animate-pulse" />
+-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+-          {Array.from({ length: 3 }).map((_, i) => (
+-            <div key={i} className="h-40 rounded-2xl bg-surface-container-low/40 border border-border-subtle/40 animate-pulse" />
+-          ))}
+-        </div>
+-      </div>
+-    )
+-  }
+-
+   return (
+     <div
+       className={cn(
+@@ -917,139 +818,8 @@ export default function DashboardPage() {
+       )}
+       dir="rtl"
+     >
+-      {statsError && (
+-        <div className="w-full bg-critical/10 border border-critical/30 rounded-xl p-3 text-critical text-xs flex items-center gap-2" role="alert">
+-          <AlertTriangle className="size-4 shrink-0" />
+-          <span>{statsError}</span>
+-        </div>
+-      )}
+-      {/* ── Mobile PWA Dashboard (matches mobile app experience) ─────────── */}
+-      <div className="flex md:hidden flex-col gap-5 w-full">
+-        {/* Compact greeting card */}
+-        <div className="flex items-center justify-between p-2">
+-          <div className="flex items-center gap-3">
+-            <img 
+-              src={user?.customFields?.avatar || 'https://lh3.googleusercontent.com/aida-public/AB6AXuB3-83sYQfLES0gmvDO5q2w28Raab5S1KepqfdSRMpxZnef78ytjqK2n-NdvYbNjQS_ca544VkccdbSdSpqgoRryJucwTRlS5GxTmUFbVKeezJ1QkeNGF0xe6zNAU4TXydoyFGGOhEl5FdxzcPCCHoPZT84FY-8OQlEniA0nZHCon-Db2rkNuNlkkufryldM1drCGtAjfTeaYeTT-yhX3Cp1zI12skUoqT9lhAWWGomB57lbAnzwP0gimpOjbQlw6053Iws6FeBdLtL'} 
+-              alt="Avatar" 
+-              className="size-11 rounded-full border-2 border-accent object-cover" 
+-            />
+-            <div className="text-right">
+-              <h2 className="text-sm font-black text-foreground">سلام، {user?.name?.split(' ')[0] || 'همکار'} عزیز</h2>
+-              <span className="text-[10px] text-foreground-muted mt-0.5 block">{jalali(new Date())}</span>
+-            </div>
+-          </div>
+-        </div>
+-
+-        {/* Shift Card */}
+-        <Link href="/shifts">
+-          <div className="relative overflow-hidden bg-surface-container-low/60 border border-border-subtle/50 rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-all">
+-            <div className="absolute right-0 top-0 bottom-0 w-1 bg-amber-500" />
+-            <div className="flex items-center justify-between mb-2">
+-              <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+-                <Clock className="size-4 text-amber-500" />
+-                <span>شیفت امروز</span>
+-              </span>
+-              <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold">
+-                {todayShift ? (shiftLabel[todayShift.code] ?? todayShift.code) : 'نامشخص'}
+-              </span>
+-            </div>
+-            <div className="flex items-end justify-between">
+-              <div>
+-                <span className="text-lg font-black text-foreground font-mono">۰۷:۰۰ - ۱۹:۰۰</span>
+-                <div className="flex items-center gap-1 text-[10px] text-foreground-muted mt-1">
+-                  <MapPin className="size-3.5" />
+-                  <span>ایستگاه امام خمینی</span>
+-                </div>
+-              </div>
+-              <span className="text-[10px] text-accent font-bold flex items-center gap-1 bg-accent/10 px-2.5 py-1 rounded-full border border-accent/20">
+-                <span className="size-1.5 bg-accent rounded-full animate-ping" />
+-                در انتظار حضور
+-              </span>
+-            </div>
+-          </div>
+-        </Link>
+-
+-        {/* Quick Access Grid */}
+-        <div className="space-y-3">
+-          <h3 className="text-xs font-black text-foreground text-right px-1">دسترسی سریع</h3>
+-          <div className="grid grid-cols-3 gap-3">
+-            {[
+-              { label: 'اعلام خرابی', href: '/tickets', icon: AlertTriangle, iconColor: 'text-red-500', bgClass: 'bg-red-500/10', borderClass: 'border-red-500/20' },
+-              { label: 'لوحه شیفت', href: '/shifts', icon: Calendar, iconColor: 'text-sky-500', bgClass: 'bg-sky-500/10', borderClass: 'border-sky-500/20' },
+-              { label: 'دفتر تلفن', href: '/directory', icon: Users, iconColor: 'text-teal-500', bgClass: 'bg-teal-500/10', borderClass: 'border-teal-500/20' },
+-              { label: 'بخشنامه‌ها', href: '/content', icon: Newspaper, iconColor: 'text-orange-500', bgClass: 'bg-orange-500/10', borderClass: 'border-orange-500/20' },
+-              { label: 'دستیار AI', href: '/ai', icon: Bot, iconColor: 'text-violet-500', bgClass: 'bg-violet-500/10', borderClass: 'border-violet-500/20' },
+-              { label: 'بی‌سیم', href: '/comms/radio', icon: Radio, iconColor: 'text-blue-500', bgClass: 'bg-blue-500/10', borderClass: 'border-blue-500/20' },
+-              { label: 'چک‌لیست‌ها', href: '/checklists', icon: ClipboardCheck, iconColor: 'text-green-500', bgClass: 'bg-green-500/10', borderClass: 'border-green-500/20' },
+-              { label: 'SOS اضطراری', href: '/crisis', icon: ShieldAlert, iconColor: 'text-red-600', bgClass: 'bg-red-600/10', borderClass: 'border-red-600/20' },
+-              { label: 'حضور و غیاب', href: '/attendance', icon: MapPin, iconColor: 'text-emerald-500', bgClass: 'bg-emerald-500/10', borderClass: 'border-emerald-500/20' },
+-              { label: 'آموزش پرسنل', href: '/learning/exams', icon: Trophy, iconColor: 'text-indigo-500', bgClass: 'bg-indigo-500/10', borderClass: 'border-indigo-500/20' },
+-              { label: 'کارنامه عملکرد', href: '/performance', icon: TrendingUp, iconColor: 'text-orange-600', bgClass: 'bg-orange-600/10', borderClass: 'border-orange-600/20' },
+-              { label: 'اعلان‌ها', href: '/notifications', icon: BellRing, iconColor: 'text-pink-500', bgClass: 'bg-pink-500/10', borderClass: 'border-pink-500/20' },
+-            ].map((service, index) => (
+-              <Link href={service.href} key={index}>
+-                <div className="bg-surface-container-low/60 border border-border-subtle/50 rounded-2xl p-3 flex flex-col items-center justify-center text-center gap-2 active:scale-95 transition-all min-h-[90px] hover:bg-surface-container-high/40">
+-                  <div className={cn("size-10 rounded-xl flex items-center justify-center border", service.bgClass, service.borderClass)}>
+-                    <service.icon className={cn("size-5", service.iconColor)} />
+-                  </div>
+-                  <span className="text-[10px] font-bold text-foreground leading-tight">{service.label}</span>
+-                </div>
+-              </Link>
+-            ))}
+-          </div>
+-        </div>
+-
+-        {/* Dynamic Banner (if enabled) */}
+-        {bannerConfig?.enabled && (
+-          <a 
+-            href={bannerConfig.link || '#'} 
+-            target="_blank" 
+-            rel="noopener noreferrer"
+-            className="w-full relative h-24 rounded-2xl overflow-hidden shadow-sm border border-border/20 block active:scale-[0.98] transition-all"
+-          >
+-            <img 
+-              src={bannerConfig.url || "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1200&q=80"} 
+-              alt="Dashboard Banner" 
+-              className="w-full h-full object-cover"
+-            />
+-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+-            <div className="absolute bottom-3 right-4 text-white text-right">
+-              <h2 className="text-xs font-black text-white">شرکت بهره‌برداری راه‌آهن شهری حومه و تهران</h2>
+-              <p className="text-[9px] text-white/80 mt-0.5">پیشخوان مدیریت و کنترل عملیات - خط ۱</p>
+-            </div>
+-          </a>
+-        )}
+-
+-        {/* Monthly Overview metrics */}
+-        <div className="space-y-3">
+-          <h3 className="text-xs font-black text-foreground text-right px-1 font-sans">نمای کلی ماه</h3>
+-          <div className="grid grid-cols-2 gap-3">
+-            <div className="bg-surface-container-low/60 border border-border-subtle/50 rounded-2xl p-4 flex items-center justify-between">
+-              <div className="text-right">
+-                <span className="text-[10px] text-foreground-muted block font-sans">تیکت‌های باز</span>
+-                <span className="text-lg font-black text-foreground font-mono mt-1 block">{toFa(stats.openTickets)}</span>
+-              </div>
+-              <div className="size-9 rounded-lg bg-[#dc2626]/10 flex items-center justify-center border border-[#dc2626]/20">
+-                <AlertTriangle className="size-4.5 text-[#dc2626]" />
+-              </div>
+-            </div>
+-            <div className="bg-surface-container-low/60 border border-border-subtle/50 rounded-2xl p-4 flex items-center justify-between">
+-              <div className="text-right">
+-                <span className="text-[10px] text-foreground-muted block font-sans">اعلان جدید</span>
+-                <span className="text-lg font-black text-foreground font-mono mt-1 block">{toFa(stats.unreadBulletins)}</span>
+-              </div>
+-              <div className="size-9 rounded-lg bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
+-                <Newspaper className="size-4.5 text-orange-500" />
+-              </div>
+-            </div>
+-          </div>
+-        </div>
+-      </div>
+-
+-      {/* ── Desktop Command Dashboard ────────────────────────────────────── */}
+-      <div className="hidden md:flex flex-col gap-5 w-full">
+-        {/* ── Dispatcher Live Announcement Ticker ─────────────────────────── */}
+-        <div className="w-full bg-surface-container-low/60 border border-border-subtle/50 rounded-xl p-3 flex items-center justify-between gap-3 overflow-hidden backdrop-blur">
++      {/* ── Dispatcher Live Announcement Ticker ─────────────────────────── */}
++      <div className="w-full bg-surface-container-low/60 border border-border-subtle/50 rounded-xl p-3 flex items-center justify-between gap-3 overflow-hidden backdrop-blur">
+         <div className="flex items-center gap-2 shrink-0">
+           <span className="relative flex h-2 w-2">
+             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+@@ -1162,27 +932,6 @@ export default function DashboardPage() {
+         </div>
+       )}
+ 
+-      {/* ── Web Dashboard Banner ───────────────────────────────────────── */}
+-      {!emergencyMode && bannerConfig?.enabled && (
+-        <a 
+-          href={bannerConfig.link || '#'} 
+-          target="_blank" 
+-          rel="noopener noreferrer"
+-          className="w-full relative h-32 md:h-48 rounded-2xl overflow-hidden mb-2 shadow-sm border border-border/20 block hover:opacity-95 transition-opacity"
+-        >
+-          <img 
+-            src={bannerConfig.url || "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1200&q=80"} 
+-            alt="Dashboard Banner" 
+-            className="w-full h-full object-cover"
+-          />
+-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+-          <div className="absolute bottom-4 right-6 text-white text-right">
+-            <h2 className="text-lg font-black text-white">شرکت بهره‌برداری راه‌آهن شهری حومه و تهران</h2>
+-            <p className="text-xs text-white/80 mt-1">پیشخوان مدیریت و کنترل عملیات - خط ۱</p>
+-          </div>
+-        </a>
+-      )}
+-
+       {activeTab === 'overview' ? (
+         <>
+           {/* ── Top Level Widgets: Operational Stats, Weather, and Top Driver ─ */}
+@@ -1343,7 +1092,7 @@ export default function DashboardPage() {
+                 })}
+ 
+                 {/* Stations buttons */}
+-                {stations.map((st) => (
++                {stations.map((st, i) => (
+                   <button
+                     key={st.id}
+                     onClick={() => setSelectedStation(st)}
+@@ -1643,9 +1392,6 @@ export default function DashboardPage() {
+             )}
+           </div>
+ 
+-          {/* Recommended Content Widget */}
+-          <RecommendedContentWidget accessToken={accessToken} />
+-
+           {/* Quick Access Menu Grid */}
+           <div className="bg-surface-container-low/40 backdrop-blur border border-border-subtle/50 rounded-2xl p-5 shadow-sm space-y-4">
+             <h2 className="text-xs font-bold text-foreground-muted">دسترسی سریع پرسنلی و مدیریتی</h2>
+@@ -1895,7 +1641,6 @@ export default function DashboardPage() {
+           )}
+         </div>
+       )}
+-      </div>
+     </div>
+   )
+ }

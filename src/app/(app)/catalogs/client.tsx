@@ -16,7 +16,12 @@ import {
   Cpu, 
   Loader2,
   CheckCircle2,
-  X
+  X,
+  ChevronDown,
+  ChevronLeft,
+  Upload,
+  FileText,
+  Sparkles
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -26,8 +31,16 @@ export default function CatalogClient({ initialCatalogs }: { initialCatalogs: Te
   const [catalogs, setCatalogs] = useState<TechnicalCatalog[]>(initialCatalogs)
   const [activeId, setActiveId] = useState<string | null>(initialCatalogs.length > 0 ? initialCatalogs[0].id : null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({})
   const [isAiModalOpen, setIsAiModalOpen] = useState(false)
   const { user, accessToken } = useAuthStore()
+
+  const toggleCategory = (category: string) => {
+    setCollapsedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }))
+  }
 
   const activeCatalog = catalogs.find(c => c.id === activeId)
 
@@ -41,6 +54,69 @@ export default function CatalogClient({ initialCatalogs }: { initialCatalogs: Te
   const [newTitle, setNewTitle] = useState('')
   const [newCategory, setNewCategory] = useState('سفارشی')
   const [isSaving, setIsSaving] = useState(false)
+
+  // AI Document Agent State
+  const [agentTab, setAgentTab] = useState<'upload' | 'text'>('upload')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [agentText, setAgentText] = useState('')
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [analysisStage, setAnalysisStage] = useState('')
+
+  const handleAnalyzeDocument = async () => {
+    if (agentTab === 'upload' && !selectedFile) {
+      toast.error('لطفاً ابتدا فایلی را انتخاب کنید')
+      return
+    }
+    if (agentTab === 'text' && !agentText.trim()) {
+      toast.error('لطفاً متن مورد نظر را بنویسید')
+      return
+    }
+
+    setIsAnalyzing(true)
+    setAnalysisStage('در حال خواندن و استخراج محتوای سند...')
+
+    try {
+      const formData = new FormData()
+      if (agentTab === 'upload' && selectedFile) {
+        formData.append('file', selectedFile)
+      } else {
+        formData.append('text', agentText)
+      }
+
+      setAnalysisStage('در حال تحلیل فنی با هوش مصنوعی خط ۱...')
+      const res = await fetch('/api/ai/catalogs/analyze-doc', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: formData
+      })
+
+      setAnalysisStage('در حال دریافت و پردازش نمودارها...')
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'خطا در تحلیل سند')
+      }
+
+      if (data.catalogs && data.catalogs.length > 0) {
+        setCatalogs(prev => [...prev, ...data.catalogs])
+        setActiveId(data.catalogs[0].id)
+        toast.success(`${data.catalogs.length} کاتالوگ جدید با موفقیت ایجاد و ثبت شد`)
+        setIsAiModalOpen(false)
+        setSelectedFile(null)
+        setAgentText('')
+      } else {
+        toast.info('هیچ کاتالوگ یا دستورالعملی در این سند یافت نشد.')
+      }
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || 'خطا در ارتباط با سرور')
+    } finally {
+      setIsAnalyzing(false)
+      setAnalysisStage('')
+    }
+  }
 
   const handleGenerate = async () => {
     if (!aiPrompt.trim()) return
@@ -153,28 +229,41 @@ export default function CatalogClient({ initialCatalogs }: { initialCatalogs: Te
             const catItems = catalogs.filter(c => c.category === category && c.title.includes(searchQuery))
             if (catItems.length === 0) return null
 
+            const isCollapsed = collapsedCategories[category] === true
+
             return (
               <div key={category} className="space-y-2">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-2">
-                  {category}
-                </h3>
-                <div className="space-y-1">
-                  {catItems.map(catalog => (
-                    <button
-                      key={catalog.id}
-                      onClick={() => setActiveId(catalog.id)}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-start transition-all duration-200",
-                        activeId === catalog.id 
-                          ? "bg-primary/10 text-primary font-medium border border-primary/20 shadow-sm" 
-                          : "hover:bg-surface-container text-foreground/80 hover:text-foreground"
-                      )}
-                    >
-                      <GitMerge className={cn("w-4 h-4 shrink-0", activeId === catalog.id ? "text-primary" : "text-muted-foreground")} />
-                      <span className="text-sm truncate">{catalog.title}</span>
-                    </button>
-                  ))}
-                </div>
+                <button
+                  onClick={() => toggleCategory(category)}
+                  className="w-full flex items-center justify-between px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors duration-200"
+                >
+                  <span>{category}</span>
+                  {isCollapsed ? (
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  )}
+                </button>
+                
+                {!isCollapsed && (
+                  <div className="space-y-1">
+                    {catItems.map(catalog => (
+                      <button
+                        key={catalog.id}
+                        onClick={() => setActiveId(catalog.id)}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-start transition-all duration-200",
+                          activeId === catalog.id 
+                            ? "bg-primary/10 text-primary font-medium border border-primary/20 shadow-sm" 
+                            : "hover:bg-surface-container text-foreground/80 hover:text-foreground"
+                        )}
+                      >
+                        <GitMerge className={cn("w-4 h-4 shrink-0", activeId === catalog.id ? "text-primary" : "text-muted-foreground")} />
+                        <span className="text-sm truncate">{catalog.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )
           })}
@@ -200,7 +289,7 @@ export default function CatalogClient({ initialCatalogs }: { initialCatalogs: Te
                 <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary/80 to-transparent" />
                 
                 <CardContent className="p-0 overflow-auto max-h-[calc(100vh-12rem)] relative custom-scrollbar">
-                   <MermaidGraph chart={activeCatalog.content} className="p-8 min-h-[400px]" />
+                   <MermaidGraph chart={activeCatalog.content} title={activeCatalog.title} className="p-8 min-h-[400px]" />
                 </CardContent>
               </Card>
             </div>

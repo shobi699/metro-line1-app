@@ -120,12 +120,20 @@ function ImagesTab() {
         },
         body: formData,
       })
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || 'بارگذاری ناموفق بود')
+      let data: { data?: { url: string }; error?: string } | null = null
+      const contentType = res.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json()
       }
-      const json = await res.json()
-      setForm((prev) => ({ ...prev, mediaUrl: json.data.url }))
+
+      if (!res.ok) {
+        throw new Error(data?.error || `بارگذاری ناموفق بود (${res.status})`)
+      }
+      if (data?.data?.url) {
+        setForm((prev) => ({ ...prev, mediaUrl: data.data.url }))
+      } else {
+        throw new Error('پاسخ نامعتبر از سرور')
+      }
     } catch (err) {
       alert(err instanceof Error ? err.message : 'خطا در بارگذاری فایل')
     } finally {

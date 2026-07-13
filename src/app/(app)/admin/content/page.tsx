@@ -233,6 +233,10 @@ function AdminContentPageContent() {
             onChange={async (e) => {
               const file = e.target.files?.[0]
               if (!file || !accessToken) return
+              if (file.size > 100 * 1024 * 1024) {
+                alert('حجم فایل بیش از ۱۰۰ مگابایت است')
+                return
+              }
               const fd = new FormData()
               fd.append('file', file)
               try {
@@ -241,12 +245,15 @@ function AdminContentPageContent() {
                   headers: { Authorization: `Bearer ${accessToken}` },
                   body: fd,
                 })
-                if (res.ok) {
-                  const data = await res.json()
+                let data: any = null
+                const contentType = res.headers.get('content-type')
+                if (contentType && contentType.includes('application/json')) {
+                  data = await res.json()
+                }
+                if (res.ok && data?.data?.url) {
                   updateBlockContent(block.id, data.data.url)
                 } else {
-                  const data = await res.json()
-                  alert(data.error || 'خطا در بارگذاری فایل')
+                  alert(data?.error || `خطا در بارگذاری فایل (${res.status})`)
                 }
               } catch {
                 alert('خطا در ارتباط با سرور')
@@ -721,6 +728,10 @@ function AdminContentPageContent() {
   async function handleCover(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file || !accessToken) return
+    if (file.size > 100 * 1024 * 1024) {
+      alert('حجم فایل بیش از ۱۰۰ مگابایت است')
+      return
+    }
     setUploading(true)
     try {
       const fd = new FormData()
@@ -730,17 +741,25 @@ function AdminContentPageContent() {
         headers: { Authorization: `Bearer ${accessToken}` },
         body: fd,
       })
-      if (res.ok) {
-        const data = await res.json()
+      
+      let data: any = null
+      const contentType = res.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json()
+      }
+      
+      if (res.ok && data?.data?.url) {
         setForm((f) => ({
           ...f,
           coverUrl: data.data.url,
           mediaUrl: data.data.url,
           mediaType: data.data.type,
         }))
+      } else {
+        alert(data?.error || `خطا در آپلود فایل (${res.status})`)
       }
     } catch {
-      // silent
+      alert('خطا در ارتباط با سرور')
     } finally {
       setUploading(false)
       if (coverRef.current) coverRef.current.value = ''
@@ -1147,6 +1166,10 @@ function AdminContentPageContent() {
                     onChange={async (e) => {
                       const file = e.target.files?.[0]
                       if (!file || !accessToken) return
+                      if (file.size > 100 * 1024 * 1024) {
+                        alert('حجم فایل بیش از ۱۰۰ مگابایت است')
+                        return
+                      }
                       const fd = new FormData()
                       fd.append('file', file)
                       try {
@@ -1155,17 +1178,25 @@ function AdminContentPageContent() {
                           headers: { Authorization: `Bearer ${accessToken}` },
                           body: fd,
                         })
-                        if (res.ok) {
-                          const data = await res.json()
+                        
+                        let data: any = null
+                        const contentType = res.headers.get('content-type')
+                        if (contentType && contentType.includes('application/json')) {
+                          data = await res.json()
+                        }
+                        
+                        if (res.ok && data?.data?.url) {
                           setForm((f) => ({
                             ...f,
                             mediaUrl: data.data.url,
                             mediaType: 'application/pdf',
                             body: `دانلود فایل: ${file.name}`,
                           }))
+                        } else {
+                          alert(data?.error || `خطا در بارگذاری فایل (${res.status})`)
                         }
                       } catch {
-                        alert('خطا در بارگذاری فایل')
+                        alert('خطا در ارتباط با سرور')
                       }
                     }}
                   />

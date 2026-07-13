@@ -178,15 +178,25 @@ export function TicketForm({ onCreated }: TicketFormProps) {
           body: formData,
         })
 
+        let uploadData: { data?: { url: string }; error?: string } | null = null
+        const contentType = uploadRes.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          uploadData = await uploadRes.json()
+        }
+
         if (!uploadRes.ok) {
-          const errData = await uploadRes.json()
-          setError(errData.error || 'خطا در آپلود تصویر خرابی')
+          setError(uploadData?.error || `خطا در آپلود تصویر خرابی (${uploadRes.status})`)
           setLoading(false)
           return
         }
 
-        const uploadData = await uploadRes.json()
-        photoUrl = uploadData.data.url
+        if (uploadData?.data?.url) {
+          photoUrl = uploadData.data.url
+        } else {
+          setError('پاسخ نامعتبر از سرور در آپلود فایل')
+          setLoading(false)
+          return
+        }
       }
 
       const res = await fetchWithAuth('/api/tickets', {
