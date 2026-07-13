@@ -65,3 +65,8 @@ mobile/ios/
 *.db-journal
 *.db-shm
 *.db-wal
+
+# Large binary/app files
+*.apk
+*.ipa
+/public/file/
