@@ -8,6 +8,7 @@ const PUBLIC_API_PATHS = [
   '/api/config',
   '/api/ui/bootstrap',
   '/api/landing',
+  '/api/logs',
 ]
 
 function isPublicPath(pathname: string): boolean {

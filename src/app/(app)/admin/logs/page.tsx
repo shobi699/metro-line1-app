@@ -46,6 +46,7 @@ import {
 import { cn } from '@/lib/utils'
 import { jalali, faTime } from '@/lib/fa'
 import { toast } from 'sonner'
+import { useAuthStore } from '@/features/auth'
 
 export default function AdminLogsPage() {
   const [logs, setLogs] = useState<any[]>([])
@@ -80,7 +81,12 @@ export default function AdminLogsPage() {
         page: currentPage.toString(),
         limit: pagination.limit.toString(),
       })
-      const res = await fetch(`/api/admin/logs?${params.toString()}`)
+      const token = useAuthStore.getState().accessToken
+      const res = await fetch(`/api/admin/logs?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
       const json = await res.url ? await res.json() : null
       if (res.ok && json) {
         setLogs(json.data.logs || [])
@@ -109,8 +115,12 @@ export default function AdminLogsPage() {
   // شبیه‌سازی خطای تست
   const handleSimulateError = async () => {
     try {
+      const token = useAuthStore.getState().accessToken
       const res = await fetch('/api/admin/logs/test', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
       const json = await res.json()
       if (res.ok) {

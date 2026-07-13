@@ -1,6 +1,8 @@
+import { useAuthStore } from '@/features/auth'
+
 /**
-2:  * یوتیلیتی لاگر کلاینت برای ارسال لاگ‌ها و خطاها به API سرور.
-3:  */
+ * یوتیلیتی لاگر کلاینت برای ارسال لاگ‌ها و خطاها به API سرور.
+ */
 export async function logToServer(params: {
   level: 'debug' | 'info' | 'warn' | 'error'
   source?: 'client' | 'mobile'
@@ -19,12 +21,18 @@ export async function logToServer(params: {
       metadata: params.metadata,
     }
 
+    const token = useAuthStore.getState().accessToken
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
     // ارسال لاگ به سرور به صورت پس‌زمینه
     await fetch('/api/logs', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(payload),
     })
   } catch (err) {
