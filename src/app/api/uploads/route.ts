@@ -5,8 +5,10 @@ import {
   authErrorResponse,
 } from '@/server/rbac/guard'
 import { getStorage } from '@/server/storage'
+import { writeSystemLog } from '@/server/modules/logs/service'
+import { extractRequestContext } from '@/server/modules/audit/service'
 
-const MAX_SIZE = 100 * 1024 * 1024 // ۱۰۰ مگابایت
+
 const ALLOWED_PREFIXES = ['image/', 'video/', 'audio/']
 const ALLOWED_EXACT = [
   'application/pdf',
@@ -22,9 +24,13 @@ const ALLOWED_EXACT = [
 ]
 
 export async function POST(request: Request) {
+  let currentUser: { id: string } | null = null
+  let uploadedFile: File | null = null
+
   try {
     const user = await getSessionUser(request)
     if ('error' in user) return authErrorResponse(user)
+    currentUser = user
 
     const roleErr = await requireRole(user, 'operator')
     if (roleErr) return authErrorResponse(roleErr)
@@ -35,13 +41,9 @@ export async function POST(request: Request) {
     if (!(file instanceof File)) {
       return NextResponse.json({ error: 'فایلی ارسال نشده است' }, { status: 400 })
     }
+    uploadedFile = file
 
-    if (file.size > MAX_SIZE) {
-      return NextResponse.json(
-        { error: 'حجم فایل بیش از ۱۰۰ مگابایت است' },
-        { status: 400 },
-      )
-    }
+
 
     const mime = file.type || 'application/octet-stream'
     const allowed =
@@ -58,11 +60,35 @@ export async function POST(request: Request) {
     const stored = await getStorage().saveFile(buffer, file.name, mime)
 
     return NextResponse.json({ data: stored }, { status: 201 })
-  } catch (error: any) {
-    console.error('[Upload API Error]:', error)
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error))
+    console.error('[Upload API Error]:', err)
+
+    try {
+      const ctx = extractRequestContext(request)
+      await writeSystemLog({
+        level: 'error',
+        source: 'server',
+        category: 'uploads',
+        message: `خطای سرور در آپلود فایل: ${err.message}`,
+        stack: err.stack,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+        actorId: currentUser?.id,
+        metadata: {
+          fileName: uploadedFile?.name || 'unknown',
+          fileSize: uploadedFile?.size || 0,
+          mimeType: uploadedFile?.type || 'unknown',
+        },
+      })
+    } catch (logError) {
+      console.error('[Upload API Log Failure]:', logError)
+    }
+
     return NextResponse.json(
-      { error: `خطای سرور در آپلود فایل: ${error?.message || error}` },
+      { error: `خطای سرور در آپلود فایل: ${err.message}` },
       { status: 500 },
     )
   }
 }
+

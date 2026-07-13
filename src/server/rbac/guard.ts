@@ -123,3 +123,68 @@ export async function can(
   // بررسی تطابق محدوده درخواست شده با محدوده‌های کاربر
   return user.scopes?.some(s => s.type === scope.type && s.key === scope.key) ?? false
 }
+
+/**
+ * یک Wrapper برای مسیرهای API (Route Handlers) جهت ثبت خودکار خطاهای کنترل‌نشده ۵۰۰ در سیستم لاگ.
+ */
+export function withErrorLogging<T extends unknown[], R>(
+  handler: (...args: T) => Promise<NextResponse<R> | Response>
+) {
+  return async (...args: T): Promise<NextResponse | Response> => {
+    try {
+      return await handler(...args)
+    } catch (error) {
+      const request = args[0] instanceof Request ? args[0] : null
+      const err = error instanceof Error ? error : new Error(String(error))
+      console.error('[API Route Error]:', err)
+
+      try {
+        let actorId: string | undefined
+        let userAgent: string | undefined
+        let ipAddress: string | undefined
+        let category = 'api'
+
+        if (request) {
+          // استخراج اطلاعات درخواست
+          const { extractRequestContext } = await import('@/server/modules/audit/service')
+          const ctx = extractRequestContext(request)
+          userAgent = ctx.userAgent
+          ipAddress = ctx.ipAddress
+
+          // استخراج دسته‌بندی از روی URL
+          const url = new URL(request.url)
+          const paths = url.pathname.split('/').filter(Boolean)
+          if (paths[0] === 'api' && paths[1]) {
+            category = paths[1]
+          }
+
+          // استخراج کاربر لاگین شده بدون بالا انداختن خطا
+          const user = await getSessionUser(request).catch(() => null)
+          if (user && !('error' in user)) {
+            actorId = user.id
+          }
+        }
+
+        const { writeSystemLog } = await import('@/server/modules/logs/service')
+        await writeSystemLog({
+          level: 'error',
+          source: 'server',
+          category,
+          message: `خطای کنترل‌نشده در مسیر: ${err.message}`,
+          stack: err.stack,
+          ipAddress,
+          userAgent,
+          actorId,
+        })
+      } catch (logErr) {
+        console.error('[withErrorLogging Log Failure]:', logErr)
+      }
+
+      return NextResponse.json(
+        { error: `خطای داخلی سرور: ${err.message}` },
+        { status: 500 }
+      )
+    }
+  }
+}
+

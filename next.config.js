@@ -12,7 +12,7 @@ const nextConfig = {
   experimental: {
     workerThreads: false,
     cpus: 1,
-    middlewareClientMaxBodySize: '110mb',
+    middlewareClientMaxBodySize: '10gb',
   },
   async headers() {
     return [

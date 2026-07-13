@@ -3,11 +3,12 @@ import {
   getSessionUser,
   requireRole,
   authErrorResponse,
+  withErrorLogging,
 } from '@/server/rbac/guard'
 import { createTicketSchema } from '@/lib/zod/safety'
 import { createTicket, listTickets, getTicketStats } from '@/server/modules/tickets/service'
 
-export async function GET(request: Request) {
+export const GET = withErrorLogging(async function GET(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
@@ -21,9 +22,9 @@ export async function GET(request: Request) {
   const stats = await getTicketStats()
 
   return NextResponse.json({ data: { tickets, stats } })
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withErrorLogging(async function POST(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
@@ -42,4 +43,5 @@ export async function POST(request: Request) {
 
   const ticket = await createTicket(parsed.data, user.id)
   return NextResponse.json({ data: ticket }, { status: 201 })
-}
+})
+

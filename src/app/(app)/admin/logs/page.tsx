@@ -165,6 +165,13 @@ ${log.stack || 'فاقد اطلاعات فنی بیشتر (Stack Trace)'}
     toast.success('اطلاعات خطا با فرمت مارک‌داون مخصوص هوش مصنوعی کپی شد.')
   }
 
+  // کپی کردن متن ساده
+  const handleCopyText = (text: string, successMessage: string) => {
+    if (!text) return
+    navigator.clipboard.writeText(text)
+    toast.success(successMessage)
+  }
+
   // نمایش آیکون مناسب برای هر سطح
   const renderLevelBadge = (lvl: string) => {
     switch (lvl) {
@@ -543,17 +550,39 @@ ${log.stack || 'فاقد اطلاعات فنی بیشتر (Stack Trace)'}
               </div>
 
               {/* Message */}
-              <div className="rounded-xl border border-border bg-surface-container-low p-4 flex flex-col gap-1.5">
-                <span className="text-xs text-foreground-muted">پیام خطا</span>
-                <p className="text-sm text-foreground font-semibold leading-relaxed font-body-sm">
+              <div className="rounded-xl border border-border bg-surface-container-low p-4 flex flex-col gap-1.5 relative group/item">
+                <div className="flex justify-between items-center w-full">
+                  <span className="text-xs text-foreground-muted">پیام خطا</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-6 text-foreground-muted hover:text-accent opacity-0 group-hover/item:opacity-100 transition-opacity"
+                    onClick={() => handleCopyText(selectedLog.message, 'پیام خطا با موفقیت کپی شد.')}
+                    title="کپی پیام خطا"
+                  >
+                    <Copy className="size-3.5" />
+                  </Button>
+                </div>
+                <p className="text-sm text-foreground font-semibold leading-relaxed font-body-sm mt-1">
                   {selectedLog.message}
                 </p>
               </div>
 
               {/* Metadata JSON */}
               {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
-                <div className="rounded-xl border border-border bg-surface-container-low p-4 flex flex-col gap-2">
-                  <span className="text-xs text-foreground-muted">اطلاعات اضافی (Metadata JSON)</span>
+                <div className="rounded-xl border border-border bg-surface-container-low p-4 flex flex-col gap-2 relative group/item">
+                  <div className="flex justify-between items-center w-full">
+                    <span className="text-xs text-foreground-muted">اطلاعات اضافی (Metadata JSON)</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-6 text-foreground-muted hover:text-accent opacity-0 group-hover/item:opacity-100 transition-opacity"
+                      onClick={() => handleCopyText(JSON.stringify(selectedLog.metadata, null, 2), 'اطلاعات متاداده با موفقیت کپی شد.')}
+                      title="کپی متاداده"
+                    >
+                      <Copy className="size-3.5" />
+                    </Button>
+                  </div>
                   <pre className="font-data-mono text-xs bg-surface-container-high border border-border rounded-lg p-3 overflow-x-auto text-emerald-400" dir="ltr">
                     {JSON.stringify(selectedLog.metadata, null, 2)}
                   </pre>
@@ -561,8 +590,21 @@ ${log.stack || 'فاقد اطلاعات فنی بیشتر (Stack Trace)'}
               )}
 
               {/* Stack Trace */}
-              <div className="rounded-xl border border-border bg-surface-container-low p-4 flex flex-col gap-2">
-                <span className="text-xs text-foreground-muted">ردیابی کد خطا (Stack Trace)</span>
+              <div className="rounded-xl border border-border bg-surface-container-low p-4 flex flex-col gap-2 relative group/item">
+                <div className="flex justify-between items-center w-full">
+                  <span className="text-xs text-foreground-muted">ردیابی کد خطا (Stack Trace)</span>
+                  {selectedLog.stack && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-6 text-foreground-muted hover:text-accent opacity-0 group-hover/item:opacity-100 transition-opacity"
+                      onClick={() => handleCopyText(selectedLog.stack || '', 'کد ردیابی خطا با موفقیت کپی شد.')}
+                      title="کپی Stack Trace"
+                    >
+                      <Copy className="size-3.5" />
+                    </Button>
+                  )}
+                </div>
                 <pre className="font-data-mono text-[11px] bg-neutral-950 text-neutral-200 border border-border rounded-lg p-4 overflow-x-auto leading-relaxed" dir="ltr">
                   {selectedLog.stack || 'فاقد Stack Trace'}
                 </pre>

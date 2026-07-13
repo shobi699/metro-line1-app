@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { MermaidGraph } from '@/components/shared/mermaid-graph'
 import { TechnicalCatalog } from '@/generated/prisma/client'
-import { 
-  Bot, 
-  GitMerge, 
-  Plus, 
-  Save, 
-  Search, 
-  Settings2, 
-  Cpu, 
+import {
+  Bot,
+  GitMerge,
+  Plus,
+  Save,
+  Search,
+  Settings2,
+  Cpu,
   Loader2,
   CheckCircle2,
   X,
@@ -127,7 +127,7 @@ export default function CatalogClient({ initialCatalogs }: { initialCatalogs: Te
       console.log('Sending request to /api/ai/catalogs/generate with prompt length:', aiPrompt.length)
       const res = await fetch('/api/ai/catalogs/generate', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`
         },
@@ -139,7 +139,7 @@ export default function CatalogClient({ initialCatalogs }: { initialCatalogs: Te
         console.error('Failed to generate graph, API returned:', res.status, errorData)
         throw new Error('Failed to generate graph')
       }
-      
+
       const data = await res.json()
       console.log('Successfully generated graph. Mermaid length:', data.mermaid?.length)
       setGeneratedGraph(data.mermaid)
@@ -156,13 +156,13 @@ export default function CatalogClient({ initialCatalogs }: { initialCatalogs: Te
       toast.error('عنوان و گراف نمی‌تواند خالی باشد')
       return
     }
-    
+
     setIsSaving(true)
     try {
       console.log('Saving catalog to /api/catalogs')
       const res = await fetch('/api/catalogs', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`
         },
@@ -179,12 +179,12 @@ export default function CatalogClient({ initialCatalogs }: { initialCatalogs: Te
         throw new Error('Failed to save')
       }
       const savedCatalog = await res.json()
-      
+
       setCatalogs([...catalogs, savedCatalog])
       setActiveId(savedCatalog.id)
       setIsAiModalOpen(false)
       toast.success('کاتالوگ جدید با موفقیت ذخیره شد')
-      
+
       // Reset state
       setGeneratedGraph(null)
       setAiPrompt('')
@@ -215,9 +215,9 @@ export default function CatalogClient({ initialCatalogs }: { initialCatalogs: Te
           </div>
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input 
-              className="pl-3 pr-9 h-9 bg-surface-container-low border-border/50 text-sm" 
-              placeholder="جستجوی کاتالوگ..." 
+            <Input
+              className="pl-3 pr-9 h-9 bg-surface-container-low border-border/50 text-sm"
+              placeholder="جستجوی کاتالوگ..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -244,7 +244,7 @@ export default function CatalogClient({ initialCatalogs }: { initialCatalogs: Te
                     <ChevronDown className="w-3.5 h-3.5" />
                   )}
                 </button>
-                
+
                 {!isCollapsed && (
                   <div className="space-y-1">
                     {catItems.map(catalog => (
@@ -253,8 +253,8 @@ export default function CatalogClient({ initialCatalogs }: { initialCatalogs: Te
                         onClick={() => setActiveId(catalog.id)}
                         className={cn(
                           "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-start transition-all duration-200",
-                          activeId === catalog.id 
-                            ? "bg-primary/10 text-primary font-medium border border-primary/20 shadow-sm" 
+                          activeId === catalog.id
+                            ? "bg-primary/10 text-primary font-medium border border-primary/20 shadow-sm"
                             : "hover:bg-surface-container text-foreground/80 hover:text-foreground"
                         )}
                       >
@@ -277,19 +277,19 @@ export default function CatalogClient({ initialCatalogs }: { initialCatalogs: Te
             <div className="h-14 border-b border-white/10 flex items-center px-6 bg-black/20 backdrop-blur-md z-10 shrink-0">
               <div className="flex flex-col">
                 <h1 className="font-bold text-white/90">{activeCatalog.title}</h1>
-                <span className="text-[10px] text-white/40 uppercase tracking-widest font-mono">REF: L1-BKS-{activeCatalog.id.substring(0,6).toUpperCase()}</span>
+                <span className="text-[10px] text-white/40 uppercase tracking-widest font-mono">REF: L1-BKS-{activeCatalog.id.substring(0, 6).toUpperCase()}</span>
               </div>
             </div>
             <div className="flex-1 overflow-hidden relative p-6 flex justify-center items-center">
               {/* Premium Glow Effect Wrapper */}
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
-              
+
               <Card className="w-full max-w-5xl max-h-full border-white/10 bg-black/40 backdrop-blur-xl shadow-2xl overflow-hidden ring-1 ring-white/5 relative">
                 {/* Accent line */}
                 <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary/80 to-transparent" />
-                
+
                 <CardContent className="p-0 overflow-auto max-h-[calc(100vh-12rem)] relative custom-scrollbar">
-                   <MermaidGraph chart={activeCatalog.content} title={activeCatalog.title} className="p-8 min-h-[400px]" />
+                  <MermaidGraph chart={activeCatalog.content} title={activeCatalog.title} className="p-8 min-h-[400px]" />
                 </CardContent>
               </Card>
             </div>
