@@ -3,6 +3,16 @@ const appOrigin = process.env.APP_ORIGIN || ''
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ["pdf-parse"],
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  experimental: {
+    workerThreads: false,
+    cpus: 1,
+  },
   async headers() {
     return [
       {

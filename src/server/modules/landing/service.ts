@@ -1,5 +1,27 @@
 import { prisma } from '@/server/db'
 
+const DEFAULT_FEATURES = [
+  { icon: 'Calendar', title: 'لوحه و شیفت‌ها', description: 'مشاهده لوحهٔ ماهانه، تقویم شخصی شیفت و درخواست جابجایی بدون کاغذبازی.' },
+  { icon: 'Users', title: 'دفتر تلفن هوشمند', description: 'دسترسی سریع به اطلاعات تماس همکاران با جست‌وجوی چندمعیاره.' },
+  { icon: 'ShieldCheck', title: 'بخشنامه‌های ایمنی', description: 'ابلاغ بخشنامه‌ها با رسید مطالعهٔ اجباری و گزارش رؤیت لحظه‌ای.' },
+  { icon: 'Wrench', title: 'گزارش خرابی', description: 'ثبت خرابی ناوگان و تجهیزات با تصویر و پیگیری وضعیت تا رفع.' },
+  { icon: 'MessageCircle', title: 'ارتباطات بلادرنگ', description: 'گفت‌وگوی گروهی و مستقیم پرسنل به‌صورت امن و لحظه‌ای.' },
+  { icon: 'GraduationCap', title: 'آموزش و آزمون', description: 'دوره‌های آموزشی، آزمون‌های آنلاین و جدول امتیازات عملکردی.' },
+]
+
+const DEFAULT_STATS = [
+  { value: '32', label: 'ایستگاه فعال' },
+  { value: '46', label: 'کیلومتر مسیر' },
+  { value: '24/7', label: 'پایش عملیات' },
+  { value: '30+', label: 'ماژول عملیاتی' },
+]
+
+const DEFAULT_FOOTER_LINKS = [
+  { label: 'ورود به سامانه', href: '/login' },
+  { label: 'ثبت‌نام پرسنل', href: '/register' },
+  { label: 'دریافت اپلیکیشن', href: '/download' },
+]
+
 const LANDING_SETTINGS_DEFAULTS = [
   {
     key: 'landing.particleCount',
@@ -105,6 +127,62 @@ const LANDING_SETTINGS_DEFAULTS = [
     type: 'text',
     value: 'سامانه سیر و حرکت خط ۱ مترو تهران — مدار خط یک',
     defaultValue: 'سامانه سیر و حرکت خط ۱ مترو تهران — مدار خط یک',
+    category: 'landing',
+  },
+  {
+    key: 'landing.announcementEnabled',
+    label: 'نمایش نوار اطلاعیه',
+    type: 'boolean',
+    value: false,
+    defaultValue: false,
+    category: 'landing',
+  },
+  {
+    key: 'landing.announcementText',
+    label: 'متن نوار اطلاعیه',
+    type: 'text',
+    value: '',
+    defaultValue: '',
+    category: 'landing',
+  },
+  {
+    key: 'landing.announcementHref',
+    label: 'لینک نوار اطلاعیه (اختیاری)',
+    type: 'text',
+    value: '',
+    defaultValue: '',
+    category: 'landing',
+  },
+  {
+    key: 'landing.featuresTitle',
+    label: 'عنوان بخش قابلیت‌ها',
+    type: 'text',
+    value: 'یک سامانه برای همهٔ عملیات خط ۱',
+    defaultValue: 'یک سامانه برای همهٔ عملیات خط ۱',
+    category: 'landing',
+  },
+  {
+    key: 'landing.features',
+    label: 'قابلیت‌های سامانه (JSON)',
+    type: 'json',
+    value: DEFAULT_FEATURES,
+    defaultValue: DEFAULT_FEATURES,
+    category: 'landing',
+  },
+  {
+    key: 'landing.stats',
+    label: 'آمار سامانه (JSON)',
+    type: 'json',
+    value: DEFAULT_STATS,
+    defaultValue: DEFAULT_STATS,
+    category: 'landing',
+  },
+  {
+    key: 'landing.footerLinks',
+    label: 'لینک‌های فوتر (JSON)',
+    type: 'json',
+    value: DEFAULT_FOOTER_LINKS,
+    defaultValue: DEFAULT_FOOTER_LINKS,
     category: 'landing',
   },
 ]

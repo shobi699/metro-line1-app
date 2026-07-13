@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useCallback, useState, useRef } from 'react'
+import { Suspense, useCallback, useMemo, useState, useRef } from 'react'
 import { Canvas, useFrame, useLoader } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
@@ -36,8 +36,13 @@ function CenterLogo({ radius = 0.9 }: CenterLogoProps) {
   const meshRef = useRef<THREE.Mesh>(null)
 
   // Load logo texture
-  const texture = useLoader(THREE.TextureLoader, '/logo.png')
-  texture.colorSpace = THREE.SRGBColorSpace
+  const rawTexture = useLoader(THREE.TextureLoader, '/logo.png')
+  const texture = useMemo(() => {
+    const t = rawTexture.clone()
+    t.colorSpace = THREE.SRGBColorSpace
+    t.needsUpdate = true
+    return t
+  }, [rawTexture])
 
   useFrame((_, delta) => {
     if (meshRef.current) {

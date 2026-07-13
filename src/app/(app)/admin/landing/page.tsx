@@ -13,7 +13,9 @@ import {
   MessageCircle,
   Palette,
   Link2,
-
+  LayoutList,
+  Megaphone,
+  BarChart3,
   Plus,
   Trash2,
   GripVertical,
@@ -124,8 +126,8 @@ function ImagesTab() {
       }
       const json = await res.json()
       setForm((prev) => ({ ...prev, mediaUrl: json.data.url }))
-    } catch (err: any) {
-      alert(err.message || 'خطا در بارگذاری فایل')
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'خطا در بارگذاری فایل')
     } finally {
       setUploading(false)
     }
@@ -502,6 +504,278 @@ function CtaTab() {
   )
 }
 
+interface FeatureItem {
+  icon: string
+  title: string
+  description: string
+}
+
+interface StatItem {
+  value: string
+  label: string
+}
+
+interface FooterLinkItem {
+  label: string
+  href: string
+}
+
+const FEATURE_ICONS = [
+  'Calendar', 'Users', 'ShieldCheck', 'Wrench', 'MessageCircle',
+  'GraduationCap', 'Radio', 'MapPin', 'Bell', 'ClipboardCheck', 'BarChart3', 'Bot',
+]
+
+function parseJsonSetting<T>(value: string | undefined, fallback: T): T {
+  if (!value) return fallback
+  try {
+    const parsed = JSON.parse(value)
+    return Array.isArray(fallback) ? (Array.isArray(parsed) ? (parsed as T) : fallback) : (parsed as T)
+  } catch {
+    return fallback
+  }
+}
+
+function SectionsTab() {
+  const api = useApi()
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const [announcementEnabled, setAnnouncementEnabled] = useState(false)
+  const [announcementText, setAnnouncementText] = useState('')
+  const [announcementHref, setAnnouncementHref] = useState('')
+  const [featuresTitle, setFeaturesTitle] = useState('')
+  const [features, setFeatures] = useState<FeatureItem[]>([])
+  const [stats, setStats] = useState<StatItem[]>([])
+  const [footerLinks, setFooterLinks] = useState<FooterLinkItem[]>([])
+
+  const load = useCallback(async () => {
+    try {
+      const res = await api.get('/api/admin/settings')
+      const map: Record<string, string> = {}
+      for (const s of res.data as Array<{ key: string; value: string }>) {
+        if (s.key.startsWith('landing.')) map[s.key] = s.value
+      }
+      setAnnouncementEnabled(parseJsonSetting<unknown>(map['landing.announcementEnabled'], false) === true)
+      setAnnouncementText(parseJsonSetting(map['landing.announcementText'], ''))
+      setAnnouncementHref(parseJsonSetting(map['landing.announcementHref'], ''))
+      setFeaturesTitle(parseJsonSetting(map['landing.featuresTitle'], ''))
+      setFeatures(parseJsonSetting<FeatureItem[]>(map['landing.features'], []))
+      setStats(parseJsonSetting<StatItem[]>(map['landing.stats'], []))
+      setFooterLinks(parseJsonSetting<FooterLinkItem[]>(map['landing.footerLinks'], []))
+    } finally {
+      setLoading(false)
+    }
+  }, [api])
+
+  useEffect(() => { void load() }, [load])
+
+  const handleSave = async () => {
+    setSaving(true)
+    setError(null)
+    setSaved(false)
+    try {
+      await api.patch('/api/admin/settings', {
+        updates: [
+          { key: 'landing.announcementEnabled', value: announcementEnabled },
+          { key: 'landing.announcementText', value: announcementText },
+          { key: 'landing.announcementHref', value: announcementHref },
+          { key: 'landing.featuresTitle', value: featuresTitle },
+          { key: 'landing.features', value: features.filter((f) => f.title) },
+          { key: 'landing.stats', value: stats.filter((s) => s.label && s.value) },
+          { key: 'landing.footerLinks', value: footerLinks.filter((l) => l.label && l.href) },
+        ],
+      })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'خطا در ذخیره')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const moveItem = <T,>(list: T[], set: (v: T[]) => void, index: number, dir: -1 | 1) => {
+    const other = index + dir
+    if (other < 0 || other >= list.length) return
+    const next = [...list]
+    ;[next[index], next[other]] = [next[other], next[index]]
+    set(next)
+  }
+
+  if (loading) return <div className="p-8 text-center text-foreground-muted">در حال بارگذاری...</div>
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-bold text-foreground">بخش‌های صفحهٔ اصلی</h3>
+        <div className="flex items-center gap-3">
+          {saved && <span className="text-xs text-success">ذخیره شد ✓</span>}
+          {error && <span className="text-xs text-danger">{error}</span>}
+          <Button onClick={handleSave} disabled={saving} size="sm">
+            <Save className="size-4" />
+            {saving ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+          </Button>
+        </div>
+      </div>
+
+      {/* نوار اطلاعیه */}
+      <section className="rounded-xl border border-border bg-surface-container-low p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Megaphone className="size-4 text-accent" />
+          <h4 className="text-sm font-bold text-foreground">نوار اطلاعیه</h4>
+          <div className="ms-auto flex items-center gap-2">
+            <Label className="text-xs text-foreground-muted">فعال</Label>
+            <Switch checked={announcementEnabled} onCheckedChange={setAnnouncementEnabled} />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div>
+            <Label>متن اطلاعیه</Label>
+            <Input value={announcementText} onChange={(e) => setAnnouncementText(e.target.value)} placeholder="مثلاً: نسخهٔ جدید اپلیکیشن منتشر شد" />
+          </div>
+          <div>
+            <Label>لینک (اختیاری)</Label>
+            <Input value={announcementHref} onChange={(e) => setAnnouncementHref(e.target.value)} placeholder="/download" dir="ltr" />
+          </div>
+        </div>
+      </section>
+
+      {/* قابلیت‌ها */}
+      <section className="rounded-xl border border-border bg-surface-container-low p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <LayoutList className="size-4 text-accent" />
+          <h4 className="text-sm font-bold text-foreground">قابلیت‌های سامانه ({features.length})</h4>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ms-auto"
+            onClick={() => setFeatures([...features, { icon: 'ClipboardCheck', title: '', description: '' }])}
+          >
+            <Plus className="size-4" />
+            افزودن
+          </Button>
+        </div>
+        <div>
+          <Label>عنوان بخش</Label>
+          <Input value={featuresTitle} onChange={(e) => setFeaturesTitle(e.target.value)} placeholder="عنوان بخش قابلیت‌ها" />
+        </div>
+        <div className="space-y-2">
+          {features.map((f, idx) => (
+            <div key={idx} className="rounded-lg border border-border bg-surface-container px-3 py-3 space-y-2">
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_1fr_auto]">
+                <Input value={f.title} onChange={(e) => setFeatures(features.map((x, i) => i === idx ? { ...x, title: e.target.value } : x))} placeholder="عنوان قابلیت" />
+                <select
+                  value={f.icon}
+                  onChange={(e) => setFeatures(features.map((x, i) => i === idx ? { ...x, icon: e.target.value } : x))}
+                  className="rounded-lg border border-border bg-surface-container px-3 py-2 text-sm text-foreground"
+                  aria-label="آیکون"
+                >
+                  {FEATURE_ICONS.map((ic) => <option key={ic} value={ic}>{ic}</option>)}
+                </select>
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon-xs" onClick={() => moveItem(features, setFeatures, idx, -1)} disabled={idx === 0}>
+                    <ArrowUp className="size-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon-xs" onClick={() => moveItem(features, setFeatures, idx, 1)} disabled={idx === features.length - 1}>
+                    <ArrowDown className="size-3.5" />
+                  </Button>
+                  <Button variant="destructive" size="icon-xs" onClick={() => setFeatures(features.filter((_, i) => i !== idx))}>
+                    <Trash2 className="size-3.5" />
+                  </Button>
+                </div>
+              </div>
+              <Textarea value={f.description} onChange={(e) => setFeatures(features.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))} placeholder="توضیح کوتاه" rows={2} />
+            </div>
+          ))}
+          {features.length === 0 && (
+            <div className="py-6 text-center text-sm text-foreground-muted">قابلیتی تعریف نشده — بخش در صفحه نمایش داده نمی‌شود</div>
+          )}
+        </div>
+      </section>
+
+      {/* آمار */}
+      <section className="rounded-xl border border-border bg-surface-container-low p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="size-4 text-accent" />
+          <h4 className="text-sm font-bold text-foreground">آمار ({stats.length})</h4>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ms-auto"
+            onClick={() => setStats([...stats, { value: '', label: '' }])}
+          >
+            <Plus className="size-4" />
+            افزودن
+          </Button>
+        </div>
+        <div className="space-y-2">
+          {stats.map((s, idx) => (
+            <div key={idx} className="grid grid-cols-1 gap-2 md:grid-cols-[10rem_1fr_auto]">
+              <Input value={s.value} onChange={(e) => setStats(stats.map((x, i) => i === idx ? { ...x, value: e.target.value } : x))} placeholder="مقدار (مثلاً 32)" dir="ltr" />
+              <Input value={s.label} onChange={(e) => setStats(stats.map((x, i) => i === idx ? { ...x, label: e.target.value } : x))} placeholder="برچسب (مثلاً ایستگاه فعال)" />
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon-xs" onClick={() => moveItem(stats, setStats, idx, -1)} disabled={idx === 0}>
+                  <ArrowUp className="size-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon-xs" onClick={() => moveItem(stats, setStats, idx, 1)} disabled={idx === stats.length - 1}>
+                  <ArrowDown className="size-3.5" />
+                </Button>
+                <Button variant="destructive" size="icon-xs" onClick={() => setStats(stats.filter((_, i) => i !== idx))}>
+                  <Trash2 className="size-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+          {stats.length === 0 && (
+            <div className="py-6 text-center text-sm text-foreground-muted">آماری تعریف نشده — بخش در صفحه نمایش داده نمی‌شود</div>
+          )}
+        </div>
+      </section>
+
+      {/* لینک‌های فوتر */}
+      <section className="rounded-xl border border-border bg-surface-container-low p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Link2 className="size-4 text-accent" />
+          <h4 className="text-sm font-bold text-foreground">لینک‌های فوتر ({footerLinks.length})</h4>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ms-auto"
+            onClick={() => setFooterLinks([...footerLinks, { label: '', href: '' }])}
+          >
+            <Plus className="size-4" />
+            افزودن
+          </Button>
+        </div>
+        <div className="space-y-2">
+          {footerLinks.map((l, idx) => (
+            <div key={idx} className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_1fr_auto]">
+              <Input value={l.label} onChange={(e) => setFooterLinks(footerLinks.map((x, i) => i === idx ? { ...x, label: e.target.value } : x))} placeholder="برچسب" />
+              <Input value={l.href} onChange={(e) => setFooterLinks(footerLinks.map((x, i) => i === idx ? { ...x, href: e.target.value } : x))} placeholder="/login" dir="ltr" />
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon-xs" onClick={() => moveItem(footerLinks, setFooterLinks, idx, -1)} disabled={idx === 0}>
+                  <ArrowUp className="size-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon-xs" onClick={() => moveItem(footerLinks, setFooterLinks, idx, 1)} disabled={idx === footerLinks.length - 1}>
+                  <ArrowDown className="size-3.5" />
+                </Button>
+                <Button variant="destructive" size="icon-xs" onClick={() => setFooterLinks(footerLinks.filter((_, i) => i !== idx))}>
+                  <Trash2 className="size-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+          {footerLinks.length === 0 && (
+            <div className="py-6 text-center text-sm text-foreground-muted">لینکی تعریف نشده</div>
+          )}
+        </div>
+      </section>
+    </div>
+  )
+}
+
 function SceneSettingsTab() {
   const api = useApi()
   const [settings, setSettings] = useState<Array<{
@@ -518,8 +792,10 @@ function SceneSettingsTab() {
   const load = useCallback(async () => {
     try {
       const res = await api.get('/api/admin/settings')
-      const landing = (res.data as typeof settings).filter((s: { category?: string; key: string }) =>
-        'category' in s ? (s as { category: string }).category === 'landing' : s.key.startsWith('landing.'),
+      const landing = (res.data as Array<typeof settings[number] & { category?: string }>).filter(
+        (s) =>
+          (('category' in s && s.category) ? s.category === 'landing' : s.key.startsWith('landing.')) &&
+          s.type !== 'json',
       )
       setSettings(landing)
       const vals: Record<string, string> = {}
@@ -647,6 +923,10 @@ export default function AdminLandingPage() {
             <Link2 className="size-4" />
             دکمه‌ها
           </TabsTrigger>
+          <TabsTrigger value="sections">
+            <LayoutList className="size-4" />
+            بخش‌های صفحه
+          </TabsTrigger>
           <TabsTrigger value="scene">
             <Palette className="size-4" />
             صحنه و سئو
@@ -661,6 +941,9 @@ export default function AdminLandingPage() {
         </TabsContent>
         <TabsContent value="cta" className="mt-4">
           <CtaTab />
+        </TabsContent>
+        <TabsContent value="sections" className="mt-4">
+          <SectionsTab />
         </TabsContent>
         <TabsContent value="scene" className="mt-4">
           <SceneSettingsTab />

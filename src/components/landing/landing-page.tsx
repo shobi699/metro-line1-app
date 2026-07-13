@@ -4,6 +4,10 @@ import { useState, useEffect, useSyncExternalStore, lazy, Suspense } from 'react
 import { HeroQuote } from './hero-quote'
 import { CtaRow } from './cta-row'
 import { FallbackPoster } from './fallback-poster'
+import { AnnouncementBar } from './announcement-bar'
+import { FeaturesSection, type LandingFeature } from './features-section'
+import { StatsSection, type LandingStat } from './stats-section'
+import { LandingFooter, type FooterLink } from './landing-footer'
 import { useAuthStore } from '@/features/auth'
 
 const OrbitScene = lazy(() =>
@@ -112,9 +116,27 @@ export function LandingPage() {
   const heroSubtitle = (data?.settings?.heroSubtitle as string) ?? 'سامانه سیر و حرکت خط ۱ مترو تهران'
   const footerText = (data?.settings?.footerText as string) ?? 'سامانه سیر و حرکت خط ۱ مترو تهران — مدار خط یک'
 
+  const announcementEnabled = data?.settings?.announcementEnabled === true
+  const announcementText = (data?.settings?.announcementText as string) ?? ''
+  const announcementHref = (data?.settings?.announcementHref as string) ?? ''
+  const featuresTitle = (data?.settings?.featuresTitle as string) ?? 'یک سامانه برای همهٔ عملیات خط ۱'
+  const features = Array.isArray(data?.settings?.features)
+    ? (data.settings.features as LandingFeature[])
+    : []
+  const stats = Array.isArray(data?.settings?.stats)
+    ? (data.settings.stats as LandingStat[])
+    : []
+  const footerLinks = Array.isArray(data?.settings?.footerLinks)
+    ? (data.settings.footerLinks as FooterLink[])
+    : []
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-black" dir="rtl">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0204] to-black opacity-60 pointer-events-none" />
+
+      {announcementEnabled && announcementText && (
+        <AnnouncementBar text={announcementText} href={announcementHref || null} />
+      )}
 
       <header className="relative z-20 flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-3">
@@ -177,13 +199,12 @@ export function LandingPage() {
         {data?.ctas && data.ctas.length > 0 && (
           <CtaRow ctas={data.ctas} isAuthenticated={isAuthenticated} />
         )}
+
+        <StatsSection stats={stats} />
+        <FeaturesSection title={featuresTitle} features={features} />
       </div>
 
-      <footer className="relative z-10 py-6 text-center">
-        <p className="text-xs text-white/30">
-          {footerText}
-        </p>
-      </footer>
+      <LandingFooter text={footerText} links={footerLinks} />
     </div>
   )
 }
