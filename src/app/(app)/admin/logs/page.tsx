@@ -276,7 +276,7 @@ ${log.stack || 'فاقد اطلاعات فنی بیشتر (Stack Trace)'}
               {/* Level Filter */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-foreground-muted font-medium">سطح حساسیت</label>
-                <Select value={level} onValueChange={setLevel}>
+                <Select value={level} onValueChange={(val) => setLevel(val || 'all')}>
                   <SelectTrigger className="h-10 border-outline-variant bg-surface-container-low">
                     <SelectValue placeholder="همه سطوح" />
                   </SelectTrigger>
@@ -293,7 +293,7 @@ ${log.stack || 'فاقد اطلاعات فنی بیشتر (Stack Trace)'}
               {/* Source Filter */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-foreground-muted font-medium">منبع خطا</label>
-                <Select value={source} onValueChange={setSource}>
+                <Select value={source} onValueChange={(val) => setSource(val || 'all')}>
                   <SelectTrigger className="h-10 border-outline-variant bg-surface-container-low">
                     <SelectValue placeholder="همه منابع" />
                   </SelectTrigger>
