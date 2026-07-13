@@ -18,7 +18,9 @@ export function createR2Driver(env: R2Env): StorageDriver {
       const folder = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
       const key = `uploads/${folder}/${crypto.randomUUID()}${ext ? `.${ext}` : ''}`
 
-      await env.R2_BUCKET.put(key, buffer, {
+      const uploadData = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer)
+
+      await env.R2_BUCKET.put(key, uploadData, {
         httpMetadata: { contentType: mime },
       })
 

@@ -32,9 +32,10 @@ export async function GET(
     else if (ext === '.ipa') contentType = 'application/octet-stream'
     else if (ext === '.plist') contentType = 'application/xml'
 
-    return new Response(fileBuffer, {
+    return new Response(new Uint8Array(fileBuffer), {
       headers: {
         'Content-Type': contentType,
+        'Content-Length': fileBuffer.length.toString(),
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
     })

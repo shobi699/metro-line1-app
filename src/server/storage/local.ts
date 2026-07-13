@@ -18,7 +18,7 @@ export const localStorageDriver: StorageDriver = {
     await mkdir(dir, { recursive: true })
 
     const fileName = `${crypto.randomUUID()}${sanitizeExt(originalName)}`
-    const data = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer
+    const data = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer)
     await writeFile(path.join(dir, fileName), data)
 
     return {
