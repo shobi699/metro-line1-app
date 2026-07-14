@@ -82,6 +82,15 @@ const LANDING_SETTINGS_DEFAULTS = [
     options: ['auto', 'always3d', 'always2d'],
   },
   {
+    key: 'landing.heroMode',
+    label: 'حالت صحنهٔ اصلی',
+    type: 'select',
+    value: 'orbit',
+    defaultValue: 'orbit',
+    category: 'landing',
+    options: ['orbit', 'tunnel'],
+  },
+  {
     key: 'landing.seoTitle',
     label: 'عنوان سئو',
     type: 'text',

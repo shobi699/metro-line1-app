@@ -17,10 +17,17 @@ export async function POST(
     // Remove correct answers from snapshot before sending to client
     const snapshot = JSON.parse(attempt.snapshot)
     const sanitizedSnapshot = snapshot.map((q: any) => {
-      let optionsObj = {}
+      let optionsObj: any = {}
       try {
         optionsObj = JSON.parse(q.options)
-        delete (optionsObj as any).correct
+        if (Array.isArray(optionsObj)) {
+          optionsObj = optionsObj.map((opt: any) => {
+            const { isCorrect, ...rest } = opt
+            return rest
+          })
+        } else {
+          delete optionsObj.correct
+        }
       } catch (e) {}
       return { ...q, options: JSON.stringify(optionsObj) }
     })

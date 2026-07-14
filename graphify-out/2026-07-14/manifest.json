@@ -665,8 +665,8 @@
     "semantic_hash": ""
   },
   "src/components/shared/message-composer.tsx": {
-    "mtime": 1783934481.79453,
-    "ast_hash": "7ca4ae6d248045a6380c95c824b4dfa8",
+    "mtime": 1784005827.120793,
+    "ast_hash": "277fcb25ce0866d737c9357079ea70db",
     "semantic_hash": ""
   },
   "src/server/db-seed.ts": {
@@ -1485,8 +1485,8 @@
     "semantic_hash": ""
   },
   "src/app/(app)/profile/page.tsx": {
-    "mtime": 1783934434.5066297,
-    "ast_hash": "5782656ef99d81ef49a3c8ffbd7f51d1",
+    "mtime": 1784006313.26619,
+    "ast_hash": "288f043d66a6b0d4784791d181dc1978",
     "semantic_hash": ""
   },
   "src/app/(app)/roster/analytics/page.tsx": {
@@ -8750,8 +8750,8 @@
     "semantic_hash": ""
   },
   "src/components/shared/image-uploader.tsx": {
-    "mtime": 1783933649.2656722,
-    "ast_hash": "f741be0f7570628399402431d287238d",
+    "mtime": 1784005756.4955375,
+    "ast_hash": "6b8b764fddaaa1c7ffe2e22d2a907905",
     "semantic_hash": ""
   },
   "src/features/calendar/api-client.ts": {
@@ -10130,8 +10130,8 @@
     "semantic_hash": ""
   },
   "src/app/(app)/admin/landing/page.tsx": {
-    "mtime": 1783934448.3671224,
-    "ast_hash": "5266c2cc639d6a317f794327359fa4de",
+    "mtime": 1784006052.4595926,
+    "ast_hash": "2ce14c3ef79efb615d330f004e4c3837",
     "semantic_hash": ""
   },
   "src/app/(app)/admin/my-unit/page.tsx": {
@@ -10330,8 +10330,8 @@
     "semantic_hash": ""
   },
   "src/components/landing/landing-page.tsx": {
-    "mtime": 1784005088.0959036,
-    "ast_hash": "82c1bc8c61cdeb2b3c2880bf69343ea6",
+    "mtime": 1784007585.8094864,
+    "ast_hash": "b5956610dc6c8576dceeab6553cbf706",
     "semantic_hash": ""
   },
   "src/components/landing/lightbox.tsx": {
@@ -10345,8 +10345,8 @@
     "semantic_hash": ""
   },
   "src/components/landing/orbit-scene.tsx": {
-    "mtime": 1784005017.7093053,
-    "ast_hash": "d803ce745cae32cf38794246c9069512",
+    "mtime": 1784005586.0928674,
+    "ast_hash": "1fd5288b0189c14aa98ef1ee1e90a64e",
     "semantic_hash": ""
   },
   "src/components/landing/particle-sphere.tsx": {
@@ -10435,8 +10435,8 @@
     "semantic_hash": ""
   },
   "src/server/modules/landing/service.ts": {
-    "mtime": 1783904512.0984042,
-    "ast_hash": "97dcf12fafe5f22074ba450bce1b679d",
+    "mtime": 1784007538.724028,
+    "ast_hash": "dfe9154fecf79f764a210f9c6709048f",
     "semantic_hash": ""
   },
   "src/server/modules/settings/service.test.ts": {
@@ -10607,6 +10607,21 @@
   "src/server/modules/logs/service.ts": {
     "mtime": 1783931191.654682,
     "ast_hash": "38a6f22201fdea5c6b7d50c1c77f9877",
+    "semantic_hash": ""
+  },
+  "src/components/landing/metro-background.tsx": {
+    "mtime": 1784005543.0511038,
+    "ast_hash": "8e9b526303f22cf232bd98b03b7a78b3",
+    "semantic_hash": ""
+  },
+  "src/lib/upload.ts": {
+    "mtime": 1784005738.7291787,
+    "ast_hash": "95ed750880e4c52508b6267c61864fa4",
+    "semantic_hash": ""
+  },
+  "src/components/landing/metro-tunnel-scene.tsx": {
+    "mtime": 1784007641.235581,
+    "ast_hash": "9f6194640f402f7286703869d640267b",
     "semantic_hash": ""
   }
 }

@@ -85,6 +85,20 @@ interface LearningPath {
   category: string
 }
 
+const getQuestionOptions = (q: any) => {
+  if (!q) return []
+  if (!q.options) return []
+  try {
+    const parsed = typeof q.options === 'string' ? JSON.parse(q.options) : q.options
+    if (Array.isArray(parsed)) {
+      return parsed.map((o: any) => ({ id: String(o.id), text: String(o.text) }))
+    }
+    return Object.entries(parsed).map(([id, text]) => ({ id, text: String(text) }))
+  } catch {
+    return []
+  }
+}
+
 export default function MyExamsPage() {
   const user = useAuthStore((s) => s.user)
   const accessToken = useAuthStore((s) => s.accessToken)
@@ -106,10 +120,12 @@ export default function MyExamsPage() {
   const [activeExam, setActiveExam] = useState<PendingExam | null>(null)
   const [examStarted, setExamStarted] = useState(false)
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0)
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({})
   const [examTimer, setExamTimer] = useState(0)
   const [examFinished, setExamFinished] = useState(false)
   const [examResultScore, setExamResultScore] = useState(0)
+  const [questions, setQuestions] = useState<any[]>([])
+  const [currentAttempt, setCurrentAttempt] = useState<any>(null)
 
   // بانک فرضی سوالات برای آزمون شبیه‌ساز راهبران خط ۱ مترو
   const SAMPLE_QUESTIONS = [
@@ -186,133 +202,88 @@ export default function MyExamsPage() {
     }
   ])
 
-  useEffect(() => {
+  const loadExams = useCallback(async () => {
     if (!accessToken) return
-    async function loadExams() {
-      try {
-        const postsRes = await fetch('/api/posts', {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        })
-        if (postsRes.ok) {
-          const data = await postsRes.json()
-          const allPosts = (data.data ?? []) as any[]
-
-          const quizPosts = allPosts.filter((p) => p.hasQuiz === true)
-
-          const completed: ExamRecord[] = quizPosts
-            .filter((p) => p.isCompleted === true)
-            .map((p, idx) => ({
-              id: p.id,
-              title: p.title,
-              slug: p.slug,
-              totalQuestions: 3,
-              correctAnswers: 3,
-              score: 100,
-              status: 'passed',
-              date: p.createdAt.substring(0, 10).replace(/-/g, '/'),
-            }))
-
-          const pending: PendingExam[] = quizPosts
-            .filter((p) => !p.isCompleted)
-            .map((p) => ({
-              id: p.id,
-              title: p.title,
-              slug: p.slug,
-              category: p.category || 'آموزش تخصصی',
-              questionCount: 3,
-              mandatory: p.mandatory ?? false,
-              timeLimitMinutes: 10,
-              dueDate: '۱۴۰۵/۰۵/۱۵'
-            }))
-
-          // اضافه کردن یک آزمون تستی رد شده برای بررسی دکمه تلاش مجدد با وقفه
-          if (completed.length > 0) {
-            completed.push({
-              id: 'exam-failed-demo',
-              title: 'آزمون شبیه‌ساز بایکوت قطار سری ۳۰۰',
-              slug: 'failed-exam-slug',
-              totalQuestions: 10,
-              correctAnswers: 5,
-              score: 50,
-              status: 'failed',
-              date: '۱۴۰۵/۰۴/۰۹',
-              retryAvailableAt: new Date(Date.now() + 120000).toLocaleTimeString('fa-IR') // ۲ دقیقه دیگر باز می‌شود
-            })
-          }
-
-          setCompletedList(completed)
-          setPendingList(pending)
-        }
-      } catch {
-        // Fallback handled silently
+    try {
+      const res = await fetch('/api/learning/exams', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setCompletedList(json.data.completed || [])
+        setPendingList(json.data.pending || [])
       }
+    } catch (e) {
+      console.error(e)
     }
-    loadExams()
   }, [accessToken])
 
-  const handleFinishExam = useCallback((isTimeout = false) => {
+  useEffect(() => {
+    void loadExams()
+  }, [loadExams])
+
+  const handleFinishExam = useCallback(async (isTimeout = false) => {
+    if (!accessToken || !currentAttempt) return
+    
     setExamStarted(false)
     setExamFinished(true)
 
-    // محاسبه امتیاز
-    let correctCount = 0
-    SAMPLE_QUESTIONS.forEach((q, idx) => {
-      if (selectedAnswers[idx] === q.correct) {
-        correctCount++
-      }
-    })
+    try {
+      const res = await fetch(`/api/learning/exams/attempt/${currentAttempt.id}/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          answers: selectedAnswers,
+        }),
+      })
 
-    const pct = Math.round((correctCount / SAMPLE_QUESTIONS.length) * 100)
-    setExamResultScore(pct)
-
-    if (pct >= 70) {
-      // ثبت امتیاز در گیمیفیکیشن
-      setPoints(prev => prev + 50)
-      // افزودن به لیست پاس شده‌ها
-      if (activeExam) {
-        setCompletedList(prev => [
-          ...prev,
-          {
-            id: activeExam.id,
-            title: activeExam.title,
-            slug: activeExam.slug,
-            totalQuestions: SAMPLE_QUESTIONS.length,
-            correctAnswers: correctCount,
-            score: pct,
-            status: 'passed',
-            date: new Date().toLocaleDateString('fa-IR')
-          }
-        ])
-        setPendingList(prev => prev.filter(p => p.id !== activeExam.id))
+      if (res.ok) {
+        const json = await res.json()
+        const attempt = json.data
+        setExamResultScore(attempt.score || 0)
+        await loadExams()
+      } else {
+        const json = await res.json()
+        alert(json.error?.message || 'خطا در ثبت نتایج آزمون')
       }
-    } else {
-      // افزودن به لیست شکست خورده‌ها جهت بازامادگی و آزمون مجدد
-      if (activeExam) {
-        setCompletedList(prev => [
-          ...prev,
-          {
-            id: activeExam.id + '-failed',
-            title: activeExam.title,
-            slug: activeExam.slug,
-            totalQuestions: SAMPLE_QUESTIONS.length,
-            correctAnswers: correctCount,
-            score: pct,
-            status: 'failed',
-            date: new Date().toLocaleDateString('fa-IR'),
-            retryAvailableAt: new Date(Date.now() + 60000).toLocaleTimeString('fa-IR') // ۱ دقیقه دیگر
-          }
-        ])
-      }
+    } catch (e) {
+      console.error(e)
+      alert('خطا در ارتباط با سرور هنگام ثبت آزمون')
     }
-  }, [activeExam, selectedAnswers, setPoints, setCompletedList, setPendingList, setExamStarted, setExamFinished, setExamResultScore])
+  }, [accessToken, currentAttempt, selectedAnswers, loadExams])
 
-  const handleStartExam = (exam: PendingExam) => {
-    setActiveExam(exam)
-    setExamStarted(true)
-    setCurrentQuestionIdx(0)
-    setSelectedAnswers({})
-    setExamTimer(120) // ۲ دقیقه فرصت پاسخگویی برای تست سریع
-    setExamFinished(false)
+  const handleStartExam = async (exam: PendingExam) => {
+    if (!accessToken) return
+    try {
+      const res = await fetch(`/api/learning/exams/${exam.id}/attempt`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const json = await res.json()
+        const attempt = json.data
+        setCurrentAttempt(attempt)
+        
+        const parsedQuestions = JSON.parse(attempt.snapshot)
+        setQuestions(parsedQuestions)
+        
+        setActiveExam(exam)
+        setExamStarted(true)
+        setCurrentQuestionIdx(0)
+        setSelectedAnswers({})
+        setExamTimer(exam.timeLimitMinutes ? exam.timeLimitMinutes * 60 : 600)
+        setExamFinished(false)
+      } else {
+        const json = await res.json()
+        alert(json.error?.message || 'خطا در شروع آزمون')
+      }
+    } catch (e) {
+      console.error(e)
+      alert('خطا در ارتباط با سرور')
+    }
   }
 
   // تایمر امتحان
@@ -824,100 +795,130 @@ export default function MyExamsPage() {
       {/* ── شبیه‌ساز بانک سوالات و آزمون تعاملی — بخش ۷.۳ ── */}
       <Dialog open={examStarted} onOpenChange={(open) => !open && setExamStarted(false)}>
         <DialogContent className="sm:max-w-xl bg-neutral-900 border-neutral-800 text-white p-6" dir="rtl">
-          <DialogHeader>
-            <DialogTitle className="text-right text-base font-bold text-accent flex items-center gap-2">
-              <HelpCircle className="size-5" />
-              <span>ارزشیابی ایمنی و شبیه‌ساز راهبری: {activeExam?.title}</span>
-            </DialogTitle>
-            <DialogDescription className="text-right text-xs text-neutral-400">
-              ارزیابی تصادفی از بانک سوالات. برای قبولی باید حداقل به ۲ سوال پاسخ صحیح بدهید.
-            </DialogDescription>
-          </DialogHeader>
+          {(() => {
+            const activeQuestions = questions.length > 0 ? questions : SAMPLE_QUESTIONS
+            const currentQuestion = activeQuestions[currentQuestionIdx]
+            
+            const getActiveOptions = () => {
+              if (!currentQuestion) return []
+              if (questions.length > 0) {
+                return getQuestionOptions(currentQuestion)
+              }
+              return (currentQuestion.options as string[]).map((opt, oIdx) => ({
+                id: String(oIdx),
+                text: opt
+              }))
+            }
 
-          <div className="space-y-6 mt-4">
-            {/* Timer and Progress */}
-            <div className="flex justify-between items-center bg-neutral-950/40 p-2.5 rounded-lg border border-neutral-800">
-              <span className="text-xs font-bold text-neutral-300">
-                سوال {toFa(currentQuestionIdx + 1)} از {toFa(SAMPLE_QUESTIONS.length)}
-              </span>
-              <span className={cn(
-                "text-xs font-mono font-bold flex items-center gap-1.5",
-                examTimer < 30 ? "text-critical animate-pulse" : "text-warning"
-              )}>
-                <Clock className="size-4" />
-                زمان باقیمانده: {toFa(Math.floor(examTimer / 60))}:{toFa(examTimer % 60).padStart(2, '۰')}
-              </span>
-            </div>
+            const currentQuestionKey = questions.length > 0 ? String(currentQuestion?.id) : String(currentQuestionIdx)
+            const isOptionSelected = (optId: string) => selectedAnswers[currentQuestionKey] === optId
+            const handleSelectOption = (optId: string) => {
+              setSelectedAnswers(prev => ({ ...prev, [currentQuestionKey]: optId }))
+            }
+            const isCurrentQuestionAnswered = selectedAnswers[currentQuestionKey] !== undefined
 
-            {/* Question visual/image indicator if present */}
-            {SAMPLE_QUESTIONS[currentQuestionIdx].image && (
-              <div className="w-full h-32 rounded-lg overflow-hidden border border-neutral-800">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={SAMPLE_QUESTIONS[currentQuestionIdx].image}
-                  alt="تصویر سوال آزمون"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
+            const activeOptions = getActiveOptions()
+            const questionImage = currentQuestion ? (currentQuestion.mediaUrl || currentQuestion.image) : ''
+            const questionText = currentQuestion ? (currentQuestion.text || currentQuestion.q) : ''
 
-            {/* Question Title */}
-            <h4 className="text-sm font-bold leading-relaxed">
-              {SAMPLE_QUESTIONS[currentQuestionIdx].q}
-            </h4>
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-right text-base font-bold text-accent flex items-center gap-2">
+                    <HelpCircle className="size-5" />
+                    <span>ارزشیابی ایمنی و شبیه‌ساز راهبری: {activeExam?.title}</span>
+                  </DialogTitle>
+                  <DialogDescription className="text-right text-xs text-neutral-400">
+                    ارزیابی تصادفی از بانک سوالات. برای قبولی باید به حدنصاب تعیین شده پاسخ صحیح بدهید.
+                  </DialogDescription>
+                </DialogHeader>
 
-            {/* Options */}
-            <div className="grid grid-cols-1 gap-2.5">
-              {SAMPLE_QUESTIONS[currentQuestionIdx].options.map((opt, oIdx) => (
-                <button
-                  key={oIdx}
-                  onClick={() => setSelectedAnswers(prev => ({ ...prev, [currentQuestionIdx]: oIdx }))}
-                  className={cn(
-                    'w-full text-right p-3 rounded-lg border text-xs transition-all cursor-pointer font-bold flex items-center justify-between',
-                    selectedAnswers[currentQuestionIdx] === oIdx
-                      ? 'bg-accent/25 border-accent text-accent'
-                      : 'border-neutral-800 bg-neutral-950/20 text-neutral-300 hover:bg-neutral-800/40'
+              <div className="space-y-6 mt-4">
+                {/* Timer and Progress */}
+                <div className="flex justify-between items-center bg-neutral-950/40 p-2.5 rounded-lg border border-neutral-800">
+                  <span className="text-xs font-bold text-neutral-300">
+                    سوال {toFa(currentQuestionIdx + 1)} از {toFa(activeQuestions.length)}
+                  </span>
+                  <span className={cn(
+                    "text-xs font-mono font-bold flex items-center gap-1.5",
+                    examTimer < 30 ? "text-critical animate-pulse" : "text-warning"
+                  )}>
+                    <Clock className="size-4" />
+                    زمان باقیمانده: {toFa(Math.floor(examTimer / 60))}:{toFa(examTimer % 60).padStart(2, '۰')}
+                  </span>
+                </div>
+
+                {/* Question visual/image indicator if present */}
+                {questionImage && (
+                  <div className="w-full h-32 rounded-lg overflow-hidden border border-neutral-800">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={questionImage}
+                      alt="تصویر سوال آزمون"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Question Title */}
+                <h4 className="text-sm font-bold leading-relaxed">
+                  {questionText}
+                </h4>
+
+                {/* Options */}
+                <div className="grid grid-cols-1 gap-2.5">
+                  {activeOptions.map((opt) => (
+                    <button
+                      key={opt.id}
+                      onClick={() => handleSelectOption(opt.id)}
+                      className={cn(
+                        'w-full text-right p-3 rounded-lg border text-xs transition-all cursor-pointer font-bold flex items-center justify-between',
+                        isOptionSelected(opt.id)
+                          ? 'bg-accent/25 border-accent text-accent'
+                          : 'border-neutral-800 bg-neutral-950/20 text-neutral-300 hover:bg-neutral-800/40'
+                      )}
+                    >
+                      <span>{opt.text}</span>
+                      {isOptionSelected(opt.id) && <Check className="size-4" />}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Nav buttons */}
+                <div className="flex justify-between items-center border-t border-neutral-800/60 pt-4 mt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentQuestionIdx === 0}
+                    onClick={() => setCurrentQuestionIdx(prev => prev - 1)}
+                    className="text-xs text-white border-neutral-800"
+                  >
+                    سوال قبلی
+                  </Button>
+
+                  {currentQuestionIdx < activeQuestions.length - 1 ? (
+                    <Button
+                      size="sm"
+                      onClick={() => setCurrentQuestionIdx(prev => prev + 1)}
+                      disabled={!isCurrentQuestionAnswered}
+                      className="bg-accent hover:bg-accent-hover text-white text-xs"
+                    >
+                      سوال بعدی
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      onClick={() => void handleFinishExam()}
+                      disabled={!isCurrentQuestionAnswered}
+                      className="bg-success hover:bg-success/90 text-white text-xs font-bold"
+                    >
+                      ثبت نهایی و اتمام آزمون
+                    </Button>
                   )}
-                >
-                  <span>{opt}</span>
-                  {selectedAnswers[currentQuestionIdx] === oIdx && <Check className="size-4" />}
-                </button>
-              ))}
-            </div>
-
-            {/* Nav buttons */}
-            <div className="flex justify-between items-center border-t border-neutral-800/60 pt-4 mt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentQuestionIdx === 0}
-                onClick={() => setCurrentQuestionIdx(prev => prev - 1)}
-                className="text-xs text-white border-neutral-800"
-              >
-                سوال قبلی
-              </Button>
-
-              {currentQuestionIdx < SAMPLE_QUESTIONS.length - 1 ? (
-                <Button
-                  size="sm"
-                  onClick={() => setCurrentQuestionIdx(prev => prev + 1)}
-                  disabled={selectedAnswers[currentQuestionIdx] === undefined}
-                  className="bg-accent hover:bg-accent-hover text-white text-xs"
-                >
-                  سوال بعدی
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  onClick={() => handleFinishExam()}
-                  disabled={selectedAnswers[currentQuestionIdx] === undefined}
-                  className="bg-success hover:bg-success/90 text-white text-xs font-bold"
-                >
-                  ثبت نهایی و اتمام آزمون
-                </Button>
-              )}
-            </div>
-          </div>
+                </div>
+              </div>
+            </>
+          )})}
         </DialogContent>
       </Dialog>
 

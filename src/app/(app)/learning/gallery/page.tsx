@@ -112,6 +112,26 @@ const QUIZ_QUESTIONS: Record<string, { q: string; options: string[]; correct: nu
   ]
 }
 
+const getCompletedLessons = (userId: string) => {
+  if (typeof window === 'undefined') return []
+  try {
+    return JSON.parse(localStorage.getItem(`completed_lessons_${userId}`) || '[]') as string[]
+  } catch {
+    return []
+  }
+}
+
+const addCompletedLesson = (userId: string, lessonId: string) => {
+  if (typeof window === 'undefined') return
+  try {
+    const list = getCompletedLessons(userId)
+    if (!list.includes(lessonId)) {
+      list.push(lessonId)
+      localStorage.setItem(`completed_lessons_${userId}`, JSON.stringify(list))
+    }
+  } catch {}
+}
+
 export default function LearningGalleryPage() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
@@ -154,26 +174,33 @@ export default function LearningGalleryPage() {
               const detailJson = await detailRes.json()
               const detail = detailJson.data
               
-              const videos: VideoItem[] = detail.videos.map((v: any) => {
-                const prog = v.progress?.[0]
-                const completed = prog?.completed || false
-                const watchedPercentage = prog?.watchedPct || 0
+              const allLessons: any[] = []
+              detail.chapters?.forEach((chap: any) => {
+                chap.lessons?.forEach((les: any) => {
+                  allLessons.push(les)
+                })
+              })
+              const videoLessons = allLessons.filter(l => l.kind === 'video')
+              const completedLessons = getCompletedLessons(user?.id || 'default')
+
+              const videos: VideoItem[] = videoLessons.map((v: any) => {
+                const completed = completedLessons.includes(v.id)
+                const watchedPercentage = completed ? 100 : 0
                 return {
                   id: v.id,
                   title: v.title,
                   slug: v.title.replace(/\s+/g, '-'),
-                  excerpt: v.excerpt || '',
-                  duration: `${Math.floor(v.durationSeconds / 60)}:${(v.durationSeconds % 60).toString().padStart(2, '0')}`,
-                  durationSeconds: v.durationSeconds,
+                  excerpt: v.title,
+                  duration: `${Math.floor((v.minSeconds || 120) / 60)}:${((v.minSeconds || 120) % 60).toString().padStart(2, '0')}`,
+                  durationSeconds: v.minSeconds || 120,
                   category: detail.title,
-                  coverUrl: v.coverUrl || 'https://images.unsplash.com/photo-1541417904950-b855846fe074?auto=format&fit=crop&w=600&q=80',
-                  mediaUrl: v.mediaUrl,
-                  mandatory: v.mandatory,
-                  points: v.points,
+                  coverUrl: detail.coverUrl || 'https://images.unsplash.com/photo-1541417904950-b855846fe074?auto=format&fit=crop&w=600&q=80',
+                  mediaUrl: v.contentRef,
+                  mandatory: true,
+                  points: 10,
                   isCompleted: completed,
-                  prerequisiteId: v.prerequisiteId,
                   watchedPercentage,
-                  quiz: v.quiz,
+                  quiz: null
                 }
               })
               
@@ -205,7 +232,20 @@ export default function LearningGalleryPage() {
   }
 
   const saveProgressToServer = async (pct: number, completed?: boolean, quizScore?: number) => {
-    if (!accessToken || !activeVideo) return
+    if (!accessToken || !activeVideo || !user) return
+    
+    if (completed) {
+      addCompletedLesson(user.id, activeVideo.id)
+    }
+
+    const course = courses.find(c => c.videos.some(v => v.id === activeVideo.id))
+    if (!course) return
+
+    const completedLessons = getCompletedLessons(user.id)
+    const totalVideos = course.videos.length
+    const completedVideosInCourse = course.videos.filter(v => v.id === activeVideo.id || completedLessons.includes(v.id)).length
+    const progressPct = totalVideos > 0 ? Math.round((completedVideosInCourse / totalVideos) * 100) : 0
+
     try {
       const res = await fetch('/api/learning/progress', {
         method: 'POST',
@@ -214,10 +254,9 @@ export default function LearningGalleryPage() {
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          videoId: activeVideo.id,
-          watchedPct: pct,
-          completed,
-          quizScore,
+          courseId: course.id,
+          progressPct,
+          completed: progressPct === 100 ? true : undefined,
         }),
       })
       if (res.ok) {

@@ -15,6 +15,10 @@ const OrbitScene = lazy(() =>
   import('./orbit-scene').then((m) => ({ default: m.OrbitScene })),
 )
 
+const MetroTunnelScene = lazy(() =>
+  import('./metro-tunnel-scene').then((m) => ({ default: m.MetroTunnelScene })),
+)
+
 interface LandingData {
   images: Array<{
     id: string
@@ -73,9 +77,16 @@ function useWebGLSupport() {
 export function LandingPage() {
   const [data, setData] = useState<LandingData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [heroOverride, setHeroOverride] = useState<string | null>(null)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const reducedMotion = useReducedMotion()
   const webglSupported = useWebGLSupport()
+
+  // Allow previewing a hero mode without changing the saved setting: ?hero=tunnel
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('hero')
+    if (q === 'tunnel' || q === 'orbit') setHeroOverride(q)
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -109,6 +120,8 @@ export function LandingPage() {
   const shouldShow3D =
     fallbackMode === 'always3d' ||
     (fallbackMode !== 'always2d' && webglSupported && !reducedMotion)
+
+  const heroMode = heroOverride ?? (data?.settings?.heroMode as string) ?? 'orbit'
 
   const quoteMode = (data?.settings?.quoteMode as 'fixed' | 'random') ?? 'random'
 
@@ -197,14 +210,18 @@ export function LandingPage() {
         <div className="relative z-10">
           {shouldShow3D ? (
             <Suspense fallback={<FallbackPoster title={heroTitle} subtitle={heroSubtitle} />}>
-              <OrbitScene
-                images={data?.images ?? []}
-                settings={{
-                  particleCount: (data?.settings?.particleCount as number) ?? 1200,
-                  sphereRadius: (data?.settings?.sphereRadius as number) ?? 3,
-                  autoRotateSpeed: (data?.settings?.autoRotateSpeed as number) ?? 0.3,
-                }}
-              />
+              {heroMode === 'tunnel' ? (
+                <MetroTunnelScene reducedMotion={reducedMotion} />
+              ) : (
+                <OrbitScene
+                  images={data?.images ?? []}
+                  settings={{
+                    particleCount: (data?.settings?.particleCount as number) ?? 1200,
+                    sphereRadius: (data?.settings?.sphereRadius as number) ?? 3,
+                    autoRotateSpeed: (data?.settings?.autoRotateSpeed as number) ?? 0.3,
+                  }}
+                />
+              )}
             </Suspense>
           ) : (
             <FallbackPoster title={heroTitle} subtitle={heroSubtitle} />

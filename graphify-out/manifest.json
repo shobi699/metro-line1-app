@@ -10330,8 +10330,8 @@
     "semantic_hash": ""
   },
   "src/components/landing/landing-page.tsx": {
-    "mtime": 1784005088.0959036,
-    "ast_hash": "82c1bc8c61cdeb2b3c2880bf69343ea6",
+    "mtime": 1784007585.8094864,
+    "ast_hash": "b5956610dc6c8576dceeab6553cbf706",
     "semantic_hash": ""
   },
   "src/components/landing/lightbox.tsx": {
@@ -10435,8 +10435,8 @@
     "semantic_hash": ""
   },
   "src/server/modules/landing/service.ts": {
-    "mtime": 1783904512.0984042,
-    "ast_hash": "97dcf12fafe5f22074ba450bce1b679d",
+    "mtime": 1784007538.724028,
+    "ast_hash": "dfe9154fecf79f764a210f9c6709048f",
     "semantic_hash": ""
   },
   "src/server/modules/settings/service.test.ts": {
@@ -10617,6 +10617,11 @@
   "src/lib/upload.ts": {
     "mtime": 1784005738.7291787,
     "ast_hash": "95ed750880e4c52508b6267c61864fa4",
+    "semantic_hash": ""
+  },
+  "src/components/landing/metro-tunnel-scene.tsx": {
+    "mtime": 1784008146.7131126,
+    "ast_hash": "6c06ba0ea0a8cf0d37a843f43c796fa5",
     "semantic_hash": ""
   }
 }

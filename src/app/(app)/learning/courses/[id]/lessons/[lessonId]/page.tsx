@@ -41,6 +41,54 @@ export default function LessonPage({ params }: { params: Promise<{ id: string, l
     fetchCourseData()
   }, [courseId, accessToken, router])
 
+  useEffect(() => {
+    if (!course || !accessToken) return
+
+    const updateProgress = async () => {
+      const allLessons: any[] = []
+      course.chapters?.forEach((chapter: any) => {
+        chapter.lessons?.forEach((lesson: any) => {
+          allLessons.push(lesson)
+        })
+      })
+      const currentLessonIndex = allLessons.findIndex(l => l.id === lessonId)
+      if (currentLessonIndex === -1) return
+
+      const nextProgressPct = Math.min(100, Math.round(((currentLessonIndex + 1) / allLessons.length) * 100))
+      const currentProgressPct = course.enrollments?.[0]?.progressPct || 0
+
+      if (nextProgressPct > currentProgressPct) {
+        try {
+          await fetch('/api/learning/progress', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              courseId,
+              progressPct: nextProgressPct,
+              completed: nextProgressPct === 100 ? true : undefined,
+            }),
+          })
+          setCourse((prev: any) => {
+            if (!prev) return prev
+            const nextEnrollments = prev.enrollments?.map((e: any) => ({
+              ...e,
+              progressPct: nextProgressPct,
+              status: nextProgressPct === 100 ? 'completed' : e.status
+            })) || []
+            return { ...prev, enrollments: nextEnrollments }
+          })
+        } catch (e) {
+          console.error(e)
+        }
+      }
+    }
+
+    void updateProgress()
+  }, [course, lessonId, courseId, accessToken])
+
   if (loading || !course) {
     return <div className="flex h-64 items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
   }

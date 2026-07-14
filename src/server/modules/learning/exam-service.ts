@@ -74,9 +74,18 @@ export async function submitExam(userId: string, attemptId: string, userAnswers:
   let correctCount = 0
 
   snapshot.forEach(q => {
-    const optionsObj = JSON.parse(q.options) // { a: "...", b: "...", correct: "a" }
+    const optionsObj = JSON.parse(q.options)
+    let correctAnswerId = ''
+    if (Array.isArray(optionsObj)) {
+      const correctOpt = optionsObj.find((opt: any) => opt.isCorrect)
+      if (correctOpt) {
+        correctAnswerId = String(correctOpt.id)
+      }
+    } else {
+      correctAnswerId = String(optionsObj.correct)
+    }
     const userAnswer = userAnswers[q.id]
-    if (userAnswer === optionsObj.correct) {
+    if (String(userAnswer) === correctAnswerId) {
       correctCount++
     }
   })

@@ -18,6 +18,40 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
   const [course, setCourse] = useState<any>(null)
   const [exam, setExam] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [enrolling, setEnrolling] = useState(false)
+
+  const handleEnroll = async () => {
+    if (!accessToken) return
+    setEnrolling(true)
+    try {
+      const res = await fetch('/api/learning/progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          courseId,
+          progressPct: 0,
+        }),
+      })
+      if (res.ok) {
+        const courseRes = await fetch(`/api/learning/courses/${courseId}`, {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        })
+        const json = await courseRes.json()
+        if (json.data) setCourse(json.data)
+      } else {
+        const json = await res.json()
+        alert(json.error?.message || 'خطا در ثبت‌نام در دوره')
+      }
+    } catch (e) {
+      console.error(e)
+      alert('خطا در ارتباط با سرور')
+    } finally {
+      setEnrolling(false)
+    }
+  }
 
   useEffect(() => {
     if (!accessToken) return
@@ -90,8 +124,8 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
             </div>
           ) : (
             <div className="pt-4">
-              <Button size="lg" className="w-full md:w-auto px-8 shadow-md">
-                شروع یادگیری (ثبت‌نام)
+              <Button size="lg" className="w-full md:w-auto px-8 shadow-md" onClick={handleEnroll} disabled={enrolling}>
+                {enrolling ? 'در حال ثبت‌نام...' : 'شروع یادگیری (ثبت‌نام)'}
               </Button>
             </div>
           )}
