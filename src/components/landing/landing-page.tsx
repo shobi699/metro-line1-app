@@ -140,14 +140,11 @@ export function LandingPage() {
         <AnnouncementBar text={announcementText} href={announcementHref || null} />
       )}
 
-      {/* ── Hero Section ── */}
-      <section className="relative min-h-screen overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0204]/60 to-black pointer-events-none" />
-
-        {/* Header */}
-        <header className="relative z-20 flex items-center justify-between px-6 py-4">
+      {/* ── Sticky Header ── */}
+      <header className="sticky top-0 z-30 border-b border-white/5 bg-black/40 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-full border border-accent/30 bg-accent/10">
+            <div className="flex size-10 items-center justify-center rounded-full border border-accent/30 bg-accent/10 shadow-[0_0_20px_-4px_rgba(229,57,53,0.5)]">
               <svg viewBox="0 0 40 40" className="size-6 text-accent" fill="currentColor">
                 <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" strokeWidth="2" />
                 <text
@@ -174,12 +171,20 @@ export function LandingPage() {
           ) : (
             <a
               href="/login"
-              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover"
+              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-[0_4px_20px_-6px_rgba(229,57,53,0.7)] transition-colors hover:bg-accent-hover"
             >
               ورود
             </a>
           )}
-        </header>
+        </div>
+      </header>
+
+      {/* ── Hero Section ── */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0204]/60 to-black pointer-events-none" />
+        {/* ambient accent glows */}
+        <div className="pointer-events-none absolute -top-24 start-1/2 size-[36rem] -translate-x-1/2 rounded-full bg-accent/10 blur-[120px]" />
+        <div className="pointer-events-none absolute bottom-0 end-0 size-[24rem] rounded-full bg-accent/5 blur-[100px]" />
 
         {/* Quote */}
         {data?.quotes && data.quotes.length > 0 && (

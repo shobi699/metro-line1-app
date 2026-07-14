@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { uploadFileWithProgress } from '@/lib/upload'
 import { useAuthStore } from '@/features/auth'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -93,6 +94,7 @@ function ImagesTab() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ title: '', alt: '', mediaUrl: '', caption: '', linkUrl: '' })
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   const load = useCallback(async () => {
     try {
@@ -109,35 +111,20 @@ function ImagesTab() {
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
+    setUploadProgress(0)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
       const token = useAuthStore.getState().accessToken
-      const res = await fetch('/api/uploads', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
+      const url = await uploadFileWithProgress({
+        file,
+        token: token || undefined,
+        onProgress: (p) => setUploadProgress(p),
       })
-      let data: { data?: { url: string }; error?: string } | null = null
-      const contentType = res.headers.get('content-type')
-      if (contentType && contentType.includes('application/json')) {
-        data = await res.json()
-      }
-
-      if (!res.ok) {
-        throw new Error(data?.error || `بارگذاری ناموفق بود (${res.status})`)
-      }
-      if (data?.data?.url) {
-        setForm((prev) => ({ ...prev, mediaUrl: data.data.url }))
-      } else {
-        throw new Error('پاسخ نامعتبر از سرور')
-      }
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'خطا در بارگذاری فایل')
+      setForm((prev) => ({ ...prev, mediaUrl: url }))
+    } catch (err: any) {
+      alert(err.message || 'خطا در بارگذاری فایل')
     } finally {
       setUploading(false)
+      setUploadProgress(0)
     }
   }
 
@@ -204,7 +191,7 @@ function ImagesTab() {
                 />
                 <label className="cursor-pointer shrink-0">
                   <span className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-surface-container px-3 text-xs font-bold text-foreground hover:bg-surface-hover transition-colors">
-                    {uploading ? 'درحال آپلود...' : 'انتخاب تصویر'}
+                    {uploading ? `درحال آپلود (${uploadProgress}٪)` : 'انتخاب تصویر'}
                   </span>
                   <input
                     type="file"

@@ -4,6 +4,7 @@ import React, { useRef, useState } from 'react'
 import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/features/auth'
+import { uploadFileWithProgress } from '@/lib/upload'
 
 interface ImageUploaderProps {
   value?: string
@@ -18,6 +19,7 @@ interface ImageUploaderProps {
 export function ImageUploader({ value, onChange, onClear, disabled, className, placeholder = 'آپلود تصویر', accept = 'image/*' }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const token = useAuthStore((s) => s.accessToken)
 
@@ -26,39 +28,21 @@ export function ImageUploader({ value, onChange, onClear, disabled, className, p
     if (!file) return
 
     setUploading(true)
+    setProgress(0)
     setError(null)
-    
-    const formData = new FormData()
-    formData.append('file', file)
 
     try {
-      const res = await fetch('/api/uploads', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
+      const url = await uploadFileWithProgress({
+        file,
+        token,
+        onProgress: (p) => setProgress(p),
       })
-      
-      let data: any = null
-      const contentType = res.headers.get('content-type')
-      if (contentType && contentType.includes('application/json')) {
-        data = await res.json()
-      }
-      
-      if (!res.ok) {
-        throw new Error(data?.error || `خطا در آپلود فایل (${res.status})`)
-      }
-      
-      if (data?.data?.url) {
-        onChange(data.data.url)
-      } else {
-        throw new Error('پاسخ نامعتبر از سرور')
-      }
+      onChange(url)
     } catch (err: any) {
       setError(err.message)
     } finally {
       setUploading(false)
+      setProgress(0)
       if (inputRef.current) inputRef.current.value = ''
     }
   }
@@ -79,7 +63,7 @@ export function ImageUploader({ value, onChange, onClear, disabled, className, p
         className={cn(
           "w-full rounded-xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden transition-all duration-200 min-h-[120px]",
           disabled ? "opacity-50 cursor-not-allowed border-border" : "cursor-pointer border-outline-variant hover:border-accent hover:bg-surface-container-low active:scale-[0.98]",
-          value ? "border-transparent border-solid p-0" : "p-4"
+          value && !uploading ? "border-transparent border-solid p-0" : "p-4"
         )}
       >
         <input
@@ -91,7 +75,20 @@ export function ImageUploader({ value, onChange, onClear, disabled, className, p
           disabled={disabled || uploading}
         />
 
-        {value ? (
+        {uploading ? (
+          <div className="flex flex-col items-center text-center p-2 w-full">
+            <Loader2 className="size-8 text-accent animate-spin mb-2" />
+            <span className="text-xs font-bold text-foreground">
+              در حال آپلود ({progress}٪)
+            </span>
+            <div className="w-28 h-1.5 bg-border rounded-full mt-2 overflow-hidden">
+              <div 
+                className="h-full bg-accent transition-all duration-150 ease-out" 
+                style={{ width: `${progress}%` }} 
+              />
+            </div>
+          </div>
+        ) : value ? (
           <div className="w-full h-full relative min-h-[120px] flex items-center justify-center p-3 bg-surface-container">
             {isImage ? (
               <img src={value} alt="Uploaded preview" className="w-full h-full object-cover absolute inset-0" />
@@ -107,22 +104,16 @@ export function ImageUploader({ value, onChange, onClear, disabled, className, p
           </div>
         ) : (
           <div className="flex flex-col items-center text-center">
-            {uploading ? (
-              <Loader2 className="size-8 text-accent animate-spin mb-2" />
-            ) : (
-              <ImageIcon className="size-8 text-foreground-muted mb-2" />
-            )}
+            <ImageIcon className="size-8 text-foreground-muted mb-2" />
             <span className="text-xs font-bold text-foreground">
-              {uploading ? 'در حال آپلود...' : placeholder}
+              {placeholder}
             </span>
-            {!uploading && (
-              <span className="text-[10px] text-foreground-muted mt-1">حداکثر حجم: ۱۰۰ مگابایت</span>
-            )}
+            <span className="text-[10px] text-foreground-muted mt-1">بدون محدودیت حجم فایل</span>
           </div>
         )}
       </div>
 
-      {value && (
+      {value && !uploading && (
         <button
           type="button"
           onClick={handleClear}
@@ -138,3 +129,4 @@ export function ImageUploader({ value, onChange, onClear, disabled, className, p
     </div>
   )
 }
+

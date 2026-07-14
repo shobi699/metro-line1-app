@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useMemo } from 'react'
+import { uploadFileWithProgress } from '@/lib/upload'
 import Link from 'next/link'
 import { useAuthStore } from '@/features/auth'
 import { useShiftsStore } from '@/features/shifts'
@@ -115,6 +116,7 @@ export default function ProfilePage() {
   const [updatingField, setUpdatingField] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   // Editable Contact states
   const [phone, setPhone] = useState('')
@@ -341,34 +343,21 @@ export default function ProfilePage() {
     if (!file || !accessToken) return
 
     setUploading(true)
+    setUploadProgress(0)
     setError('')
 
-    const formData = new FormData()
-    formData.append('file', file)
-
     try {
-      const res = await fetch('/api/uploads', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${accessToken}` },
-        body: formData,
+      const fileUrl = await uploadFileWithProgress({
+        file,
+        token: accessToken,
+        onProgress: (p) => setUploadProgress(p),
       })
-
-      let data: { data?: { url: string }; error?: string } | null = null
-      const contentType = res.headers.get('content-type')
-      if (contentType && contentType.includes('application/json')) {
-        data = await res.json()
-      }
-
-      if (res.ok && data?.data?.url) {
-        const fileUrl = data.data.url
-        await handleUpdateDirectField('avatar', fileUrl)
-      } else {
-        setError(data?.error || `خطا در بارگذاری تصویر (${res.status})`)
-      }
-    } catch {
-      setError('خطا در ارتباط با سرور هنگام بارگذاری فایل')
+      await handleUpdateDirectField('avatar', fileUrl)
+    } catch (err: any) {
+      setError(err.message || 'خطا در ارتباط با سرور هنگام بارگذاری فایل')
     } finally {
       setUploading(false)
+      setUploadProgress(0)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
@@ -744,7 +733,10 @@ export default function ProfilePage() {
                 disabled={uploading}
               >
                 {uploading ? (
-                  <Loader2 className="size-5 animate-spin" />
+                  <div className="flex flex-col items-center gap-1">
+                    <Loader2 className="size-5 animate-spin text-white" />
+                    <span className="text-[10px] font-bold text-white">{uploadProgress}٪</span>
+                  </div>
                 ) : (
                   <>
                     <Camera className="size-5 text-white/90" />
