@@ -163,7 +163,7 @@ const EMPTY_FORM: FormState = {
   mediaType: '',
   published: true,
   mandatory: false,
-  status: 'draft',
+  status: 'published',
   targetRoles: ['all'],
   kind: 'news',
   audience: {
@@ -1112,7 +1112,7 @@ function AdminContentPageContent() {
               ) : (
                 <Check className="size-4" />
               )}
-              <span>{form.id ? 'بروزرسانی تغییرات' : 'انتشار نهایی'}</span>
+              <span>{form.id ? 'بروزرسانی تغییرات' : (form.status === 'published' ? 'انتشار نهایی' : 'ذخیره پیش‌نویس')}</span>
             </Button>
           </div>
         </header>

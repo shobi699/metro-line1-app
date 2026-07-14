@@ -30,18 +30,40 @@ export async function startExam(userId: string, examId: string) {
     }
   }
 
-  // Draw questions from QuestionBank
-  // Using simple fetch and shuffle for now.
-  const allQuestions = await prisma.questionBank.findMany({
-    where: { isActive: true },
+  let courseCategory = ''
+  if (exam.courseId) {
+    const course = await prisma.course.findUnique({ where: { id: exam.courseId } })
+    if (course) {
+      courseCategory = course.title
+    }
+  }
+
+  let allQuestions = await prisma.questionBank.findMany({
+    where: {
+      isActive: true,
+      ...(courseCategory ? { category: courseCategory } : {})
+    },
     select: {
       id: true,
       text: true,
-      options: true, // JSON string containing options and the correct answer
+      options: true,
       kind: true,
       mediaUrl: true
     }
   })
+
+  if (allQuestions.length === 0) {
+    allQuestions = await prisma.questionBank.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        text: true,
+        options: true,
+        kind: true,
+        mediaUrl: true
+      }
+    })
+  }
 
   // Shuffle and pick
   const shuffled = allQuestions.sort(() => 0.5 - Math.random())

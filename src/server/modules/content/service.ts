@@ -499,6 +499,145 @@ const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
   archived: ['draft'],
 }
 
+async function syncPostToCourse(postId: string) {
+  const post = await prisma.post.findUnique({
+    where: { id: postId }
+  })
+  if (!post) return
+
+  if (post.type !== 'training' && post.type !== 'gallery') {
+    return
+  }
+
+  // 1. Parse quiz/questions from post body
+  let quizQuestions: any[] = []
+  let cleanBody = post.body || ''
+  const quizMatch = cleanBody.match(/\[quiz\]([\s\S]*?)\[\/quiz\]/)
+  if (quizMatch) {
+    try {
+      quizQuestions = JSON.parse(quizMatch[1].trim())
+    } catch {}
+  }
+
+  // 2. Upsert Course
+  const course = await prisma.course.upsert({
+    where: { key: post.id },
+    update: {
+      title: post.title,
+      description: post.excerpt || post.title,
+      coverUrl: post.coverUrl,
+      category: post.category || 'عمومی',
+      status: post.status === 'published' ? 'published' : 'draft',
+      passScore: 70,
+      estMinutes: Math.max(10, Math.round(cleanBody.length / 400)),
+    },
+    create: {
+      key: post.id,
+      title: post.title,
+      description: post.excerpt || post.title,
+      coverUrl: post.coverUrl,
+      category: post.category || 'عمومی',
+      status: post.status === 'published' ? 'published' : 'draft',
+      passScore: 70,
+      estMinutes: Math.max(10, Math.round(cleanBody.length / 400)),
+      createdBy: 'admin',
+    },
+  })
+
+  // 3. Update or create default Chapter
+  let chapter = await prisma.chapter.findFirst({
+    where: { courseId: course.id }
+  })
+  if (!chapter) {
+    chapter = await prisma.chapter.create({
+      data: {
+        courseId: course.id,
+        title: 'بخش اول: آموزش ویدیویی و مستندات',
+        sortOrder: 1,
+      }
+    })
+  }
+
+  // 4. Update or create default Lesson (video or content)
+  const isVideo = post.mediaUrl && (post.mediaUrl.endsWith('.mp4') || post.mediaType?.includes('video'))
+  
+  await prisma.lesson.deleteMany({
+    where: { chapterId: chapter.id }
+  })
+
+  await prisma.lesson.create({
+    data: {
+      chapterId: chapter.id,
+      title: post.title,
+      kind: isVideo ? 'video' : 'text',
+      contentRef: post.mediaUrl || post.body,
+      minSeconds: 120,
+      sortOrder: 1,
+    }
+  })
+
+  // 5. Sync Exam and questions
+  if (quizQuestions.length > 0) {
+    const exam = await prisma.exam.upsert({
+      where: { id: post.id },
+      update: {
+        courseId: course.id,
+        title: `آزمون صلاحیت: ${post.title}`,
+        questionCount: quizQuestions.length,
+        durationMin: 15,
+        passScore: 70,
+        drawRules: '[]',
+      },
+      create: {
+        id: post.id,
+        courseId: course.id,
+        title: `آزمون صلاحیت: ${post.title}`,
+        questionCount: quizQuestions.length,
+        durationMin: 15,
+        passScore: 70,
+        drawRules: '[]',
+        maxAttempts: 3,
+        cooldownHrs: 0,
+      }
+    })
+
+    for (let i = 0; i < quizQuestions.length; i++) {
+      const q = quizQuestions[i]
+      const qKey = `q-${post.id}-${i}`
+      
+      const formattedOptions = q.options.map((optText: string, oIdx: number) => ({
+        id: String(oIdx),
+        text: optText,
+        isCorrect: oIdx === q.answerIndex
+      }))
+
+      await prisma.questionBank.upsert({
+        where: { id: qKey },
+        update: {
+          category: course.title,
+          text: q.q,
+          options: JSON.stringify(formattedOptions),
+          isActive: true,
+        },
+        create: {
+          id: qKey,
+          category: course.title,
+          kind: 'multiple_choice',
+          text: q.q,
+          options: JSON.stringify(formattedOptions),
+          isActive: true,
+        }
+      })
+    }
+  } else {
+    try {
+      await prisma.exam.delete({ where: { id: post.id } })
+    } catch {}
+  }
+}
+
+export default syncPostToCourse;
+
 export async function transitionPostStatus(
   id: string,
   newStatus: string,
@@ -543,6 +682,8 @@ export async function transitionPostStatus(
   if (newStatus === 'published' && existing.status !== 'published') {
     await triggerAnnouncementNotification(post)
   }
+
+  await syncPostToCourse(post.id)
 
   return post
 }
@@ -615,6 +756,8 @@ export async function createPost(data: CreatePostInput, authorId: string) {
     await triggerAnnouncementNotification(post)
   }
 
+  await syncPostToCourse(post.id)
+
   return post
 }
 
@@ -672,6 +815,8 @@ export async function updatePost(
   if (post.status === 'published' && existing.status !== 'published') {
     await triggerAnnouncementNotification(post)
   }
+
+  await syncPostToCourse(post.id)
 
   return post
 }
