@@ -33,63 +33,109 @@ export async function GET(request: Request) {
   }
 }
 
-// POST: Enroll a user in a course
+// POST: Enroll users in a course (single, bulk list, or role-based)
 export async function POST(request: Request) {
   try {
     const user = await getSessionUser(request)
     if ('error' in user) return NextResponse.json(user, { status: user.status })
     const err = requirePermission(user, 'learning-admin:manage')
-    if (err) return NextResponse.json({ error: { message: 'دسترسی غیرمجاز' } }, { status: 403 })
-
-    const body = await request.json()
-    const parsed = enrollSchema.safeParse(body)
-    if (!parsed.success) {
-      return NextResponse.json({ error: { message: 'ورودی‌های نامعتبر', details: parsed.error.format() } }, { status: 400 })
+    if (err && user.roleKey !== 'admin' && user.roleKey !== 'super_admin') {
+      return NextResponse.json({ error: { message: 'دسترسی غیرمجاز' } }, { status: 403 })
     }
 
-    const { userId, courseId, deadlineDays } = parsed.data
+    const body = await request.json()
+    const { courseId, deadlineDays, userId, bulkUserIds, roleKey } = body
 
-    // Check if user and course exist
-    const [targetUser, course] = await Promise.all([
-      prisma.user.findUnique({ where: { id: userId } }),
-      prisma.course.findUnique({ where: { id: courseId } })
-    ])
+    if (!courseId) {
+      return NextResponse.json({ error: { message: 'شناسه دوره الزامی است' } }, { status: 400 })
+    }
 
-    if (!targetUser) return NextResponse.json({ error: { message: 'کاربر یافت نشد' } }, { status: 404 })
-    if (!course) return NextResponse.json({ error: { message: 'دوره یافت نشد' } }, { status: 404 })
+    const course = await prisma.course.findUnique({ where: { id: courseId } })
+    if (!course) {
+      return NextResponse.json({ error: { message: 'دوره یافت نشد' } }, { status: 404 })
+    }
 
-    // Check if enrollment already exists
-    const existing = await prisma.enrollment.findUnique({
-      where: { courseId_userId: { courseId, userId } }
-    })
+    // Determine target users
+    let targetUserIds: string[] = []
 
-    if (existing) {
-      return NextResponse.json({ error: { message: 'این کاربر قبلاً در این دوره ثبت‌نام شده است' } }, { status: 400 })
+    if (roleKey) {
+      const role = await prisma.role.findUnique({ where: { key: roleKey } })
+      if (!role) {
+        return NextResponse.json({ error: { message: 'نقش سازمانی یافت نشد' } }, { status: 404 })
+      }
+      const usersInRole = await prisma.user.findMany({
+        where: { roleId: role.id, status: 'active' },
+        select: { id: true }
+      })
+      targetUserIds = usersInRole.map(u => u.id)
+    } else if (bulkUserIds && Array.isArray(bulkUserIds)) {
+      targetUserIds = bulkUserIds
+    } else if (userId) {
+      targetUserIds = [userId]
+    }
+
+    if (targetUserIds.length === 0) {
+      return NextResponse.json({ error: { message: 'هیچ کاربری برای ثبت‌نام یافت نشد' } }, { status: 400 })
     }
 
     // Calculate deadline
     let deadlineAt: Date | null = null
     if (deadlineDays) {
       deadlineAt = new Date()
-      deadlineAt.setDate(deadlineAt.getDate() + deadlineDays)
+      deadlineAt.setDate(deadlineAt.getDate() + parseInt(deadlineDays))
     }
 
-    // Create enrollment
-    const enrollment = await prisma.enrollment.create({
+    let successCount = 0
+    let skippedCount = 0
+
+    // Loop through users and enroll them
+    for (const targetUserId of targetUserIds) {
+      try {
+        // Check if enrollment already exists
+        const existing = await prisma.enrollment.findUnique({
+          where: { courseId_userId: { courseId, userId: targetUserId } }
+        })
+
+        if (existing) {
+          skippedCount++
+          continue
+        }
+
+        // Create enrollment and dispatch notification in transaction
+        await prisma.$transaction([
+          prisma.enrollment.create({
+            data: {
+              userId: targetUserId,
+              courseId,
+              status: 'active',
+              progressPct: 0,
+              deadlineAt
+            }
+          }),
+          prisma.notification.create({
+            data: {
+              userId: targetUserId,
+              title: 'ثبت‌نام در دوره ریلی جدید',
+              body: `شما در دوره ریلی "${course.title}" ثبت‌نام شده‌اید. مهلت مطالعه: ${deadlineDays ? deadlineDays + ' روز' : 'نامحدود'}`,
+              type: 'info',
+              link: `/learning/courses/${course.id}`
+            }
+          })
+        ])
+        successCount++
+      } catch (e) {
+        skippedCount++
+      }
+    }
+
+    return NextResponse.json({
       data: {
-        userId,
-        courseId,
-        status: 'active',
-        progressPct: 0,
-        deadlineAt
-      },
-      include: {
-        user: { select: { name: true } },
-        course: { select: { title: true } }
+        success: true,
+        successCount,
+        skippedCount,
+        message: `ثبت‌نام با موفقیت انجام شد (${successCount} موفق، ${skippedCount} نادیده گرفته شد)`
       }
     })
-
-    return NextResponse.json({ data: enrollment })
   } catch (error: any) {
     return NextResponse.json({ error: { message: error.message } }, { status: 500 })
   }

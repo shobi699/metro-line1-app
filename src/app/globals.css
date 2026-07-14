@@ -461,3 +461,23 @@ body {
 .animate-pulse-live {
   animation: pulse-live-opacity 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* ── Dropdown option overrides for dark/light modes on Windows Chrome ── */
+select {
+  color-scheme: dark;
+}
+:global(.light) select,
+.light select {
+  color-scheme: light;
+}
+
+select option {
+  background-color: #18181b !important; /* Zinc 900 background */
+  color: #ffffff !important;            /* White text */
+}
+
+:global(.light) select option,
+.light select option {
+  background-color: #ffffff !important; /* White background */
+  color: #09090b !important;            /* Zinc 950 text */
+}

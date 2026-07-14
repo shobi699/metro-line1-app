@@ -31,17 +31,24 @@ export async function startExam(userId: string, examId: string) {
   }
 
   let courseCategory = ''
+  let courseKey = ''
   if (exam.courseId) {
     const course = await prisma.course.findUnique({ where: { id: exam.courseId } })
     if (course) {
-      courseCategory = course.title
+      courseCategory = course.category || ''
+      courseKey = course.key || ''
     }
   }
 
   let allQuestions = await prisma.questionBank.findMany({
     where: {
       isActive: true,
-      ...(courseCategory ? { category: courseCategory } : {})
+      ...(courseCategory || courseKey ? {
+        OR: [
+          { category: courseCategory },
+          { category: courseKey }
+        ]
+      } : {})
     },
     select: {
       id: true,
@@ -69,6 +76,17 @@ export async function startExam(userId: string, examId: string) {
   const shuffled = allQuestions.sort(() => 0.5 - Math.random())
   const selected = shuffled.slice(0, exam.questionCount)
 
+  // Find user enrollment if exists
+  let enrollmentId: string | null = null
+  if (exam.courseId) {
+    const enroll = await prisma.enrollment.findUnique({
+      where: { courseId_userId: { courseId: exam.courseId, userId } }
+    })
+    if (enroll) {
+      enrollmentId = enroll.id
+    }
+  }
+
   // We store the full selected questions in the snapshot so grading can happen later.
   const attempt = await prisma.examAttempt.create({
     data: {
@@ -76,6 +94,7 @@ export async function startExam(userId: string, examId: string) {
       examId,
       status: 'in_progress',
       snapshot: JSON.stringify(selected),
+      enrollmentId
     }
   })
 
@@ -138,10 +157,15 @@ export async function submitExam(userId: string, attemptId: string, userAnswers:
 
     // Issue certificate if course is attached
     if (attempt.exam.courseId) {
-      // Assuming a generic certificate template or logic
+      const course = await prisma.course.findUnique({ where: { id: attempt.exam.courseId } })
       const serial = `CERT-${attempt.exam.courseId.substring(0, 4)}-${userId.substring(0, 4)}-${new Date().getTime().toString().substring(8)}`
       const expiresAt = new Date()
-      expiresAt.setFullYear(expiresAt.getFullYear() + 2) // Default 2 years
+      
+      if (course && course.recurrenceMonths) {
+        expiresAt.setMonth(expiresAt.getMonth() + course.recurrenceMonths)
+      } else {
+        expiresAt.setFullYear(expiresAt.getFullYear() + 2) // Default 2 years
+      }
       
       await prisma.certificate.upsert({
         where: {
@@ -150,7 +174,11 @@ export async function submitExam(userId: string, attemptId: string, userAnswers:
             userId
           }
         },
-        update: {},
+        update: {
+          serial,
+          expiresAt,
+          issuedAt: new Date()
+        },
         create: {
           courseId: attempt.exam.courseId,
           userId,

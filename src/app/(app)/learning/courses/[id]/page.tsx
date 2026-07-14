@@ -14,6 +14,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
   const router = useRouter()
   const { id: courseId } = use(params)
   const accessToken = useAuthStore((s) => s.accessToken)
+  const user = useAuthStore((s) => s.user)
   
   const [course, setCourse] = useState<any>(null)
   const [exam, setExam] = useState<any>(null)
@@ -89,6 +90,25 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
   const isCompleted = enrollment?.status === 'completed'
   const hasCertificate = course.certificates?.length > 0
 
+  const getCompletedLessons = (userId: string) => {
+    if (typeof window === 'undefined') return []
+    try {
+      return JSON.parse(localStorage.getItem(`completed_lessons_${userId}`) || '[]') as string[]
+    } catch {
+      return []
+    }
+  }
+
+  const completedLessons = getCompletedLessons(user?.id || 'default')
+
+  // Get all lessons in order
+  const allLessons: any[] = []
+  course.chapters?.forEach((chap: any) => {
+    chap.lessons?.forEach((les: any) => {
+      allLessons.push(les)
+    })
+  })
+
   return (
     <div className="container mx-auto p-4 space-y-8 max-w-5xl">
       {/* Course Header */}
@@ -162,8 +182,12 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
                         chapter.lessons?.map((lesson: any) => {
                           const Icon = lesson.kind === 'video' ? PlayCircle : lesson.kind === 'pdf' ? FileText : BookOpen
                           
-                          // Simplified progress check - in a real app, track per lesson
-                          const isLessonAccessible = isEnrolled
+                          const lessonIndex = allLessons.findIndex(l => l.id === lesson.id)
+                          const isLessonAccessible = isEnrolled && (
+                            lessonIndex === 0 || 
+                            completedLessons.includes(allLessons[lessonIndex - 1]?.id)
+                          )
+                          const isLessonCompleted = completedLessons.includes(lesson.id)
                           
                           return (
                             <div 
@@ -172,9 +196,13 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
                             >
                               <div className="flex items-center gap-3">
                                 {isLessonAccessible ? (
-                                  <Icon className="w-5 h-5 text-primary/70" />
+                                  isLessonCompleted ? (
+                                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                                  ) : (
+                                    <Icon className="w-5 h-5 text-primary/70 shrink-0" />
+                                  )
                                 ) : (
-                                  <Lock className="w-5 h-5 text-muted-foreground" />
+                                  <Lock className="w-5 h-5 text-muted-foreground shrink-0" />
                                 )}
                                 <span className={isLessonAccessible ? 'font-medium' : 'text-muted-foreground'}>
                                   {lesson.title}
@@ -184,7 +212,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
                               {isLessonAccessible && (
                                 <Link 
                                   href={`/learning/courses/${course.id}/lessons/${lesson.id}`}
-                                  className={buttonVariants({ variant: "ghost", size: "sm" })}
+                                  className={buttonVariants({ variant: "ghost", size: "sm", className: "cursor-pointer font-bold" })}
                                 >
                                   مشاهده
                                 </Link>
@@ -223,48 +251,51 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
             </CardContent>
           </Card>
 
-          {course.exam && (
-            <Card className={`border-2 shadow-md ${isCompleted ? 'border-primary' : 'border-border'}`}>
-              <CardHeader className="bg-primary/5 pb-4">
-                <CardTitle className="flex items-center gap-2">
-                  <Award className="w-5 h-5 text-primary" />
-                  آزمون پایانی
-                </CardTitle>
-                <CardDescription>برای دریافت گواهینامه، قبولی در این آزمون الزامی است.</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4 space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                  <div className="bg-muted p-2 rounded text-center">
-                    <span className="block text-muted-foreground text-xs mb-1">تعداد سوال</span>
-                    <span className="font-bold">{course.exam.questionCount}</span>
+          {course.exams?.[0] && (() => {
+            const exam = course.exams[0]
+            return (
+              <Card className={`border-2 shadow-md ${isCompleted ? 'border-primary' : 'border-border'}`}>
+                <CardHeader className="bg-primary/5 pb-4">
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-primary" />
+                    آزمون پایانی
+                  </CardTitle>
+                  <CardDescription>برای دریافت گواهینامه، قبولی در این آزمون الزامی است.</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                    <div className="bg-muted p-2 rounded text-center">
+                      <span className="block text-muted-foreground text-xs mb-1">تعداد سوال</span>
+                      <span className="font-bold">{exam.questionCount}</span>
+                    </div>
+                    <div className="bg-muted p-2 rounded text-center">
+                      <span className="block text-muted-foreground text-xs mb-1">زمان (دقیقه)</span>
+                      <span className="font-bold">{exam.durationMin}</span>
+                    </div>
                   </div>
-                  <div className="bg-muted p-2 rounded text-center">
-                    <span className="block text-muted-foreground text-xs mb-1">زمان (دقیقه)</span>
-                    <span className="font-bold">{course.exam.durationMin}</span>
-                  </div>
-                </div>
-                
-                {isEnrolled ? (
-                  progressPct >= 100 || isCompleted ? (
-                    <Link 
-                      href={`/learning/exams/${course.exam.id}`}
-                      className={buttonVariants({ className: 'w-full' })}
-                    >
-                      شروع آزمون
-                    </Link>
+                  
+                  {isEnrolled ? (
+                    progressPct >= 100 || isCompleted ? (
+                      <Link 
+                        href={`/learning/exams/${exam.id}`}
+                        className={buttonVariants({ className: 'w-full cursor-pointer font-bold' })}
+                      >
+                        شروع آزمون
+                      </Link>
+                    ) : (
+                      <Button className="w-full font-bold" variant="outline" disabled>
+                        ابتدا دروس را تکمیل کنید
+                      </Button>
+                    )
                   ) : (
-                    <Button className="w-full" variant="outline" disabled>
-                      ابتدا دروس را تکمیل کنید
+                    <Button className="w-full font-bold" variant="outline" disabled>
+                      نیاز به ثبت‌نام
                     </Button>
-                  )
-                ) : (
-                  <Button className="w-full" variant="outline" disabled>
-                    نیاز به ثبت‌نام
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          )}
+                  )}
+                </CardContent>
+              </Card>
+            )
+          })()}
         </div>
       </div>
     </div>

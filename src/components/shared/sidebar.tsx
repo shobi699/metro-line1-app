@@ -49,6 +49,8 @@ import {
   Vote,
   Menu,
   Terminal,
+  Search,
+  X,
 } from 'lucide-react'
 
 interface NavItem {
@@ -275,6 +277,7 @@ export function SidebarContent() {
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
   const [webVersion, setWebVersion] = useState<string>('v0.1.1')
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     fetch('/api/config')
@@ -316,6 +319,47 @@ export function SidebarContent() {
     return roles.includes(user?.roleKey ?? '')
   }
 
+  // فیلتر کردن هوشمند بخش‌ها و منوها بر اساس جستجو
+  const getFilteredSections = () => {
+    if (!searchQuery.trim()) return NAVIGATION_SECTIONS
+
+    const query = searchQuery.toLowerCase().trim()
+
+    return NAVIGATION_SECTIONS.map((section) => {
+      // فیلتر گروه‌های هر بخش
+      const filteredGroups = section.groups.map((group) => {
+        const groupMatches = group.label.toLowerCase().includes(query)
+        if (groupMatches) {
+          return group
+        }
+
+        const matchingItems = group.items.filter((item) =>
+          item.label.toLowerCase().includes(query)
+        )
+
+        if (matchingItems.length > 0) {
+          return {
+            ...group,
+            items: matchingItems
+          }
+        }
+
+        return null
+      }).filter((g): g is NavSubgroup => g !== null)
+
+      if (filteredGroups.length > 0) {
+        return {
+          ...section,
+          groups: filteredGroups
+        }
+      }
+
+      return null
+    }).filter((s): s is NavSection => s !== null)
+  }
+
+  const filteredSections = getFilteredSections()
+
   return (
     <div className="flex flex-col h-full w-full">
       {/* User Profile Section */}
@@ -338,91 +382,120 @@ export function SidebarContent() {
         </div>
       </div>
 
+      {/* Search Input Box */}
+      <div className="px-3 pt-3 pb-1">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="جستجوی منوها..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-9 rounded-lg bg-surface-container-highest/60 border border-border-subtle/50 pr-8 pl-3 text-xs text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-accent/50 focus:border-accent transition duration-150"
+            dir="rtl"
+          />
+          <Search className="absolute right-2.5 top-2.5 size-4 text-foreground-muted pointer-events-none" />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="absolute left-2.5 top-2.5 text-foreground-muted hover:text-foreground cursor-pointer"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Navigation */}
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4" aria-label="منوی اصلی">
-        {NAVIGATION_SECTIONS.map((section, idx) => {
-          // بررسی نقش در سطح بخش
-          if (section.roles && !section.roles.includes(user?.roleKey ?? '')) {
-            return null
-          }
+        {filteredSections.length === 0 ? (
+          <div className="text-center py-8 text-xs text-foreground-muted">
+            منویی یافت نشد.
+          </div>
+        ) : (
+          filteredSections.map((section, idx) => {
+            // بررسی نقش در سطح بخش
+            if (section.roles && !section.roles.includes(user?.roleKey ?? '')) {
+              return null
+            }
 
-          // فیلتر گروه‌های مجاز بر اساس نقش کاربر
-          const visibleGroups = section.groups.filter((group) => checkRole(group.roles))
-          if (visibleGroups.length === 0) return null
+            // فیلتر گروه‌های مجاز بر اساس نقش کاربر
+            const visibleGroups = section.groups.filter((group) => checkRole(group.roles))
+            if (visibleGroups.length === 0) return null
 
-          return (
-            <div key={idx} className="space-y-1.5">
-              {/* عنوان دسته‌بندی */}
-              <div className="text-[10px] font-bold text-foreground-muted/65 px-3 uppercase tracking-wider">
-                {section.title}
-              </div>
+            return (
+              <div key={idx} className="space-y-1.5">
+                {/* عنوان دسته‌بندی */}
+                <div className="text-[10px] font-bold text-foreground-muted/65 px-3 uppercase tracking-wider">
+                  {section.title}
+                </div>
 
-              {/* گروه‌های تاشو */}
-              <div className="space-y-1">
-                {visibleGroups.map((group) => {
-                  const isExpanded = !!expandedGroups[group.id]
-                  const groupHasActiveChild = group.items.some(
-                    (item) => pathname === item.href || pathname.startsWith(item.href + '/'),
-                  )
+                {/* گروه‌های تاشو */}
+                <div className="space-y-1">
+                  {visibleGroups.map((group) => {
+                    const isExpanded = searchQuery.trim() ? true : !!expandedGroups[group.id]
+                    const groupHasActiveChild = group.items.some(
+                      (item) => pathname === item.href || pathname.startsWith(item.href + '/'),
+                    )
 
-                  // فیلتر آیتم‌های مجاز
-                  const visibleItems = group.items.filter((item) => checkRole(item.roles))
-                  if (visibleItems.length === 0) return null
+                    // فیلتر آیتم‌های مجاز
+                    const visibleItems = group.items.filter((item) => checkRole(item.roles))
+                    if (visibleItems.length === 0) return null
 
-                  return (
-                    <div key={group.id} className="rounded-lg overflow-hidden">
-                      {/* دکمه هدر گروه تاشو */}
-                      <button
-                        onClick={() => toggleGroup(group.id)}
-                        className={cn(
-                          'flex items-center justify-between w-full px-3 py-2 text-sm rounded-lg transition-all scale-[0.98] active:scale-95',
-                          groupHasActiveChild
-                            ? 'text-foreground font-semibold bg-surface-container-high/40'
-                            : 'text-foreground-muted hover:bg-surface-container-highest hover:text-foreground',
+                    return (
+                      <div key={group.id} className="rounded-lg overflow-hidden">
+                        {/* دکمه هدر گروه تاشو */}
+                        <button
+                          onClick={() => toggleGroup(group.id)}
+                          className={cn(
+                            'flex items-center justify-between w-full px-3 py-2 text-sm rounded-lg transition-all scale-[0.98] active:scale-95',
+                            groupHasActiveChild
+                              ? 'text-foreground font-semibold bg-surface-container-high/40'
+                              : 'text-foreground-muted hover:bg-surface-container-highest hover:text-foreground',
+                          )}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <group.icon className="size-4 shrink-0" />
+                            <span>{group.label}</span>
+                          </div>
+                          {isExpanded ? (
+                            <ChevronDown className="size-3.5 text-foreground-muted" />
+                          ) : (
+                            <ChevronLeft className="size-3.5 text-foreground-muted" />
+                          )}
+                        </button>
+
+                        {/* لیست زیرمنوهای گروه */}
+                        {isExpanded && (
+                          <div className="mr-3 mt-0.5 border-r border-border-subtle/50 pr-2.5 space-y-0.5 transition-all">
+                            {visibleItems.map((item) => {
+                              const active = pathname === item.href || pathname.startsWith(item.href + '/')
+                              return (
+                                <Link
+                                  key={item.href}
+                                  href={item.href}
+                                  aria-current={active ? 'page' : undefined}
+                                  className={cn(
+                                    'flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs transition-all scale-[0.98] active:scale-95',
+                                    active
+                                      ? 'bg-accent/10 text-accent font-bold'
+                                      : 'text-foreground-muted hover:bg-surface-container-highest hover:text-foreground',
+                                  )}
+                                >
+                                  <item.icon className="size-3.5 shrink-0" />
+                                  <span>{item.label}</span>
+                                </Link>
+                              )
+                            })}
+                          </div>
                         )}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <group.icon className="size-4 shrink-0" />
-                          <span>{group.label}</span>
-                        </div>
-                        {isExpanded ? (
-                          <ChevronDown className="size-3.5 text-foreground-muted" />
-                        ) : (
-                          <ChevronLeft className="size-3.5 text-foreground-muted" />
-                        )}
-                      </button>
-
-                      {/* لیست زیرمنوهای گروه */}
-                      {isExpanded && (
-                        <div className="mr-3 mt-0.5 border-r border-border-subtle/50 pr-2.5 space-y-0.5 transition-all">
-                          {visibleItems.map((item) => {
-                            const active = pathname === item.href || pathname.startsWith(item.href + '/')
-                            return (
-                              <Link
-                                key={item.href}
-                                href={item.href}
-                                aria-current={active ? 'page' : undefined}
-                                className={cn(
-                                  'flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs transition-all scale-[0.98] active:scale-95',
-                                  active
-                                    ? 'bg-accent/10 text-accent font-bold'
-                                    : 'text-foreground-muted hover:bg-surface-container-highest hover:text-foreground',
-                                )}
-                              >
-                                <item.icon className="size-3.5 shrink-0" />
-                                <span>{item.label}</span>
-                              </Link>
-                            )
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })
+        )}
       </nav>
 
       {/* Footer */}

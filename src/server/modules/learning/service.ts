@@ -62,6 +62,7 @@ export async function getCourseDetail(courseId: string, userId: string) {
       certificates: {
         where: { userId },
       },
+      exams: true,
     },
   })
 

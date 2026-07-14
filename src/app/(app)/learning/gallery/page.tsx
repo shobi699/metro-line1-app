@@ -541,19 +541,24 @@ export default function LearningGalleryPage() {
         <div className="space-y-6">
           {courses.map((course) => {
             const completedVideosCount = course.videos.filter((v) => v.isCompleted).length
-            const courseProgress = Math.round((completedVideosCount / course.videos.length) * 100)
+            const courseProgress = course.videos.length > 0 
+              ? Math.round((completedVideosCount / course.videos.length) * 100) 
+              : 0
 
             return (
               <div key={course.id} className="space-y-3">
                 {/* Course Header */}
                 <div className="flex items-center justify-between border-b border-border/40 pb-2 flex-wrap gap-2">
-                  <div className="flex items-center gap-2 select-none">
-                    <span className="text-xl">{course.icon}</span>
+                  <Link 
+                    href={`/learning/courses/${course.id}`} 
+                    className="flex items-center gap-2 hover:opacity-80 transition cursor-pointer select-none group"
+                  >
+                    <span className="text-xl group-hover:scale-110 transition">{course.icon}</span>
                     <div>
-                      <h3 className="text-xs font-black text-foreground">{course.name}</h3>
+                      <h3 className="text-xs font-black text-white group-hover:text-primary transition">{course.name}</h3>
                       <p className="text-[10px] text-foreground-muted mt-0.5">{course.description}</p>
                     </div>
-                  </div>
+                  </Link>
 
                   <div className="flex items-center gap-3">
                     <div className="flex flex-col items-end text-left">
@@ -597,7 +602,14 @@ export default function LearningGalleryPage() {
                       const dlProgress = downloadProgress[vid.id] || 0
 
                       return (
-                        <Card key={vid.id} className="overflow-hidden border border-border-subtle bg-surface/50 backdrop-blur flex flex-col h-full group hover:border-accent/30 transition-all duration-300 rounded-lg relative">
+                        <Card 
+                          key={vid.id} 
+                          onClick={() => {
+                            setActiveVideo(vid)
+                            setVideoProgress(vid.watchedPercentage)
+                          }}
+                          className="overflow-hidden border border-border-subtle bg-surface/50 backdrop-blur flex flex-col h-full group hover:border-accent/30 hover:shadow-lg transition-all duration-300 rounded-lg relative cursor-pointer"
+                        >
                           {/* Thumbnail */}
                           <div className="relative aspect-video bg-slate-950 overflow-hidden">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -611,7 +623,8 @@ export default function LearningGalleryPage() {
                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                               <Button
                                 size="icon"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation()
                                   setActiveVideo(vid)
                                   setVideoProgress(vid.watchedPercentage)
                                 }}
@@ -689,7 +702,10 @@ export default function LearningGalleryPage() {
                                   <Button
                                     size="xs"
                                     variant="ghost"
-                                    onClick={() => handleDownloadVideo(vid.id)}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleDownloadVideo(vid.id)
+                                    }}
                                     className="h-7 text-[9px] text-accent hover:text-accent-hover hover:bg-transparent p-0 cursor-pointer gap-1"
                                   >
                                     <Download className="size-3" />
