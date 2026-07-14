@@ -2768,12 +2768,12 @@ function AdminContentPageContent() {
                 <div className="flex flex-col gap-2">
                   <Label className="text-foreground-muted font-semibold">برچسب‌ها (تگ‌ها):</Label>
                   <div className="flex flex-wrap gap-1.5 min-h-[36px] p-1.5 border border-border rounded-lg bg-surface">
-                    {form.tags.map((tag, idx) => (
+                    {(form.tags || []).map((tag, idx) => (
                       <div key={idx} className="flex items-center gap-1 bg-accent/15 text-accent border border-accent/20 px-2 py-1 rounded text-[10px]">
                         <span>{tag}</span>
                         <X
                           className="size-3 cursor-pointer opacity-70 hover:opacity-100"
-                          onClick={() => setForm(f => ({ ...f, tags: f.tags.filter((_, i) => i !== idx) }))}
+                          onClick={() => setForm(f => ({ ...f, tags: (f.tags || []).filter((_, i) => i !== idx) }))}
                         />
                       </div>
                     ))}
@@ -2784,8 +2784,9 @@ function AdminContentPageContent() {
                         if (e.key === 'Enter') {
                           e.preventDefault()
                           const val = e.currentTarget.value.trim()
-                          if (val && !form.tags.includes(val)) {
-                            setForm(f => ({ ...f, tags: [...f.tags, val] }))
+                          const currentTags = form.tags || []
+                          if (val && !currentTags.includes(val)) {
+                            setForm(f => ({ ...f, tags: [...currentTags, val] }))
                             e.currentTarget.value = ''
                           }
                         }
@@ -2797,22 +2798,26 @@ function AdminContentPageContent() {
                 <div className="space-y-1.5">
                   <span className="text-[10px] text-foreground-muted font-semibold block">برچسب‌های محبوب خط ۱:</span>
                   <div className="flex flex-wrap gap-1">
-                    {POPULAR_CATEGORIES.map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => {
-                          if (!form.tags.includes(cat)) {
-                            setForm(f => ({ ...f, tags: [...f.tags, cat] }))
-                          }
-                        }}
-                        className={`px-2 py-1 rounded text-[10px] border transition-all cursor-pointer ${
-                          form.tags.includes(cat) ? 'bg-accent/15 border-accent text-accent' : 'bg-background hover:bg-surface-hover border-border text-foreground-muted'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
+                    {POPULAR_CATEGORIES.map((cat) => {
+                      const currentTags = form.tags || []
+                      const isIncluded = currentTags.includes(cat)
+                      return (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => {
+                            if (!isIncluded) {
+                              setForm(f => ({ ...f, tags: [...(f.tags || []), cat] }))
+                            }
+                          }}
+                          className={`px-2 py-1 rounded text-[10px] border transition-all cursor-pointer ${
+                            isIncluded ? 'bg-accent/15 border-accent text-accent' : 'bg-background hover:bg-surface-hover border-border text-foreground-muted'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               </CardContent>

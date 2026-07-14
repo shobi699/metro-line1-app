@@ -918,7 +918,8 @@ export default function MyExamsPage() {
                 </div>
               </div>
             </>
-          )})}
+          )
+        })()}
         </DialogContent>
       </Dialog>
 
