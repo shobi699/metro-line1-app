@@ -191,7 +191,7 @@ export function SharedFilesUploader({ value = '[]', onChange, disabled }: Shared
               فایل خود را اینجا بکشید یا برای انتخاب کلیک کنید
             </span>
             <span className="text-[10px] text-foreground-muted mt-1.5">
-              پشتیبانی از ZIP، RAR و اسناد بدون محدودیت حجم (حداقل ۱۵۰ مگابایت)
+              پشتیبانی از ZIP، RAR و سایر اسناد عمومی (بدون محدودیت در حجم فایل)
             </span>
           </div>
         )}
