@@ -51,10 +51,6 @@ export default function FeedbackCategoriesAdminPage() {
     isActive: true,
   })
 
-  useEffect(() => {
-    fetchCategories()
-  }, [])
-
   const fetchCategories = async () => {
     setLoading(true)
     try {
@@ -67,6 +63,10 @@ export default function FeedbackCategoriesAdminPage() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchCategories()
+  }, [])
 
   const handleOpenNew = () => {
     setFormData({

@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, Save, RotateCcw, Check, AlertCircle } from 'lucide-react'
 import { toFa } from '@/lib/fa'
 import { ImageUploader } from '@/components/shared/image-uploader'
+import { SharedFilesUploader } from '@/components/shared/shared-files-uploader'
 
 interface Setting {
   id: string
@@ -508,6 +509,13 @@ export default function AdminSettingsPage() {
                               dir="ltr"
                               className="w-full md:w-[400px] rounded-lg border border-border bg-background/50 p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-ring focus:border-accent resize-y"
                             />
+                          ) : setting.key === 'download.sharedFiles' ? (
+                            <div className="w-48 md:w-[480px]">
+                              <SharedFilesUploader
+                                value={String(currentValue ?? '[]')}
+                                onChange={(val) => handleValueChange(setting.key, val)}
+                              />
+                            </div>
                           ) : setting.key.includes('Notice') || setting.key.includes('message') ? (
                             <textarea
                               value={String(currentValue ?? '')}

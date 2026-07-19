@@ -79,6 +79,16 @@ export async function GET(request: Request) {
     const downloadIosType = await getSettingValue('download.ios.type', 'url')
     let downloadIosValue = await getSettingValue('download.ios.value', 'https://metro.tehran.ir')
     const downloadWebUrl = await getSettingValue('download.web.url', 'https://metro.tehran.ir')
+    const downloadSharedFilesRaw = await getSettingValue('download.sharedFiles', '[]')
+    
+    let sharedFiles = []
+    try {
+      sharedFiles = typeof downloadSharedFilesRaw === 'string'
+        ? JSON.parse(downloadSharedFilesRaw)
+        : (downloadSharedFilesRaw || [])
+    } catch {
+      sharedFiles = []
+    }
 
     const host = request.headers.get('host') || 'localhost:3000'
     const protocol = request.headers.get('x-forwarded-proto') || 'http'
@@ -93,6 +103,12 @@ export async function GET(request: Request) {
     }
     if (downloadIosValue.startsWith('/')) {
       downloadIosValue = `${baseUrl}${downloadIosValue}`
+    }
+    if (Array.isArray(sharedFiles)) {
+      sharedFiles = sharedFiles.map((f: any) => ({
+        ...f,
+        url: f.url && f.url.startsWith('/') ? `${baseUrl}${f.url}` : f.url
+      }))
     }
 
     return NextResponse.json({
@@ -133,7 +149,8 @@ export async function GET(request: Request) {
           androidValue: downloadAndroidValue,
           iosType: downloadIosType,
           iosValue: downloadIosValue,
-          webUrl: downloadWebUrl
+          webUrl: downloadWebUrl,
+          sharedFiles
         }
       },
     })

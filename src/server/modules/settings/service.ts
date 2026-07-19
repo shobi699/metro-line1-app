@@ -649,6 +649,15 @@ export const DEFAULT_SETTINGS = [
     category: 'download',
   },
   {
+    key: 'download.sharedFiles',
+    label: 'فایل‌های آپلود سنتر',
+    description: 'فایل‌های زیپ، رر یا سایر موارد آپلود شده برای دانلود عمومی کاربران',
+    type: 'text',
+    value: '[]',
+    defaultValue: '[]',
+    category: 'download',
+  },
+  {
     key: 'ai.searchPriority',
     label: 'اولویت سناریوی جستجو',
     description: 'تعیین اولویت پاسخ‌دهی به پرسنل: جستجو در دیتابیس محلی (آیین‌نامه) یا پردازش با هوش مصنوعی',

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Loader2, Plus, Edit2, Trash2, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -171,7 +170,7 @@ export default function FAQAdminPage() {
                   </div>
                 ))
               ) : (
-                <div className="p-8 text-center text-muted-foreground">هیچ سوالی یافت نشد. برای شروع روی دکمه "افزودن سوال" کلیک کنید.</div>
+                <div className="p-8 text-center text-muted-foreground">هیچ سوالی یافت نشد. برای شروع روی دکمه {"\"افزودن سوال\""} کلیک کنید.</div>
               )}
             </div>
           </div>

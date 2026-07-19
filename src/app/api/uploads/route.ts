@@ -21,6 +21,11 @@ const ALLOWED_EXACT = [
   'application/zip',
   'application/x-zip-compressed',
   'application/x-rar-compressed',
+  'application/x-rar',
+  'application/vnd.rar',
+  'application/x-tar',
+  'application/x-7z-compressed',
+  'application/rar',
 ]
 
 export async function POST(request: Request) {

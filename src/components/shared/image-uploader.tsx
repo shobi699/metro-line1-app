@@ -34,7 +34,7 @@ export function ImageUploader({ value, onChange, onClear, disabled, className, p
     try {
       const url = await uploadFileWithProgress({
         file,
-        token,
+        token: token || undefined,
         onProgress: (p) => setProgress(p),
       })
       onChange(url)

@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     const token = authHeader.split(' ')[1]
-    const decoded = await verifyAccessToken(token)
+    const decoded = (await verifyAccessToken(token)) as any
     if (!decoded) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

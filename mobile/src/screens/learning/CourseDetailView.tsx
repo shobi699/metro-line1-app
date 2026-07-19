@@ -84,7 +84,7 @@ export function CourseDetailView({
               
               <View style={[styles.lessons, { borderColor: theme.colors.border }]}>
                 {chapter.lessons?.map((lesson: any) => {
-                  const Icon = lesson.type === 'video' ? PlayCircle : FileText
+                  const Icon = (lesson.kind === 'video' || lesson.type === 'video') ? PlayCircle : FileText
                   return (
                     <TouchableOpacity 
                       key={lesson.id} 

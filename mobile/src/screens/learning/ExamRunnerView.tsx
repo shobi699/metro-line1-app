@@ -44,7 +44,15 @@ export function ExamRunnerView({ examId, onBack }: { examId: string, onBack: () 
       })
       const json = await res.json()
       if (json.data) {
-        setAttempt(json.data)
+        let parsedQuestions = []
+        try {
+          if (json.data.snapshot) {
+            parsedQuestions = JSON.parse(json.data.snapshot)
+          }
+        } catch (e) {
+          console.error('Error parsing snapshot:', e)
+        }
+        setAttempt({ ...json.data, questions: parsedQuestions })
       } else {
         Alert.alert('خطا', json.error?.message || 'شروع آزمون با خطا مواجه شد.')
       }
@@ -59,18 +67,13 @@ export function ExamRunnerView({ examId, onBack }: { examId: string, onBack: () 
     if (!attempt) return
     setSubmitting(true)
     try {
-      const payloadAnswers = Object.entries(answers).map(([questionId, selectedOption]) => ({
-        questionId,
-        selectedOption
-      }))
-
       const res = await fetch(`${API_URL}/learning/exams/attempt/${attempt.id}/submit`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ answers: payloadAnswers })
+        body: JSON.stringify({ answers })
       })
       const json = await res.json()
       if (json.data) {
@@ -159,27 +162,37 @@ export function ExamRunnerView({ examId, onBack }: { examId: string, onBack: () 
             <Text style={[styles.questionText, { color: theme.colors.onSurface }]}>
               {i + 1}. {q.text}
             </Text>
-            {q.options?.map((opt: string) => {
-              const isSelected = answers[q.id] === opt
-              return (
-                <TouchableOpacity
-                  key={opt}
-                  style={[
-                    styles.option, 
-                    { 
-                      borderColor: isSelected ? theme.colors.primary : theme.colors.border,
-                      backgroundColor: isSelected ? theme.colors.primary + '10' : 'transparent'
-                    }
-                  ]}
-                  onPress={() => setAnswers(prev => ({ ...prev, [q.id]: opt }))}
-                >
-                  <View style={[styles.radio, { borderColor: isSelected ? theme.colors.primary : theme.colors.textSecondary }]}>
-                    {isSelected && <View style={[styles.radioDot, { backgroundColor: theme.colors.primary }]} />}
-                  </View>
-                  <Text style={[styles.optionText, { color: theme.colors.onSurface }]}>{opt}</Text>
-                </TouchableOpacity>
-              )
-            })}
+            {(() => {
+              let parsedOptions: any[] = []
+              try {
+                if (q.options) {
+                  parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options
+                }
+              } catch (e) {
+                console.error(e)
+              }
+              return parsedOptions?.map((opt: any) => {
+                const isSelected = answers[q.id] === String(opt.id)
+                return (
+                  <TouchableOpacity
+                    key={opt.id}
+                    style={[
+                      styles.option, 
+                      { 
+                        borderColor: isSelected ? theme.colors.primary : theme.colors.border,
+                        backgroundColor: isSelected ? theme.colors.primary + '10' : 'transparent'
+                      }
+                    ]}
+                    onPress={() => setAnswers(prev => ({ ...prev, [q.id]: String(opt.id) }))}
+                  >
+                    <View style={[styles.radio, { borderColor: isSelected ? theme.colors.primary : theme.colors.textSecondary }]}>
+                      {isSelected && <View style={[styles.radioDot, { backgroundColor: theme.colors.primary }]} />}
+                    </View>
+                    <Text style={[styles.optionText, { color: theme.colors.onSurface }]}>{opt.text}</Text>
+                  </TouchableOpacity>
+                )
+              })
+            })()}
           </View>
         ))}
         <TouchableOpacity 

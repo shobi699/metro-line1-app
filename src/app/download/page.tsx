@@ -11,9 +11,20 @@ import {
   ArrowLeft,
   Loader2,
   ShieldCheck,
-  Cpu
+  Cpu,
+  FileArchive,
+  FileText,
+  File
 } from 'lucide-react'
-import { toFa } from '@/lib/fa'
+import { toFa, jalali } from '@/lib/fa'
+
+interface SharedFile {
+  id: string
+  name: string
+  url: string
+  size: number
+  uploadedAt: string
+}
 
 interface DownloadConfig {
   title: string
@@ -23,6 +34,7 @@ interface DownloadConfig {
   iosType: 'url' | 'file'
   iosValue: string
   webUrl: string
+  sharedFiles?: SharedFile[]
 }
 
 export default function DownloadPage() {
@@ -208,6 +220,67 @@ export default function DownloadPage() {
             </div>
           </div>
         </div>
+
+        {/* Uploaded Shared Files Section */}
+        {config?.sharedFiles && config.sharedFiles.length > 0 && (
+          <div className="mt-10 bg-[#121214]/60 backdrop-blur-xl border border-white/5 rounded-3xl p-6 w-full max-w-3xl space-y-4">
+            <h4 className="text-sm font-black text-white flex items-center gap-2 justify-start">
+              <Cpu className="size-4 text-[#e53935]" />
+              <span>مرکز دانلود اسناد و فایل‌های عمومی</span>
+            </h4>
+            <p className="text-xs text-[#a1a1aa] leading-relaxed">
+              آخرین فایل‌های بخشنامه‌ها، برنامه‌ها، به‌روزرسانی‌ها و اسناد راهبری را از لیست زیر دریافت کنید:
+            </p>
+            <div className="divide-y divide-white/5 border border-white/5 rounded-2xl overflow-hidden bg-white/[0.01]">
+              {config.sharedFiles.map((file) => {
+                const ext = file.name.split('.').pop()?.toLowerCase() || ''
+                let icon = <File className="size-5 text-[#a1a1aa] shrink-0" />
+                if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) {
+                  icon = <FileArchive className="size-5 text-[#e53935] shrink-0" />
+                } else if (['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt'].includes(ext)) {
+                  icon = <FileText className="size-5 text-blue-400 shrink-0" />
+                }
+                
+                // Format file size
+                const bytes = file.size
+                let sizeStr = '۰ بایت'
+                if (bytes > 0) {
+                  const k = 1024
+                  const sizes = ['بایت', 'KB', 'MB', 'GB']
+                  const i = Math.floor(Math.log(bytes) / Math.log(k))
+                  const formatted = parseFloat((bytes / Math.pow(k, i)).toFixed(1))
+                  sizeStr = `${toFa(formatted)} ${sizes[i]}`
+                }
+
+                return (
+                  <div key={file.id} className="p-3.5 flex items-center justify-between gap-4 hover:bg-white/[0.01] transition-colors">
+                    <div className="flex items-center gap-3 min-w-0">
+                      {icon}
+                      <div className="flex flex-col gap-1 min-w-0 text-right">
+                        <span className="text-xs font-semibold text-white truncate max-w-[180px] sm:max-w-xs md:max-w-md block" dir="ltr">
+                          {file.name}
+                        </span>
+                        <div className="flex items-center gap-2 text-[10px] text-[#a1a1aa]">
+                          <span>{sizeStr}</span>
+                          <span>•</span>
+                          <span>تاریخ انتشار: {jalali(file.uploadedAt)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <a
+                      href={file.url}
+                      download
+                      className="px-3.5 py-1.5 bg-[#e53935]/10 border border-[#e53935]/30 hover:bg-[#e53935] text-white hover:text-white rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5"
+                    >
+                      <Download className="size-3.5" />
+                      <span>دریافت فایل</span>
+                    </a>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Informational Tips */}
         <div className="mt-8 bg-white/[0.02] border border-white/5 rounded-2xl p-4 max-w-xl flex items-start gap-3 text-right">

@@ -10,6 +10,13 @@ if [ -f "package-lock.json" ]; then
   git checkout -- package-lock.json
 fi
 
+# ایجاد نسخه پشتیبان امن از دیتابیس قبل از بروزرسانی
+if [ -f "prisma/dev.db" ]; then
+  echo "در حال تهیه نسخه پشتیبان با مهر زمانی از دیتابیس سرور..."
+  mkdir -p prisma/backups
+  cp prisma/dev.db "prisma/backups/dev_db_backup_$(date +%Y%m%d_%H%M%S).db"
+fi
+
 # مدیریت فایل دیتابیس برای جلوگیری از تداخل گیت
 DB_EXISTS=false
 if [ -f "prisma/dev.db" ]; then

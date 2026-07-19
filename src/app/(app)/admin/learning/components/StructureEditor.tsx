@@ -98,8 +98,8 @@ export function StructureEditor({
   const handleDeleteLesson = (chapterIdx: number, lessonIdx: number) => {
     if (!confirm('آیا از حذف این درس اطمینان دارید؟')) return
     const lessons = chapters[chapterIdx].lessons || []
-    const updatedLessons = lessons.filter((_, i) => i !== lessonIdx)
-    updatedLessons.forEach((l, i) => { l.sortOrder = i + 1 })
+    const updatedLessons = lessons.filter((_: any, i: number) => i !== lessonIdx)
+    updatedLessons.forEach((l: any, i: number) => { l.sortOrder = i + 1 })
     const updated = [...chapters]
     updated[chapterIdx].lessons = updatedLessons
     onChaptersChange(updated)
