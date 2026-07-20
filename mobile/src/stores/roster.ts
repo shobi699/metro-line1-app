@@ -69,7 +69,11 @@ export const useRosterStore = create<RosterState>()(
           if (response && response.days) {
             const newDays = { ...get().myDays }
             for (const day of response.days) {
-              newDays[day.jalaliDate] = day
+              const dashedDate = day.jalaliDate.replace(/\//g, '-')
+              newDays[dashedDate] = {
+                ...day,
+                jalaliDate: dashedDate
+              }
             }
             set({
               myDays: newDays,
@@ -85,25 +89,27 @@ export const useRosterStore = create<RosterState>()(
       },
 
       getDay: async (jalaliDate: string) => {
+        const dashedDate = jalaliDate.replace(/\//g, '-')
         // Return from cache first (instant)
         const state = get()
-        const cachedDay = state.myDays[jalaliDate]
+        const cachedDay = state.myDays[dashedDate]
         
         // Background sync to update
         try {
-          // If we had ETag support in cachedFetch we would use it here.
-          // For now just fetch normally and update cache.
-          const response = await cachedFetch<MyRosterPayload>(`/roster/my/${jalaliDate}`)
+          const response = await cachedFetch<MyRosterPayload>(`/roster/my/${dashedDate}`)
           
-          // Wait, the API returns the bare payload. If not found, it returns an empty object with nextDepartureTime: null
           if (response && response.rosterDayId) {
+            const normalizedPayload = {
+              ...response,
+              jalaliDate: dashedDate
+            }
             set((prev) => ({
               myDays: {
                 ...prev.myDays,
-                [jalaliDate]: response
+                [dashedDate]: normalizedPayload
               }
             }))
-            return response
+            return normalizedPayload
           }
         } catch (err) {
           // Ignore background fetch error
@@ -115,14 +121,15 @@ export const useRosterStore = create<RosterState>()(
       clearCache: () => set({ myDays: {}, lastSyncAt: null }),
 
       acknowledgeTrip: async (jalaliDate, tripId) => {
+        const dashedDate = jalaliDate.replace(/\//g, '-')
         const now = new Date().toISOString()
         set((state) => {
-          const day = state.myDays[jalaliDate]
+          const day = state.myDays[dashedDate]
           if (!day) return state
           return {
             myDays: {
               ...state.myDays,
-              [jalaliDate]: {
+              [dashedDate]: {
                 ...day,
                 trips: day.trips.map(t => t.id === tripId ? { ...t, acknowledgedAt: now } : t)
               }
@@ -133,14 +140,15 @@ export const useRosterStore = create<RosterState>()(
       },
 
       readyTrip: async (jalaliDate, tripId) => {
+        const dashedDate = jalaliDate.replace(/\//g, '-')
         const now = new Date().toISOString()
         set((state) => {
-          const day = state.myDays[jalaliDate]
+          const day = state.myDays[dashedDate]
           if (!day) return state
           return {
             myDays: {
               ...state.myDays,
-              [jalaliDate]: {
+              [dashedDate]: {
                 ...day,
                 trips: day.trips.map(t => t.id === tripId ? { ...t, readyAt: now } : t)
               }
@@ -151,14 +159,15 @@ export const useRosterStore = create<RosterState>()(
       },
 
       handoverTrip: async (jalaliDate, tripId) => {
+        const dashedDate = jalaliDate.replace(/\//g, '-')
         const now = new Date().toISOString()
         set((state) => {
-          const day = state.myDays[jalaliDate]
+          const day = state.myDays[dashedDate]
           if (!day) return state
           return {
             myDays: {
               ...state.myDays,
-              [jalaliDate]: {
+              [dashedDate]: {
                 ...day,
                 trips: day.trips.map(t => t.id === tripId ? { ...t, handoverAt: now } : t)
               }
@@ -169,13 +178,14 @@ export const useRosterStore = create<RosterState>()(
       },
 
       disputeTrip: async (jalaliDate, tripId, note) => {
+        const dashedDate = jalaliDate.replace(/\//g, '-')
         set((state) => {
-          const day = state.myDays[jalaliDate]
+          const day = state.myDays[dashedDate]
           if (!day) return state
           return {
             myDays: {
               ...state.myDays,
-              [jalaliDate]: {
+              [dashedDate]: {
                 ...day,
                 trips: day.trips.map(t => t.id === tripId ? { ...t, disputed: true, disputeNote: note } : t)
               }

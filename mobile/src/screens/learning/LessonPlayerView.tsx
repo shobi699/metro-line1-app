@@ -1,8 +1,10 @@
-import React from 'react'
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Linking } from 'react-native'
+import React, { useState, useEffect } from 'react'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Linking, Alert, ActivityIndicator } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTheme } from '../../shared/ThemeProvider'
 import { API_URL } from '../../shared/config'
-import { ArrowRight, PlayCircle, FileText } from 'lucide-react-native'
+import { ArrowRight, PlayCircle, FileText, CheckCircle } from 'lucide-react-native'
+import { useAuthStore } from '../../stores/auth'
 
 export function LessonPlayerView({ 
   course, 
@@ -14,6 +16,70 @@ export function LessonPlayerView({
   onBack: () => void 
 }) {
   const { theme } = useTheme()
+  const accessToken = useAuthStore((s) => s.accessToken)
+  const user = useAuthStore((s) => s.user)
+  const [isCompleted, setIsCompleted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!user || !lessonId) return
+    AsyncStorage.getItem(`completed_lessons_${user.id}`).then((stored) => {
+      if (stored) {
+        const list = JSON.parse(stored) as string[]
+        setIsCompleted(list.includes(lessonId))
+      }
+    })
+  }, [user, lessonId])
+
+  const markAsCompleted = async () => {
+    if (!user || !lessonId || !course || !accessToken) return
+    setSubmitting(true)
+    try {
+      const stored = await AsyncStorage.getItem(`completed_lessons_${user.id}`)
+      const list = (stored ? JSON.parse(stored) : []) as string[]
+      if (!list.includes(lessonId)) {
+        list.push(lessonId)
+        await AsyncStorage.setItem(`completed_lessons_${user.id}`, JSON.stringify(list))
+      }
+      setIsCompleted(true)
+
+      const allLessons: any[] = []
+      course.chapters?.forEach((chap: any) => {
+        chap.lessons?.forEach((les: any) => {
+          allLessons.push(les)
+        })
+      })
+      const completedInThisCourse = allLessons.filter(l => list.includes(l.id)).length
+      const progressPct = allLessons.length > 0 
+        ? Math.round((completedInThisCourse / allLessons.length) * 100) 
+        : 0
+
+      const res = await fetch(`${API_URL}/learning/progress`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          courseId: course.id,
+          progressPct,
+          completed: progressPct === 100 ? true : undefined,
+        }),
+      })
+      if (res.ok) {
+        Alert.alert('موفقیت', 'درس با موفقیت تکمیل شد و پیشرفت شما ثبت گردید.')
+        onBack()
+      } else {
+        const json = await res.json()
+        Alert.alert('خطا', json.error?.message || 'خطا در ثبت پیشرفت درس در سرور')
+      }
+    } catch (e) {
+      console.error(e)
+      Alert.alert('خطا', 'خطا در ارتباط با سرور')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   let selectedLesson: any = null
   for (const chapter of course.chapters || []) {
@@ -411,6 +477,26 @@ export function LessonPlayerView({
           <Text style={[styles.title, { color: theme.colors.onBackground }]}>{selectedLesson.title}</Text>
           {renderContentText(textContent)}
         </View>
+        <View style={styles.completionContainer}>
+          {isCompleted ? (
+            <View style={styles.completedBadge}>
+              <CheckCircle size={18} color="#10b981" />
+              <Text style={styles.completedBadgeText}>این درس را کامل مطالعه کردم ✓</Text>
+            </View>
+          ) : (
+            <TouchableOpacity 
+              style={[styles.completeBtn, { backgroundColor: theme.colors.primary }]}
+              onPress={markAsCompleted}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.completeBtnText}>مطالعه کردم و علامت‌گذاری به عنوان تکمیل شده</Text>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
         <View style={{ height: 40 }} />
       </ScrollView>
     </View>
@@ -493,4 +579,36 @@ const styles = StyleSheet.create({
   imageBlockContainer: { width: '100%', alignItems: 'center', marginVertical: 12 },
   imageBlock: { width: '100%', height: 200, borderRadius: 8 },
   imageCaption: { fontSize: 11, fontFamily: 'Vazirmatn', marginTop: 6, textAlign: 'center' },
+  completionContainer: {
+    paddingHorizontal: 16,
+    marginVertical: 24,
+    alignItems: 'stretch',
+  },
+  completedBadge: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#10b98115',
+    borderColor: '#10b98140',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    gap: 8,
+  },
+  completedBadgeText: {
+    color: '#10b981',
+    fontSize: 13,
+    fontFamily: 'Vazirmatn-Bold',
+  },
+  completeBtn: {
+    height: 48,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  completeBtnText: {
+    color: 'white',
+    fontSize: 13,
+    fontFamily: 'Vazirmatn-Bold',
+  },
 })

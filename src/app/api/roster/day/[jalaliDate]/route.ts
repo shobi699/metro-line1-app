@@ -12,7 +12,8 @@ export async function GET(
   if ('error' in user) return authErrorResponse(user)
 
   try {
-    const { jalaliDate } = await params
+    const { jalaliDate: rawJalaliDate } = await params
+    const jalaliDate = decodeURIComponent(rawJalaliDate).replace(/-/g, '/')
     
     // Check if client has ETag
     const ifNoneMatch = request.headers.get('If-None-Match')

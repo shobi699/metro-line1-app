@@ -25,7 +25,7 @@ export interface CalendarHolidayEntry {
 
 export interface CalendarEventEntry {
   id: string
-  type: 'event' | 'birthday' | 'task' | 'note'
+  type: string
   title: string
   description: string | null
   startAt: string
@@ -35,6 +35,7 @@ export interface CalendarEventEntry {
   location: string | null
   isDone: boolean
   occurrence: boolean
+  metadata?: any
 }
 
 export interface CalendarOrgEventEntry {
@@ -66,10 +67,12 @@ interface CalendarRangeResponse {
 }
 
 export interface NewEventInput {
-  type: 'event' | 'task'
+  type: string
   title: string
+  description?: string
   startAt: string
   allDay: boolean
+  metadata?: any
   reminders?: { minutesBefore: number }[]
 }
 

@@ -27,13 +27,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'توکن نامعتبر' }, { status: 401 })
   }
 
-  const dateParam = request.nextUrl.searchParams.get('date')
-  if (!dateParam) {
+  const dateParamRaw = request.nextUrl.searchParams.get('date')
+  if (!dateParamRaw) {
     return NextResponse.json(
       { error: 'پارامتر date الزامی است (مثال: 1404/07/16)' },
       { status: 400 },
     )
   }
+  const dateParam = decodeURIComponent(dateParamRaw).replace(/-/g, '/')
 
   try {
     // Find RosterDay for given jalali date

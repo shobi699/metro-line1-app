@@ -30,6 +30,24 @@ const JALALI_MONTHS = [
 
 const WEEKDAYS = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج']
 
+const STATUS_MENU = [
+  { key: 'on_call', label: 'کشیک', color: '#3b82f6', textColor: '#ffffff' },
+  { key: 'overtime', label: 'اضافه کار', color: '#a855f7', textColor: '#ffffff' },
+  { key: 'leave_sick', label: 'مرخصی استعلاجی', color: '#059669', textColor: '#ffffff' },
+  { key: 'leave_daily', label: 'مرخصی روزانه', color: '#22c55e', textColor: '#ffffff' },
+  { key: 'note', label: 'یادداشت', color: '#f59e0b', textColor: '#ffffff' },
+  { key: 'leave_hourly', label: 'مرخصی ساعتی', color: '#f97316', textColor: '#ffffff' },
+  { key: 'other', label: 'سایر کارکرد', color: '#b91c1c', textColor: '#ffffff' },
+  { key: 'reminder', label: 'یادآور', color: '#ef4444', textColor: '#ffffff' },
+] as const
+
+const OTHER_TYPES = [
+  { key: 'event', label: 'رویداد', color: '#f43f5e' },
+  { key: 'task', label: 'کار', color: '#3b82f6' },
+  { key: 'work_log', label: 'گزارش کار', color: '#eab308' },
+  { key: 'financial', label: 'مالی', color: '#10b981' },
+] as const
+
 // پالت شیفت — SHIFT_CALENDAR_UI_DESIGN.md §2.1 (روشن / تیره)
 const SHIFT_PALETTE: Record<string, { label: string; icon: string; light: string; dark: string }> = {
   morning: { label: 'صبح', icon: '☀️', light: '#0e9f9f', dark: '#2dd4cf' },
@@ -68,7 +86,11 @@ export function LifeCalendarScreen({ navigation }: any) {
   } = useCalendarStore()
 
   const [newTitle, setNewTitle] = useState('')
-  const [newType, setNewType] = useState<'event' | 'task'>('event')
+  const [newType, setNewType] = useState<string>('event')
+  const [newDescription, setNewDescription] = useState('')
+  const [newAmount, setNewAmount] = useState('')
+  const [newHours, setNewHours] = useState('')
+  const [newIsIncome, setNewIsIncome] = useState(true)
   const [newReminder, setNewReminder] = useState<number | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -99,19 +121,60 @@ export function LifeCalendarScreen({ navigation }: any) {
     return isDark ? p.dark : p.light
   }
 
+  const calculatedNetBalance = useMemo(() => {
+    if (!selectedDay) return null
+    let balance = 0
+    let hasFinancial = false
+    selectedDay.events.forEach((e) => {
+      if (e.type === 'financial' && e.metadata?.amount) {
+        hasFinancial = true
+        const isInc = e.metadata.isIncome !== false
+        if (isInc) {
+          balance += Number(e.metadata.amount)
+        } else {
+          balance -= Number(e.metadata.amount)
+        }
+      }
+    })
+    return hasFinancial ? balance : null
+  }, [selectedDay])
+
+  function handleSelectType(typeKey: string, defaultTitle: string) {
+    setNewType(typeKey)
+    setNewTitle(defaultTitle)
+    setNewDescription('')
+    setNewAmount('')
+    setNewHours('')
+  }
+
   async function handleAdd() {
     if (!selectedDay || newTitle.trim().length === 0) return
     setIsSaving(true)
+
+    const metadata: any = {}
+    if (newType === 'financial') {
+      metadata.amount = Number(newAmount) || 0
+      metadata.isIncome = newIsIncome
+    } else if (newType === 'work_log' || newType === 'leave_hourly' || newType === 'overtime') {
+      metadata.hours = Number(newHours) || 0
+    }
+
     const ok = await addEvent({
       type: newType,
       title: newTitle.trim(),
+      description: newDescription.trim() || undefined,
       startAt: `${selectedDay.date}T00:00:00.000Z`,
       allDay: true,
+      metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
       reminders: newReminder !== null ? [{ minutesBefore: newReminder }] : undefined,
     })
     setIsSaving(false)
     if (ok) {
       setNewTitle('')
+      setNewDescription('')
+      setNewAmount('')
+      setNewHours('')
+      setNewIsIncome(true)
       setNewReminder(null)
     }
   }
@@ -439,6 +502,109 @@ export function LifeCalendarScreen({ navigation }: any) {
       justifyContent: 'center',
     },
     addBtnText: { color: theme.colors.onPrimary, fontWeight: '700' },
+    balanceCard: {
+      borderWidth: 1,
+      borderRadius: theme.borderRadius.lg,
+      padding: 10,
+      flexDirection: 'row-reverse',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    balanceLabel: {
+      fontSize: 12,
+      fontWeight: '700',
+      fontFamily: theme.typography.captionSm.fontFamily,
+    },
+    balanceValue: {
+      fontSize: 13,
+      fontWeight: '700',
+      fontFamily: theme.typography.bodyMd.fontFamily,
+    },
+    statusGrid: {
+      flexDirection: 'row-reverse',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginBottom: 12,
+    },
+    statusBtn: {
+      width: '48%',
+      height: 44,
+      borderRadius: theme.borderRadius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 8,
+    },
+    statusBtnText: {
+      fontSize: 13,
+      fontWeight: '700',
+      fontFamily: theme.typography.captionSm.fontFamily,
+    },
+    dynamicFieldsRow: {
+      flexDirection: 'row-reverse',
+      gap: 8,
+    },
+    financialToggleRow: {
+      flexDirection: 'row-reverse',
+      backgroundColor: theme.colors.surfaceContainerLow,
+      borderRadius: theme.borderRadius.md,
+      padding: 2,
+      borderWidth: 1,
+      borderColor: theme.colors.surfaceVariant,
+      alignItems: 'center',
+    },
+    toggleBtn: {
+      paddingHorizontal: 10,
+      height: 36,
+      borderRadius: theme.borderRadius.sm,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    toggleBtnText: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: theme.colors.secondary,
+      fontFamily: theme.typography.captionSm.fontFamily,
+    },
+    addBtnLarge: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadius.md,
+      height: 48,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 8,
+    },
+    addBtnLargeText: {
+      color: theme.colors.onPrimary,
+      fontWeight: '700',
+      fontSize: 14,
+      fontFamily: theme.typography.bodyMd.fontFamily,
+    },
+    eventWrapper: {
+      marginBottom: 8,
+    },
+    eventDesc: {
+      fontSize: 11,
+      color: theme.colors.secondary,
+      textAlign: 'right',
+      marginTop: 4,
+      marginRight: 16,
+      backgroundColor: theme.colors.surfaceVariant + '30',
+      padding: 6,
+      borderRadius: theme.borderRadius.sm,
+      fontFamily: theme.typography.bodyMd.fontFamily,
+    },
+    badge: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 9999,
+      marginHorizontal: 4,
+    },
+    badgeText: {
+      fontSize: 10,
+      fontWeight: '700',
+      fontFamily: theme.typography.captionSm.fontFamily,
+    },
   })
 
   function renderTodayCard() {
@@ -591,39 +757,97 @@ export function LifeCalendarScreen({ navigation }: any) {
     )
   }
 
+  function getEventColor(type: string): string {
+    switch (type) {
+      case 'on_call':
+        return '#3b82f6'
+      case 'overtime':
+        return '#a855f7'
+      case 'leave_sick':
+        return '#059669'
+      case 'leave_daily':
+        return '#22c55e'
+      case 'note':
+        return '#f59e0b'
+      case 'leave_hourly':
+        return '#f97316'
+      case 'other':
+        return '#b91c1c'
+      case 'reminder':
+        return '#ef4444'
+      case 'task':
+        return isDark ? EVT_TASK.dark : EVT_TASK.light
+      default:
+        return isDark ? EVT_PERSONAL.dark : EVT_PERSONAL.light
+    }
+  }
+
   function renderEventRow(e: CalendarEventEntry) {
-    const personalColor = isDark ? EVT_PERSONAL.dark : EVT_PERSONAL.light
+    const personalColor = getEventColor(e.type)
     const taskColor = isDark ? EVT_TASK.dark : EVT_TASK.light
 
     return (
-      <View key={e.id} style={styles.eventRow}>
-        {e.type === 'task' ? (
-          <TouchableOpacity
-            accessibilityLabel={`انجام شد: ${e.title}`}
-            onPress={() => toggleTask(e.id, !e.isDone)}
-            style={[
-              styles.checkbox,
-              { borderColor: taskColor },
-              e.isDone && { backgroundColor: taskColor },
-            ]}
-          >
-            {e.isDone && <MaterialIcons name="check" size={16} color="#fff" />}
-          </TouchableOpacity>
-        ) : (
-          <View style={[styles.evtDot, { width: 8, height: 8, backgroundColor: personalColor }]} />
-        )}
-        <Text style={[styles.eventTitle, e.type === 'task' && e.isDone && styles.eventTitleDone]}>
-          {e.title}
-        </Text>
-        {!e.occurrence && (
-          <TouchableOpacity
-            style={styles.deleteBtn}
-            accessibilityLabel={`حذف ${e.title}`}
-            onPress={() => deleteEvent(e.id)}
-          >
-            <MaterialIcons name="delete-outline" size={20} color={theme.colors.secondary} />
-          </TouchableOpacity>
-        )}
+      <View key={e.id} style={styles.eventWrapper}>
+        <View style={styles.eventRow}>
+          {e.type === 'task' ? (
+            <TouchableOpacity
+              accessibilityLabel={`انجام شد: ${e.title}`}
+              onPress={() => toggleTask(e.id, !e.isDone)}
+              style={[
+                styles.checkbox,
+                { borderColor: taskColor },
+                e.isDone && { backgroundColor: taskColor },
+              ]}
+            >
+              {e.isDone && <MaterialIcons name="check" size={16} color="#fff" />}
+            </TouchableOpacity>
+          ) : e.type === 'financial' ? (
+            <Text style={{ fontSize: 16 }}>💰</Text>
+          ) : e.type === 'work_log' ? (
+            <Text style={{ fontSize: 16 }}>⏱️</Text>
+          ) : (
+            <View style={[styles.evtDot, { width: 8, height: 8, backgroundColor: personalColor }]} />
+          )}
+
+          <Text style={[styles.eventTitle, e.type === 'task' && e.isDone && styles.eventTitleDone]}>
+            {e.title}
+          </Text>
+
+          {e.type === 'financial' && e.metadata?.amount ? (
+            <View style={[
+              styles.badge,
+              { backgroundColor: e.metadata.isIncome !== false ? '#10b98120' : '#ef444420' }
+            ]}>
+              <Text style={[
+                styles.badgeText,
+                { color: e.metadata.isIncome !== false ? '#10b981' : '#ef4444' }
+              ]}>
+                {e.metadata.isIncome !== false ? '+' : '−'} {toFa(Number(e.metadata.amount).toLocaleString())} تومان
+              </Text>
+            </View>
+          ) : null}
+
+          {(e.type === 'work_log' || e.type === 'overtime' || e.type === 'leave_hourly') && e.metadata?.hours ? (
+            <View style={[styles.badge, { backgroundColor: '#0284c720' }]}>
+              <Text style={[styles.badgeText, { color: '#0284c7' }]}>
+                {toFa(e.metadata.hours)} ساعت
+              </Text>
+            </View>
+          ) : null}
+
+          {!e.occurrence && (
+            <TouchableOpacity
+              style={styles.deleteBtn}
+              accessibilityLabel={`حذف ${e.title}`}
+              onPress={() => deleteEvent(e.id)}
+            >
+              <MaterialIcons name="delete-outline" size={20} color={theme.colors.secondary} />
+            </TouchableOpacity>
+          )}
+        </View>
+        {e.description ? (
+          <Text style={styles.eventDesc}>{e.description}</Text>
+        ) : null}
       </View>
     )
   }
@@ -790,6 +1014,22 @@ export function LifeCalendarScreen({ navigation }: any) {
                 ))}
 
                 <Text style={styles.sectionLabel}>رویدادها و کارها</Text>
+                {calculatedNetBalance !== null && (
+                  <View style={[
+                    styles.balanceCard,
+                    {
+                      borderColor: calculatedNetBalance >= 0 ? '#10b98150' : '#ef444450',
+                      backgroundColor: calculatedNetBalance >= 0 ? '#10b98115' : '#ef444415'
+                    }
+                  ]}>
+                    <Text style={[styles.balanceLabel, { color: calculatedNetBalance >= 0 ? '#10b981' : '#ef4444' }]}>
+                      تراز مالی امروز (جمع و تفریق):
+                    </Text>
+                    <Text style={[styles.balanceValue, { color: calculatedNetBalance >= 0 ? '#10b981' : '#ef4444' }]}>
+                      {calculatedNetBalance >= 0 ? '+' : '−'} {toFa(Math.abs(calculatedNetBalance).toLocaleString())} تومان
+                    </Text>
+                  </View>
+                )}
                 {selectedDay.events.length === 0 ? (
                   <Text style={styles.emptyText}>روز آزاد شماست ✨ رویدادی اضافه کنید.</Text>
                 ) : (
@@ -808,69 +1048,165 @@ export function LifeCalendarScreen({ navigation }: any) {
                       </Text>
                     </View>
                   )}
-                  <View style={styles.typeChipsRow}>
-                    <TouchableOpacity
-                      style={[styles.typeChip, newType === 'event' && styles.typeChipActive]}
-                      onPress={() => setNewType('event')}
-                    >
-                      <Text
-                        style={[styles.typeChipText, newType === 'event' && styles.typeChipTextActive]}
-                      >
-                        رویداد
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.typeChip, newType === 'task' && styles.typeChipActive]}
-                      onPress={() => setNewType('task')}
-                    >
-                      <Text
-                        style={[styles.typeChipText, newType === 'task' && styles.typeChipTextActive]}
-                      >
-                        کار
-                      </Text>
-                    </TouchableOpacity>
+
+                  {/* منوی ثبت وضعیت روز */}
+                  <Text style={styles.sectionLabel}>منوی ثبت وضعیت روز</Text>
+                  <View style={styles.statusGrid}>
+                    {STATUS_MENU.map((item) => {
+                      const isSelected = newType === item.key
+                      return (
+                        <TouchableOpacity
+                          key={item.key}
+                          onPress={() => handleSelectType(item.key, item.label)}
+                          style={[
+                            styles.statusBtn,
+                            { backgroundColor: item.color },
+                            isSelected && { borderWidth: 2, borderColor: theme.colors.onSurface }
+                          ]}
+                        >
+                          <Text style={[styles.statusBtnText, { color: item.textColor }]}>
+                            {item.label}
+                          </Text>
+                        </TouchableOpacity>
+                      )
+                    })}
                   </View>
+
+                  {/* سایر موارد */}
+                  <Text style={styles.sectionLabel}>سایر موارد</Text>
                   <View style={styles.typeChipsRow}>
-                    {(
-                      [
-                        { label: '🔕 بدون یادآور', value: null },
-                        { label: '⏰ صبح همان روز', value: 0 },
-                        { label: '⏰ ۱ روز قبل', value: 1440 },
-                      ] as const
-                    ).map((r) => (
+                    {OTHER_TYPES.map((t) => (
                       <TouchableOpacity
-                        key={String(r.value)}
-                        style={[styles.typeChip, newReminder === r.value && styles.typeChipActive]}
-                        onPress={() => setNewReminder(r.value)}
+                        key={t.key}
+                        style={[
+                          styles.typeChip,
+                          newType === t.key && [styles.typeChipActive, { borderColor: t.color, backgroundColor: t.color + '20' }]
+                        ]}
+                        onPress={() => handleSelectType(t.key, t.label)}
                       >
                         <Text
                           style={[
                             styles.typeChipText,
-                            newReminder === r.value && styles.typeChipTextActive,
+                            newType === t.key && [styles.typeChipTextActive, { color: t.color }]
                           ]}
                         >
-                          {r.label}
+                          {t.label}
                         </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
-                  <View style={styles.addRow}>
+
+                  {/* Reminder selection (only for event / reminder) */}
+                  {(newType === 'event' || newType === 'reminder') && (
+                    <>
+                      <Text style={styles.sectionLabel}>یادآور</Text>
+                      <View style={styles.typeChipsRow}>
+                        {(
+                          [
+                            { label: '🔕 بدون یادآور', value: null },
+                            { label: '⏰ صبح همان روز', value: 0 },
+                            { label: '⏰ ۱ روز قبل', value: 1440 },
+                          ] as const
+                        ).map((r) => (
+                          <TouchableOpacity
+                            key={String(r.value)}
+                            style={[styles.typeChip, newReminder === r.value && styles.typeChipActive]}
+                            onPress={() => setNewReminder(r.value)}
+                          >
+                            <Text
+                              style={[
+                                styles.typeChipText,
+                                newReminder === r.value && styles.typeChipTextActive,
+                              ]}
+                            >
+                              {r.label}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </>
+                  )}
+
+                  {/* Dynamic Fields */}
+                  <View style={styles.dynamicFieldsRow}>
                     <TextInput
                       style={styles.addInput}
-                      placeholder={newType === 'task' ? 'کار جدید…' : 'رویداد جدید…'}
+                      placeholder={
+                        newType === 'task'
+                          ? 'کار جدید…'
+                          : newType === 'financial'
+                          ? 'عنوان تراکنش…'
+                          : newType === 'work_log'
+                          ? 'عنوان فعالیت…'
+                          : 'مورد جدید…'
+                      }
                       placeholderTextColor={theme.colors.onSurfaceVariant}
                       value={newTitle}
                       onChangeText={setNewTitle}
-                      onSubmitEditing={handleAdd}
                     />
-                    <TouchableOpacity
-                      style={[styles.addBtn, (isSaving || newTitle.trim().length === 0) && { opacity: 0.5 }]}
-                      onPress={handleAdd}
-                      disabled={isSaving || newTitle.trim().length === 0}
-                    >
-                      <Text style={styles.addBtnText}>{isSaving ? '…' : 'افزودن'}</Text>
-                    </TouchableOpacity>
+
+                    {newType === 'financial' && (
+                      <>
+                        <TextInput
+                          style={[styles.addInput, { width: 110 }]}
+                          placeholder="مبلغ (تومان)..."
+                          placeholderTextColor={theme.colors.onSurfaceVariant}
+                          value={newAmount}
+                          onChangeText={setNewAmount}
+                          keyboardType="numeric"
+                        />
+                        <View style={styles.financialToggleRow}>
+                          <TouchableOpacity
+                            onPress={() => setNewIsIncome(true)}
+                            style={[
+                              styles.toggleBtn,
+                              newIsIncome && { backgroundColor: '#10b981' }
+                            ]}
+                          >
+                            <Text style={[styles.toggleBtnText, newIsIncome && { color: '#ffffff' }]}>درآمد</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => setNewIsIncome(false)}
+                            style={[
+                              styles.toggleBtn,
+                              !newIsIncome && { backgroundColor: '#ef4444' }
+                            ]}
+                          >
+                            <Text style={[styles.toggleBtnText, !newIsIncome && { color: '#ffffff' }]}>هزینه</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </>
+                    )}
+
+                    {(newType === 'work_log' || newType === 'leave_hourly' || newType === 'overtime') && (
+                      <TextInput
+                        style={[styles.addInput, { width: 80 }]}
+                        placeholder="ساعت..."
+                        placeholderTextColor={theme.colors.onSurfaceVariant}
+                        value={newHours}
+                        onChangeText={setNewHours}
+                        keyboardType="numeric"
+                      />
+                    )}
                   </View>
+
+                  {/* Description field */}
+                  <TextInput
+                    style={styles.addInput}
+                    placeholder="توضیحات اختیاری (علت، جزئیات فعالیت، یادداشت روزانه...)"
+                    placeholderTextColor={theme.colors.onSurfaceVariant}
+                    value={newDescription}
+                    onChangeText={setNewDescription}
+                  />
+
+                  {/* Add button */}
+                  <TouchableOpacity
+                    style={[styles.addBtnLarge, (isSaving || newTitle.trim().length === 0) && { opacity: 0.5 }]}
+                    onPress={handleAdd}
+                    disabled={isSaving || newTitle.trim().length === 0}
+                  >
+                    <Text style={styles.addBtnLargeText}>{isSaving ? 'در حال ثبت…' : 'افزودن به تقویم زندگی'}</Text>
+                  </TouchableOpacity>
                 </View>
               </ScrollView>
             )}

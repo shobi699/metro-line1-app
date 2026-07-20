@@ -42,6 +42,7 @@ export function HomeScreen({ navigation }: any) {
   const accessToken = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
   const config = useConfigStore((s) => s.config)
+  const isModuleEnabled = useConfigStore((s) => s.isModuleEnabled)
   const setGlobalOffline = useNetworkStore((s) => s.setOffline)
 
   const [stats, setStats] = useState<DashboardStats>({
@@ -339,42 +340,50 @@ export function HomeScreen({ navigation }: any) {
 
   // Expanded Dashboard Actions to 8 items for a 4-column compact layout
   const dashboardActions = [
-    { label: 'لوحه شیفت', icon: 'calendar-today', color: '#0284c7', bg: '#e0f2fe', screen: 'لوحه' },
-    { label: 'اعلام خرابی', icon: 'report-problem', color: '#dc2626', bg: '#fee2e2', screen: 'تیکت‌ها' },
-    { label: 'حضور و غیاب', icon: 'pin-drop', color: '#16a34a', bg: '#dcfce7', screen: 'حضور و غیاب' },
-    { label: 'دستیار AI', icon: 'assistant', color: '#7c3aed', bg: '#ede9fe', screen: 'دستیار AI' },
-    { label: 'بخشنامه‌ها', icon: 'description', color: '#ea580c', bg: '#ffedd5', screen: 'بخشنامه‌ها' },
-    { label: 'دفتر تلفن', icon: 'contacts', color: '#0d9488', bg: '#ccfbf1', screen: 'دفتر تلفن' },
-    { label: 'بی‌سیم', icon: 'radio', color: '#2563eb', bg: '#dbeafe', screen: 'بی‌سیم راهبری' },
+    { label: 'لوحه شیفت', icon: 'calendar-today', color: '#0284c7', bg: '#e0f2fe', screen: 'لوحه', moduleId: 'calendar_roster' },
+    { label: 'اعلام خرابی', icon: 'report-problem', color: '#dc2626', bg: '#fee2e2', screen: 'تیکت‌ها', moduleId: 'tickets' },
+    { label: 'حضور و غیاب', icon: 'pin-drop', color: '#16a34a', bg: '#dcfce7', screen: 'حضور و غیاب', moduleId: 'attendance' },
+    { label: 'دستیار AI', icon: 'assistant', color: '#7c3aed', bg: '#ede9fe', screen: 'دستیار AI', moduleId: 'ai' },
+    { label: 'بخشنامه‌ها', icon: 'description', color: '#ea580c', bg: '#ffedd5', screen: 'بخشنامه‌ها', moduleId: 'safety' },
+    { label: 'دفتر تلفن', icon: 'contacts', color: '#0d9488', bg: '#ccfbf1', screen: 'دفتر تلفن', moduleId: 'directory' },
+    { label: 'بی‌سیم', icon: 'radio', color: '#2563eb', bg: '#dbeafe', screen: 'بی‌سیم راهبری', moduleId: 'radio_comms' },
     { label: 'سایر خدمات', icon: 'apps', color: theme.colors.onSurface, bg: theme.colors.surfaceContainerHighest, action: 'more' },
   ]
 
+  const activeDashboardActions = dashboardActions.filter(
+    (action) => !action.moduleId || isModuleEnabled(action.moduleId)
+  )
+
   const allServices = [
-    { label: 'اعلام خرابی (تیکت)', icon: 'report-problem', color: '#dc2626', bg: '#fee2e2', screen: 'تیکت‌ها' },
-    { label: 'لوحه هفتگی (شیفت)', icon: 'calendar-today', color: '#0284c7', bg: '#e0f2fe', screen: 'لوحه' },
-    { label: 'حالت کابین قطار', icon: 'do-not-disturb-on', color: '#64748b', bg: '#f1f5f9', screen: 'CabinMode' },
-    { label: 'دفترچه تلفن پرسنل', icon: 'contacts', color: '#0d9488', bg: '#ccfbf1', screen: 'دفتر تلفن' },
-    { label: 'بخشنامه‌های ایمنی', icon: 'description', color: '#ea580c', bg: '#ffedd5', screen: 'بخشنامه‌ها' },
-    { label: 'دستیار هوشمند AI', icon: 'assistant', color: '#7c3aed', bg: '#ede9fe', screen: 'دستیار AI' },
-    { label: 'بی‌سیم راهبری', icon: 'radio', color: '#2563eb', bg: '#dbeafe', screen: 'بی‌سیم راهبری' },
-    { label: 'کنفرانس صوتی', icon: 'mic', color: '#0369a1', bg: '#e0f2fe', screen: 'کنفرانس صوتی' },
-    { label: 'ثبت مرخصی/اضافه‌کار', icon: 'assignment-add', color: '#c026d3', bg: '#fdf4ff', screen: 'SubmitRequestScreen' },
-    { label: 'گزارش درخواست‌ها', icon: 'assessment', color: '#8b5cf6', bg: '#f5f3ff', screen: 'MonthlyReportScreen' },
-    { label: 'چک‌لیست قبل از حرکت', icon: 'done-all', color: '#16a34a', bg: '#dcfce7', screen: 'چک‌لیست‌ها' },
-    { label: 'استعلام پلاک (بازرسی)', icon: 'search', color: '#0f172a', bg: '#e2e8f0', screen: 'PlateSearch' },
-    { label: 'اعلام اضطراری (SOS)', icon: 'warning', color: '#b91c1c', bg: '#fef2f2', screen: 'SOS' },
-    { label: 'ثبت حضور و غیاب', icon: 'pin-drop', color: '#059669', bg: '#d1fae5', screen: 'حضور و غیاب' },
-    { label: 'سامانه آموزش پرسنل', icon: 'school', color: '#6d28d9', bg: '#f3e8ff', screen: 'آموزش' },
-    { label: 'کارنامه عملکرد', icon: 'emoji-events', color: '#c2410c', bg: '#ffedd5', screen: 'عملکرد' },
-    { label: 'ثبت فرم و نظرسنجی', icon: 'dynamic-form', color: '#be185d', bg: '#fce7f3', screen: 'Forms' },
-    { label: 'ثبت ایده و بازخورد', icon: 'feedback', color: '#1d4ed8', bg: '#eff6ff', screen: 'بازخورد' },
-    { label: 'پایش خستگی و سلامت', icon: 'airline-seat-flat', color: '#e11d48', bg: '#ffe4e6', screen: 'Fatigue' },
-    { label: 'جدول برترها', icon: 'stars', color: '#fbbf24', bg: '#fef3c7', screen: 'Leaderboard' },
+    { label: 'اعلام خرابی (تیکت)', icon: 'report-problem', color: '#dc2626', bg: '#fee2e2', screen: 'تیکت‌ها', moduleId: 'tickets' },
+    { label: 'لوحه هفتگی (شیفت)', icon: 'calendar-today', color: '#0284c7', bg: '#e0f2fe', screen: 'لوحه', moduleId: 'calendar_roster' },
+    { label: 'حالت کابین قطار', icon: 'do-not-disturb-on', color: '#64748b', bg: '#f1f5f9', screen: 'CabinMode', moduleId: 'radio_comms' },
+    { label: 'دفترچه تلفن پرسنل', icon: 'contacts', color: '#0d9488', bg: '#ccfbf1', screen: 'دفتر تلفن', moduleId: 'directory' },
+    { label: 'بخشنامه‌های ایمنی', icon: 'description', color: '#ea580c', bg: '#ffedd5', screen: 'بخشنامه‌ها', moduleId: 'safety' },
+    { label: 'دستیار هوشمند AI', icon: 'assistant', color: '#7c3aed', bg: '#ede9fe', screen: 'دستیار AI', moduleId: 'ai' },
+    { label: 'بی‌سیم راهبری', icon: 'radio', color: '#2563eb', bg: '#dbeafe', screen: 'بی‌سیم راهبری', moduleId: 'radio_comms' },
+    { label: 'کنفرانس صوتی', icon: 'mic', color: '#0369a1', bg: '#e0f2fe', screen: 'کنفرانس صوتی', moduleId: 'radio_comms' },
+    { label: 'ثبت مرخصی/اضافه‌کار', icon: 'assignment-add', color: '#c026d3', bg: '#fdf4ff', screen: 'SubmitRequestScreen', moduleId: 'calendar_roster' },
+    { label: 'گزارش درخواست‌ها', icon: 'assessment', color: '#8b5cf6', bg: '#f5f3ff', screen: 'MonthlyReportScreen', moduleId: 'calendar_roster' },
+    { label: 'چک‌لیست قبل از حرکت', icon: 'done-all', color: '#16a34a', bg: '#dcfce7', screen: 'چک‌لیست‌ها', moduleId: 'checklists' },
+    { label: 'استعلام پلاک (بازرسی)', icon: 'search', color: '#0f172a', bg: '#e2e8f0', screen: 'PlateSearch', moduleId: 'tickets' },
+    { label: 'اعلام اضطراری (SOS)', icon: 'warning', color: '#b91c1c', bg: '#fef2f2', screen: 'SOS', moduleId: 'chat' },
+    { label: 'ثبت حضور و غیاب', icon: 'pin-drop', color: '#059669', bg: '#d1fae5', screen: 'حضور و غیاب', moduleId: 'attendance' },
+    { label: 'سامانه آموزش پرسنل', icon: 'school', color: '#6d28d9', bg: '#f3e8ff', screen: 'آموزش', moduleId: 'learning' },
+    { label: 'کارنامه عملکرد', icon: 'emoji-events', color: '#c2410c', bg: '#ffedd5', screen: 'عملکرد', moduleId: 'performance' },
+    { label: 'ثبت فرم و نظرسنجی', icon: 'dynamic-form', color: '#be185d', bg: '#fce7f3', screen: 'Forms', moduleId: 'ideas_feedback' },
+    { label: 'ثبت ایده و بازخورد', icon: 'feedback', color: '#1d4ed8', bg: '#eff6ff', screen: 'بازخورد', moduleId: 'ideas_feedback' },
+    { label: 'پایش خستگی و سلامت', icon: 'airline-seat-flat', color: '#e11d48', bg: '#ffe4e6', screen: 'Fatigue', moduleId: 'performance' },
+    { label: 'جدول برترها', icon: 'stars', color: '#fbbf24', bg: '#fef3c7', screen: 'Leaderboard', moduleId: 'performance' },
     { label: 'تجهیزات انفرادی من', icon: 'construction', color: '#0f766e', bg: '#ccfbf1', screen: 'Equipment' },
-    { label: 'درخواست تعویض شیفت', icon: 'swap-horiz', color: '#4f46e5', bg: '#e0e7ff', screen: 'Swap' },
-    { label: 'کاتالوگ فنی و خطایابی', icon: 'menu-book', color: '#047857', bg: '#d1fae5', screen: 'CatalogsScreen' },
-    { label: 'راهنمای کاربری', icon: 'import-contacts', color: '#0f766e', bg: '#f0fdfa', screen: 'راهنمای کاربری' },
+    { label: 'درخواست تعویض شیفت', icon: 'swap-horiz', color: '#4f46e5', bg: '#e0e7ff', screen: 'Swap', moduleId: 'swap' },
+    { label: 'کاتالوگ فنی و خطایابی', icon: 'menu-book', color: '#047857', bg: '#d1fae5', screen: 'CatalogsScreen', moduleId: 'learning' },
+    { label: 'راهنمای کاربری', icon: 'import-contacts', color: '#0f766e', bg: '#f0fdfa', screen: 'راهنمای کاربری', moduleId: 'learning' },
   ]
+
+  const activeAllServices = allServices.filter(
+    (service) => !service.moduleId || isModuleEnabled(service.moduleId)
+  )
 
   const metrics = [
     { label: 'تیکت‌های باز', value: stats.openTickets.toString(), icon: 'confirmation-number' },
@@ -445,7 +454,7 @@ export function HomeScreen({ navigation }: any) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>دسترسی سریع</Text>
           <View style={styles.actionsGrid}>
-            {dashboardActions.map((action, i) => (
+            {activeDashboardActions.map((action, i) => (
               <TouchableOpacity 
                 key={i} 
                 style={styles.actionCard} 
@@ -543,7 +552,7 @@ export function HomeScreen({ navigation }: any) {
 
             <ScrollView contentContainerStyle={styles.modalScroll} showsVerticalScrollIndicator={false}>
               <View style={styles.modalGrid}>
-                {allServices.map((service, i) => (
+                {activeAllServices.map((service, i) => (
                   <TouchableOpacity 
                     key={i} 
                     style={styles.modalServiceCard} 
