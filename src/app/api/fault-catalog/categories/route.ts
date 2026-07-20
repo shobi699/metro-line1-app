@@ -22,8 +22,11 @@ export async function POST(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const err = requirePermission(user, 'fault-catalog:manage')
-  if (err) return authErrorResponse(err)
+  const manageErr = requirePermission(user, 'fault-catalog:manage')
+  const faultsErr = requirePermission(user, 'faults:create')
+  if (manageErr && faultsErr) {
+    return authErrorResponse(manageErr)
+  }
 
   try {
     const body = await request.json()

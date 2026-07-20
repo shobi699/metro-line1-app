@@ -1567,6 +1567,19 @@ model Wagon {
   @@index([trainId])
 }
 
+model Part {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  partNumber  String?  @unique
+  trainType   String   @default("both") // "AC", "DC", "both"
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([trainType])
+}
+
 // ── Fault Catalog ──────────────────────────────────────────────
 
 model FaultCategory {

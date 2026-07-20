@@ -129,3 +129,12 @@ export function getJalaliHoliday(jy: number, jm: number, jd: number): string | n
   return null
 }
 
+export function extractHijriDate(title: string): string | null {
+  if (!title) return null
+  const match = title.match(/[\(\[]\s*([\u0600-\u06FF0-9\s]+(?:محرم|صفر|ربیع|جمادی|رجب|شعبان|رمضان|شوال|ذوالقعده|ذوالحجه|ذیقعده|ذیحجه)[\u0600-\u06FF0-9\s]*)\s*[\)\]]/i)
+  if (match) return match[1].trim()
+  const directMatch = title.match(/\b(?:\d+|[\u0660-\u0669\u06f0-\u06f9]+)\s*(?:محرم|صفر|ربیع\s*الاول|ربیع\s*الثانی|جمادی\s*الاول|جمادی\s*الثانی|رجب|شعبان|رمضان|شوال|ذوالقعده|ذوالحجه|ذیقعده|ذیحجه)\b/i)
+  if (directMatch) return directMatch[0].trim()
+  return null
+}
+

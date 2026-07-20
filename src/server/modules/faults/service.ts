@@ -56,14 +56,17 @@ export async function calculateSlaDueTime(
 export async function detectRecurrence(
   trainId: string,
   faultCodeId: string,
-  occurredAt: Date
+  occurredAt: Date,
+  tx?: any,
+  windowDays?: number
 ): Promise<{ recurrenceOfId: string | null; count: number }> {
-  const windowDays = await getSettingValue<number>('faults.recurrence.windowDays', 30)
+  const wDays = windowDays !== undefined ? windowDays : await getSettingValue<number>('faults.recurrence.windowDays', 30)
   const windowStart = new Date(occurredAt)
-  windowStart.setDate(windowStart.getDate() - windowDays)
+  windowStart.setDate(windowStart.getDate() - wDays)
 
+  const client = tx || prisma
   // Find closed reports on this train with the same code in the window
-  const pastReports = await prisma.faultReport.findMany({
+  const pastReports = await client.faultReport.findMany({
     where: {
       trainId,
       faultCodeId,
@@ -278,6 +281,11 @@ ${codesListPrompt}
  * Creates a new fault report. Runs in transaction for safe sequential F-numbering.
  */
 export async function createFaultReport(data: CreateFaultReportInput, reporterId: string) {
+  // Pre-fetch settings outside the transaction to avoid database deadlocks in SQLite
+  const windowDays = await getSettingValue<number>('faults.recurrence.windowDays', 30)
+  const defaultHours = { critical: 1, high: 4, medium: 12, low: 24 }
+  const reviewSlaConfig = await getSettingValue<Record<string, number>>('faults.sla.review.hours', defaultHours)
+
   return await prisma.$transaction(async (tx) => {
     // 1. Programmatic unique F-numbering (SQLite safe autoincrement)
     const lastReport = await tx.faultReport.findFirst({
@@ -293,7 +301,7 @@ export async function createFaultReport(data: CreateFaultReportInput, reporterId
     if (!faultCode) throw new Error('کد خطای انتخاب‌شده یافت نشد.')
 
     // 3. Check recurrence
-    const recurrence = await detectRecurrence(data.trainId, data.faultCodeId, data.occurredAt)
+    const recurrence = await detectRecurrence(data.trainId, data.faultCodeId, data.occurredAt, tx, windowDays)
     
     // Determine priority (escalate by 1 level if recurrence count >= 2)
     let priority: TicketPriority = data.priority || (faultCode.defaultPriority as TicketPriority)
@@ -303,8 +311,10 @@ export async function createFaultReport(data: CreateFaultReportInput, reporterId
       else if (priority === 'high' || priority === 'critical') priority = 'critical'
     }
 
-    // 4. Calculate SLA due time for review
-    const slaDueAt = await calculateSlaDueTime('review', priority, data.occurredAt)
+    // 4. Calculate SLA due time for review using pre-fetched config
+    const hours = reviewSlaConfig[priority] ?? defaultHours[priority] ?? 12
+    const slaDueAt = new Date(data.occurredAt)
+    slaDueAt.setMilliseconds(slaDueAt.getMilliseconds() + hours * 60 * 60 * 1000)
 
     // 5. Create report
     const report = await tx.faultReport.create({
@@ -374,6 +384,12 @@ export async function executeWorkflowTransition(
   actorRank: number,
   payload?: any
 ) {
+  // Pre-fetch settings outside the transaction to avoid database deadlocks in SQLite
+  const autoAssignMapping = await getSettingValue<Record<string, string>>('faults.autoAssign.byCategory', {})
+  const defaultHours = { critical: 4, high: 24, medium: 72, low: 168 }
+  const repairSlaConfig = await getSettingValue<Record<string, number>>('faults.sla.repair.hours', defaultHours)
+  const requireVerify = await getSettingValue<boolean>('faults.workflow.requireFinalVerification', true)
+
   return await prisma.$transaction(async (tx) => {
     const report = await tx.faultReport.findUnique({
       where: { id: faultId },
@@ -411,7 +427,6 @@ export async function executeWorkflowTransition(
         }
         
         // Auto-assign based on setting category mapping
-        const autoAssignMapping = await getSettingValue<Record<string, string>>('faults.autoAssign.byCategory', {})
         const targetRoleKey = autoAssignMapping[report.faultCode.code.split('-')[0]] || 'expert'
         
         // Find a user with this role key
@@ -429,8 +444,12 @@ export async function executeWorkflowTransition(
           logNote = 'تایید فالت و قرار گرفتن در صف ارجاع کار'
         }
 
-        // Calculate SLA for repair
-        updateData.slaDueAt = await calculateSlaDueTime('repair', updateData.priority || report.priority, new Date())
+        // Calculate SLA for repair using pre-fetched config
+        const targetPriority = (updateData.priority || report.priority) as TicketPriority
+        const hours = repairSlaConfig[targetPriority] ?? defaultHours[targetPriority] ?? 72
+        const slaDueAt = new Date()
+        slaDueAt.setMilliseconds(slaDueAt.getMilliseconds() + hours * 60 * 60 * 1000)
+        updateData.slaDueAt = slaDueAt
         updateData.slaBreached = false
         break
       }
@@ -512,8 +531,7 @@ export async function executeWorkflowTransition(
         updateData.partsUsed = (repairPayload.partsUsed || []) as any
         logNote = `ثبت اقدامات فنی و اعلام رفع خرابی. علت ریشه‌ای: ${repairPayload.rootCause}`
 
-        // Check if final verification is required
-        const requireVerify = await getSettingValue<boolean>('faults.workflow.requireFinalVerification', true)
+        // Check if final verification is required using pre-fetched config
         if (!requireVerify) {
           newStatus = 'verified_closed'
           updateData.verifierId = actorId

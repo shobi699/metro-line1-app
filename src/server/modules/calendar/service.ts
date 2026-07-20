@@ -89,6 +89,7 @@ export interface CalendarDay {
   events: CalendarEventEntry[]
   orgEvents: CalendarOrgEventEntry[]
   meetings: CalendarMeetingEntry[]
+  trips: any[]
 }
 
 /** ساعات پیش‌فرض هر کد شیفت — اگر تنظیمات ادمین موجود باشد از آنجا خوانده می‌شود */
@@ -527,6 +528,27 @@ export async function getCalendarRange(params: {
       : new Map<string, CalendarMeetingEntry[]>(),
   ])
 
+  // Fetch user dispatches (trips) from MyRosterDay for the date range
+  const myRosterDays = await prisma.myRosterDay.findMany({
+    where: {
+      userId: params.userId,
+      jalaliDate: {
+        in: dayKeys.map((d) => d.jalali.replace(/-/g, '/')),
+      },
+    },
+  })
+
+  const tripsByJalali = new Map<string, any[]>()
+  for (const mrd of myRosterDays) {
+    try {
+      const payload = JSON.parse(mrd.payload)
+      const key = mrd.jalaliDate.replace(/\//g, '-')
+      tripsByJalali.set(key, payload.trips || [])
+    } catch {
+      // ignore parse errors
+    }
+  }
+
   const days: CalendarDay[] = dayKeys.map((d) => ({
     date: d.date,
     jalali: d.jalali,
@@ -536,6 +558,7 @@ export async function getCalendarRange(params: {
     events: personalMap.get(d.date) ?? [],
     orgEvents: orgMap.get(d.date) ?? [],
     meetings: meetingMap.get(d.date) ?? [],
+    trips: tripsByJalali.get(d.jalali) ?? [],
   }))
 
   return { from: params.from, to: params.to, days }
@@ -621,18 +644,36 @@ export async function togglePersonalTaskDone(id: string, userId: string, isDone:
 
 // ── ترجیحات تقویم ──────────────────────────────────────
 
-export async function getCalendarPreference(userId: string) {
+export async function getCalendarPreference(userId: string): Promise<any> {
   const pref = await prisma.calendarPreference.findUnique({ where: { userId } })
-  if (pref) return pref
-  return prisma.calendarPreference.create({
-    data: { userId, layers: DEFAULT_LAYERS },
-  })
+  if (!pref) {
+    const created = await prisma.calendarPreference.create({
+      data: { userId, layers: DEFAULT_LAYERS },
+    })
+    return {
+      ...created,
+      quickAddDefaults: {}
+    }
+  }
+  const widgetConfig = (pref.widgetConfig as Record<string, any>) || {}
+  return {
+    ...pref,
+    quickAddDefaults: widgetConfig.quickAddDefaults || {}
+  }
 }
 
-export async function updateCalendarPreference(userId: string, input: CalendarPreferenceInput) {
+export async function updateCalendarPreference(userId: string, input: CalendarPreferenceInput): Promise<any> {
   const current = await getCalendarPreference(userId)
   const currentLayers = (current.layers as Record<string, unknown>) ?? DEFAULT_LAYERS
-  return prisma.calendarPreference.update({
+  const currentWidgetConfig = (current.widgetConfig as Record<string, any>) ?? {}
+
+  const newWidgetConfig = {
+    ...currentWidgetConfig,
+    ...(input.widgetConfig !== undefined && (input.widgetConfig as any)),
+    ...(input.quickAddDefaults !== undefined && { quickAddDefaults: input.quickAddDefaults }),
+  }
+
+  const updated = await prisma.calendarPreference.update({
     where: { userId },
     data: {
       ...(input.layers !== undefined && {
@@ -640,9 +681,12 @@ export async function updateCalendarPreference(userId: string, input: CalendarPr
       }),
       ...(input.defaultView !== undefined && { defaultView: input.defaultView }),
       ...(input.weekStart !== undefined && { weekStart: input.weekStart }),
-      ...(input.widgetConfig !== undefined && {
-        widgetConfig: input.widgetConfig as Prisma.InputJsonValue,
-      }),
+      widgetConfig: newWidgetConfig as Prisma.InputJsonValue,
     },
   })
+
+  return {
+    ...updated,
+    quickAddDefaults: newWidgetConfig.quickAddDefaults || {}
+  }
 }

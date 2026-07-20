@@ -79,15 +79,23 @@ function computeStats(days: CalendarDay[], movazafiRules: any = { satTueHours: 8
       movazafiHours += movazafiRules.thuHours ?? 7
     }
 
-    // Sum financials
+    // Sum financials and overtime
     for (const ev of day.events || []) {
-      if (ev.type === 'work_log' || ev.type === 'financial') {
+      if (ev.type === 'overtime' || ev.type === 'work_log') {
         const meta = ev.metadata as Record<string, any> | null
-        if (meta?.amount && typeof meta.amount === 'number') {
-          workLogTotalAmount += meta.amount
-        }
         if (meta?.hours && typeof meta.hours === 'number') {
           overtimeTotalHours += meta.hours
+        }
+      }
+      if (ev.type === 'financial') {
+        const meta = ev.metadata as Record<string, any> | null
+        if (meta?.amount && typeof meta.amount === 'number') {
+          const isIncome = meta.isIncome !== false
+          if (isIncome) {
+            workLogTotalAmount += meta.amount
+          } else {
+            workLogTotalAmount -= meta.amount
+          }
         }
       }
     }

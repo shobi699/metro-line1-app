@@ -35,7 +35,7 @@ export function calculateShiftForDate(
     return template.shifts.find((s) => s.day === persianIndex + 1)
   } else {
     const cycleLength = template.length || 6
-    const diffDays = current.diff(anchor, 'day')
+    const diffDays = Math.round(current.diff(anchor, 'hour') / 24)
     const cycleIndex = ((diffDays % cycleLength) + cycleLength) % cycleLength
     
     return template.shifts.find((s) => s.day === cycleIndex + 1)
@@ -109,7 +109,7 @@ export function getShiftForUserAndDate(
     }
   } else {
     const cycleLength = template.length || 6
-    const diffDays = current.diff(anchor, 'day')
+    const diffDays = Math.round(current.diff(anchor, 'hour') / 24)
     const cycleIndex = ((diffDays % cycleLength) + cycleLength) % cycleLength
     const shift = template.shifts.find((s) => s.day === cycleIndex + 1)
 
@@ -164,7 +164,7 @@ export function getShiftForUserAndDateFromDb(
     }
   } else {
     const cycleLength = template.length || 6
-    const diffDays = current.diff(anchor, 'day')
+    const diffDays = Math.round(current.diff(anchor, 'hour') / 24)
     const cycleIndex = ((diffDays % cycleLength) + cycleLength) % cycleLength
     const shift = template.shifts.find((s) => s.day === cycleIndex + 1)
 

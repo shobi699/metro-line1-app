@@ -39,6 +39,7 @@ import {
   ChevronUp,
   Lock,
   Check,
+  Award,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -96,6 +97,7 @@ interface FeedbackItem {
   user?: { name: string } | null
   category?: { title: string; key: string } | null
   messages?: FeedbackMessage[]
+  formData?: any
 }
 
 /* ────────────────────────────── Config Maps ───────────────────────────────── */
@@ -423,6 +425,29 @@ export default function FeedbackPage() {
         setAdminReplyText('')
         setSelectedInboxItem(null)
         loadInbox()
+      }
+    } catch {
+      alert('خطا در ارتباط با سرور')
+    }
+  }
+
+  async function togglePublicIdea(fbId: string, currentPublic: boolean) {
+    try {
+      const res = await fetch(`/api/admin/feedback/${fbId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ isPublicIdea: !currentPublic }),
+      })
+      if (res.ok) {
+        alert(currentPublic ? '✅ ایده از تابلوی عمومی حذف شد.' : '✅ ایده در تابلوی عمومی منتشر شد.')
+        setSelectedInboxItem((prev) => prev ? { ...prev, isPublicIdea: !currentPublic } : null)
+        setInboxItems((prev) => prev.map((item) => item.id === fbId ? { ...item, isPublicIdea: !currentPublic } : item))
+      } else {
+        const json = await res.json()
+        alert(json.error || 'خطا در تغییر وضعیت انتشار')
       }
     } catch {
       alert('خطا در ارتباط با سرور')
@@ -977,6 +1002,102 @@ export default function FeedbackPage() {
                   <div className="p-3 bg-neutral-950/20 border border-border/40 rounded-lg leading-relaxed font-bold">
                     {selectedInboxItem.body}
                   </div>
+
+                  {/* Idea Board Moderation Toggle */}
+                  {selectedInboxItem.type === 'suggestion' && (
+                    <div className="flex flex-col gap-3 p-3 rounded-lg border border-outline-variant bg-surface-container/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Lightbulb className="size-4 text-accent" />
+                          <div>
+                            <p className="text-xs font-bold text-foreground">وضعیت نمایش در تابلوی ایده‌ها</p>
+                            <p className="text-[10px] text-foreground-muted">با فعال‌سازی، این پیشنهاد برای همه همکاران قابل مشاهده و رای‌دهی می‌شود.</p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => togglePublicIdea(selectedInboxItem.id, selectedInboxItem.isPublicIdea)}
+                          className={cn(
+                            "text-xs font-bold px-3 py-1 cursor-pointer transition",
+                            selectedInboxItem.isPublicIdea
+                              ? "bg-critical/10 text-critical border border-critical/20 hover:bg-critical/20"
+                              : "bg-success/10 text-success border border-success/20 hover:bg-success/20"
+                          )}
+                        >
+                          {selectedInboxItem.isPublicIdea ? 'لغو انتشار عمومی' : 'انتشار عمومی ایده'}
+                        </Button>
+                      </div>
+
+                      {/* Performance Score Input */}
+                      {!selectedInboxItem.isAnonymous && (
+                        <div className="border-t border-border/20 pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <Award className="size-4 text-warning" />
+                            <div>
+                              <p className="text-xs font-bold text-foreground">ثبت امتیاز ارزیابی عملکرد</p>
+                              <p className="text-[10px] text-foreground-muted">اختصاص امتیاز صلاحیت نوآوری به فرستنده ایده (تا سقف ۲۰ امتیاز).</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min={0}
+                              max={20}
+                              defaultValue={((selectedInboxItem.formData as any)?.managerScore) ?? ''}
+                              id={`score-input-${selectedInboxItem.id}`}
+                              placeholder="امتیاز..."
+                              className="w-20 text-center h-8 text-xs bg-neutral-950/40 rounded"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={async () => {
+                                const input = document.getElementById(`score-input-${selectedInboxItem.id}`) as HTMLInputElement
+                                const val = Number(input?.value)
+                                if (isNaN(val) || val < 0 || val > 20) {
+                                  alert('لطفاً عددی بین ۰ و ۲۰ وارد کنید.')
+                                  return
+                                }
+                                try {
+                                  const res = await fetch(`/api/admin/feedback/${selectedInboxItem.id}`, {
+                                    method: 'PATCH',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      Authorization: `Bearer ${accessToken}`,
+                                    },
+                                    body: JSON.stringify({ scoreValue: val }),
+                                  })
+                                  if (res.ok) {
+                                    alert('✅ امتیاز ارزیابی عملکرد با موفقیت ثبت شد.')
+                                    loadInbox()
+                                    setSelectedInboxItem(prev => {
+                                      if (!prev) return null
+                                      const currentFormData = (prev.formData as object) || {}
+                                      return {
+                                        ...prev,
+                                        formData: {
+                                          ...currentFormData,
+                                          managerScore: val
+                                        }
+                                      }
+                                    })
+                                  } else {
+                                    const err = await res.json()
+                                    alert(err.error || 'خطا در ثبت امتیاز')
+                                  }
+                                } catch {
+                                  alert('خطا در ارتباط با سرور')
+                                }
+                              }}
+                              className="text-xs font-bold h-8 cursor-pointer bg-warning/10 text-warning hover:bg-warning/20 border border-warning/20"
+                            >
+                              ثبت امتیاز
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* SLA Indicator */}
                   {(() => {

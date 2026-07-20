@@ -70,7 +70,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         label: 'عملیات و شیفت‌ها',
         icon: 'calendar-today',
         items: [
-          { label: 'شیفت و تقویم من', route: 'CalendarScreen', icon: 'calendar-today' },
+          { label: 'تقویم زندگی', route: 'LifeCalendarScreen', icon: 'calendar-today' },
           { label: 'لوحه اعزام روزانه خط ۱', route: 'لوحه', icon: 'schedule' },
           { label: 'حضور و غیاب هوشمند', route: 'حضور و غیاب', icon: 'check-circle' },
           { label: 'چک‌لیست حرکت قطار', route: 'چک‌لیست‌ها', icon: 'done-all' },

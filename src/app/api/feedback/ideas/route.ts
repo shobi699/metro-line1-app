@@ -18,6 +18,9 @@ export async function GET(request: Request) {
         category: {
           select: { id: true, title: true, icon: true }
         },
+        user: {
+          select: { name: true }
+        },
         votes: {
           where: { userId: user.id },
           select: { userId: true } // Check if current user voted
@@ -34,14 +37,12 @@ export async function GET(request: Request) {
       const hasVoted = idea.votes.length > 0
       
       // Strip out sensitive info just in case
-      const { votes, anonToken, attachments, formData, ...safeIdea } = idea
+      const { votes: _votes, anonToken: _anonToken, attachments: _attachments, formData, ...safeIdea } = idea
       
       return {
         ...safeIdea,
-        // Since it's public, maybe they want to see attachments/formData?
-        // Let's pass basic formData if needed, but for ideas usually title/body are in the DB.
-        // Wait, Feedback model only has `formData` (JSON), it doesn't have `title` and `body` directly as top-level strings? Let's check schema.
-        formData: formData as any,
+        user: safeIdea.isAnonymous ? null : safeIdea.user,
+        formData: formData as unknown,
         hasVoted
       }
     })
@@ -50,10 +51,11 @@ export async function GET(request: Request) {
       success: true,
       data: formattedIdeas
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching ideas:', error)
+    const message = error instanceof Error ? error.message : 'خطای نامشخص'
     return NextResponse.json(
-      { error: 'خطای سرور در دریافت ایده‌ها', details: error.message },
+      { error: 'خطای سرور در دریافت ایده‌ها', details: message },
       { status: 500 }
     )
   }

@@ -47,8 +47,9 @@ import {
   parseTargetId,
   targetIdLabel,
 } from '@/lib/shift-grouping'
-import { toFa } from '@/lib/fa'
+import { toFa, jalali } from '@/lib/fa'
 import { cn } from '@/lib/utils'
+import { JalaliDatePicker } from '@/components/ui/jalali-date-picker'
 
 interface Shift {
   id: string
@@ -128,15 +129,32 @@ export default function AdminShiftsPage() {
   const [weekOffset, setWeekOffset] = useState(0)
   const [department, setDepartment] = useState('all')
   const [lineFilter, setLineFilter] = useState('line1')
+  const [groupFilter, setGroupFilter] = useState('all')
+  const [regimeFilter, setRegimeFilter] = useState('all')
+  const [locationFilter, setLocationFilter] = useState('all')
   const [viewType, setViewType] = useState<'weekly' | 'monthly'>('weekly')
+
+  // Loaded data
+  const [users, setUsers] = useState<User[]>([])
+
+  // Extract unique starting locations dynamically from loaded users
+  const uniqueLocations = useMemo(() => {
+    const locations = new Set<string>()
+    users.forEach((u) => {
+      const loc = (u.customFields as Record<string, unknown> | null)?.startLocation
+      if (loc && typeof loc === 'string') {
+        const trimmed = loc.trim()
+        if (trimmed) locations.add(trimmed)
+      }
+    })
+    return Array.from(locations).sort()
+  }, [users])
 
   // Year and Month states for Monthly View (Jalali Month/Year)
   const now = jdate()
   const [selectedYear, setSelectedYear] = useState(() => now.year())
   const [selectedMonth, setSelectedMonth] = useState(() => now.month() + 1)
 
-  // Loaded data
-  const [users, setUsers] = useState<User[]>([])
   const [dbShifts, setDbShifts] = useState<Shift[]>([])
   const [swapRequests, setSwapRequests] = useState<SwapRequest[]>([])
 
@@ -190,6 +208,17 @@ export default function AdminShiftsPage() {
     text: string
   } | null>(null)
 
+  // Confirmation state for overwriting existing assignments (user requested)
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false)
+  const [pendingAssignmentData, setPendingAssignmentData] = useState<{
+    templateId: string
+    targetType: 'user' | 'group'
+    targetId: string
+    anchorDate: string
+    existingTplName?: string
+    existingAnchorDate?: string
+  } | null>(null)
+
   useEffect(() => {
     if (notification) {
       const timer = setTimeout(() => setNotification(null), 4000)
@@ -213,8 +242,8 @@ export default function AdminShiftsPage() {
           endTime: isWeekend ? '' : '16:15',
         }
       } else if (tplRegime === 'rotational_12h') {
-        const isDay = d % 4 === 1
-        const isNight = d % 4 === 2
+        const isDay = tplLength === 4 ? (d % 4 === 1) : (d % 6 === 1 || d % 6 === 2)
+        const isNight = tplLength === 4 ? (d % 4 === 2) : (d % 6 === 3 || d % 6 === 4)
         return {
           day: d,
           code: (isDay ? 'morning' : isNight ? 'night' : 'off') as ShiftCodeValue,
@@ -870,21 +899,53 @@ export default function AdminShiftsPage() {
   async function handleSaveAssignment() {
     if (!accessToken) return
     if (!assignTplId) return
-    setActionLoading((prev) => ({ ...prev, __assignment: true }))
-    try {
-      // برای هدف گروهی، کلید ترکیبی {نوع}:{گروه} ساخته می‌شود تا گروه و نوع شیفت با هم انتساب را تعیین کنند
-      const finalTargetId =
-        assignTargetType === 'group'
-          ? buildCompositeKey(assignTargetId, assignGroupType)
-          : assignTargetId
 
-      await shiftsApi.createAssignment(accessToken, {
+    const finalTargetId =
+      assignTargetType === 'group'
+        ? buildCompositeKey(assignTargetId, assignGroupType)
+        : assignTargetId
+
+    // Check if an assignment already exists for this target (user requested modal verification)
+    const existing = dbAssignments.find(
+      (a) => a.targetType === assignTargetType && a.targetId === finalTargetId
+    )
+
+    if (existing) {
+      const tpl = dbTemplates.find((t) => t.id === existing.templateId)
+      setPendingAssignmentData({
         templateId: assignTplId,
         targetType: assignTargetType,
         targetId: finalTargetId,
         anchorDate: assignAnchorDate,
+        existingTplName: tpl?.name || 'الگوی قبلی',
+        existingAnchorDate: existing.anchorDate,
       })
+      setConfirmModalOpen(true)
+      return
+    }
+
+    // Otherwise, execute the save immediately
+    await executeSaveAssignment({
+      templateId: assignTplId,
+      targetType: assignTargetType,
+      targetId: finalTargetId,
+      anchorDate: assignAnchorDate,
+    })
+  }
+
+  // Actual API call handler for shift assignment save/update
+  async function executeSaveAssignment(data: {
+    templateId: string
+    targetType: 'user' | 'group'
+    targetId: string
+    anchorDate: string
+  }) {
+    setActionLoading((prev) => ({ ...prev, __assignment: true }))
+    try {
+      await shiftsApi.createAssignment(accessToken!, data)
       setNotification({ type: 'success', text: 'الگوی شیفت با موفقیت در دیتابیس انتساب داده شد و لوحه کاری به‌روزرسانی گردید.' })
+      setConfirmModalOpen(false)
+      setPendingAssignmentData(null)
       await loadData()
     } catch {
       setNotification({ type: 'error', text: 'خطا در ثبت انتساب شیفت در سرور' })
@@ -899,18 +960,52 @@ export default function AdminShiftsPage() {
 
   // Filtered users for grid
   const filteredUsers = useMemo(() => {
-    if (department === 'all') return users
-    if (department === 'drivers') {
-      return users.filter((u) => {
-        const post = String((u.customFields as Record<string, unknown> | null)?.post || '')
-        return u.role?.key === 'operator' || u.role?.key === 'driver' || post === 'راهبر'
+    let list = users
+
+    // 1. Department Filter
+    if (department !== 'all') {
+      if (department === 'drivers') {
+        list = list.filter((u) => {
+          const post = String((u.customFields as Record<string, unknown> | null)?.post || '')
+          return u.role?.key === 'operator' || u.role?.key === 'driver' || post === 'راهبر'
+        })
+      } else {
+        list = list.filter((u) => {
+          const post = String((u.customFields as Record<string, unknown> | null)?.post || '')
+          return u.role?.key !== 'operator' && u.role?.key !== 'driver' && post !== 'راهبر'
+        })
+      }
+    }
+
+    // 2. Group Filter (A, B, C, ستادی)
+    if (groupFilter !== 'all') {
+      list = list.filter((u) => {
+        const cf = u.customFields as Record<string, unknown> | null
+        const shiftVal = String(cf?.shift || cf?.group || '').trim()
+        return shiftVal === groupFilter
       })
     }
-    return users.filter((u) => {
-      const post = String((u.customFields as Record<string, unknown> | null)?.post || '')
-      return u.role?.key !== 'operator' && u.role?.key !== 'driver' && post !== 'راهبر'
-    })
-  }, [users, department])
+
+    // 3. Working Regime Filter (9-15, 12-24, ستادی)
+    if (regimeFilter !== 'all') {
+      list = list.filter((u) => {
+        const cf = u.customFields as Record<string, unknown> | null
+        const shiftTypeVal = String(cf?.shiftType || '').trim()
+        return shiftTypeVal === regimeFilter
+      })
+    }
+
+    // 4. Starting Location Filter
+    if (locationFilter !== 'all') {
+      list = list.filter((u) => {
+        const cf = u.customFields as Record<string, unknown> | null
+        const loc = String(cf?.startLocation || '').trim()
+        return loc === locationFilter
+      })
+    }
+
+    return list
+  }, [users, department, groupFilter, regimeFilter, locationFilter])
 
   // Persian Months for selectors
   const persianMonths = [
@@ -1123,7 +1218,7 @@ export default function AdminShiftsPage() {
 
               {/* Grid Top Filters */}
               <div className="bg-surface/40 border border-border rounded-xl p-3 flex justify-between items-center gap-3 shrink-0">
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 flex-1">
                   <select
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
@@ -1132,6 +1227,42 @@ export default function AdminShiftsPage() {
                     <option value="all">همه دپارتمان‌ها</option>
                     <option value="drivers">راهبران قطار</option>
                     <option value="staff">پرسنل ایستگاهی و اداری</option>
+                  </select>
+
+                  <select
+                    value={groupFilter}
+                    onChange={(e) => setGroupFilter(e.target.value)}
+                    className="bg-background/50 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground font-bold outline-none focus-visible:border-accent cursor-pointer"
+                  >
+                    <option value="all">همه گروه‌ها</option>
+                    <option value="A">گروه الف (A)</option>
+                    <option value="B">گروه ب (B)</option>
+                    <option value="C">گروه ج (C)</option>
+                    <option value="ستادی">ستادی (ثابت)</option>
+                  </select>
+
+                  <select
+                    value={regimeFilter}
+                    onChange={(e) => setRegimeFilter(e.target.value)}
+                    className="bg-background/50 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground font-bold outline-none focus-visible:border-accent cursor-pointer"
+                  >
+                    <option value="all">همه رژیم‌ها</option>
+                    <option value="9-15">چرخشی ۹ ساعته</option>
+                    <option value="12-24">چرخشی ۱۲ ساعته</option>
+                    <option value="ستادی">ثابت اداری / ستادی</option>
+                  </select>
+
+                  <select
+                    value={locationFilter}
+                    onChange={(e) => setLocationFilter(e.target.value)}
+                    className="bg-background/50 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground font-bold outline-none focus-visible:border-accent cursor-pointer"
+                  >
+                    <option value="all">همه ایستگاه‌های شروع</option>
+                    {uniqueLocations.map((loc) => (
+                      <option key={loc} value={loc}>
+                        {loc}
+                      </option>
+                    ))}
                   </select>
 
                   <select
@@ -1997,11 +2128,10 @@ export default function AdminShiftsPage() {
 
                     <div className="space-y-1.5">
                       <Label htmlFor="anchor-date" className="text-xs font-bold flex justify-start">تاریخ لنگرگاه چرخه (شروع الگو)</Label>
-                      <Input
+                      <JalaliDatePicker
                         id="anchor-date"
-                        type="date"
                         value={assignAnchorDate}
-                        onChange={(e) => setAssignAnchorDate(e.target.value)}
+                        onChange={(v) => setAssignAnchorDate(v)}
                         className="h-10 text-sm border-border text-start font-data-mono"
                       />
                       <p className="text-[10px] text-foreground-muted mt-1 text-right leading-relaxed pr-1">
@@ -2074,7 +2204,7 @@ export default function AdminShiftsPage() {
                           )}
                           <div className="text-foreground-muted text-[10px] flex items-center gap-1">
                             <CalendarIcon className="size-3" />
-                            لنگرگاه: {toFa(jdate(assign.anchorDate).format('YYYY/MM/DD'))}
+                            لنگرگاه: {jalali(assign.anchorDate)}
                           </div>
                         </div>
                         <Button
@@ -2152,7 +2282,7 @@ export default function AdminShiftsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-12 items-center bg-background/55 border border-border/60 p-3.5 rounded-lg text-xs font-data-mono text-center gap-3">
                         <div className="md:col-span-5 bg-surface border border-border/40 p-2.5 rounded">
                           <div className="font-bold text-foreground">{req.requester.name}</div>
-                          <div className="text-foreground-muted text-[10px] mt-1">{toFa(jdate(req.sourceShift.date).format('YYYY/MM/DD'))} ({jdate(req.sourceShift.date).format('dddd')})</div>
+                          <div className="text-foreground-muted text-[10px] mt-1">{jalali(req.sourceShift.date)} ({jdate(req.sourceShift.date).format('dddd')})</div>
                           <Badge className="mt-2 text-[10px] bg-accent/10 text-accent border-accent/30">{shiftLabels[req.sourceShift.code]}</Badge>
                         </div>
 
@@ -2162,7 +2292,7 @@ export default function AdminShiftsPage() {
 
                         <div className="md:col-span-5 bg-surface border border-border/40 p-2.5 rounded">
                           <div className="font-bold text-foreground">{req.target.name}</div>
-                          <div className="text-foreground-muted text-[10px] mt-1">{toFa(jdate(req.targetShift.date).format('YYYY/MM/DD'))} ({jdate(req.targetShift.date).format('dddd')})</div>
+                          <div className="text-foreground-muted text-[10px] mt-1">{jalali(req.targetShift.date)} ({jdate(req.targetShift.date).format('dddd')})</div>
                           <Badge className="mt-2 text-[10px] bg-accent/10 text-accent border-accent/30">{shiftLabels[req.targetShift.code]}</Badge>
                         </div>
                       </div>
@@ -2367,7 +2497,7 @@ export default function AdminShiftsPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-foreground-muted">تاریخ شیفت:</span>
-                  <strong className="text-foreground font-data-mono">{toFa(jdate(selectedDate).format('YYYY/MM/DD'))} ({jdate(selectedDate).format('dddd')})</strong>
+                  <strong className="text-foreground font-data-mono">{jalali(selectedDate)} ({jdate(selectedDate).format('dddd')})</strong>
                 </div>
               </div>
             ) : (
@@ -2390,13 +2520,11 @@ export default function AdminShiftsPage() {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="assign-date" className="text-xs font-bold text-foreground flex justify-start">تاریخ شیفت</Label>
-                  <Input
+                  <JalaliDatePicker
                     id="assign-date"
-                    type="date"
-                    required
                     value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="h-10 text-sm focus-visible:ring-accent border-border font-data-mono text-start"
+                    onChange={(v) => setSelectedDate(v)}
+                    className="h-10 text-sm border-border font-data-mono text-start"
                   />
                 </div>
               </>
@@ -2499,6 +2627,71 @@ export default function AdminShiftsPage() {
               )
             })}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for Overwriting Assignment (user requested) */}
+      <Dialog open={confirmModalOpen} onOpenChange={setConfirmModalOpen}>
+        <DialogContent className="max-w-md w-full" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold text-foreground text-start flex items-center gap-2">
+              <Shield className="size-5 text-warning" />
+              تایید به‌روزرسانی انتساب شیفت
+            </DialogTitle>
+            <DialogDescription className="text-xs text-foreground-muted text-start mt-2">
+              یک انتساب فعال برای این هدف وجود دارد. آیا مایلید آن را به‌روزرسانی کنید؟
+            </DialogDescription>
+          </DialogHeader>
+
+          {pendingAssignmentData && (
+            <div className="bg-surface/30 p-3.5 rounded-xl border border-border/80 space-y-2.5 text-xs text-right mt-1.5">
+              <div>
+                <span className="font-bold text-foreground-muted block mb-1">مشخصات انتساب فعلی (قبلی):</span>
+                <div className="bg-surface/60 p-2 rounded border border-border/40 space-y-1">
+                  <div>الگو: <span className="font-bold text-critical">{pendingAssignmentData.existingTplName}</span></div>
+                  <div>لنگرگاه: <span className="font-data-mono font-bold text-foreground-muted">{jalali(pendingAssignmentData.existingAnchorDate || '')}</span></div>
+                </div>
+              </div>
+
+              <div>
+                <span className="font-bold text-foreground-muted block mb-1">مشخصات انتساب جدید:</span>
+                <div className="bg-accent/10 p-2 rounded border border-accent/20 space-y-1">
+                  <div>الگو: <span className="font-bold text-accent">{dbTemplates.find((t) => t.id === pendingAssignmentData.templateId)?.name || ''}</span></div>
+                  <div>لنگرگاه: <span className="font-data-mono font-bold text-accent">{jalali(pendingAssignmentData.anchorDate)}</span></div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="pt-4 flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setConfirmModalOpen(false)
+                setPendingAssignmentData(null)
+              }}
+              className="text-xs h-9 cursor-pointer"
+            >
+              انصراف
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                if (pendingAssignmentData) {
+                  executeSaveAssignment({
+                    templateId: pendingAssignmentData.templateId,
+                    targetType: pendingAssignmentData.targetType,
+                    targetId: pendingAssignmentData.targetId,
+                    anchorDate: pendingAssignmentData.anchorDate,
+                  })
+                }
+              }}
+              className="px-5 h-9 bg-accent hover:bg-accent-hover text-accent-foreground text-xs font-bold cursor-pointer"
+            >
+              بله، به‌روزرسانی شود
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

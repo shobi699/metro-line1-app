@@ -175,7 +175,7 @@ function getComponentForRoute(route: string) {
       return HomeStackScreen
     case 'CalendarScreen':
     case 'Calendar':
-      return CalendarScreen
+      return LifeCalendarScreen
     case 'RosterScreen':
     case 'Roster':
       return RosterScreen
@@ -300,7 +300,7 @@ function MainTabs() {
         { label: 'پروفایل', route: 'ProfileScreen' },
         { label: 'گفتگو', route: 'ChatScreen' },
         { label: 'اعلان‌ها', route: 'NotificationsScreen' },
-        { label: 'شیفت‌ها', route: 'CalendarScreen' },
+        { label: 'تقویم', route: 'LifeCalendarScreen' },
         { label: 'داشبورد', route: 'HomeScreen' },
       ]
 
@@ -355,6 +355,7 @@ export function AppContent() {
   const isLoading = useAuthStore((s) => s.isLoading)
   const loadPersistedAuth = useAuthStore((s) => s.loadPersistedAuth)
   const fetchConfig = useConfigStore((s) => s.fetchConfig)
+  const fetchModuleFlags = useConfigStore((s) => s.fetchModuleFlags)
   const loadPersistedConfig = useConfigStore((s) => s.loadPersistedConfig)
   const { theme, isDark } = useTheme()
 
@@ -366,6 +367,7 @@ export function AppContent() {
   useEffect(() => {
     loadPersistedConfig().then(() => {
       fetchConfig()
+      fetchModuleFlags()
     })
     loadPersistedAuth()
   }, [])

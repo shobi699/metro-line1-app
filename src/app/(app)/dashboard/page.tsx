@@ -941,7 +941,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Shift Card */}
-        <Link href="/shifts">
+        <Link href="/calendar">
           <div className="relative overflow-hidden bg-surface-container-low/60 border border-border-subtle/50 rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-all">
             <div className="absolute right-0 top-0 bottom-0 w-1 bg-amber-500" />
             <div className="flex items-center justify-between mb-2">
@@ -975,7 +975,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-3 gap-3">
             {[
               { label: 'اعلام خرابی', href: '/tickets', icon: AlertTriangle, iconColor: 'text-red-500', bgClass: 'bg-red-500/10', borderClass: 'border-red-500/20' },
-              { label: 'لوحه شیفت', href: '/shifts', icon: Calendar, iconColor: 'text-sky-500', bgClass: 'bg-sky-500/10', borderClass: 'border-sky-500/20' },
+              { label: 'تقویم زندگی', href: '/calendar', icon: Calendar, iconColor: 'text-sky-500', bgClass: 'bg-sky-500/10', borderClass: 'border-sky-500/20' },
               { label: 'دفتر تلفن', href: '/directory', icon: Users, iconColor: 'text-teal-500', bgClass: 'bg-teal-500/10', borderClass: 'border-teal-500/20' },
               { label: 'بخشنامه‌ها', href: '/content', icon: Newspaper, iconColor: 'text-orange-500', bgClass: 'bg-orange-500/10', borderClass: 'border-orange-500/20' },
               { label: 'دستیار AI', href: '/ai', icon: Bot, iconColor: 'text-violet-500', bgClass: 'bg-violet-500/10', borderClass: 'border-violet-500/20' },

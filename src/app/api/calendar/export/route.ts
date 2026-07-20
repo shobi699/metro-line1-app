@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { prisma } from '@/server/db'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
 import { exportMonthToExcel } from '@/server/modules/calendar'
 import { jdate } from '@/lib/dayjs'
@@ -28,9 +29,33 @@ export async function GET(request: Request) {
     )
   }
 
+  let targetUserId = user.id
+  const requestedUserId = searchParams.get('userId')
+  if (requestedUserId && requestedUserId !== user.id) {
+    if (!['super_admin', 'admin', 'manager'].includes(user.roleKey)) {
+      return NextResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'شما دسترسی به گزارش سایر کاربران را ندارید' } },
+        { status: 403 },
+      )
+    }
+    targetUserId = requestedUserId
+  }
+
+  // Get user roleKey for target user if exporting other user
+  let targetRoleKey = user.roleKey
+  if (targetUserId !== user.id) {
+    const targetUser = await prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { role: { select: { key: true } } }
+    })
+    if (targetUser?.role) {
+      targetRoleKey = targetUser.role.key
+    }
+  }
+
   const buffer = await exportMonthToExcel({
-    userId: user.id,
-    roleKey: user.roleKey,
+    userId: targetUserId,
+    roleKey: targetRoleKey,
     jYear,
     jMonth,
   })

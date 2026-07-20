@@ -203,10 +203,23 @@ export default function DayStatusAdminPage() {
                           {toFa(jdate(item.startAt).format('YYYY/MM/DD'))}
                         </td>
                         <td className="p-3 whitespace-nowrap" dir="ltr">
-                          {cf.hours !== undefined ? `${toFa(cf.hours)} h` : cf.amount !== undefined ? `${toFa(cf.amount.toLocaleString())} ﷼` : '-'}
+                          {cf.hours !== undefined ? (
+                            <span className="font-medium text-info">{toFa(cf.hours)} ساعت</span>
+                          ) : cf.amount !== undefined ? (
+                            <span className={cf.isIncome !== false ? 'text-success font-medium' : 'text-critical font-medium'}>
+                              {cf.isIncome !== false ? '+' : '−'} {toFa(cf.amount.toLocaleString())} تومان
+                            </span>
+                          ) : (
+                            '-'
+                          )}
                         </td>
-                        <td className="p-3 max-w-[200px] truncate" title={item.title}>
-                          {item.title}
+                        <td className="p-3">
+                          <div className="font-bold text-sm text-foreground">{item.title}</div>
+                          {item.description && (
+                            <div className="text-xs text-muted-foreground mt-0.5 whitespace-pre-wrap max-w-sm">
+                              {item.description}
+                            </div>
+                          )}
                         </td>
                       </tr>
                     )

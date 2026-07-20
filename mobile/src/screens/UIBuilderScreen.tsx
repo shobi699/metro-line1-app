@@ -29,7 +29,7 @@ const DEFAULT_WIDGETS = [
 
 const DEFAULT_MENU_ITEMS = [
   { id: '1', label: 'داشبورد', icon: 'home', route: 'HomeScreen', orderIndex: 0, isVisible: true },
-  { id: '2', label: 'شیفت‌ها', icon: 'calendar', route: 'CalendarScreen', orderIndex: 1, isVisible: true },
+  { id: '2', label: 'تقویم', icon: 'calendar', route: 'LifeCalendarScreen', orderIndex: 1, isVisible: true },
   { id: '3', label: 'اعلان‌ها', icon: 'announcements', route: 'NotificationsScreen', orderIndex: 2, isVisible: true },
   { id: '4', label: 'گفتگو', icon: 'chat', route: 'ChatScreen', orderIndex: 3, isVisible: true },
   { id: '5', label: 'پروفایل', icon: 'profile', route: 'ProfileScreen', orderIndex: 4, isVisible: true },

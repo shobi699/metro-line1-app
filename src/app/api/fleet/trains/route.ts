@@ -27,8 +27,12 @@ export async function POST(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const err = requirePermission(user, 'fleet:manage')
-  if (err) return authErrorResponse(err)
+  const manageErr = requirePermission(user, 'fleet:manage')
+  const faultsErr = requirePermission(user, 'faults:create')
+  // Allow if either permission is granted
+  if (manageErr && faultsErr) {
+    return authErrorResponse(manageErr)
+  }
 
   try {
     const body = await request.json()
@@ -85,7 +89,16 @@ export async function POST(request: Request) {
       return newTrain
     })
 
-    return NextResponse.json({ data: train }, { status: 201 })
+    const trainWithWagons = await prisma.train.findUnique({
+      where: { id: train.id },
+      include: {
+        wagons: {
+          orderBy: { position: 'asc' },
+        },
+      },
+    })
+
+    return NextResponse.json({ data: trainWithWagons }, { status: 201 })
   } catch (e: any) {
     return NextResponse.json({ error: e.message || 'خطا در ثبت قطار' }, { status: 500 })
   }

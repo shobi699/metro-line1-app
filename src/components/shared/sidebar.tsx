@@ -102,9 +102,8 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         id: 'shifts-op',
         label: 'عملیات و شیفت‌ها',
         icon: Calendar,
-        items: [
-          { label: 'شیفت و تقویم من', href: '/shifts', icon: Calendar },
-          { label: 'تقویم زندگی', href: '/calendar', icon: CalendarDays },
+         items: [
+          { label: 'تقویم زندگی (شیفت و رویدادها)', href: '/calendar', icon: CalendarDays },
           { label: 'برنامه روزانه من', href: '/roster/my-day', icon: Clock },
           { label: 'لوحه اعزام روزانه خط ۱', href: '/roster', icon: Clock },
           { label: 'بورد لوحه', href: '/roster/board', icon: CalendarDays },
@@ -258,6 +257,7 @@ const NAVIGATION_SECTIONS: NavSection[] = [
           { label: 'صلاحیت و گواهی راهبران', href: '/admin/operator-licenses', icon: ShieldCheck },
           { label: 'دفتر ثبت وقایع (Audit Log)', href: '/admin/audit-logs', icon: Shield },
           { label: 'لاگ‌های سیستم و خطاها', href: '/admin/logs', icon: Terminal },
+          { label: 'مدیریت ماژول‌ها و منوها', href: '/admin/modules', icon: Settings, roles: ['super_admin', 'admin'] },
           { label: 'تنظیمات سیستم', href: '/admin/settings', icon: Settings },
         ]
       }
@@ -276,17 +276,20 @@ export function SidebarContent() {
   const pathname = usePathname()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
+  const isRouteEnabled = useConfigStore((s) => s.isRouteEnabled)
+  const fetchModuleFlags = useConfigStore((s) => s.fetchModuleFlags)
   const [webVersion, setWebVersion] = useState<string>('v0.1.1')
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
+    fetchModuleFlags()
     fetch('/api/config')
       .then((r) => r.json())
       .then((json) => {
         if (json?.data?.webVersion) setWebVersion(json.data.webVersion)
       })
       .catch(() => {})
-  }, [])
+  }, [fetchModuleFlags])
 
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}
@@ -438,7 +441,9 @@ export function SidebarContent() {
                     )
 
                     // فیلتر آیتم‌های مجاز
-                    const visibleItems = group.items.filter((item) => checkRole(item.roles))
+                    const visibleItems = group.items.filter(
+                      (item) => checkRole(item.roles) && isRouteEnabled(item.href)
+                    )
                     if (visibleItems.length === 0) return null
 
                     return (

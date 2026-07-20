@@ -56,6 +56,7 @@ export interface CalendarDay {
   holidays: CalendarHolidayEntry[]
   events: CalendarEventEntry[]
   orgEvents: CalendarOrgEventEntry[]
+  trips?: any[]
 }
 
 interface CalendarRangeResponse {

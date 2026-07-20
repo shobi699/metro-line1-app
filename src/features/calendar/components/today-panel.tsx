@@ -74,7 +74,12 @@ export function TodayPanel({ today, upcomingDays, loading, onToggleTask }: Today
         )}
 
         {today.holidays.length > 0 && (
-          <div className="text-sm text-critical">
+          <div
+            className={cn(
+              'text-sm font-medium',
+              today.holidays.some((h) => h.isOffDay) ? 'text-critical' : 'text-amber-500/90 dark:text-amber-400/90',
+            )}
+          >
             {today.holidays.map((h) => h.title).join('، ')}
           </div>
         )}

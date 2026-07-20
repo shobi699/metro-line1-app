@@ -63,11 +63,7 @@ export const calendarPreferenceSchema = z
     defaultView: z.enum(['month', 'week', 'agenda']).optional(),
     weekStart: z.enum(['saturday', 'monday']).optional(),
     widgetConfig: z.record(z.string(), z.unknown()).optional(),
-    quickAddDefaults: z.record(z.string(), z.object({
-      title: z.string().optional(),
-      amount: z.string().optional(),
-      hours: z.string().optional()
-    })).optional(),
+    quickAddDefaults: z.any().optional(),
   })
   .strict()
 

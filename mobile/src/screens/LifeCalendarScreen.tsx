@@ -14,7 +14,7 @@ import { MaterialIcons } from '@expo/vector-icons'
 import { useTheme } from '../shared/ThemeProvider'
 import { ScreenWrapper } from '../shared/ScreenWrapper'
 import { syncWidgetAndReminders } from '../shared/widget-sync'
-import { toFa, getJalaliDateLabel } from '../shared/jalali'
+import { toFa, getJalaliDateLabel, extractHijriDate } from '../shared/jalali'
 import {
   useCalendarStore,
   type CalendarDay,
@@ -481,6 +481,28 @@ export function LifeCalendarScreen({ navigation }: any) {
     )
   }
 
+  function getEventEmoji(type: string): string {
+    switch (type) {
+      case 'overtime':
+      case 'work_log':
+        return '⏱️'
+      case 'financial':
+        return '💰'
+      case 'leave_sick':
+      case 'leave_daily':
+      case 'leave_hourly':
+        return '🌴'
+      case 'on_call':
+        return '📞'
+      case 'note':
+        return '📝'
+      case 'birthday':
+        return '🎂'
+      default:
+        return '📌'
+    }
+  }
+
   function renderCell(day: CalendarDay) {
     const jDayNum = Number(day.jalali.slice(8))
     const isToday = day.date === todayStr
@@ -489,8 +511,14 @@ export function LifeCalendarScreen({ navigation }: any) {
     const isOffHoliday = day.holidays.some((h) => h.isOffDay)
     const meta = day.shift ? SHIFT_PALETTE[day.shift.code] : null
     const color = day.shift ? shiftColor(day.shift.code) : theme.colors.secondary
-    const dotEvents = day.events.filter((e) => e.type !== 'task')
     const hasTasks = day.events.some((e) => e.type === 'task')
+    const nonTaskEvents = day.events.filter((e) => e.type !== 'task')
+    const uniqueEmojis = Array.from(new Set(nonTaskEvents.map((e) => getEventEmoji(e.type))))
+    if (day.trips && day.trips.length > 0) {
+      uniqueEmojis.unshift('🚇')
+    }
+
+    const holidayTitle = day.holidays.map((h) => h.title).join('، ')
 
     return (
       <TouchableOpacity
@@ -530,17 +558,28 @@ export function LifeCalendarScreen({ navigation }: any) {
             <View style={{ height: 14 }} />
           )}
 
+          {holidayTitle ? (
+            <Text
+              numberOfLines={1}
+              style={{
+                fontSize: 8,
+                fontWeight: isOffHoliday ? '700' : '500',
+                color: isOffHoliday ? theme.colors.error : '#f59e0b',
+                textAlign: 'right',
+                marginTop: 1,
+              }}
+            >
+              {holidayTitle}
+            </Text>
+          ) : null}
+
           <View style={styles.dotsRow}>
-            {dotEvents.slice(0, 2).map((e) => (
-              <View
-                key={e.id}
-                style={[
-                  styles.evtDot,
-                  { backgroundColor: isDark ? EVT_PERSONAL.dark : EVT_PERSONAL.light },
-                ]}
-              />
+            {uniqueEmojis.slice(0, 2).map((emoji, idx) => (
+              <Text key={idx} style={{ fontSize: 10, marginHorizontal: 1 }}>
+                {emoji}
+              </Text>
             ))}
-            {dotEvents.length > 2 && <Text style={styles.moreText}>+{toFa(dotEvents.length - 2)}</Text>}
+            {uniqueEmojis.length > 2 && <Text style={styles.moreText}>+{toFa(uniqueEmojis.length - 2)}</Text>}
             {hasTasks && (
               <Text style={[styles.moreText, { color: isDark ? EVT_TASK.dark : EVT_TASK.light }]}>
                 ☐
@@ -675,9 +714,28 @@ export function LifeCalendarScreen({ navigation }: any) {
             {selectedDay && (
               <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                 {selectedDay.holidays.length > 0 && (
-                  <View style={styles.holidayBox}>
-                    <Text style={styles.holidayText}>
-                      {selectedDay.holidays.map((h) => h.title).join('، ')}
+                  <View
+                    style={[
+                      styles.holidayBox,
+                      !selectedDay.holidays.some((h) => h.isOffDay) && {
+                        backgroundColor: '#f59e0b20',
+                        borderColor: '#f59e0b40',
+                        borderWidth: 1,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.holidayText,
+                        !selectedDay.holidays.some((h) => h.isOffDay) && {
+                          color: '#f59e0b',
+                        },
+                      ]}
+                    >
+                      {selectedDay.holidays.map((h) => {
+                        const hijri = extractHijriDate(h.title)
+                        return hijri ? `${h.title} (🌙 ${hijri})` : h.title
+                      }).join('، ')}
                     </Text>
                   </View>
                 )}

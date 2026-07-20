@@ -51,6 +51,7 @@ const CATEGORY_MAP: Record<string, { label: string; icon: string }> = {
   mobile: { label: 'تنظیمات اپلیکیشن موبایل', icon: '📱' },
   comms: { label: 'ارتباطات صوتی و بی‌سیم', icon: '🎙️' },
   performance: { label: 'ارزیابی عملکرد و گیمیفیکیشن', icon: '🏆' },
+  ideas: { label: 'تنظیمات و امتیازدهی ایده‌ها', icon: '💡' },
   download: { label: 'تنظیمات صفحه دانلود', icon: '📥' },
   requests: { label: 'درخواست‌های پرسنلی', icon: '📝' },
   audit: { label: 'تاریخچه تغییرات', icon: '🕒' },

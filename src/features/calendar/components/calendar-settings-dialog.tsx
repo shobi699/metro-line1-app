@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Settings, Save, X } from 'lucide-react'
+import { Settings, Save, X, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -24,7 +24,7 @@ interface SettingsData {
     org?: { on: boolean; color?: string }
     tasks?: { on: boolean; color?: string }
   }
-  quickAddDefaults?: Record<string, { title?: string; amount?: string; hours?: string }>
+  quickAddDefaults?: Record<string, any>
 }
 
 export function CalendarSettingsDialog() {
@@ -75,17 +75,77 @@ export function CalendarSettingsDialog() {
     })
   }
 
-  function updateDefault(typeKey: string, field: 'title'|'hours'|'amount', value: string) {
+  function updatePreset(typeKey: string, presetId: string, field: 'title'|'hours'|'amount', value: string) {
     setSettings(prev => {
       const currentDefaults = prev.quickAddDefaults || {}
+      const raw = currentDefaults[typeKey]
+      let list = Array.isArray(raw) 
+        ? [...raw] 
+        : (raw && typeof raw === 'object' && (raw as any).title) 
+          ? [{ id: 'default', ...(raw as any) }] 
+          : []
+      
+      list = list.map(item => {
+        if (item.id === presetId || (item.id === 'default' && presetId === 'default')) {
+          return { ...item, [field]: value }
+        }
+        return item
+      })
+
       return {
         ...prev,
         quickAddDefaults: {
           ...currentDefaults,
-          [typeKey]: {
-            ...(currentDefaults[typeKey] || {}),
-            [field]: value
-          }
+          [typeKey]: list
+        }
+      }
+    })
+  }
+
+  function addPreset(typeKey: string) {
+    setSettings(prev => {
+      const currentDefaults = prev.quickAddDefaults || {}
+      const raw = currentDefaults[typeKey]
+      let list = Array.isArray(raw) 
+        ? [...raw] 
+        : (raw && typeof raw === 'object' && (raw as any).title) 
+          ? [{ id: 'default', ...(raw as any) }] 
+          : []
+      
+      list.push({
+        id: Math.random().toString(36).substring(2, 9),
+        title: '',
+        hours: '',
+        amount: ''
+      })
+
+      return {
+        ...prev,
+        quickAddDefaults: {
+          ...currentDefaults,
+          [typeKey]: list
+        }
+      }
+    })
+  }
+
+  function removePreset(typeKey: string, presetId: string) {
+    setSettings(prev => {
+      const currentDefaults = prev.quickAddDefaults || {}
+      const raw = currentDefaults[typeKey]
+      let list = Array.isArray(raw) 
+        ? [...raw] 
+        : (raw && typeof raw === 'object' && (raw as any).title) 
+          ? [{ id: 'default', ...(raw as any) }] 
+          : []
+      
+      list = list.filter(item => item.id !== presetId)
+
+      return {
+        ...prev,
+        quickAddDefaults: {
+          ...currentDefaults,
+          [typeKey]: list
         }
       }
     })
@@ -94,11 +154,13 @@ export function CalendarSettingsDialog() {
   const quickAddTypes = [
     { key: 'overtime', label: 'اضافه کار', hasHours: true },
     { key: 'leave_hourly', label: 'مرخصی ساعتی', hasHours: true },
-    { key: 'financial', label: 'مالی', hasAmount: true },
-    { key: 'work_log', label: 'گزارش کار', hasHours: true },
-    { key: 'task', label: 'کار' },
+    { key: 'leave_daily', label: 'مرخصی روزانه' },
+    { key: 'leave_sick', label: 'مرخصی استعلاجی' },
+    { key: 'financial', label: 'مالی / هزینه و درآمد', hasAmount: true },
+    { key: 'work_log', label: 'گزارش کار روزانه', hasHours: true },
+    { key: 'task', label: 'کار / وظیفه' },
     { key: 'event', label: 'رویداد شخصی' },
-    { key: 'on_call', label: 'کشیک' },
+    { key: 'on_call', label: 'کشیک / آن‌کال' },
   ]
 
   return (
@@ -181,47 +243,82 @@ export function CalendarSettingsDialog() {
             <TabsContent value="defaults" className="py-4">
               <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
                 {quickAddTypes.map(type => {
-                  const currentObj = settings.quickAddDefaults?.[type.key] || {}
+                  const raw = settings.quickAddDefaults?.[type.key]
+                  const presets = Array.isArray(raw) 
+                    ? raw 
+                    : (raw && typeof raw === 'object' && (raw as any).title) 
+                      ? [{ id: 'default', ...(raw as any) }] 
+                      : []
+                  
                   return (
-                    <div key={type.key} className="space-y-2 p-3 rounded-lg border border-border-subtle bg-surface/50">
-                      <Label className="text-sm font-bold text-accent">{type.label}</Label>
-                      <div className="flex gap-2">
-                        <div className="flex-1 space-y-1">
-                          <Label className="text-xs text-foreground-muted">عنوان پیش‌فرض</Label>
-                          <Input 
-                            value={currentObj.title || ''} 
-                            onChange={e => updateDefault(type.key, 'title', e.target.value)}
-                            placeholder={type.label}
-                            className="h-8 text-sm"
-                          />
-                        </div>
-                        {type.hasHours && (
-                          <div className="w-20 space-y-1">
-                            <Label className="text-xs text-foreground-muted">ساعت</Label>
-                            <Input 
-                              type="number"
-                              dir="ltr"
-                              value={currentObj.hours || ''} 
-                              onChange={e => updateDefault(type.key, 'hours', e.target.value)}
-                              placeholder="0"
-                              className="h-8 text-sm text-center"
-                            />
-                          </div>
-                        )}
-                        {type.hasAmount && (
-                          <div className="w-28 space-y-1">
-                            <Label className="text-xs text-foreground-muted">مبلغ</Label>
-                            <Input 
-                              type="number"
-                              dir="ltr"
-                              value={currentObj.amount || ''} 
-                              onChange={e => updateDefault(type.key, 'amount', e.target.value)}
-                              placeholder="0"
-                              className="h-8 text-sm text-center"
-                            />
-                          </div>
-                        )}
+                    <div key={type.key} className="space-y-3 p-3 rounded-lg border border-border-subtle bg-surface/50">
+                      <div className="flex justify-between items-center">
+                        <Label className="text-sm font-bold text-accent">{type.label}</Label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => addPreset(type.key)}
+                          className="h-6 w-6 text-accent hover:bg-accent/10"
+                        >
+                          <Plus className="size-3.5" />
+                        </Button>
                       </div>
+
+                      {presets.length === 0 ? (
+                        <p className="text-[10px] text-foreground-muted">هیچ پیش‌فرضی ثبت نشده است.</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {presets.map((preset) => (
+                            <div key={preset.id} className="flex gap-2 items-end bg-background/40 p-2 rounded-md border border-border/40">
+                              <div className="flex-1 space-y-1">
+                                <Label className="text-[10px] text-foreground-muted">عنوان پیش‌فرض</Label>
+                                <Input 
+                                  value={preset.title || ''} 
+                                  onChange={e => updatePreset(type.key, preset.id, 'title', e.target.value)}
+                                  placeholder={type.label}
+                                  className="h-8 text-xs"
+                                />
+                              </div>
+                              {type.hasHours && (
+                                <div className="w-20 space-y-1">
+                                  <Label className="text-[10px] text-foreground-muted">ساعت</Label>
+                                  <Input 
+                                    type="number"
+                                    dir="ltr"
+                                    value={preset.hours || ''} 
+                                    onChange={e => updatePreset(type.key, preset.id, 'hours', e.target.value)}
+                                    placeholder="0"
+                                    className="h-8 text-xs text-center"
+                                  />
+                                </div>
+                              )}
+                              {type.hasAmount && (
+                                <div className="w-28 space-y-1">
+                                  <Label className="text-[10px] text-foreground-muted">مبلغ</Label>
+                                  <Input 
+                                    type="number"
+                                    dir="ltr"
+                                    value={preset.amount || ''} 
+                                    onChange={e => updatePreset(type.key, preset.id, 'amount', e.target.value)}
+                                    placeholder="0"
+                                    className="h-8 text-xs text-center"
+                                  />
+                                </div>
+                              )}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={() => removePreset(type.key, preset.id)}
+                                className="h-8 w-8 text-critical hover:bg-critical/10"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )
                 })}

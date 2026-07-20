@@ -8,8 +8,11 @@ import { useTheme } from '@/shared/ThemeProvider'
 import { BlurView } from 'expo-blur'
 import { useUIBuilderStore } from '../stores/ui-builder'
 
+import { useConfigStore } from '../stores/config'
+
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const { theme, isDark } = useTheme()
+  const isModuleEnabled = useConfigStore((s) => s.isModuleEnabled)
 
   const styles = StyleSheet.create({
     containerWrapper: {
@@ -64,6 +67,20 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
                 ? options.title
                 : route.name
 
+            // Check if module is disabled
+            const routeModuleMap: Record<string, string> = {
+              'شیفت‌ها': 'calendar_roster',
+              'تقویم': 'calendar_roster',
+              'تقویم زندگی': 'calendar_roster',
+              'گفتگو': 'chat',
+              'تیکت‌ها': 'tickets',
+              'اعلان‌ها': 'safety',
+            }
+            const moduleId = routeModuleMap[route.name]
+            if (moduleId && !isModuleEnabled(moduleId)) {
+              return null
+            }
+
             const isFocused = state.index === index
 
             const onPress = () => {
@@ -103,7 +120,7 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
               iconName = iconMap[menuItem.icon] || (menuItem.icon as any) || 'help'
             } else {
               if (route.name === 'داشبورد') iconName = 'home'
-              if (route.name === 'شیفت‌ها') iconName = 'schedule'
+              if (route.name === 'شیفت‌ها' || route.name === 'تقویم' || route.name === 'تقویم زندگی') iconName = 'schedule'
               if (route.name === 'گفتگو') iconName = 'chat'
               if (route.name === 'اعلان‌ها') iconName = 'notifications'
               if (route.name === 'پروفایل') iconName = 'person'

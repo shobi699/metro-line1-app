@@ -21,6 +21,7 @@ import { API_URL } from '../shared/config'
 import { useTheme } from '../shared/ThemeProvider'
 import { ScreenWrapper } from '../shared/ScreenWrapper'
 import { pickAndUploadImage } from '../shared/uploader'
+import { toFa } from '../shared/jalali'
 
 interface Train {
   id: string
@@ -149,11 +150,64 @@ export function TicketsScreen({ navigation }: any) {
   const [commentText, setCommentText] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
 
+  // Manual Fault Catalog browsing states
+  const [categories, setCategories] = useState<any[]>([])
+  const [codes, setCodes] = useState<any[]>([])
+  const [showManualCodeSelection, setShowManualCodeSelection] = useState(false)
+  const [selectedCatId, setSelectedCatId] = useState('')
+
+  // Add category dynamic modal states
+  const [showAddCatModal, setShowAddCatModal] = useState(false)
+  const [newCatCode, setNewCatCode] = useState('')
+  const [newCatTitle, setNewCatTitle] = useState('')
+  const [isCreatingCat, setIsCreatingCat] = useState(false)
+
+  // Add fault code dynamic modal states
+  const [showAddCodeModal, setShowAddCodeModal] = useState(false)
+  const [newCodeVal, setNewCodeVal] = useState('')
+  const [newCodeTitle, setNewCodeTitle] = useState('')
+  const [newCodePriority, setNewCodePriority] = useState('medium')
+  const [isCreatingCode, setIsCreatingCode] = useState(false)
+
+  // Repair parts dynamic picker states
+  const [allParts, setAllParts] = useState<any[]>([])
+  const [selectedParts, setSelectedParts] = useState<any[]>([])
+  const [partSearch, setPartSearch] = useState('')
+
+  // Add part dynamic modal states
+  const [showAddPartModal, setShowAddPartModal] = useState(false)
+  const [newPartName, setNewPartName] = useState('')
+  const [newPartTrainType, setNewPartTrainType] = useState('both')
+  const [isCreatingPart, setIsCreatingPart] = useState(false)
+
+  const getActiveStepIndex = (status: string) => {
+    switch (status) {
+      case 'submitted':
+      case 'under_review':
+      case 'needs_info':
+      case 'rejected':
+      case 'reopened':
+        return 0
+      case 'approved':
+      case 'deferred':
+        return 1
+      case 'in_repair':
+        return 2
+      case 'repaired':
+        return 3
+      case 'verified_closed':
+        return 4
+      default:
+        return 0
+    }
+  }
+
   const { theme } = useTheme()
 
   useEffect(() => {
     void loadTrains()
     void loadReports()
+    void loadCategories()
   }, [statusFilter, isGlobalOffline])
 
   async function loadCachedReports(filter: string) {
@@ -182,6 +236,191 @@ export function TicketsScreen({ navigation }: any) {
       }
     } catch (err) {
       console.error('Error loading trains:', err)
+    }
+  }
+
+  async function loadCategories() {
+    if (isGlobalOffline) return
+    try {
+      const res = await fetch(`${API_URL}/fault-catalog/categories`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setCategories(json.data || [])
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async function handleCategorySelect(catId: string) {
+    setSelectedCatId(catId)
+    setSelectedFaultCode(null)
+    if (!catId) {
+      setCodes([])
+      return
+    }
+    try {
+      const res = await fetch(`${API_URL}/fault-catalog/codes?categoryId=${catId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const json = await res.json()
+        const codeList = json.data || []
+        setCodes(codeList)
+
+        // Auto-generate code suffix
+        const category = categories.find((c) => c.id === catId)
+        if (category) {
+          let nextNum = 1
+          if (codeList.length > 0) {
+            const numbers = codeList
+              .map((c: any) => {
+                const parts = c.code.split('-')
+                const numStr = parts[parts.length - 1]
+                return parseInt(numStr, 10)
+              })
+              .filter((n: any) => !isNaN(n))
+            if (numbers.length > 0) {
+              nextNum = Math.max(...numbers) + 1
+            }
+          }
+          setNewCodeVal(`${category.code}-${String(nextNum).padStart(3, '0')}`)
+        }
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async function handleCreateCategory() {
+    if (!newCatCode.trim() || !newCatTitle.trim()) {
+      Alert.alert('خطا', 'لطفا شناسه و عنوان دسته‌بندی را تکمیل کنید.')
+      return
+    }
+    setIsCreatingCat(true)
+    try {
+      const res = await fetch(`${API_URL}/fault-catalog/categories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          code: newCatCode.trim().toUpperCase(),
+          title: newCatTitle.trim(),
+          sortOrder: 100,
+        }),
+      })
+      if (res.ok) {
+        const json = await res.json()
+        const newCat = json.data
+        setCategories((prev) => [...prev, newCat].sort((a, b) => a.code.localeCompare(b.code)))
+        setShowAddCatModal(false)
+        setNewCatCode('')
+        setNewCatTitle('')
+        await handleCategorySelect(newCat.id)
+      } else {
+        const json = await res.json()
+        Alert.alert('خطا', json.error || 'خطا در ثبت دسته‌بندی جدید')
+      }
+    } catch {
+      Alert.alert('خطا', 'ارتباط با سرور برقرار نشد.')
+    } finally {
+      setIsCreatingCat(false)
+    }
+  }
+
+  async function handleCreateFaultCode() {
+    if (!newCodeVal.trim() || !newCodeTitle.trim() || !selectedCatId) {
+      Alert.alert('خطا', 'لطفا کادرها را تکمیل کنید.')
+      return
+    }
+    setIsCreatingCode(true)
+    try {
+      const res = await fetch(`${API_URL}/fault-catalog/codes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          code: newCodeVal.trim().toUpperCase(),
+          title: newCodeTitle.trim(),
+          categoryId: selectedCatId,
+          defaultPriority: newCodePriority,
+          requiresWagon: true,
+          safetyCritical: false,
+        }),
+      })
+      if (res.ok) {
+        const json = await res.json()
+        const createdCode = json.data
+        setSelectedFaultCode(createdCode)
+        setPriority(createdCode.defaultPriority)
+        setShowAddCodeModal(false)
+        setNewCodeVal('')
+        setNewCodeTitle('')
+      } else {
+        const json = await res.json()
+        Alert.alert('خطا', json.error || 'خطا در ثبت کد خطای جدید')
+      }
+    } catch {
+      Alert.alert('خطا', 'ارتباط با سرور برقرار نشد.')
+    } finally {
+      setIsCreatingCode(false)
+    }
+  }
+
+  async function loadPartsForRepair() {
+    if (isGlobalOffline) return
+    try {
+      const res = await fetch(`${API_URL}/parts`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setAllParts(json.data || [])
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async function handleCreatePart() {
+    if (!newPartName.trim()) {
+      Alert.alert('خطا', 'لطفا نام قطعه را وارد کنید.')
+      return
+    }
+    setIsCreatingPart(true)
+    try {
+      const res = await fetch(`${API_URL}/parts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          name: newPartName.trim(),
+          trainType: newPartTrainType,
+        }),
+      })
+      if (res.ok) {
+        const json = await res.json()
+        const createdPart = json.data
+        setAllParts((prev) => [...prev, createdPart])
+        setSelectedParts((prev) => [...prev, createdPart])
+        setShowAddPartModal(false)
+        setNewPartName('')
+      } else {
+        const json = await res.json()
+        Alert.alert('خطا', json.error || 'خطا در ثبت قطعه جدید')
+      }
+    } catch {
+      Alert.alert('خطا', 'ارتباط با سرور برقرار نشد.')
+    } finally {
+      setIsCreatingPart(false)
     }
   }
 
@@ -619,8 +858,82 @@ export function TicketsScreen({ navigation }: any) {
                   )}
                 </TouchableOpacity>
 
+                {/* Switch to Manual Selection */}
+                <TouchableOpacity
+                  style={{
+                    flexDirection: 'row-reverse',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: theme.colors.surfaceVariant,
+                    borderWidth: 1,
+                    borderColor: theme.colors.border,
+                    padding: 10,
+                    borderRadius: theme.borderRadius.sm,
+                    marginBottom: 12,
+                    gap: 8
+                  }}
+                  onPress={() => setShowManualCodeSelection(!showManualCodeSelection)}
+                >
+                  <MaterialIcons name="list" size={18} color={theme.colors.onSurface} />
+                  <Text style={{ fontFamily: 'Vazirmatn-Bold', fontSize: 12, color: theme.colors.onSurface }}>
+                    {showManualCodeSelection ? 'پنهان کردن انتخاب دستی کاتالوگ' : 'انتخاب دستی و تعریف کد خطا در کاتالوگ'}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Manual Catalog browser section */}
+                {showManualCodeSelection && (
+                  <View style={{ marginBottom: 12, borderBottomWidth: 1, borderBottomColor: theme.colors.border, paddingBottom: 12 }}>
+                    <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <Text style={styles.label}>دسته‌بندی فالت *</Text>
+                      <TouchableOpacity onPress={() => setShowAddCatModal(true)}>
+                        <Text style={{ fontSize: 10, fontFamily: 'Vazirmatn-Bold', color: '#e53935' }}>+ دسته‌بندی جدید</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 12 }}>
+                      {categories.map((c) => (
+                        <TouchableOpacity
+                          key={c.id}
+                          style={[styles.pickerButton, selectedCatId === c.id && styles.pickerButtonActive]}
+                          onPress={() => handleCategorySelect(c.id)}
+                        >
+                          <Text style={[styles.pickerText, selectedCatId === c.id && styles.pickerTextActive]}>
+                            {c.code} - {c.title}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+
+                    {selectedCatId && (
+                      <>
+                        <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                          <Text style={styles.label}>کد خطا کاتالوگ *</Text>
+                          <TouchableOpacity onPress={() => setShowAddCodeModal(true)}>
+                            <Text style={{ fontSize: 10, fontFamily: 'Vazirmatn-Bold', color: '#e53935' }}>+ کد خطای جدید</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 12 }}>
+                          {codes.map((c) => (
+                            <TouchableOpacity
+                              key={c.id}
+                              style={[styles.pickerButton, selectedFaultCode?.id === c.id && styles.pickerButtonActive]}
+                              onPress={() => {
+                                setSelectedFaultCode(c)
+                                setPriority(c.defaultPriority || 'medium')
+                              }}
+                            >
+                              <Text style={[styles.pickerText, selectedFaultCode?.id === c.id && styles.pickerTextActive]}>
+                                {c.code} - {c.title}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </ScrollView>
+                      </>
+                    )}
+                  </View>
+                )}
+
                 {/* Matched Suggestions */}
-                {matchedSuggestions.length > 0 && (
+                {matchedSuggestions.length > 0 && !showManualCodeSelection && (
                   <View style={{ marginBottom: 12 }}>
                     <Text style={styles.label}>کدهای پیشنهادی کاتالوگ:</Text>
                     {matchedSuggestions.map((s) => (
@@ -723,6 +1036,95 @@ export function TicketsScreen({ navigation }: any) {
           </View>
         </Modal>
 
+        {/* Modal: Add Category */}
+        <Modal visible={showAddCatModal} transparent animationType="slide" onRequestClose={() => setShowAddCatModal(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { maxHeight: '60%' }]}>
+              <Text style={styles.modalTitle}>تعریف دسته‌بندی خطای جدید</Text>
+              
+              <Text style={styles.label}>شناسه دسته‌بندی (مانند HVAC یا BOG) *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="مثال: HVAC"
+                placeholderTextColor={theme.colors.secondary}
+                value={newCatCode}
+                onChangeText={setNewCatCode}
+                autoCapitalize="characters"
+              />
+
+              <Text style={styles.label}>عنوان دسته‌بندی *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="مثال: سیستم تهویه مطبوع"
+                placeholderTextColor={theme.colors.secondary}
+                value={newCatTitle}
+                onChangeText={setNewCatTitle}
+              />
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => setShowAddCatModal(false)}>
+                  <Text style={styles.modalBtnCancelText}>انصراف</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.modalBtn, styles.modalBtnSubmit]} onPress={handleCreateCategory} disabled={isCreatingCat}>
+                  {isCreatingCat ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.modalBtnSubmitText}>ثبت</Text>}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal: Add Fault Code */}
+        <Modal visible={showAddCodeModal} transparent animationType="slide" onRequestClose={() => setShowAddCodeModal(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { maxHeight: '70%' }]}>
+              <Text style={styles.modalTitle}>تعریف کد خطای جدید در کاتالوگ</Text>
+              
+              <Text style={styles.label}>کد خطا *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="مثال: HVAC-001"
+                placeholderTextColor={theme.colors.secondary}
+                value={newCodeVal}
+                onChangeText={setNewCodeVal}
+                autoCapitalize="characters"
+              />
+
+              <Text style={styles.label}>عنوان و شرح خطا *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="مثال: خرابی برد کنترل کولر"
+                placeholderTextColor={theme.colors.secondary}
+                value={newCodeTitle}
+                onChangeText={setNewCodeTitle}
+              />
+
+              <Text style={styles.label}>اولویت پیش‌فرض</Text>
+              <View style={styles.pickerRow}>
+                {['low', 'medium', 'high', 'critical'].map((p) => (
+                  <TouchableOpacity
+                    key={p}
+                    style={[styles.pickerButton, newCodePriority === p && styles.pickerButtonActive]}
+                    onPress={() => setNewCodePriority(p)}
+                  >
+                    <Text style={[styles.pickerText, newCodePriority === p && styles.pickerTextActive]}>
+                      {PRIORITY_LABELS[p]}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => setShowAddCodeModal(false)}>
+                  <Text style={styles.modalBtnCancelText}>انصراف</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.modalBtn, styles.modalBtnSubmit]} onPress={handleCreateFaultCode} disabled={isCreatingCode}>
+                  {isCreatingCode ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.modalBtnSubmitText}>ثبت کد خطا</Text>}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
         {/* Detail Modal */}
         <Modal visible={showDetailModal} transparent animationType="fade" onRequestClose={() => setShowDetailModal(false)}>
           <View style={styles.modalOverlay}>
@@ -760,6 +1162,60 @@ export function TicketsScreen({ navigation }: any) {
                       resizeMode="cover"
                     />
                   )}
+
+                  {/* Step Tracker */}
+                  <View style={{ marginVertical: 12, backgroundColor: theme.colors.surfaceVariant, padding: 12, borderRadius: 8 }}>
+                    <Text style={[styles.label, { marginBottom: 12 }]}>چرخه پیشرفت فالت فنی:</Text>
+                    <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
+                      <View style={{ position: 'absolute', left: 20, right: 20, top: 12, height: 2, backgroundColor: theme.colors.border }} />
+                      <View style={{
+                        position: 'absolute',
+                        right: 20,
+                        top: 12,
+                        height: 2,
+                        backgroundColor: '#ff3b30',
+                        left: 'auto',
+                        width: `${(getActiveStepIndex(selectedReport.status) / 4) * 85}%`
+                      }} />
+
+                      {['ثبت', 'ارجاع', 'تعمیر', 'رفع عیب', 'بستن'].map((lbl, idx) => {
+                        const activeIdx = getActiveStepIndex(selectedReport.status)
+                        const isCompleted = idx < activeIdx
+                        const isActive = idx === activeIdx
+                        
+                        return (
+                          <View key={idx} style={{ alignItems: 'center', flex: 1 }}>
+                            <View style={{
+                              width: 24,
+                              height: 24,
+                              borderRadius: 12,
+                              backgroundColor: isCompleted ? '#ff3b30' : isActive ? theme.colors.surface : theme.colors.border,
+                              borderWidth: 2,
+                              borderColor: (isCompleted || isActive) ? '#ff3b30' : theme.colors.border,
+                              justifyContent: 'center',
+                              alignItems: 'center'
+                            }}>
+                              <Text style={{
+                                color: isCompleted ? '#fff' : isActive ? '#ff3b30' : theme.colors.secondary,
+                                fontSize: 9,
+                                fontWeight: 'bold'
+                              }}>
+                                {isCompleted ? '✓' : toFa(idx + 1)}
+                              </Text>
+                            </View>
+                            <Text style={{
+                              fontFamily: 'Vazirmatn-Bold',
+                              fontSize: 9,
+                              color: isActive ? '#ff3b30' : theme.colors.onSurfaceVariant,
+                              marginTop: 4
+                            }}>
+                              {lbl}
+                            </Text>
+                          </View>
+                        )
+                      })}
+                    </View>
+                  </View>
 
                   {/* Specifications */}
                   <View style={{ backgroundColor: theme.colors.surfaceVariant, padding: 12, borderRadius: 8, gap: 8, marginBottom: 12 }}>
@@ -811,7 +1267,9 @@ export function TicketsScreen({ navigation }: any) {
                           onPress={() => {
                             setRootCause('')
                             setActionsTaken('')
-                            setPartsUsed('')
+                            setSelectedParts([])
+                            setPartSearch('')
+                            void loadPartsForRepair()
                             setShowRepairModal(true)
                           }}
                         >
@@ -910,14 +1368,86 @@ export function TicketsScreen({ navigation }: any) {
                   onChangeText={setActionsTaken}
                 />
 
-                <Text style={styles.label}>قطعات مصرفی (فرمت متنی)</Text>
+                <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <Text style={styles.label}>قطعات یدکی مصرفی *</Text>
+                  <TouchableOpacity onPress={() => setShowAddPartModal(true)}>
+                    <Text style={{ fontSize: 10, fontFamily: 'Vazirmatn-Bold', color: '#e53935' }}>+ ثبت قطعه جدید</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Selected parts chips */}
+                {selectedParts.length > 0 && (
+                  <View style={{ flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                    {selectedParts.map((p) => (
+                      <TouchableOpacity
+                        key={p.id}
+                        style={{ flexDirection: 'row-reverse', alignItems: 'center', backgroundColor: '#e5393520', borderWidth: 1, borderColor: '#e5393540', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, gap: 4 }}
+                        onPress={() => setSelectedParts(selectedParts.filter((item) => item.id !== p.id))}
+                      >
+                        <Text style={{ color: '#e53935', fontSize: 10, fontFamily: 'Vazirmatn-Bold' }}>{p.name}</Text>
+                        <MaterialIcons name="close" size={12} color="#e53935" />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+
+                {/* Parts Search bar */}
                 <TextInput
-                  style={styles.input}
-                  placeholder="مثال: واشر ترمز، سنسور دما..."
+                  style={[styles.input, { marginBottom: 6 }]}
+                  placeholder="جستجوی قطعات فنی..."
                   placeholderTextColor={theme.colors.secondary}
-                  value={partsUsed}
-                  onChangeText={setPartsUsed}
+                  value={partSearch}
+                  onChangeText={setPartSearch}
                 />
+
+                {/* Parts compatibility filter warning banner */}
+                <View style={{ backgroundColor: 'rgba(88, 86, 214, 0.05)', padding: 8, borderRadius: 6, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(88, 86, 214, 0.15)' }}>
+                  <Text style={{ fontSize: 9, color: '#5856d6', fontFamily: 'Vazirmatn-Medium', textAlign: 'right' }}>
+                    نمایش قطعات سازگار با سری قطار {selectedReport?.train?.fleetSeries || ''} ({selectedReport?.train?.fleetSeries?.toUpperCase().startsWith('AC') ? 'نوع AC' : 'نوع DC'})
+                  </Text>
+                </View>
+
+                {/* Filtered parts picker list */}
+                <ScrollView style={{ maxHeight: 120, borderWidth: 1, borderColor: theme.colors.outlineVariant, borderRadius: 6, padding: 8, marginBottom: 16, backgroundColor: theme.colors.surfaceVariant }}>
+                  {allParts
+                    .filter((p) => {
+                      const isAC = selectedReport?.train?.fleetSeries?.toUpperCase().startsWith('AC')
+                      const matchesSearch = p.name.toLowerCase().includes(partSearch.toLowerCase())
+                      if (isAC) {
+                        return (p.trainType === 'AC' || p.trainType === 'both') && matchesSearch
+                      } else {
+                        return (p.trainType === 'DC' || p.trainType === 'both') && matchesSearch
+                      }
+                    })
+                    .map((p) => {
+                      const isSelected = selectedParts.some((item) => item.id === p.id)
+                      return (
+                        <TouchableOpacity
+                          key={p.id}
+                          style={{
+                            flexDirection: 'row-reverse',
+                            justifyContent: 'space-between',
+                            paddingVertical: 8,
+                            borderBottomWidth: 1,
+                            borderBottomColor: theme.colors.border,
+                            alignItems: 'center'
+                          }}
+                          onPress={() => {
+                            if (isSelected) {
+                              setSelectedParts(selectedParts.filter((item) => item.id !== p.id))
+                            } else {
+                              setSelectedParts([...selectedParts, p])
+                            }
+                          }}
+                        >
+                          <Text style={{ fontSize: 11, color: isSelected ? '#ff3b30' : theme.colors.onSurface, fontFamily: isSelected ? 'Vazirmatn-Bold' : 'Vazirmatn-Regular' }}>
+                            {p.name}
+                          </Text>
+                          {isSelected && <MaterialIcons name="check" size={14} color="#ff3b30" />}
+                        </TouchableOpacity>
+                      )
+                    })}
+                </ScrollView>
 
                 <View style={styles.modalButtons}>
                   <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => setShowRepairModal(false)}>
@@ -930,7 +1460,7 @@ export function TicketsScreen({ navigation }: any) {
                         Alert.alert('خطا', 'ثبت علت ریشه‌ای و اقدامات انجام‌شده الزامی است.')
                         return
                       }
-                      const partsList = partsUsed.trim() ? partsUsed.split(',').map((p) => p.trim()) : []
+                      const partsList = selectedParts.map((p) => p.name)
                       executeTransition(selectedReport!.id, 'repair_complete', {
                         rootCause: rootCause.trim(),
                         actionsTaken: actionsTaken.trim(),
@@ -942,6 +1472,52 @@ export function TicketsScreen({ navigation }: any) {
                   </TouchableOpacity>
                 </View>
               </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal: Add Part */}
+        <Modal visible={showAddPartModal} transparent animationType="slide" onRequestClose={() => setShowAddPartModal(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { maxHeight: '60%' }]}>
+              <Text style={styles.modalTitle}>ثبت قطعه یدکی جدید در کاتالوگ</Text>
+              
+              <Text style={styles.label}>نام قطعه *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="مثال: فیلتر کولر AC"
+                placeholderTextColor={theme.colors.secondary}
+                value={newPartName}
+                onChangeText={setNewPartName}
+              />
+
+              <Text style={styles.label}>نوع قطار سازگار</Text>
+              <View style={styles.pickerRow}>
+                {[
+                  { key: 'AC', label: 'قطار AC' },
+                  { key: 'DC', label: 'قطار DC' },
+                  { key: 'both', label: 'هر دو' },
+                ].map((t) => (
+                  <TouchableOpacity
+                    key={t.key}
+                    style={[styles.pickerButton, newPartTrainType === t.key && styles.pickerButtonActive]}
+                    onPress={() => setNewPartTrainType(t.key)}
+                  >
+                    <Text style={[styles.pickerText, newPartTrainType === t.key && styles.pickerTextActive]}>
+                      {t.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => setShowAddPartModal(false)}>
+                  <Text style={styles.modalBtnCancelText}>انصراف</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.modalBtn, styles.modalBtnSubmit]} onPress={handleCreatePart} disabled={isCreatingPart}>
+                  {isCreatingPart ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.modalBtnSubmitText}>ثبت</Text>}
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>

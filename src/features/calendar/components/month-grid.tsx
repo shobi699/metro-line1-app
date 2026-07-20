@@ -11,14 +11,39 @@ interface DayCellProps {
   onSelect: (date: string) => void
 }
 
+function getEventEmoji(type: string): string {
+  switch (type) {
+    case 'overtime':
+    case 'work_log':
+      return '⏱️'
+    case 'financial':
+      return '💰'
+    case 'leave_sick':
+    case 'leave_daily':
+    case 'leave_hourly':
+      return '🌴'
+    case 'on_call':
+      return '📞'
+    case 'note':
+      return '📝'
+    case 'birthday':
+      return '🎂'
+    default:
+      return '📌'
+  }
+}
+
 function DayCell({ day, isToday, isSelected, onSelect }: DayCellProps) {
   const jDayNum = Number(day.jalali.slice(8))
   const isFriday = day.weekday === 6
   const isOffHoliday = day.holidays.some((h) => h.isOffDay)
   const meta = day.shift ? SHIFT_META[day.shift.code] : null
-  const dotEvents = day.events.filter((e) => e.type !== 'task')
   const tasks = day.events.filter((e) => e.type === 'task')
-  const extraCount = Math.max(0, dotEvents.length - 2)
+  const nonTaskEvents = day.events.filter((e) => e.type !== 'task')
+  const uniqueEmojis = Array.from(new Set(nonTaskEvents.map((e) => getEventEmoji(e.type))))
+  if (day.trips && day.trips.length > 0) {
+    uniqueEmojis.unshift('🚇')
+  }
   const holidayTitle = day.holidays.map((h) => h.title).join('، ')
 
   const ariaParts = [
@@ -83,26 +108,30 @@ function DayCell({ day, isToday, isSelected, onSelect }: DayCellProps) {
       )}
 
       {holidayTitle && (
-        <div className="mt-0.5 truncate text-[9px] text-critical" title={holidayTitle}>
+        <div
+          className={cn(
+            'mt-0.5 truncate text-[9px] font-medium leading-tight',
+            isOffHoliday ? 'text-critical font-bold' : 'text-amber-500/90 dark:text-amber-400/90',
+          )}
+          title={holidayTitle}
+        >
           {holidayTitle}
         </div>
       )}
 
-      <div className="mt-auto flex items-center gap-1 pt-0.5">
-        {dotEvents.slice(0, 2).map((e) => (
-          <span
-            key={e.id}
-            className="size-1.5 rounded-full bg-evt-personal"
-            title={e.title}
-          />
+      <div className="mt-auto flex items-center gap-1.5 pt-0.5 flex-wrap w-full">
+        {uniqueEmojis.slice(0, 3).map((emoji, idx) => (
+          <span key={idx} className="text-xs" title="ثبت شده">
+            {emoji}
+          </span>
         ))}
-        {extraCount > 0 && (
-          <span className="text-[9px] text-foreground-muted">+{toFa(extraCount)}</span>
+        {uniqueEmojis.length > 3 && (
+          <span className="text-[9px] text-foreground-muted">+{toFa(uniqueEmojis.length - 3)}</span>
         )}
         {tasks.length > 0 && (
           <span
             className={cn(
-              'text-[10px]',
+              'text-[10px] ms-auto',
               tasks.every((t) => t.isDone) ? 'text-success' : 'text-evt-task',
             )}
             title={tasks.map((t) => t.title).join('، ')}

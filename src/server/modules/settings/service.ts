@@ -772,6 +772,24 @@ export const DEFAULT_SETTINGS = [
     defaultValue: 'error',
     options: ['debug', 'info', 'warn', 'error'],
     category: 'logging',
+  },
+  {
+    key: 'ideas.baseline_score',
+    label: 'امتیاز پایه ثبت ایده',
+    description: 'امتیاز اولیه‌ای که به محض ثبت ایده غیرناشناس به پرسنل تعلق می‌گیرد.',
+    type: 'number',
+    value: 5,
+    defaultValue: 5,
+    category: 'ideas',
+  },
+  {
+    key: 'ideas.max_score',
+    label: 'حداکثر امتیاز ارزیابی ایده',
+    description: 'حداکثر امتیازی که مدیر می‌تواند در ارزیابی عملکرد به این ایده اختصاص دهد.',
+    type: 'number',
+    value: 20,
+    defaultValue: 20,
+    category: 'ideas',
   }
 ]
 

@@ -31,7 +31,8 @@ import {
   Check, 
   ArrowRight,
   EyeOff,
-  UserCheck
+  UserCheck,
+  Plus
 } from 'lucide-react-native'
 
 interface Category {
@@ -83,6 +84,7 @@ interface FeedbackItem {
   category?: { title: string; key: string } | null
   messages?: FeedbackMessage[]
   logs?: FeedbackLog[]
+  formData?: any
 }
 
 // Helper to format numbers to Farsi digits
@@ -106,6 +108,7 @@ export function FeedbackScreen({ navigation }: any) {
   const [ideas, setIdeas] = useState<FeedbackItem[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const [ideasSubTab, setIdeasSubTab] = useState<'all' | 'my'>('all')
 
   // Feedback Submission Form
   const [showForm, setShowForm] = useState(false)
@@ -826,6 +829,73 @@ export function FeedbackScreen({ navigation }: any) {
       fontSize: 12,
       marginTop: 8,
       fontFamily: theme.typography.bodyMd.fontFamily,
+    },
+    subTabContainer: {
+      flexDirection: 'row-reverse',
+      backgroundColor: theme.colors.surfaceContainerLow,
+      borderRadius: theme.borderRadius.md,
+      padding: 3,
+      marginBottom: 10,
+    },
+    subTabButton: {
+      flex: 1,
+      paddingVertical: 6,
+      alignItems: 'center',
+      borderRadius: theme.borderRadius.sm,
+    },
+    subTabButtonActive: {
+      backgroundColor: theme.colors.surfaceContainerHighest,
+      borderWidth: 0.5,
+      borderColor: theme.colors.border,
+    },
+    subTabText: {
+      fontSize: 10.5,
+      color: theme.colors.onSurfaceVariant,
+      fontFamily: theme.typography.captionSm.fontFamily,
+      fontWeight: 'bold',
+    },
+    subTabTextActive: {
+      color: theme.colors.onSurface,
+      fontWeight: '900',
+    },
+    scoreRow: {
+      flexDirection: 'row-reverse',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 6,
+      paddingTop: 6,
+      borderTopWidth: 0.5,
+      borderTopColor: theme.colors.border + '30',
+    },
+    scoreBadge: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      borderWidth: 0.5,
+      borderColor: theme.colors.border + '20',
+    },
+    scoreText: {
+      fontSize: 8.5,
+      fontWeight: 'bold',
+      fontFamily: theme.typography.captionSm.fontFamily,
+    },
+    chatButton: {
+      flexDirection: 'row-reverse',
+      alignItems: 'center',
+      gap: 4,
+      alignSelf: 'flex-start',
+      marginTop: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    chatButtonText: {
+      fontSize: 9.5,
+      color: theme.colors.primary,
+      fontWeight: 'bold',
+      fontFamily: theme.typography.captionSm.fontFamily,
     }
   })
 
@@ -1137,43 +1207,122 @@ export function FeedbackScreen({ navigation }: any) {
 
         {/* TAB Content 3: Idea Board */}
         {activeTab === 'ideas' && (
-          loading ? (
-            <View style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator size="large" color={theme.colors.primary} /></View>
-          ) : (
-            <FlatList
-              data={ideas}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.listContainer}
-              renderItem={({ item }) => (
-                <View style={styles.card}>
-                  <View style={styles.cardHeader}>
-                    <Text style={styles.cardTitle}>{item.title}</Text>
-                    <View style={[styles.statusBadge, { backgroundColor: theme.colors.primary + '10' }]}>
-                      <Text style={[styles.statusText, { color: theme.colors.primary }]}>پیشنهاد عمومی</Text>
+          <View style={{ flex: 1 }}>
+            {/* Direct Idea Submission Button */}
+            <TouchableOpacity 
+              style={styles.newButton}
+              onPress={() => {
+                setForm({
+                  type: 'suggestion',
+                  categoryId: categories[0]?.id || '',
+                  title: '',
+                  body: '',
+                  isAnonymous: false,
+                  priority: 'normal',
+                  isPublicIdea: true,
+                })
+                setShowForm(true)
+              }}
+            >
+              <Plus size={16} color={theme.colors.onPrimary} />
+              <Text style={styles.newButtonText}>ثبت ایده جدید</Text>
+            </TouchableOpacity>
+
+            {/* Sub Tabs Selector */}
+            <View style={styles.subTabContainer}>
+              <TouchableOpacity 
+                style={[styles.subTabButton, ideasSubTab === 'all' && styles.subTabButtonActive]}
+                onPress={() => setIdeasSubTab('all')}
+              >
+                <Text style={[styles.subTabText, ideasSubTab === 'all' && styles.subTabTextActive]}>همه ایده‌ها</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.subTabButton, ideasSubTab === 'my' && styles.subTabButtonActive]}
+                onPress={() => setIdeasSubTab('my')}
+              >
+                <Text style={[styles.subTabText, ideasSubTab === 'my' && styles.subTabTextActive]}>ایده‌های من</Text>
+              </TouchableOpacity>
+            </View>
+
+            {loading ? (
+              <View style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator size="large" color={theme.colors.primary} /></View>
+            ) : (
+              <FlatList
+                data={ideasSubTab === 'all' ? ideas : myFeedbacks.filter(item => item.type === 'suggestion' || item.isPublicIdea === true)}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.listContainer}
+                renderItem={({ item }) => {
+                  const bScore = item.formData?.baselineScore
+                  const mScore = item.formData?.managerScore
+                  
+                  return (
+                    <View style={styles.card}>
+                      <View style={styles.cardHeader}>
+                        <Text style={styles.cardTitle}>{item.title}</Text>
+                        <View style={[styles.statusBadge, { backgroundColor: (ideasSubTab === 'my' ? (statusColor[item.status] ?? theme.colors.primary) : theme.colors.primary) + '10' }]}>
+                          <Text style={[styles.statusText, { color: ideasSubTab === 'my' ? (statusColor[item.status] ?? theme.colors.primary) : theme.colors.primary }]}>
+                            {ideasSubTab === 'my' ? (statusLabel[item.status] ?? 'پیشنهاد عمومی') : 'پیشنهاد عمومی'}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text style={styles.cardBody}>{item.body}</Text>
+                      
+                      {/* Score Panel display */}
+                      {(bScore || mScore) && !item.isAnonymous && (
+                        <View style={styles.scoreRow}>
+                          {!!bScore && (
+                            <View style={[styles.scoreBadge, { backgroundColor: theme.colors.success + '15' }]}>
+                              <Text style={[styles.scoreText, { color: theme.colors.success }]}>ثبت ایده: +{toFa(bScore)} امتیاز</Text>
+                            </View>
+                          )}
+                          {!!mScore && (
+                            <View style={[styles.scoreBadge, { backgroundColor: theme.colors.warning + '15' }]}>
+                              <Text style={[styles.scoreText, { color: theme.colors.warning }]}>ارزیابی مدیر: +{toFa(mScore)} امتیاز</Text>
+                            </View>
+                          )}
+                          {(!!bScore || !!mScore) && (
+                            <View style={[styles.scoreBadge, { backgroundColor: theme.colors.primary + '15' }]}>
+                              <Text style={[styles.scoreText, { color: theme.colors.primary }]}>مجموع: +{toFa((bScore || 0) + (mScore || 0))} امتیاز</Text>
+                            </View>
+                          )}
+                        </View>
+                      )}
+
+                      <View style={styles.cardFooter}>
+                        <Text style={styles.cardTime}>ثبت: {toFa(new Date(item.createdAt).toLocaleDateString('fa-IR'))}</Text>
+                        
+                        {ideasSubTab === 'all' ? (
+                          <TouchableOpacity 
+                            style={[styles.voteButton, item.ideaVotesCount > 0 && styles.voteButtonActive]}
+                            onPress={() => handleVoteIdea(item.id)}
+                          >
+                            <ThumbsUp size={12} color={theme.colors.primary} />
+                            <Text style={styles.voteText}>{toFa(item.ideaVotesCount)} موافق</Text>
+                          </TouchableOpacity>
+                        ) : (
+                          <TouchableOpacity 
+                            style={styles.chatButton}
+                            onPress={() => openConversation(item)}
+                          >
+                            <MessageSquare size={10} color={theme.colors.primary} />
+                            <Text style={styles.chatButtonText}>گفتگو با مدیر</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
                     </View>
+                  )
+                }}
+                ListEmptyComponent={
+                  <View style={{ alignItems: 'center', marginTop: 50 }}>
+                    <Star size={40} color={theme.colors.onSurfaceVariant} />
+                    <Text style={styles.emptyText}>
+                      {ideasSubTab === 'all' ? 'پیشنهاد عمومی فعالی یافت نشد.' : 'ایده ثبت شده‌ای ندارید.'}
+                    </Text>
                   </View>
-                  <Text style={styles.cardBody}>{item.body}</Text>
-                  <View style={styles.cardFooter}>
-                    <Text style={styles.cardTime}>ثبت: {toFa(new Date(item.createdAt).toLocaleDateString('fa-IR'))}</Text>
-                    
-                    <TouchableOpacity 
-                      style={[styles.voteButton, item.ideaVotesCount > 0 && styles.voteButtonActive]}
-                      onPress={() => handleVoteIdea(item.id)}
-                    >
-                      <ThumbsUp size={12} color={theme.colors.primary} />
-                      <Text style={styles.voteText}>{toFa(item.ideaVotesCount)} موافق</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-              ListEmptyComponent={
-                <View style={{ alignItems: 'center', marginTop: 50 }}>
-                  <Star size={40} color={theme.colors.onSurfaceVariant} />
-                  <Text style={styles.emptyText}>پیشنهاد عمومی فعالی یافت نشد.</Text>
-                </View>
-              }
-            />
-          )
+                }
+              />
+            )}
+          </View>
         )}
 
         {/* 1. CHAT MESSAGE THREAD MODAL */}

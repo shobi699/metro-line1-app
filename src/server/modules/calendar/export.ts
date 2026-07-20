@@ -48,12 +48,20 @@ export async function exportMonthToExcel(params: {
     'وضعیت': d.shift?.forecast ? 'پیش‌بینی سیکل' : d.shift ? 'قطعی' : '',
     'تعطیلی/مناسبت': d.holidays.map((h) => h.title).join('، '),
     'رویدادها': d.events
-      .filter((e) => e.type !== 'task')
-      .map((e) => e.title)
+      .filter((e) => !['task', 'financial', 'work_log', 'overtime'].includes(e.type))
+      .map((e) => `${e.title}${e.description ? ` (${e.description})` : ''}`)
       .join('، '),
     'کارها': d.events
       .filter((e) => e.type === 'task')
-      .map((e) => `${e.isDone ? '✔' : '☐'} ${e.title}`)
+      .map((e) => `${e.isDone ? '✔' : '☐'} ${e.title}${e.description ? ` (${e.description})` : ''}`)
+      .join('، '),
+    'اضافه کار / کارکرد': d.events
+      .filter((e) => e.type === 'overtime' || e.type === 'work_log')
+      .map((e) => `${e.title}: ${(e.metadata as any)?.hours || 0} ساعت${e.description ? ` (${e.description})` : ''}`)
+      .join('، '),
+    'تراکنش‌های مالی': d.events
+      .filter((e) => e.type === 'financial')
+      .map((e) => `${e.title}: ${(e.metadata as any)?.isIncome !== false ? '+' : '-'} ${Number((e.metadata as any)?.amount || 0).toLocaleString()} تومان${e.description ? ` (${e.description})` : ''}`)
       .join('، '),
     'رویداد سازمانی': d.orgEvents
       .map((e) => `${e.mandatory ? '(الزامی) ' : ''}${e.title}`)
@@ -67,23 +75,27 @@ export async function exportMonthToExcel(params: {
     { 'شاخص': 'اداری', 'مقدار': insights.stats.counts.office ?? 0 },
     { 'شاخص': 'آف', 'مقدار': insights.stats.counts.off ?? 0 },
     { 'شاخص': 'روزهای استراحت (با تعطیلات)', 'مقدار': insights.stats.offDays },
-    { 'شاخص': 'ساعات کارکرد تقریبی', 'مقدار': insights.stats.workHours },
+    { 'شاخص': 'ساعات کارکرد تقریبی شیفت', 'مقدار': insights.stats.workHours },
+    { 'شاخص': 'مجموع ساعات اضافه کار ثبت شده', 'مقدار': insights.stats.overtimeTotalHours },
+    { 'شاخص': 'تراز مالی ماه (تومان)', 'مقدار': insights.stats.workLogTotalAmount },
   ]
 
   const wb = XLSX.utils.book_new()
 
   const daysSheet = XLSX.utils.json_to_sheet(rows)
   daysSheet['!cols'] = [
-    { wch: 12 },
-    { wch: 10 },
-    { wch: 12 },
-    { wch: 8 },
-    { wch: 16 },
-    { wch: 12 },
-    { wch: 24 },
-    { wch: 30 },
-    { wch: 30 },
-    { wch: 30 },
+    { wch: 12 }, // تاریخ جلالی
+    { wch: 10 }, // روز هفته
+    { wch: 12 }, // تاریخ میلادی
+    { wch: 8 },  // شیفت
+    { wch: 16 }, // ساعت
+    { wch: 12 }, // وضعیت
+    { wch: 24 }, // تعطیلی/مناسبت
+    { wch: 30 }, // رویدادها
+    { wch: 30 }, // کارها
+    { wch: 35 }, // اضافه کار / کارکرد
+    { wch: 35 }, // تراکنش‌های مالی
+    { wch: 30 }, // رویداد سازمانی
   ]
   XLSX.utils.book_append_sheet(wb, daysSheet, monthTitle.slice(0, 31))
 
@@ -128,12 +140,13 @@ export async function exportDayStatusToExcel(where: any): Promise<ArrayBuffer> {
   }
 
   const rows = events.map((e, index) => {
-    const cf = (e.metadata as Record<string, unknown> | null) || {}
+    const cf = (e.metadata as Record<string, any> | null) || {}
     let amountOrHours = ''
     if (cf.hours !== undefined) {
       amountOrHours = toFa(String(cf.hours)) + ' ساعت'
     } else if (cf.amount !== undefined) {
-      amountOrHours = toFa(String(cf.amount)) + ' تومان'
+      const prefix = cf.isIncome !== false ? '+' : '−'
+      amountOrHours = prefix + toFa(Number(cf.amount).toLocaleString()) + ' تومان'
     }
 
     return [
@@ -143,7 +156,7 @@ export async function exportDayStatusToExcel(where: any): Promise<ArrayBuffer> {
       typeMap[e.type] || e.type,
       toFa(jdate(e.startAt).format('YYYY/MM/DD')),
       amountOrHours,
-      e.title,
+      e.title + (e.description ? ` (توضیحات: ${e.description})` : ''),
     ]
   })
 

@@ -71,6 +71,29 @@ export async function createFeedback(data: {
   const slaFirstDue = new Date(now.getTime() + firstResponseHours * 60 * 60 * 1000)
   const slaResolveDue = new Date(now.getTime() + resolveHours * 60 * 60 * 1000)
 
+  // Idea baseline score calculation
+  let baselineScore = 0
+  const isIdea = data.type === 'suggestion' || data.isPublicIdea === true
+  
+  if (isIdea && !isAnonymous && data.userId) {
+    try {
+      const setting = await prisma.setting.findUnique({
+        where: { key: 'ideas.baseline_score' }
+      })
+      if (setting && setting.isEnabled) {
+        baselineScore = Number(JSON.parse(setting.value))
+      } else {
+        baselineScore = 5
+      }
+    } catch {
+      baselineScore = 5
+    }
+  }
+
+  const finalFormData = baselineScore > 0 
+    ? { ...(data.formData as object || {}), baselineScore }
+    : (data.formData ?? undefined)
+
   const feedback = await prisma.feedback.create({
     data: {
       userId: data.userId,
@@ -81,7 +104,7 @@ export async function createFeedback(data: {
       feedbackNo,
       categoryId: data.categoryId || null,
       priority: data.priority || 'normal',
-      formData: data.formData ?? undefined,
+      formData: finalFormData ? (finalFormData as any) : undefined,
       attachments: data.attachments ?? undefined,
       anonToken,
       slaFirstDue,
@@ -94,6 +117,63 @@ export async function createFeedback(data: {
       category: { select: { title: true, key: true } },
     },
   })
+
+  // Log baseline score to Performance Evaluation
+  if (baselineScore > 0 && !isAnonymous && data.userId) {
+    try {
+      // Ensure competency exists
+      await prisma.competency.upsert({
+        where: { id: 'innovation' },
+        update: {},
+        create: {
+          id: 'innovation',
+          name: 'نوآوری',
+          weight: 1.5,
+          direction: 'positive'
+        }
+      })
+
+      // Ensure action type exists
+      await prisma.performanceActionType.upsert({
+        where: { id: 'a_idea_submit' },
+        update: { defaultScore: baselineScore },
+        create: {
+          id: 'a_idea_submit',
+          competencyId: 'innovation',
+          title: 'ثبت ایده و پیشنهاد بهبود',
+          defaultScore: baselineScore,
+          maxSeverity: 'L1'
+        }
+      })
+
+      // Calculate periodId
+      const periodId = (() => {
+        const d = new Date()
+        try {
+          const { getCurrentPeriodId } = require('../performance/service')
+          return getCurrentPeriodId()
+        } catch {
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        }
+      })()
+
+      // Create log
+      await prisma.performanceLog.create({
+        data: {
+          employeeId: data.userId,
+          recordedById: data.userId,
+          actionTypeId: 'a_idea_submit',
+          severity: 'L1',
+          scoreValue: baselineScore,
+          note: `امتیاز پایه ثبت ایده: ${data.title}`,
+          periodId,
+          status: 'active',
+        }
+      })
+    } catch (err) {
+      console.error('Failed to log performance score for idea submission:', err)
+    }
+  }
 
   // Create initial log
   await prisma.feedbackLog.create({

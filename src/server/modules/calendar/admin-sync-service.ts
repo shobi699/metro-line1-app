@@ -6,6 +6,40 @@ import { importHolidays, type HolidayImportRow } from './admin-service'
 
 const PERSIAN_HOLIDAY_DB_URL = 'https://raw.githubusercontent.com/samanzamani/PersianHoliday/main/persian_holiday.db'
 
+export function sanitizeHolidayTitle(rawTitle: string): string | null {
+  if (!rawTitle) return null
+  let title = rawTitle.trim()
+
+  // 1. Skip concatenated month dumps (length > 75 or multiple bracket pairs)
+  if (title.length > 75 || (title.match(/\[/g) || []).length > 2) {
+    return null
+  }
+
+  // 2. Remove prepended day + month numbers (e.g., "1 فروردینجشن نوروز", "1 فروردین جشن نوروز", "14 مهرروز جهانی معلم")
+  title = title.replace(/^\d+\s*(?:فروردین|اردیبهشت|خرداد|تیر|مرداد|شهریور|مهر|آبان|آذر|دی|بهمن|اسفند)?\s*/iu, '')
+  title = title.replace(/^[\u0660-\u0669\u06f0-\u06f9]+\s*(?:فروردین|اردیبهشت|خرداد|تیر|مرداد|شهریور|مهر|آبان|آذر|دی|بهمن|اسفند)?\s*/iu, '')
+
+  // 3. Remove Gregorian English bracket tags like "[ September 27 ]" or "[ October 10 ]"
+  title = title.replace(/\s*\[\s*[A-Za-z]+\s+\d+\s*\]/gi, '')
+
+  // 4. Convert Hijri brackets like "[ ۱ شوال ]" to standard Persian parenthesis "(۱ شوال)"
+  title = title.replace(/\s*\[\s*([\u0600-\u06FF\s]+)\s*\]/gi, (_match, inner) => ` (${inner.trim()})`)
+
+  // 5. Fix common concatenated words lacking spaces
+  title = title
+    .replace(/عیدنوروز/g, 'عید نوروز')
+    .replace(/روزبزرگداشت/g, 'روز بزرگداشت')
+    .replace(/روزجهانی/g, 'روز جهانی')
+    .replace(/روزملی/g, 'روز ملی')
+    .replace(/روزدندانپزشک/g, 'روز دندانپزشک')
+
+  // 6. Trim and clean double spaces
+  title = title.replace(/\s+/g, ' ').trim()
+
+  if (!title || title.length < 2) return null
+  return title
+}
+
 export async function syncPersianHolidays(actorId: string, fromYear: number = 1400) {
   const tmpDir = os.tmpdir()
   const dbPath = path.join(tmpDir, `persian_holiday_${Date.now()}.db`)
@@ -29,6 +63,7 @@ export async function syncPersianHolidays(actorId: string, fromYear: number = 14
     })
 
     const rows: HolidayImportRow[] = []
+    const seen = new Set<string>()
 
     for (const row of result.rows) {
       const year = String(row.year).padStart(4, '0')
@@ -36,9 +71,14 @@ export async function syncPersianHolidays(actorId: string, fromYear: number = 14
       const day = String(row.day).padStart(2, '0')
       const jalaliDate = `${year}-${month}-${day}`
       const isOffDay = row.is_holiday === 1
-      const title = String(row.event)
+      const rawTitle = String(row.event)
+      const title = sanitizeHolidayTitle(rawTitle)
       
-      // Basic mapping: If it's a holiday, mark as official. Else, occasion.
+      if (!title) continue
+      const dedupKey = `${jalaliDate}_${title}`
+      if (seen.has(dedupKey)) continue
+      seen.add(dedupKey)
+
       const kind = isOffDay ? 'official' : 'occasion'
 
       rows.push({
@@ -46,7 +86,7 @@ export async function syncPersianHolidays(actorId: string, fromYear: number = 14
         title,
         isOffDay,
         kind,
-        recurring: false, // PersianHoliday data is year-specific, so we shouldn't mark it as recurring globally
+        recurring: false,
         hijriBased: false,
       })
     }

@@ -96,6 +96,7 @@ export interface CalendarDay {
   events: CalendarEventEntry[]
   orgEvents: CalendarOrgEventEntry[]
   meetings: CalendarMeetingEntry[]
+  trips: any[]
 }
 
 export interface CalendarRangeResponse {

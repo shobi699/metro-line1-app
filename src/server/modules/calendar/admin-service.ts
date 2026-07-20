@@ -262,6 +262,7 @@ export interface CalendarConfig {
     wedHours: number
     thuHours: number
   }
+  userDayOverrideAllowed?: boolean
   dayStatusRules?: Record<string, { enabled: boolean; defaultHours?: number }>
 }
 
@@ -277,6 +278,7 @@ const DEFAULT_CALENDAR_CONFIG: CalendarConfig = {
   widgetPolicy: { enabled: true, updateIntervalMinutes: 30 },
   icsPolicy: { enabled: true, maxTokensPerUser: 1 },
   movazafiRules: { satTueHours: 8.75, wedHours: 7, thuHours: 7 },
+  userDayOverrideAllowed: false,
   dayStatusRules: {
     on_call: { enabled: true },
     overtime: { enabled: true },
@@ -316,6 +318,7 @@ export async function updateCalendarConfig(partial: Partial<CalendarConfig>, act
     widgetPolicy: { ...current.widgetPolicy, ...(partial.widgetPolicy ?? {}) },
     icsPolicy: { ...current.icsPolicy, ...(partial.icsPolicy ?? {}) },
     movazafiRules: { ...current.movazafiRules, ...(partial.movazafiRules ?? {}) },
+    userDayOverrideAllowed: partial.userDayOverrideAllowed ?? current.userDayOverrideAllowed ?? false,
     dayStatusRules: { ...current.dayStatusRules, ...(partial.dayStatusRules ?? {}) },
   }
   const serialized = JSON.stringify(merged)

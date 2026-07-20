@@ -1060,7 +1060,7 @@ export async function seedUiBuilder(prisma: PrismaClient) {
       { label: 'پروفایل', icon: 'User', route: 'ProfileScreen', orderIndex: 4, isVisible: true },
       { label: 'گفتگو', icon: 'MessageSquare', route: 'ChatScreen', orderIndex: 3, isVisible: true },
       { label: 'اعلان‌ها', icon: 'Bell', route: 'NotificationsScreen', orderIndex: 2, isVisible: true },
-      { label: 'شیفت‌ها', icon: 'Calendar', route: 'CalendarScreen', orderIndex: 1, isVisible: true },
+      { label: 'تقویم زندگی', icon: 'Calendar', route: 'LifeCalendarScreen', orderIndex: 1, isVisible: true },
       { label: 'داشبورد', icon: 'LayoutDashboard', route: 'HomeScreen', orderIndex: 0, isVisible: true },
     ]
   })

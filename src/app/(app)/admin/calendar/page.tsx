@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +22,9 @@ import {
   Save,
   Check,
   Eye,
+  Search,
+  Filter,
+  RotateCcw,
 } from 'lucide-react'
 
 dayjs.extend(jalaliday)
@@ -81,6 +84,7 @@ interface CalendarConfig {
     wedHours: number
     thuHours: number
   }
+  userDayOverrideAllowed?: boolean
 }
 
 const KIND_LABELS: Record<string, string> = {
@@ -145,12 +149,43 @@ export default function CalendarAdminPage() {
 
 // ── تب تعطیلات ────────────────────────────────────────
 
+const JALALI_MONTHS = [
+  { value: '01', label: 'فروردین' },
+  { value: '02', label: 'اردیبهشت' },
+  { value: '03', label: 'خرداد' },
+  { value: '04', label: 'تیر' },
+  { value: '05', label: 'مرداد' },
+  { value: '06', label: 'شهریور' },
+  { value: '07', label: 'مهر' },
+  { value: '08', label: 'آبان' },
+  { value: '09', label: 'آذر' },
+  { value: '10', label: 'دی' },
+  { value: '11', label: 'بهمن' },
+  { value: '12', label: 'اسفند' },
+]
+
+function extractHijriDate(title: string): string | null {
+  if (!title) return null
+  const match = title.match(/[\(\[]\s*([\u0600-\u06FF0-9\s]+(?:محرم|صفر|ربیع|جمادی|رجب|شعبان|رمضان|شوال|ذوالقعده|ذوالحجه|ذیقعده|ذیحجه)[\u0600-\u06FF0-9\s]*)\s*[\)\]]/i)
+  if (match) return match[1].trim()
+  const directMatch = title.match(/\b(?:\d+|[\u0660-\u0669\u06f0-\u06f9]+)\s*(?:محرم|صفر|ربیع\s*الاول|ربیع\s*الثانی|جمادی\s*الاول|جمادی\s*الثانی|رجب|شعبان|رمضان|شوال|ذوالقعده|ذوالحجه|ذیقعده|ذیحجه)\b/i)
+  if (directMatch) return directMatch[0].trim()
+  return null
+}
+
 function HolidaysTab({ accessToken }: { accessToken: string | null }) {
   const [holidays, setHolidays] = useState<Holiday[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
+  
+  // Filters
+  const [searchQuery, setSearchQuery] = useState('')
+  const [yearFilter, setYearFilter] = useState('all')
+  const [monthFilter, setMonthFilter] = useState('all')
+  const [isOffFilter, setIsOffFilter] = useState('all')
   const [kindFilter, setKindFilter] = useState('all')
+
   const [importResult, setImportResult] = useState<{
     total: number; created: number; updated: number; errors: { row: number; message: string }[]
   } | null>(null)
@@ -276,42 +311,161 @@ function HolidaysTab({ accessToken }: { accessToken: string | null }) {
     setShowForm(true)
   }
 
-  const filtered = holidays.filter((h) => kindFilter === 'all' || h.kind === kindFilter)
+  const availableYears = useMemo(() => {
+    const setYears = new Set<string>()
+    holidays.forEach((h) => {
+      if (h.jalaliDate && h.jalaliDate.length >= 4) {
+        setYears.add(h.jalaliDate.slice(0, 4))
+      }
+    })
+    return Array.from(setYears).sort()
+  }, [holidays])
+
+  const filtered = useMemo(() => {
+    return holidays.filter((h) => {
+      if (kindFilter !== 'all' && h.kind !== kindFilter) return false
+      if (isOffFilter === 'off' && !h.isOffDay) return false
+      if (isOffFilter === 'work' && h.isOffDay) return false
+      if (yearFilter !== 'all' && !h.jalaliDate.startsWith(yearFilter)) return false
+      if (monthFilter !== 'all' && h.jalaliDate.slice(5, 7) !== monthFilter) return false
+      if (searchQuery.trim() && !h.title.toLowerCase().includes(searchQuery.trim().toLowerCase())) return false
+      return true
+    })
+  }, [holidays, kindFilter, isOffFilter, yearFilter, monthFilter, searchQuery])
+
+  const hasActiveFilters = searchQuery !== '' || yearFilter !== 'all' || monthFilter !== 'all' || isOffFilter !== 'all' || kindFilter !== 'all'
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={() => { setEditId(null); setForm({ jalaliDate: '', title: '', kind: 'official', isOffDay: true, recurring: true, hijriBased: false }); setShowForm(true) }} size="sm">
-          <Plus className="w-4 h-4 me-1" /> افزودن تعطیلی
-        </Button>
-        <div className="flex items-center gap-2">
-          <input type="file" id="excel-upload" accept=".xlsx,.xls" className="hidden" onChange={handleImport} />
-          <label htmlFor="excel-upload" className={buttonVariants({ variant: 'outline', size: 'sm', className: 'cursor-pointer' })}>
-            <Upload className="w-4 h-4 me-1" /> ایمپورت اکسل
-          </label>
-        </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleSyncHolidays} 
-          disabled={isSyncing}
-        >
-          {isSyncing ? 'در حال هماهنگ‌سازی...' : 'دریافت از PersianHoliday'}
-        </Button>
-        <div className="flex items-center gap-1 bg-muted/50 p-0.5 rounded-md border ms-auto">
-          {['all', 'official', 'religious', 'occasion'].map((k) => (
-            <button
-              key={k}
-              onClick={() => setKindFilter(k)}
-              className={`px-2.5 py-1 text-xs rounded transition-all ${
-                kindFilter === k ? 'bg-background shadow-sm font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {k === 'all' ? 'همه' : KIND_LABELS[k]}
-            </button>
-          ))}
+      {/* نوار اقدامات بالایی */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button onClick={() => { setEditId(null); setForm({ jalaliDate: '', title: '', kind: 'official', isOffDay: true, recurring: true, hijriBased: false }); setShowForm(true) }} size="sm">
+            <Plus className="w-4 h-4 me-1" /> افزودن تعطیلی
+          </Button>
+          <div className="flex items-center gap-2">
+            <input type="file" id="excel-upload" accept=".xlsx,.xls" className="hidden" onChange={handleImport} />
+            <label htmlFor="excel-upload" className={buttonVariants({ variant: 'outline', size: 'sm', className: 'cursor-pointer' })}>
+              <Upload className="w-4 h-4 me-1" /> ایمپورت اکسل
+            </label>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleSyncHolidays} 
+            disabled={isSyncing}
+          >
+            {isSyncing ? 'در حال هماهنگ‌سازی...' : 'دریافت از PersianHoliday'}
+          </Button>
         </div>
       </div>
+
+      {/* نوار فیلترهای پیشرفته مناسبت‌ها */}
+      <Card className="bg-card/70 border-border-subtle p-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* جستجو */}
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="جستجو در عنوان مناسبت..."
+              className="ps-9 text-xs h-9 bg-background"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute end-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* فیلتر سال */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground font-medium shrink-0">سال:</span>
+            <select
+              value={yearFilter}
+              onChange={(e) => setYearFilter(e.target.value)}
+              className="h-9 rounded-md border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="all">همه سال‌ها</option>
+              {availableYears.map((y: string) => (
+                <option key={y} value={y}>{toFa(y)}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* فیلتر ماه */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground font-medium shrink-0">ماه:</span>
+            <select
+              value={monthFilter}
+              onChange={(e) => setMonthFilter(e.target.value)}
+              className="h-9 rounded-md border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="all">همه ماه‌ها</option>
+              {JALALI_MONTHS.map((m) => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* فیلتر وضعیت تعطیلی */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground font-medium shrink-0">وضعیت:</span>
+            <select
+              value={isOffFilter}
+              onChange={(e) => setIsOffFilter(e.target.value)}
+              className="h-9 rounded-md border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="all">همه روزها</option>
+              <option value="off">فقط تعطیل رسمی</option>
+              <option value="work">غیرتعطیل / مناسبت کاری</option>
+            </select>
+          </div>
+
+          {/* فیلتر نوع مناسبت */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground font-medium shrink-0">نوع:</span>
+            <select
+              value={kindFilter}
+              onChange={(e) => setKindFilter(e.target.value)}
+              className="h-9 rounded-md border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="all">همه دسته‌ها</option>
+              <option value="official">رسمی</option>
+              <option value="religious">مذهبی</option>
+              <option value="occasion">مناسبت</option>
+            </select>
+          </div>
+
+          {/* ریست فیلترها */}
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchQuery('')
+                setYearFilter('all')
+                setMonthFilter('all')
+                setIsOffFilter('all')
+                setKindFilter('all')
+              }}
+              className="h-9 px-2 text-xs text-destructive hover:bg-destructive/10 ms-auto"
+            >
+              <RotateCcw className="w-3.5 h-3.5 me-1" />
+              حذف فیلترها
+            </Button>
+          )}
+
+          {/* آمار */}
+          <div className="text-xs text-muted-foreground border-s ps-3 py-1 font-medium">
+            نمایش <span className="text-primary font-bold">{toFa(filtered.length)}</span> از {toFa(holidays.length)} مناسبت
+          </div>
+        </div>
+      </Card>
 
       {importResult && (
         <Card className="border-info/30 bg-info/5">
@@ -419,10 +573,10 @@ function HolidaysTab({ accessToken }: { accessToken: string | null }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((h) => (
+                  {filtered.map((h: Holiday) => (
                     <tr key={h.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
                       <td className="p-3 font-mono text-xs" dir="ltr">{toFa(h.jalaliDate)}</td>
-                      <td className="p-3">{h.title}</td>
+                      <td className="p-3 font-medium">{h.title}</td>
                       <td className="p-3">
                         <span className={`text-xs px-2 py-0.5 rounded-full ${
                           h.kind === 'official' ? 'bg-destructive/10 text-destructive' :
@@ -432,9 +586,20 @@ function HolidaysTab({ accessToken }: { accessToken: string | null }) {
                           {KIND_LABELS[h.kind] ?? h.kind}
                         </span>
                       </td>
+
                       <td className="p-3 text-center">{h.isOffDay ? <Check className="w-4 h-4 text-success mx-auto" /> : '—'}</td>
                       <td className="p-3 text-center">{h.recurring ? <Check className="w-4 h-4 text-info mx-auto" /> : '—'}</td>
-                      <td className="p-3 text-center">{h.hijriBased ? <Check className="w-4 h-4 text-warning mx-auto" /> : '—'}</td>
+                      <td className="p-3 text-center">
+                        {extractHijriDate(h.title) ? (
+                          <span className="text-[11px] bg-amber-500/10 text-amber-500 font-bold px-2 py-0.5 rounded-full border border-amber-500/20 whitespace-nowrap">
+                            {extractHijriDate(h.title)}
+                          </span>
+                        ) : h.hijriBased ? (
+                          <Check className="w-4 h-4 text-warning mx-auto" />
+                        ) : (
+                          '—'
+                        )}
+                      </td>
                       <td className="p-3 text-end">
                         <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="sm" onClick={() => openEdit(h)}><Pencil className="w-3.5 h-3.5" /></Button>
@@ -885,6 +1050,26 @@ function ConfigTab({ accessToken }: { accessToken: string | null }) {
               />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">دسترسی و اختیارات کارکرد پرسنل</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <label className="flex items-center justify-between cursor-pointer">
+            <div>
+              <p className="text-sm font-medium">اجازه به پرسنل برای ویرایش کارکرد و وضعیت روزانه</p>
+              <p className="text-xs text-muted-foreground">در صورت فعال‌سازی، کاربران عادی هم می‌توانند در تقویم زندگی، کارکرد روزانه خود (مرخصی/اضافه‌کار/ساعات کارکرد) را شخصی‌سازی و ویرایش کنند.</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={config.userDayOverrideAllowed ?? false}
+              onChange={(e) => setConfig({ ...config, userDayOverrideAllowed: e.target.checked })}
+              className="rounded"
+            />
+          </label>
         </CardContent>
       </Card>
 

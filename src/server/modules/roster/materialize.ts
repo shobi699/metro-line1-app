@@ -42,7 +42,7 @@ export function calculateShiftForDate(
   }
 
   const cycleLength = template.length || 6
-  const diffDays = current.diff(anchor, 'day')
+  const diffDays = Math.round(current.diff(anchor, 'hour') / 24)
   const cycleIndex = ((diffDays % cycleLength) + cycleLength) % cycleLength
   return template.shifts.find((s) => s.day === cycleIndex + 1) ?? null
 }
