@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/dashboard', label: 'خانه', icon: LayoutDashboard },
-  { href: '/shifts', label: 'شیفت', icon: Calendar },
+  { href: '/calendar', label: 'تقویم', icon: Calendar },
   { href: '/chat', label: 'گفتگو', icon: MessageCircle, elevated: true },
   { href: '/tickets', label: 'تیکت', icon: AlertTriangle },
   { href: '/profile', label: 'پروفایل', icon: User },

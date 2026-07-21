@@ -5,7 +5,7 @@ import {
   authErrorResponse,
 } from '@/server/rbac/guard'
 import { prisma } from '@/server/db'
-import { updatePostSchema } from '@/server/dto/content'
+import { updatePostSchema } from '@/lib/zod/content'
 import { updatePost, deletePost } from '@/server/modules/content/service'
 
 export async function GET(
@@ -32,6 +32,9 @@ export async function GET(
         mediaType: true,
         published: true,
         mandatory: true,
+        status: true,
+        publishAt: true,
+        nextReviewAt: true,
       },
     })
     return NextResponse.json({ data: post })
@@ -48,7 +51,7 @@ export async function PATCH(
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'admin')
+  const roleErr = await requireRole(user, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { id } = await params
@@ -77,7 +80,7 @@ export async function DELETE(
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'admin')
+  const roleErr = await requireRole(user, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { id } = await params

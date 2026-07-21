@@ -7,3 +7,5 @@ export {
   createBulkNotifications,
   type NotificationData,
 } from './service'
+export { notifyEvent } from './gateway'
+

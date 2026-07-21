@@ -1,27 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
 import { getSessionUser, requireRole, authErrorResponse } from '@/server/rbac/guard'
-import { z } from 'zod'
-
-const updateUserSchema = z.object({
-  name: z.string().min(2, 'نام حداقل ۲ کاراکتر باشد').optional(),
-  phone: z
-    .string()
-    .regex(/^09\d{9}$/, 'شماره موبایل نامعتبر است')
-    .optional()
-    .or(z.literal(''))
-    .transform((val) => (val === '' ? null : val)),
-  email: z
-    .string()
-    .email('ایمیل نامعتبر است')
-    .optional()
-    .or(z.literal(''))
-    .transform((val) => (val === '' ? null : val)),
-  roleId: z.string().optional(),
-  status: z.enum(['pending', 'active', 'suspended']).optional(),
-  customFields: z.record(z.string(), z.any()).optional(),
-  password: z.string().min(6, 'رمز عبور حداقل ۶ کاراکتر باشد').optional(),
-})
+import type { Prisma } from '@/generated/prisma/client'
+import { updateUserSchema } from '@/lib/zod/admin'
 
 // PATCH /api/admin/users/[id] - ویرایش اطلاعات کاربر
 export async function PATCH(
@@ -31,7 +12,7 @@ export async function PATCH(
   const sessionUser = await getSessionUser(request)
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
-  const roleErr = requireRole(sessionUser, 'admin')
+  const roleErr = await requireRole(sessionUser, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { id: userId } = await params
@@ -91,7 +72,7 @@ export async function PATCH(
     }
 
     // Hash password if provided
-    const prismaData: any = { ...dataToUpdate }
+    const prismaData: Prisma.UserUpdateInput = { ...dataToUpdate }
     if (password) {
       const { hashPassword } = await import('@/server/auth/password')
       prismaData.passwordHash = await hashPassword(password)
@@ -113,7 +94,7 @@ export async function PATCH(
         data: prismaData,
         select: {
           id: true,
-          nationalId: true,
+          personnelCode: true,
           name: true,
           phone: true,
           email: true,
@@ -133,7 +114,7 @@ export async function PATCH(
           after: {
             ...dataToUpdate,
             passwordChanged: !!password,
-          } as any,
+          } as unknown as Prisma.InputJsonValue,
         },
       }),
     ])
@@ -157,7 +138,7 @@ export async function DELETE(
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
   // Only super_admin can delete users for security reasons
-  const roleErr = requireRole(sessionUser, 'super_admin')
+  const roleErr = await requireRole(sessionUser, 'super_admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { id: userId } = await params
@@ -182,7 +163,7 @@ export async function DELETE(
     }
 
     const beforeState = {
-      nationalId: targetUser.nationalId,
+      personnelCode: targetUser.personnelCode,
       name: targetUser.name,
       phone: targetUser.phone,
       email: targetUser.email,

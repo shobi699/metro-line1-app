@@ -4,7 +4,7 @@ import {
   requireRole,
   authErrorResponse,
 } from '@/server/rbac/guard'
-import { updateTicketStatusSchema } from '@/server/dto/safety'
+import { updateTicketStatusSchema } from '@/lib/zod/safety'
 import { updateTicketStatus } from '@/server/modules/tickets/service'
 
 export async function POST(
@@ -14,7 +14,7 @@ export async function POST(
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'operator')
+  const roleErr = await requireRole(user, 'operator')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { id } = await params

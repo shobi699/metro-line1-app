@@ -1,6 +1,6 @@
 import { Prisma } from '@/generated/prisma/client'
 import { prisma } from '@/server/db'
-import type { CreateTicketInput, UpdateTicketStatusInput } from '@/server/dto/safety'
+import type { CreateTicketInput, UpdateTicketStatusInput } from '@/lib/zod/safety'
 import { getSettingValue } from '@/server/modules/settings/service'
 
 export async function predictTicketPriority(title: string, description?: string) {
@@ -158,7 +158,7 @@ export async function listTickets(
   return prisma.ticket.findMany({
     where: where as never,
     include: {
-      creator: { select: { id: true, name: true, nationalId: true } },
+      creator: { select: { id: true, name: true, personnelCode: true } },
       logs: {
         include: {
           actor: { select: { id: true, name: true } },
@@ -226,7 +226,7 @@ export async function getTicketById(ticketId: string) {
   return prisma.ticket.findUnique({
     where: { id: ticketId },
     include: {
-      creator: { select: { id: true, name: true, nationalId: true } },
+      creator: { select: { id: true, name: true, personnelCode: true } },
       logs: {
         include: {
           actor: { select: { id: true, name: true } },

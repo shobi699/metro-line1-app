@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useAuthStore } from '@/features/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,9 +26,6 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
 } from '@/components/ui/sheet'
 import {
   DropdownMenu,
@@ -74,11 +71,11 @@ import {
   Award,
   MapPin,
 } from 'lucide-react'
-import dayjs from 'dayjs'
-import 'dayjs-jalali'
+import { jdate, dayjs } from '@/lib/dayjs'
 import { toFa, jalali } from '@/lib/fa'
 import { cn } from '@/lib/utils'
 import { PERMISSION_CATALOG } from '@/server/rbac/permissions'
+import { RoleAssignmentModal } from '@/components/shared/RoleAssignmentModal'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 function normalizeText(str: string | null | undefined): string {
@@ -113,6 +110,7 @@ interface ColumnHeaderFilterProps {
 }
 
 function ColumnHeaderFilter({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   columnKey,
   columnLabel,
   uniqueValues,
@@ -314,7 +312,7 @@ interface Vehicle {
 
 interface User {
   id: string
-  nationalId: string
+  personnelCode: string
   name: string
   phone: string | null
   email: string | null
@@ -345,6 +343,7 @@ function toEn(str: string | null | undefined): string {
     .replace(/[۹]/g, '9')
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getFieldIcon(fieldName: string) {
   switch (fieldName) {
     case 'personnelNo': return <CreditCard className="size-4 text-accent" />
@@ -392,7 +391,7 @@ function calculateAge(birthDateStr: string | null | undefined) {
     const jalaliYearMatch = birthDateStr.match(/^(\d{4})[-/]\d{2}[-/]\d{2}/)
     if (jalaliYearMatch) {
       const jYear = parseInt(jalaliYearMatch[1])
-      const currentJYear = dayjs().locale('jalali').year()
+      const currentJYear = jdate().year()
       return currentJYear - jYear
     }
     const gYear = dayjs(birthDateStr).year()
@@ -437,12 +436,15 @@ export default function AdminUsersPage() {
   const [userModalOpen, setUserModalOpen] = useState(false)
   const [userModalMode, setUserModalMode] = useState<'create' | 'edit'>('create')
   const [editingUserId, setEditingUserId] = useState<string | null>(null)
+  
+  const [roleAssignmentModalOpen, setRoleAssignmentModalOpen] = useState(false)
 
   const [roleModalOpen, setRoleModalOpen] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [fieldModalOpen, setFieldModalOpen] = useState(false)
 
   // Form Fields - User
-  const [nationalId, setNationalId] = useState('')
+  const [personnelCode, setNationalId] = useState('')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -474,23 +476,25 @@ export default function AdminUsersPage() {
   const [editFieldRequired, setEditFieldRequired] = useState(false)
   const [editFieldDefaultValue, setEditFieldDefaultValue] = useState('')
 
-  function getUserFieldValue(user: User, fieldName: string) {
+  const getUserFieldValue = useCallback((user: User, fieldName: string) => {
     const val = user.customFields?.[fieldName]
     if (val !== undefined && val !== null && val !== '') {
       return val
     }
     const def = customFieldDefs.find((d) => d.name === fieldName)
     return def?.defaultValue ?? ''
-  }
+  }, [customFieldDefs])
 
   // User Detail Sheet States
   const [selectedUserForDetail, setSelectedUserForDetail] = useState<User | null>(null)
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [userAuditLogs, setUserAuditLogs] = useState<any[]>([])
   const [loadingUserAuditLogs, setLoadingUserAuditLogs] = useState(false)
   const [detailTab, setDetailTab] = useState<'profile' | 'vehicles' | 'logs'>('profile')
 
   // Global Audit Logs States
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [globalAuditLogs, setGlobalAuditLogs] = useState<any[]>([])
   const [loadingGlobalAuditLogs, setLoadingGlobalAuditLogs] = useState(false)
   const [auditLogSearch, setAuditLogSearch] = useState('')
@@ -513,12 +517,18 @@ export default function AdminUsersPage() {
   const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>({})
   const [columnSearchTerms, setColumnSearchTerms] = useState<Record<string, string>>({})
 
-  function getColumnValue(user: User, key: string): string {
+  const statusLabels = useMemo<Record<string, { text: string; color: string; badgeColor: string }>>(() => ({
+    pending: { text: 'در حال بررسی', color: 'text-warning bg-warning/15 border-warning/30', badgeColor: 'bg-warning' },
+    active: { text: 'فعال', color: 'text-success bg-success/10 border-success/20', badgeColor: 'bg-success' },
+    suspended: { text: 'معلق', color: 'text-critical bg-critical/10 border-critical/20', badgeColor: 'bg-critical' },
+  }), [])
+
+  const getColumnValue = useCallback((user: User, key: string): string => {
     switch (key) {
       case 'name':
         return user.name || ''
-      case 'nationalId':
-        return user.nationalId ? toFa(user.nationalId) : '—'
+      case 'personnelCode':
+        return user.personnelCode ? toFa(user.personnelCode) : '—'
       case 'phone':
         return user.phone ? toFa(user.phone) : '—'
       case 'phone2': {
@@ -587,7 +597,7 @@ export default function AdminUsersPage() {
         return val !== undefined && val !== null ? String(val) : '—'
       }
     }
-  }
+  }, [getUserFieldValue, statusLabels])
 
   function getUniqueValues(columnKey: string): { value: string; count: number }[] {
     const values = users.map((user) => getColumnValue(user, columnKey))
@@ -637,7 +647,7 @@ export default function AdminUsersPage() {
       const s = normalizeText(searchTerm)
       result = result.filter((user) => {
         if (normalizeText(user.name).includes(s)) return true
-        if (normalizeText(user.nationalId).includes(s)) return true
+        if (normalizeText(user.personnelCode).includes(s)) return true
         if (normalizeText(user.phone).includes(s)) return true
         if (normalizeText(user.email).includes(s)) return true
         if (user.customFields) {
@@ -695,7 +705,7 @@ export default function AdminUsersPage() {
     }
 
     return result
-  }, [users, searchTerm, statusFilter, roleFilter, columnFilters, sortConfig])
+  }, [users, searchTerm, statusFilter, roleFilter, columnFilters, sortConfig, getColumnValue])
 
   useEffect(() => {
     if (notification) {
@@ -705,7 +715,7 @@ export default function AdminUsersPage() {
   }, [notification])
 
   // Fetch Users
-  async function loadUsers() {
+  const loadUsers = useCallback(async () => {
     if (!accessToken) return
     setLoadingUsers(true)
     try {
@@ -724,10 +734,10 @@ export default function AdminUsersPage() {
     } finally {
       setLoadingUsers(false)
     }
-  }
+  }, [accessToken])
 
   // Fetch Roles
-  async function loadRoles() {
+  const loadRoles = useCallback(async () => {
     if (!accessToken) return
     setLoadingRoles(true)
     try {
@@ -750,10 +760,10 @@ export default function AdminUsersPage() {
     } finally {
       setLoadingRoles(false)
     }
-  }
+  }, [accessToken, selectedRole])
 
   // Fetch Custom Field Definitions
-  async function loadCustomFieldDefs() {
+  const loadCustomFieldDefs = useCallback(async () => {
     if (!accessToken) return
     setLoadingFields(true)
     try {
@@ -772,7 +782,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoadingFields(false)
     }
-  }
+  }, [accessToken])
 
   // Fetch User-Specific Audit Logs
   async function loadUserAuditLogs(userId: string) {
@@ -786,15 +796,15 @@ export default function AdminUsersPage() {
         const json = await res.json()
         setUserAuditLogs(json.data || [])
       }
-    } catch (error) {
-      console.error('Error loading user audit logs:', error)
+    } catch {
+      // user audit logs fetch failed silently
     } finally {
       setLoadingUserAuditLogs(false)
     }
   }
 
   // Fetch Global Audit Logs
-  async function loadGlobalAuditLogs() {
+  const loadGlobalAuditLogs = useCallback(async () => {
     if (!accessToken) return
     setLoadingGlobalAuditLogs(true)
     try {
@@ -810,12 +820,12 @@ export default function AdminUsersPage() {
         const json = await res.json()
         setGlobalAuditLogs(json.data || [])
       }
-    } catch (error) {
-      console.error('Error loading global audit logs:', error)
+    } catch {
+      // global audit logs fetch failed silently
     } finally {
       setLoadingGlobalAuditLogs(false)
     }
-  }
+  }, [accessToken, auditLogSearch, auditLogAction, auditLogEntity])
 
   function selectRoleItem(role: Role) {
     setSelectedRole(role)
@@ -843,13 +853,13 @@ export default function AdminUsersPage() {
       void loadRoles()
       void loadCustomFieldDefs()
     }
-  }, [accessToken])
+  }, [accessToken, loadUsers, loadRoles, loadCustomFieldDefs])
 
   useEffect(() => {
     if (activeTab === 'audit_logs' && accessToken) {
       void loadGlobalAuditLogs()
     }
-  }, [activeTab, auditLogSearch, auditLogAction, auditLogEntity, accessToken])
+  }, [activeTab, accessToken, loadGlobalAuditLogs])
 
   // Export Users to Excel
   async function handleExcelExport() {
@@ -995,7 +1005,7 @@ export default function AdminUsersPage() {
     setActionLoading(true)
 
     const payload = userModalMode === 'create'
-      ? { nationalId, name, phone, email, password, roleId, status, customFields: userCustomFields }
+      ? { personnelCode, name, phone, email, password, roleId, status, customFields: userCustomFields }
       : { name, phone, email, roleId, status, customFields: userCustomFields }
 
     const url = userModalMode === 'create'
@@ -1095,13 +1105,14 @@ export default function AdminUsersPage() {
     if (!accessToken) return
     setActionLoading(true)
     try {
-      const res = await fetch(`/api/admin/users/${userId}`, {
-        method: 'PATCH',
+      const action = newStatus === 'active' ? 'activate' : newStatus === 'suspended' ? 'suspend' : 'suspend'
+      const res = await fetch(`/api/admin/iam/users/${userId}/lifecycle`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ action, reason: 'Quick update via Admin UI' }),
       })
       const json = await res.json()
       if (res.ok) {
@@ -1211,6 +1222,7 @@ export default function AdminUsersPage() {
       const userToUpdate = users.find((u) => u.id === userId) || selectedUserForDetail
       if (!userToUpdate) return
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const currentCustomFields = (userToUpdate.customFields as Record<string, any>) || {}
       const updatedCustomFields = {
         ...currentCustomFields,
@@ -1254,9 +1266,9 @@ export default function AdminUsersPage() {
       const userToUpdate = users.find((u) => u.id === userId) || selectedUserForDetail
       if (!userToUpdate) return
 
-      const currentCustomFields = (userToUpdate.customFields as Record<string, any>) || {}
-      const currentVehicles = (currentCustomFields.vehicles as any[]) || []
-      const updatedVehicles = currentVehicles.map((v: any) =>
+      const currentCustomFields = (userToUpdate.customFields as Record<string, unknown>) || {}
+      const currentVehicles = (currentCustomFields.vehicles as Vehicle[]) || []
+      const updatedVehicles = currentVehicles.map((v: Vehicle) =>
         v.id === vehicleId ? { ...v, status } : v
       )
 
@@ -1297,8 +1309,8 @@ export default function AdminUsersPage() {
 
   const renderDetailFieldRow = (label: string, fieldName: string, icon: React.ReactNode) => {
     if (!selectedUserForDetail) return null
-    const value = String((selectedUserForDetail.customFields as any)?.[fieldName] || '—')
-    const status = (selectedUserForDetail.customFields as any)?.[`${fieldName}_status`] || 'approved'
+    const value = String((selectedUserForDetail.customFields as Record<string, unknown>)?.[fieldName] || '—')
+    const status = (selectedUserForDetail.customFields as Record<string, unknown>)?.[`${fieldName}_status`] || 'approved'
 
     return (
       <div className="flex flex-col border-b border-border/20 py-2 last:border-0">
@@ -1686,6 +1698,7 @@ export default function AdminUsersPage() {
   }
 
   // Convert Audit Log payload to Persian description
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function getAuditLogDescription(log: any) {
     const actorName = log.actor?.name || 'سیستم'
     const action = log.action
@@ -1739,12 +1752,6 @@ export default function AdminUsersPage() {
     }
 
     return `${entityStr} توسط ${actorName} ${actionStr}.`
-  }
-
-  const statusLabels: Record<string, { text: string; color: string; badgeColor: string }> = {
-    pending: { text: 'در حال بررسی', color: 'text-warning bg-warning/15 border-warning/30', badgeColor: 'bg-warning' },
-    active: { text: 'فعال', color: 'text-success bg-success/10 border-success/20', badgeColor: 'bg-success' },
-    suspended: { text: 'معلق', color: 'text-critical bg-critical/10 border-critical/20', badgeColor: 'bg-critical' },
   }
 
   const fieldTypeLabels: Record<string, string> = {
@@ -1980,7 +1987,7 @@ export default function AdminUsersPage() {
                   if (!label) {
                     switch (colKey) {
                       case 'name': label = 'نام پرسنل'; break
-                      case 'nationalId': label = 'کد ملی'; break
+                      case 'personnelCode': label = 'کد پرسنلی'; break
                       case 'phone': label = 'شماره همراه'; break
                       case 'status': label = 'وضعیت'; break
                       case 'post': label = 'پست سازمانی'; break
@@ -2068,17 +2075,17 @@ export default function AdminUsersPage() {
                         </TableHead>
                         <TableHead className="text-start whitespace-nowrap">
                           <div className="flex items-center gap-1">
-                            <span>کد ملی</span>
+                            <span>کد پرسنلی</span>
                             <ColumnHeaderFilter
-                              columnKey="nationalId"
-                              columnLabel="کد ملی"
-                              uniqueValues={getUniqueValues('nationalId')}
-                              selectedValues={columnFilters['nationalId'] || []}
-                              onFilterChange={(values) => handleFilterChange('nationalId', values)}
-                              onSort={(direction) => handleSort('nationalId', direction)}
-                              currentSort={sortConfig?.key === 'nationalId' ? sortConfig.direction : null}
-                              searchTerm={columnSearchTerms['nationalId'] || ''}
-                              onSearchChange={(val) => handleColumnSearchChange('nationalId', val)}
+                              columnKey="personnelCode"
+                              columnLabel="کد پرسنلی"
+                              uniqueValues={getUniqueValues('personnelCode')}
+                              selectedValues={columnFilters['personnelCode'] || []}
+                              onFilterChange={(values) => handleFilterChange('personnelCode', values)}
+                              onSort={(direction) => handleSort('personnelCode', direction)}
+                              currentSort={sortConfig?.key === 'personnelCode' ? sortConfig.direction : null}
+                              searchTerm={columnSearchTerms['personnelCode'] || ''}
+                              onSearchChange={(val) => handleColumnSearchChange('personnelCode', val)}
                             />
                           </div>
                         </TableHead>
@@ -2291,7 +2298,7 @@ export default function AdminUsersPage() {
                               return pNo ? toFa(String(pNo)) : '—'
                             })()}
                           </TableCell>
-                          <TableCell className="font-mono text-xs text-foreground/80 whitespace-nowrap">{toFa(user.nationalId)}</TableCell>
+                          <TableCell className="font-mono text-xs text-foreground/80 whitespace-nowrap">{toFa(user.personnelCode)}</TableCell>
                           <TableCell className="font-mono text-xs text-foreground/80 whitespace-nowrap">
                             {user.phone ? toFa(user.phone) : '—'}
                           </TableCell>
@@ -2668,7 +2675,7 @@ export default function AdminUsersPage() {
                   <select
                     id="fieldType"
                     value={fieldType}
-                    onChange={(e) => setFieldType(e.target.value as any)}
+                    onChange={(e) => setFieldType(e.target.value as 'text' | 'number' | 'select' | 'date' | 'boolean')}
                     className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-accent cursor-pointer"
                   >
                     <option value="text">متن (یک خطی)</option>
@@ -2970,7 +2977,7 @@ export default function AdminUsersPage() {
                             <div className="flex flex-col gap-0.5">
                               <span className="text-foreground">{log.actor?.name || 'سیستم'}</span>
                               <span className="text-[10px] text-foreground-muted/60 font-mono tracking-tight text-start">
-                                کدملی: {log.actor?.nationalId ? toFa(log.actor.nationalId) : '—'}
+                                کدملی: {log.actor?.personnelCode ? toFa(log.actor.personnelCode) : '—'}
                               </span>
                             </div>
                           </TableCell>
@@ -3058,7 +3065,7 @@ export default function AdminUsersPage() {
                       : "text-foreground-muted hover:text-foreground hover:bg-surface/50 border border-transparent"
                   )}
                 >
-                  خودروها ({toFa(((selectedUserForDetail.customFields as any)?.vehicles || []).length)})
+                  خودروها ({toFa(((selectedUserForDetail.customFields as Record<string, unknown>)?.vehicles as Vehicle[] | undefined || []).length)})
                 </button>
                 <button
                   type="button"
@@ -3089,8 +3096,8 @@ export default function AdminUsersPage() {
                         <div className="flex items-center gap-2.5">
                           <CreditCard className="size-4 text-foreground-muted shrink-0" />
                           <div className="flex flex-col">
-                            <span className="text-[9px] text-foreground-muted">کد ملی (نام کاربری)</span>
-                            <span className="text-xs font-bold text-foreground font-mono">{toFa(selectedUserForDetail.nationalId)}</span>
+                            <span className="text-[9px] text-foreground-muted">کد پرسنلی (نام کاربری)</span>
+                            <span className="text-xs font-bold text-foreground font-mono">{toFa(selectedUserForDetail.personnelCode)}</span>
                           </div>
                         </div>
 
@@ -3180,7 +3187,7 @@ export default function AdminUsersPage() {
                         {renderDetailFieldRow('تلفن ۴ پرسنلی', 'phone4', <Phone className="size-3.5 text-accent" />)}
                         
                         {/* Additional phones display if any */}
-                        {(((selectedUserForDetail.customFields as any)?.additionalPhones || []) as string[]).map((ph: string, idx: number) => {
+                        {(((selectedUserForDetail.customFields as Record<string, unknown>)?.additionalPhones || []) as string[]).map((ph: string, idx: number) => {
                           return (
                             <div key={idx} className="flex flex-col border-b border-border/20 py-2.5 last:border-0">
                               <div className="flex items-center justify-between">
@@ -3204,7 +3211,7 @@ export default function AdminUsersPage() {
                     </h3>
 
                     {(() => {
-                      const userVehicles = ((selectedUserForDetail.customFields as any)?.vehicles || []) as Vehicle[]
+                      const userVehicles = ((selectedUserForDetail.customFields as Record<string, unknown>)?.vehicles || []) as Vehicle[]
                       if (userVehicles.length === 0) {
                         return (
                           <div className="flex flex-col items-center justify-center p-12 text-foreground-muted gap-2 border border-dashed border-border/60 rounded-xl">
@@ -3414,7 +3421,8 @@ export default function AdminUsersPage() {
                         variant="outline"
                         className="border-border hover:bg-surface-hover text-foreground text-xs h-9 px-3 rounded-lg cursor-pointer font-bold shrink-0 shadow-sm"
                       >
-                        تغییر نقش
+                        <Shield className="size-3.5 ml-1" />
+                        تغییر نقش سیستم
                       </Button>
                     }
                   />
@@ -3430,6 +3438,14 @@ export default function AdminUsersPage() {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
+
+                <Button
+                  onClick={() => setRoleAssignmentModalOpen(true)}
+                  className="bg-accent/10 border border-accent/20 hover:bg-accent/20 text-accent font-bold text-xs h-9 px-3 rounded-lg cursor-pointer flex items-center gap-1 shrink-0 shadow-sm"
+                >
+                  <UserPlus className="size-3.5" />
+                  انتساب نقش / تفویض موقت
+                </Button>
 
                 <Button
                   onClick={() => openPasswordResetModal(selectedUserForDetail)}
@@ -3463,6 +3479,20 @@ export default function AdminUsersPage() {
         </SheetContent>
       </Sheet>
 
+      {/* Role Assignment Modal */}
+      {selectedUserForDetail && (
+        <RoleAssignmentModal
+          open={roleAssignmentModalOpen}
+          onOpenChange={setRoleAssignmentModalOpen}
+          userId={selectedUserForDetail.id}
+          onAssigned={() => {
+            setRoleAssignmentModalOpen(false)
+            setNotification({ type: 'success', text: 'انتساب نقش/تفویض با موفقیت انجام شد' })
+            loadUsers() // Reload user list
+          }}
+        />
+      )}
+
       {/* User Create/Edit Dialog */}
       <Dialog open={userModalOpen} onOpenChange={setUserModalOpen}>
         <DialogContent className="max-w-2xl w-full max-h-[90vh] overflow-y-auto" dir="rtl">
@@ -3485,15 +3515,15 @@ export default function AdminUsersPage() {
                 
                 {userModalMode === 'create' && (
                   <div className="space-y-1.5">
-                    <Label htmlFor="nationalId" className="text-xs font-semibold text-foreground">
-                      کد ملی (نام کاربری) <span className="text-critical">*</span>
+                    <Label htmlFor="personnelCode" className="text-xs font-semibold text-foreground">
+                      کد پرسنلی (نام کاربری) <span className="text-critical">*</span>
                     </Label>
                     <Input
-                      id="nationalId"
+                      id="personnelCode"
                       required
                       maxLength={10}
                       placeholder="مثلا: ۰۰۱۲۳۴۵۶۷۸"
-                      value={nationalId}
+                      value={personnelCode}
                       onChange={(e) => setNationalId(e.target.value)}
                       className="h-10 text-sm focus-visible:ring-accent border-border font-mono text-start"
                     />
@@ -3641,7 +3671,7 @@ export default function AdminUsersPage() {
                       id="status"
                       required
                       value={status}
-                      onChange={(e) => setStatus(e.target.value as any)}
+                      onChange={(e) => setStatus(e.target.value as 'pending' | 'active' | 'suspended')}
                       className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-accent cursor-pointer"
                     >
                       <option value="active">فعال</option>
@@ -3976,7 +4006,7 @@ export default function AdminUsersPage() {
               <select
                 id="editFieldType"
                 value={editFieldType}
-                onChange={(e) => setEditFieldType(e.target.value as any)}
+                onChange={(e) => setEditFieldType(e.target.value as 'text' | 'number' | 'select' | 'date' | 'boolean')}
                 className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-accent cursor-pointer"
               >
                 <option value="text">متن (یک خطی)</option>

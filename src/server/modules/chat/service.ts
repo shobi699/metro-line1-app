@@ -1,7 +1,6 @@
 import { prisma } from '@/server/db'
-import type { CreateGroupRoomInput, SendMessageInput } from '@/server/dto/chat'
+import type { CreateGroupRoomInput, SendMessageInput } from '@/lib/zod/chat'
 import { publishMessage } from '@/server/realtime/bus'
-import { getSettingValue } from '@/server/modules/settings/service'
 
 export interface RoomSummary {
   id: string
@@ -28,6 +27,9 @@ export interface MessageView {
   attachmentUrl: string | null
   attachmentType: string | null
   pinned: boolean
+  priority?: string
+  tags?: string[]
+  readReceipts?: any
   createdAt: Date
 }
 
@@ -79,36 +81,43 @@ export async function listRoomsForUser(userId: string): Promise<RoomSummary[]> {
     },
   })
 
-  const summaries = await Promise.all(
-    memberships.map(async (m) => {
-      const room = m.room
-      const unreadCount = await prisma.message.count({
-        where: {
-          roomId: room.id,
-          senderId: { not: userId },
-          ...(m.lastReadAt ? { createdAt: { gt: m.lastReadAt } } : {}),
-        },
-      })
-      const last = room.messages[0]
-      return {
-        id: room.id,
-        name: roomDisplayName(room, userId),
-        type: room.type as 'direct' | 'group',
-        kind: room.kind,
-        memberCount: room.members.length,
-        unreadCount,
-        lastMessage: last
-          ? {
-              body: last.body,
-              attachmentType: last.attachmentType,
-              senderName: last.sender.name,
-              createdAt: last.createdAt,
-            }
-          : null,
-        updatedAt: room.updatedAt,
-      }
-    }),
-  )
+  // Solve N+1 unread counts in a single query
+  const unreadCountsRaw = await prisma.$queryRaw<Array<{ roomId: string; count: bigint | number }>>`
+    SELECT m.roomId, COUNT(*) as count
+    FROM Message m
+    JOIN ChatMember cm ON m.roomId = cm.roomId
+    WHERE cm.userId = ${userId}
+      AND m.senderId != ${userId}
+      AND (cm.lastReadAt IS NULL OR m.createdAt > cm.lastReadAt)
+    GROUP BY m.roomId
+  `
+  const unreadMap = new Map<string, number>()
+  for (const item of unreadCountsRaw) {
+    unreadMap.set(item.roomId, Number(item.count))
+  }
+
+  const summaries = memberships.map((m) => {
+    const room = m.room
+    const unreadCount = unreadMap.get(room.id) ?? 0
+    const last = room.messages[0]
+    return {
+      id: room.id,
+      name: roomDisplayName(room, userId),
+      type: room.type as 'direct' | 'group',
+      kind: room.kind,
+      memberCount: room.members.length,
+      unreadCount,
+      lastMessage: last
+        ? {
+            body: last.body,
+            attachmentType: last.attachmentType,
+            senderName: last.sender.name,
+            createdAt: last.createdAt,
+          }
+        : null,
+      updatedAt: room.updatedAt,
+    }
+  })
 
   // مرتب‌سازی بر اساس آخرین فعالیت
   return summaries.sort((a, b) => {
@@ -211,6 +220,9 @@ export async function listMessages(
       attachmentUrl: true,
       attachmentType: true,
       pinned: true,
+      priority: true,
+      tags: true,
+      readReceipts: true,
       createdAt: true,
       sender: { select: { name: true } },
     },
@@ -228,6 +240,9 @@ export async function listMessages(
       attachmentUrl: r.attachmentUrl,
       attachmentType: r.attachmentType,
       pinned: r.pinned,
+      priority: r.priority,
+      tags: r.tags ? r.tags.split(',') : [],
+      readReceipts: r.readReceipts ? JSON.parse(JSON.stringify(r.readReceipts)) : null,
       createdAt: r.createdAt,
     }))
     .reverse() // قدیمی → جدید برای نمایش
@@ -272,6 +287,8 @@ export async function sendMessage(
       body: input.body?.trim() || null,
       attachmentUrl: input.attachmentUrl || null,
       attachmentType: input.attachmentType || null,
+      priority: input.priority || 'normal',
+      tags: input.tags && input.tags.length > 0 ? input.tags.join(',') : null,
     },
     select: {
       id: true,
@@ -281,6 +298,9 @@ export async function sendMessage(
       attachmentUrl: true,
       attachmentType: true,
       pinned: true,
+      priority: true,
+      tags: true,
+      readReceipts: true,
       createdAt: true,
       sender: { select: { name: true } },
     },
@@ -304,6 +324,9 @@ export async function sendMessage(
     attachmentUrl: message.attachmentUrl,
     attachmentType: message.attachmentType,
     pinned: message.pinned,
+    priority: message.priority,
+    tags: message.tags ? message.tags.split(',') : [],
+    readReceipts: message.readReceipts ? JSON.parse(JSON.stringify(message.readReceipts)) : null,
     createdAt: message.createdAt,
   }
 
@@ -313,6 +336,75 @@ export async function sendMessage(
   })
 
   return view
+}
+
+/**
+ * تایید و امضای رسمی رؤیت پیام (رسید قانونی) — بخش ۵.۲ سند tosee.md
+ */
+export async function acknowledgeMessage(
+  messageId: string,
+  userId: string,
+  context: { device?: string; ipAddress?: string; signature?: string }
+): Promise<any> {
+  const message = await prisma.message.findUnique({
+    where: { id: messageId },
+    select: { id: true, roomId: true, readReceipts: true }
+  })
+  if (!message) throw new Error('پیام یافت نشد')
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true }
+  })
+  if (!user) throw new Error('کاربر یافت نشد')
+
+  let currentReceipts: any[] = []
+  if (message.readReceipts) {
+    try {
+      currentReceipts = JSON.parse(JSON.stringify(message.readReceipts)) as any[]
+    } catch {
+      currentReceipts = []
+    }
+  }
+
+  // جلوگیری از رسید تکراری
+  if (currentReceipts.some((r) => r.userId === userId)) {
+    return currentReceipts
+  }
+
+  const newReceipt = {
+    userId,
+    userName: user.name,
+    seenAt: new Date().toISOString(),
+    device: context.device || 'desktop',
+    ipAddress: context.ipAddress || '127.0.0.1',
+    signature: context.signature || `SIGN-${userId}-${Date.now().toString(36)}`
+  }
+
+  currentReceipts.push(newReceipt)
+
+  await prisma.message.update({
+    where: { id: messageId },
+    data: { readReceipts: currentReceipts }
+  })
+
+  // انتشار به‌روزرسانی برای کاربران متصل
+  publishMessage({
+    roomId: message.roomId,
+    message: {
+      id: `receipt-${messageId}-${Date.now()}`,
+      roomId: message.roomId,
+      senderId: userId,
+      senderName: user.name,
+      body: JSON.stringify({ messageId, receipts: currentReceipts }),
+      attachmentUrl: null,
+      attachmentType: 'event/receipt_updated',
+      pinned: false,
+      createdAt: new Date().toISOString()
+    }
+  })
+
+  return currentReceipts
 }
 
 export async function markRead(roomId: string, userId: string): Promise<void> {

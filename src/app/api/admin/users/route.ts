@@ -2,34 +2,16 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
 import { getSessionUser, requireRole, authErrorResponse } from '@/server/rbac/guard'
 import { hashPassword } from '@/server/auth/password'
-import { z } from 'zod'
 import type { Prisma } from '@/generated/prisma/client'
 import { POST_TO_ROLE_KEY } from '@/server/rbac/permissions'
-
-const createUserSchema = z.object({
-  nationalId: z
-    .string()
-    .length(10, 'کد ملی باید ۱۰ رقم باشد')
-    .regex(/^\d+$/, 'کد ملی فقط شامل اعداد باشد'),
-  name: z.string().min(2, 'نام حداقل ۲ کاراکتر باشد'),
-  phone: z
-    .string()
-    .regex(/^09\d{9}$/, 'شماره موبایل نامعتبر است')
-    .optional()
-    .or(z.literal('')),
-  email: z.string().email('ایمیل نامعتبر است').optional().or(z.literal('')),
-  password: z.string().min(6, 'رمز عبور حداقل ۶ کاراکتر باشد'),
-  roleId: z.string().min(1, 'انتخاب نقش الزامی است'),
-  status: z.enum(['pending', 'active', 'suspended']).default('active'),
-  customFields: z.record(z.string(), z.any()).optional(),
-})
+import { createUserSchema } from '@/lib/zod/admin'
 
 // GET /api/admin/users - دریافت لیست کاربران با امکان جستجو و فیلتر
 export async function GET(request: Request) {
   const sessionUser = await getSessionUser(request)
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
-  const roleErr = requireRole(sessionUser, 'admin')
+  const roleErr = await requireRole(sessionUser, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { searchParams } = new URL(request.url)
@@ -43,7 +25,7 @@ export async function GET(request: Request) {
     if (search) {
       whereClause.OR = [
         { name: { contains: search } },
-        { nationalId: { contains: search } },
+        { personnelCode: { contains: search } },
         { phone: { contains: search } },
       ]
     }
@@ -63,7 +45,7 @@ export async function GET(request: Request) {
           select: {
             id: true,
             key: true,
-            name: true,
+            title: true,
             rank: true,
           },
         },
@@ -75,7 +57,7 @@ export async function GET(request: Request) {
 
     // Remove password hash from response
     const sanitizedUsers = users.map((u) => {
-      const { passwordHash, ...rest } = u
+      const { passwordHash: _passwordHash, ...rest } = u
       return rest
     })
 
@@ -94,7 +76,7 @@ export async function POST(request: Request) {
   const sessionUser = await getSessionUser(request)
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
-  const roleErr = requireRole(sessionUser, 'admin')
+  const roleErr = await requireRole(sessionUser, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {
@@ -108,16 +90,16 @@ export async function POST(request: Request) {
       )
     }
 
-    const { nationalId, name, phone, email, password, roleId, status, customFields } = parsed.data
+    const { personnelCode, name, phone, email, password, roleId, status, customFields } = parsed.data
 
-    // Check unique nationalId
+    // Check unique personnelCode
     const existingUser = await prisma.user.findUnique({
-      where: { nationalId },
+      where: { personnelCode },
     })
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'کاربری با این کد ملی از قبل وجود دارد' },
+        { error: 'کاربری با این کد پرسنلی از قبل وجود دارد' },
         { status: 400 }
       )
     }
@@ -153,18 +135,18 @@ export async function POST(request: Request) {
     const [newUser] = await prisma.$transaction([
       prisma.user.create({
         data: {
-          nationalId,
+          personnelCode,
           name,
           phone: phone || null,
           email: email || null,
           passwordHash,
           roleId: finalRoleId,
           status,
-          customFields: (customFields || null) as any,
+          customFields: (customFields || null) as unknown as Prisma.InputJsonValue,
         },
         select: {
           id: true,
-          nationalId: true,
+          personnelCode: true,
           name: true,
           phone: true,
           email: true,
@@ -178,25 +160,25 @@ export async function POST(request: Request) {
         data: {
           actorId: sessionUser.id,
           entity: 'User',
-          entityId: nationalId, // Using national ID as a key reference or fallback to new user ID after creation
+          entityId: personnelCode, // Using national ID as a key reference or fallback to new user ID after creation
           action: 'create',
           before: undefined,
           after: {
-            nationalId,
+            personnelCode,
             name,
             phone,
             email,
             roleId: finalRoleId,
             status,
             customFields,
-          } as any,
+          } as unknown as Prisma.InputJsonValue,
         },
       }),
     ])
 
     // Update AuditLog entityId with actual database ID
     await prisma.auditLog.updateMany({
-      where: { actorId: sessionUser.id, entity: 'User', entityId: nationalId },
+      where: { actorId: sessionUser.id, entity: 'User', entityId: personnelCode },
       data: { entityId: newUser.id },
     })
 

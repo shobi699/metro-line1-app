@@ -37,7 +37,7 @@ export function BulletinGuard({ children }: { children: React.ReactNode }) {
         return
       }
       try {
-        const res = await fetch(`${API_URL}/bulletins/pending`, {
+        const res = await fetch(`${API_URL}/safety/bulletins/active`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         })
         if (res.ok) {
@@ -69,12 +69,14 @@ export function BulletinGuard({ children }: { children: React.ReactNode }) {
     setSubmitting(true)
     try {
       const userAgent = `MetroApp/1.0 (${Platform.OS}; Version ${Platform.Version})`
-      const res = await fetch(`${API_URL}/bulletins/${current.id}/acknowledge`, {
+      const res = await fetch(`${API_URL}/safety/read-receipts`, {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
           'User-Agent': userAgent,
         },
+        body: JSON.stringify({ bulletinId: current.id }),
       })
       if (res.ok) {
         setPending((prev) => prev.filter((b) => b.id !== current.id))

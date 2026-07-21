@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
-import { approveUserSchema } from '@/server/dto/auth'
+import { approveUserSchema } from '@/lib/zod/auth'
 import {
   getSessionUser,
   requireRole,
@@ -14,7 +14,7 @@ export async function POST(
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'admin')
+  const roleErr = await requireRole(user, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { id } = await params
@@ -54,7 +54,7 @@ export async function POST(
     prisma.user.update({
       where: { id: userId },
       data: { status: 'active', roleId: role.id },
-      select: { id: true, nationalId: true, name: true, status: true },
+      select: { id: true, personnelCode: true, name: true, status: true },
     }),
     prisma.auditLog.create({
       data: {

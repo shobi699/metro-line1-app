@@ -1,130 +1,106 @@
-# مترو خط ۱ — Metro Line 1 Crew Management
-1
-سیستم مدیریت پرسنل خط ۱ مترو تهران
+# 🚇 سامانه جامع سیر و حرکت خط ۱ مترو تهران (Tehran Metro Line 1 Platform)
 
-## Tech Stack
+سامانه‌ای یکپارچه، پیشرفته و بلادرنگ جهت مدیریت پرسنل، راهبران، شیفت‌ها، ایمنی و ارتباطات اضطراری خط ۱ مترو تهران. این پلتفرم شامل نسخه وب (React/Next.js) و نسخه موبایل (React Native/Expo) می‌باشد.
 
-| Layer | Choice |
-|-------|--------|
-| Framework | Next.js 16 (App Router, Turbopack) |
-| Language | TypeScript (strict) |
-| Styling | Tailwind CSS v4 (CSS-first, oklch tokens) |
-| UI | shadcn/ui (New York, base-ui) |
-| DB | Prisma 7 + SQLite (libsql adapter) |
-| Auth | JWT (access 15m + refresh 7d, bcrypt 12) |
-| State | Zustand |
-| i18n | Persian RTL, Vazirmatn font, jalali dates |
-| Dark mode | next-themes (class-based, default dark) |
-| Icons | Lucide React |
+---
 
-## Quick Start
+## 🛠️ پشته فناوری (Tech Stack)
 
+| لایه | فناوری‌های استفاده شده | توضیحات |
+| :--- | :--- | :--- |
+| **فریم‌ورک وب** | Next.js 16 (App Router, Turbopack) | رندرینگ سریع و بهینه سمت سرور و کلاینت |
+| **فریم‌ورک موبایل** | React Native + Expo | نرم‌افزار کراس‌پلتفرم برای اندروید و iOS |
+| **زبان برنامه‌نویسی** | TypeScript (Strict) | تایپ سیف کامل سراسر اپلیکیشن |
+| **استایل‌دهی** | Tailwind CSS v4 | پیکربندی CSS-first به همراه توکن‌های oklch |
+| **کتابخانه UI** | shadcn/ui + Radix UI | کامپوننت‌های دسترسی‌پذیر و مدرن |
+| **دیتابیس و ORM** | Prisma 7 + SQLite / PostgreSQL | هماهنگی کامل برای محیط توسعه محلی و پروداکشن |
+| **مدیریت حالت** | Zustand | مدیریت استیت سریع به همراه ماندگاری (Persist) |
+| **احراز هویت** | JWT (Access + Refresh) | احراز هویت دو مرحله‌ای و کنترل دسترسی بر اساس نقش (RBAC) |
+| **بومی‌سازی** | فارسی RTL، فونت وزیرمتن و تاریخ جلالی | هماهنگی کامل با تقویم هجری شمسی |
+
+---
+
+## 🚀 ویژگی‌ها و امکانات کلیدی سامانه
+
+### ۱. احراز هویت و سطوح دسترسی (RBAC)
+- ثبت‌نام دو مرحله‌ای (کاربر پس از ثبت‌نام در وضعیت «در انتظار تایید» قرار گرفته و پس از تایید مدیریت فعال می‌شود).
+- نقش‌های کاربری چندگانه (`super_admin` / `admin` / `operator` / `manager`).
+
+### ۲. دفتر تلفن هوشمند (Smart Directory)
+- تعریف و مدیریت فیلدهای داینامیک پروفایل توسط ادمین.
+- سیستم هوشمند درون‌ریزی (Import) کاربران از اکسل با گزارش خطا به صورت ردیف به ردیف.
+- خروجی اکسل کامل منطبق بر فایل ورودی.
+
+### ۳. مدیریت لوحه و شیفت‌ها (Roster & Calendar)
+- تقویم شخصی و عمومی کارکنان بر پایه تاریخ جلالی.
+- آپلود مستقیم فایل لوحه توسط ادمین و استخراج خودکار شیفت‌ها.
+- **گزارش‌گیری وضعیت روزانه:** امکان فیلتر و خروجی اکسل و لیست وب از رویدادها و وضعیت‌های ثبت‌شده در تقویم.
+- **شخصی‌سازی مقادیر پیش‌فرض:** امکان تعریف عنوان، ساعت یا مبلغ پیش‌فرض برای دکمه‌های ثبت سریع (مانند اضافه کار، مرخصی و...) توسط هر کاربر در بخش تنظیمات تقویم.
+
+### ۴. موتور تعویض شیفت هوشمند (Shift Swapping)
+- اجرای فیلترهای خودکار پیش از ثبت و تایید درخواست تعویض شیفت:
+  - رعایت حداقل ۱۰ ساعت استراحت بین دو شیفت کاری.
+  - حداکثر ۶ شیفت کاری متوالی.
+  - بررسی تطابق و برابری نقش راهبری (Role Parity).
+
+### ۵. بخشنامه‌ها و دستورالعمل‌های ایمنی (Safety Bulletins)
+- اجبار به مطالعه بخشنامه‌های جدید پیش از دسترسی به داشبورد.
+- ذخیره اطلاعات زمان، دستگاه و موقعیت تایید بخشنامه توسط پرسنل (Immutable Read-Receipts).
+
+### ۶. سیستم تیکتینگ و ثبت خرابی (Fault Ticketing)
+- امکان ثبت تیکت خرابی به همراه آپلود عکس و نشانه‌گذاری روی تصویر.
+- اولویت‌بندی، ارجاع و فرآیند تغییر وضعیت تیکت به همراه ثبت لاگ تغییرات.
+
+### ۷. پیام‌رسان بلادرنگ (Real-time Messaging)
+- گفتگوهای مستقیم و گروهی به صورت کاملاً زنده بر بستر کانال‌های Real-time (مانند SSE).
+
+### ۸. دستیار هوشمند و AI Gateway
+- دستیار هوش مصنوعی آموزش دیده روی آیین‌نامه‌ها و قوانین عملیاتی مترو.
+- سوئیچ خودکار بین مدل‌ها (Gemini، OpenRouter و...) در صورت بروز خطا (Circuit Breaker).
+- **کش معنایی بومی (Semantic Cache):** پاسخگویی سریع‌تر و بهینه‌تر به سوالات تکراری کاربران.
+
+---
+
+## ⚡ راه‌اندازی سریع (Quick Start)
+
+### ۱. نصب وابستگی‌ها
 ```bash
-# 1. Install dependencies
 npm install
+```
 
-# 2. Set up database
+### ۲. راه‌اندازی دیتابیس (Prisma)
+```bash
+# ریست و اعمال تغییرات دیتابیس و اجرای سید
 npx prisma migrate reset --force
 npx tsx prisma/seed.ts
+```
 
-# 3. Start dev server
+### ۳. اجرای سرور توسعه (Turbopack)
+```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+سامانه وب در مسیر [http://localhost:3000](http://localhost:3000) در دسترس خواهد بود.
 
-## Demo Accounts
+---
 
-| Role | National ID | Password |
-|------|-------------|----------|
-| Super Admin | `0000000000` | `admin123` |
-| Admin | `9999999999` | `admin123` |
-| Operator | `1111111111` through `6666666666` | `admin123` |
+## 🔑 اکانت‌های دمو جهت تست
 
-## Features
+| نقش | کد ملی / نام کاربری | رمز عبور |
+| :--- | :--- | :--- |
+| **Super Admin** | `0000000000` | `admin123` |
+| **Admin** | `9999999999` | `admin123` |
+| **Operator** | `1111111111` الی `6666666666` | `admin123` |
 
-### Auth & RBAC
-- Two-step registration (pending approval by admin)
-- JWT access + refresh tokens
-- 3-tier role hierarchy: operator → admin → super_admin
-- 20 granular permissions across 6 modules
+---
 
-### Directory (دفتر تلفن)
-- User list with search/filter/pagination
-- Dynamic custom fields (admin-managed)
-- Excel import with per-row error report
-- Excel export
-
-### Shifts (شیفت)
-- Personal shift calendar (jalali month grid)
-- Admin shift calendar (all users)
-- Roster upload from Excel → auto-shift extraction
-
-### Shift Swapping (تعویض شیفت)
-- Swap request with rule engine:
-  - Minimum 10h rest between shifts
-  - Max 6 consecutive shifts
-  - Role parity check
-- Accept/reject workflow
-- Admin approval
-
-### Safety Bulletins (بخشنامه ایمنی)
-- Create/acknowledge with read receipts
-- Non-blocking modal until scroll + acknowledge
-- Receipt tracking with % seen
-
-### Fault Ticketing (تیکتینگ خرابی)
-- Photo + on-image annotation
-- Priority levels (low → critical)
-- Status workflow: open → in_progress → resolved → closed
-- Audit trail per ticket
-
-## Scripts
+## 🧪 دستورات کاربردی (Scripts)
 
 ```bash
-npm run dev          # Start dev server (Turbopack)
-npm run build        # Production build
-npm run lint         # ESLint check
-npm run typecheck    # TypeScript check
-npx vitest run       # Run unit tests
-npx prisma studio    # Open Prisma Studio
-npx tsx prisma/seed.ts  # Re-seed database
+npm run dev          # اجرای سرور توسعه
+npm run build        # ساخت نسخه پروداکشن
+npm run lint         # بررسی خطاهای ساختاری و نگارشی کد
+npm run typecheck    # بررسی کدهای تایپ‌اسکریپت
+npx vitest run       # اجرای تست‌های واحد
+npx prisma studio    # اجرای پنل مدیریت دیتابیس در مرورگر
 ```
-
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── layout.tsx              # Root layout (RTL, Vazirmatn, dark mode)
-│   ├── globals.css             # oklch theme tokens
-│   ├── (auth)/                 # login, register, pending-approval
-│   ├── (app)/                  # authenticated shell
-│   │   ├── layout.tsx          # sidebar + bulletin guard
-│   │   └── dashboard/
-│   └── api/                    # Route handlers (26 endpoints)
-├── components/
-│   ├── ui/                     # shadcn wrappers (button, card, etc.)
-│   └── shared/                 # sidebar, bulletin-guard, data-table, etc.
-├── server/
-│   ├── auth/                   # password, jwt
-│   ├── rbac/                   # permissions, guard
-│   └── modules/                # services per domain
-├── stores/                     # Zustand stores
-├── lib/
-│   ├── fa.ts                   # toFa(), jalali()
-│   └── utils.ts                # cn()
-└── generated/prisma/           # Prisma client output
-```
-
-## Environment Variables
-
-```env
-DATABASE_URL="file:prisma/dev.db"
-JWT_ACCESS_SECRET="<random-secret>"
-JWT_REFRESH_SECRET="<random-secret>"
-```
-
-## License
-
-Internal use only — Tehran Metro

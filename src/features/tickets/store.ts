@@ -11,7 +11,7 @@ interface Ticket {
   photoUrl: string | null
   annotations: string | null
   createdAt: string
-  creator: { id: string; name: string; nationalId: string }
+  creator: { id: string; name: string; personnelCode: string }
   _count: { logs: number }
 }
 

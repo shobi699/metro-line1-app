@@ -1,14 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, requireRole, authErrorResponse } from '@/server/rbac/guard'
 import { resolveShiftForUser } from '@/server/modules/roster'
+import { prisma } from '@/server/db'
 import dayjs from 'dayjs'
-import { z } from 'zod'
-
-const resolvedSchema = z.object({
-  userId: z.string().min(1),
-  startDate: z.string().min(1),
-  endDate: z.string().min(1),
-})
+import { resolvedSchema } from '@/lib/zod/shifts'
 
 /**
  * GET /api/shifts/resolved?userId=&startDate=&endDate=
@@ -18,7 +13,7 @@ export async function GET(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'operator')
+  const roleErr = await requireRole(user, 'operator')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { searchParams } = new URL(request.url)
@@ -57,9 +52,16 @@ export async function GET(request: Request) {
     templateName: string
   }> = []
 
+  // customFields کاربر هدف را یک‌بار می‌خوانیم تا گروه×نوع شیفت در resolve اعمال شود
+  const targetUser = await prisma.user.findUnique({
+    where: { id: parsed.data.userId },
+    select: { customFields: true },
+  })
+  const targetCustomFields = (targetUser?.customFields as Record<string, unknown> | null) ?? null
+
   for (let i = 0; i < totalDays; i++) {
     const date = start.add(i, 'day')
-    const result = await resolveShiftForUser(parsed.data.userId, date, undefined)
+    const result = await resolveShiftForUser(parsed.data.userId, date, targetCustomFields)
     resolved.push({
       date: date.format('YYYY-MM-DD'),
       shift: result.shift,

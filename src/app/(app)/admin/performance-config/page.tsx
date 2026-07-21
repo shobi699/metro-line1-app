@@ -36,7 +36,7 @@ interface Competency {
   actionTypes: ActionType[]
 }
 
-const DIRECTION_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+const DIRECTION_CONFIG: Record<string, { label: string; color: string; icon: React.ComponentType<any> }> = {
   positive: { label: 'پاداشی', color: 'text-success', icon: TrendingUp },
   negative: { label: 'جریمه‌ای', color: 'text-critical', icon: TrendingDown },
   both: { label: 'دوطرفه', color: 'text-info', icon: Minus },

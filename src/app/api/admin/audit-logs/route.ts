@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const sessionUser = await getSessionUser(request)
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
-  const roleErr = requireRole(sessionUser, 'admin')
+  const roleErr = await requireRole(sessionUser, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { searchParams } = new URL(request.url)
@@ -20,7 +20,10 @@ export async function GET(request: Request) {
     const whereClause: Prisma.AuditLogWhereInput = {}
 
     if (action) {
-      whereClause.action = action as any
+      const validActions = ['create', 'update', 'delete', 'login', 'logout', 'import', 'export'] as const
+      if (validActions.includes(action as (typeof validActions)[number])) {
+        whereClause.action = action as (typeof validActions)[number]
+      }
     }
 
     if (entity) {
@@ -34,7 +37,7 @@ export async function GET(request: Request) {
           actor: {
             OR: [
               { name: { contains: search } },
-              { nationalId: { contains: search } },
+              { personnelCode: { contains: search } },
             ],
           },
         },
@@ -48,10 +51,10 @@ export async function GET(request: Request) {
           select: {
             id: true,
             name: true,
-            nationalId: true,
+            personnelCode: true,
             role: {
               select: {
-                name: true,
+                title: true,
               },
             },
           },
@@ -65,7 +68,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ data: logs })
   } catch (error: unknown) {
-    console.error('Error fetching general audit logs:', error)
     const message = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
       { error: `خطا در دریافت لاگ‌های ممیزی سیستم: ${message}` },

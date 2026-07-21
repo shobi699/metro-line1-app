@@ -35,7 +35,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ data: logs })
   } catch (error: unknown) {
-    console.error('Error fetching settings audit logs:', error)
     const message = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
       { error: `خطا در دریافت لاگ‌های ممیزی تنظیمات: ${message}` },

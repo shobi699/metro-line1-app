@@ -1,22 +1,7 @@
 import { prisma } from '@/server/db'
 import { z } from 'zod'
 import type { Prisma } from '@/generated/prisma/client'
-
-export const shiftNoteSchema = z.object({
-  date: z.string().min(1, 'تاریخ الزامی است'),
-  content: z.string().min(1, 'محتوای یادداشت الزامی است'),
-})
-
-export const shiftTaskSchema = z.object({
-  date: z.string().min(1, 'تاریخ الزامی است'),
-  title: z.string().min(1, 'عنوان الزامی است'),
-  time: z.string().default('08:00'),
-  priority: z.enum(['low', 'medium', 'high']).default('medium'),
-  status: z.enum(['todo', 'in_progress', 'done']).default('todo'),
-  type: z.enum(['personal', 'system']).default('personal'),
-  overtime: z.number().optional(),
-  extraData: z.record(z.string(), z.unknown()).optional(),
-})
+import { shiftNoteSchema, shiftTaskSchema } from '@/lib/zod/roster'
 
 export async function listNotes(userId: string, startDate: Date, endDate: Date) {
   return prisma.shiftNote.findMany({

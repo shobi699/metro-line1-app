@@ -8,7 +8,10 @@ import {
   Vibration,
   TextInput,
 } from 'react-native'
+import { useTheme } from '../shared/ThemeProvider'
 import { useAuthStore } from '../stores/auth'
+import { ScreenWrapper } from '../shared/ScreenWrapper'
+import { useRadioStore } from '../stores/radio'
 import {
   Radio,
   Wifi,
@@ -30,12 +33,59 @@ interface RadioLog {
 
 export function RadioSimulatorScreen({ navigation }: any) {
   const user = useAuthStore((s) => s.user)
-  const [channel, setChannel] = useState('OCC MAIN')
-  const [dialedCode, setDialedCode] = useState('1000') // Default frequency code
+  const radioStore = useRadioStore()
+  
+  const [dialedCode, setDialedCode] = useState('') // Default empty, meaning active channel
   const [state, setState] = useState<'IDLE' | 'TRANSMITTING' | 'RECEIVING'>('IDLE')
   const [muted, setMuted] = useState(false)
-  const [radioLogs, setRadioLogs] = useState<RadioLog[]>([])
   const [currentTransmittingText, setCurrentTransmittingText] = useState('')
+  const [channel, setChannel] = useState('OCC MAIN')
+  const [radioLogs, setRadioLogs] = useState<RadioLog[]>([])
+  
+  const handlePttPress = () => {
+    if (state !== 'IDLE') return
+    setState('TRANSMITTING')
+    playStartBeep()
+  }
+
+  const handlePttRelease = () => {
+    if (state !== 'TRANSMITTING') return
+    setState('IDLE')
+    playSquelch()
+    const timeStr = new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
+    const activeBand = dialedCode.length > 0 ? `باند اختصاصی ${dialedCode}` : channel
+    setRadioLogs(prev => [
+      {
+        id: Date.now().toString(),
+        time: timeStr,
+        sender: 'شما (راهبر)',
+        message: dialedCode.length > 0 
+          ? `پیام رادیویی با کد اختصاصی فرستنده ${dialedCode} با موفقیت مخابره شد.`
+          : `پیام رادیویی با موفقیت در کانال عمومی ${channel} ارسال شد.`,
+        channel: activeBand
+      },
+      ...prev
+    ])
+  }
+
+  const { theme } = useTheme()
+  const styles = React.useMemo(() => getStyles(theme), [theme])
+
+  // Initialize store
+  useEffect(() => {
+    radioStore.fetchChannels()
+    radioStore.fetchPhrases()
+  }, [])
+
+  // Poll for logs
+  useEffect(() => {
+    if (!radioStore.activeChannel) return
+    const interval = setInterval(() => {
+      radioStore.fetchLogs(radioStore.activeChannel!.id)
+    }, 5000)
+    radioStore.fetchLogs(radioStore.activeChannel.id)
+    return () => clearInterval(interval)
+  }, [radioStore.activeChannel?.id])
 
   // Web Audio Context for tone synthesis (works on React Native Web)
   const audioCtxRef = useRef<any>(null)
@@ -63,41 +113,22 @@ export function RadioSimulatorScreen({ navigation }: any) {
       const now = ctx.currentTime
       const duration = 0.05
       
-      // Chirp 1 (800Hz)
-      const osc1 = ctx.createOscillator()
-      const gain1 = ctx.createGain()
-      osc1.type = 'sine'
-      osc1.frequency.setValueAtTime(800, now)
-      gain1.gain.setValueAtTime(0.08, now)
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + duration)
-      osc1.connect(gain1)
-      gain1.connect(ctx.destination)
-      osc1.start(now)
-      osc1.stop(now + duration)
+      const playChirp = (freq: number, delay: number) => {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(freq, now + delay)
+        gain.gain.setValueAtTime(0.08, now + delay)
+        gain.gain.exponentialRampToValueAtTime(0.001, now + delay + duration)
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.start(now + delay)
+        osc.stop(now + delay + duration)
+      }
 
-      // Chirp 2 (900Hz)
-      const osc2 = ctx.createOscillator()
-      const gain2 = ctx.createGain()
-      osc2.type = 'sine'
-      osc2.frequency.setValueAtTime(900, now + 0.06)
-      gain2.gain.setValueAtTime(0.08, now + 0.06)
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.06 + duration)
-      osc2.connect(gain2)
-      gain2.connect(ctx.destination)
-      osc2.start(now + 0.06)
-      osc2.stop(now + 0.06 + duration)
-
-      // Chirp 3 (1000Hz)
-      const osc3 = ctx.createOscillator()
-      const gain3 = ctx.createGain()
-      osc3.type = 'sine'
-      osc3.frequency.setValueAtTime(1000, now + 0.12)
-      gain3.gain.setValueAtTime(0.08, now + 0.12)
-      gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.12 + duration)
-      osc3.connect(gain3)
-      gain3.connect(ctx.destination)
-      osc3.start(now + 0.12)
-      osc3.stop(now + 0.12 + duration)
+      playChirp(800, 0)
+      playChirp(900, 0.06)
+      playChirp(1000, 0.12)
     } catch {}
   }
 
@@ -178,7 +209,6 @@ export function RadioSimulatorScreen({ navigation }: any) {
     if (dtmfFrequencies[key]) {
       playDtmfTone(dtmfFrequencies[key][0], dtmfFrequencies[key][1])
     }
-    
     setDialedCode((prev) => {
       if (prev.length >= 6) return prev
       return prev + key
@@ -199,25 +229,17 @@ export function RadioSimulatorScreen({ navigation }: any) {
     try {
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
+      osc.type = 'square'
+      osc.frequency.value = freq
+      gain.gain.setValueAtTime(0.03, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
       osc.connect(gain)
       gain.connect(ctx.destination)
-      osc.type = 'sine'
-      osc.frequency.setValueAtTime(freq, ctx.currentTime)
-      gain.gain.setValueAtTime(0.05, ctx.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
       osc.start()
       osc.stop(ctx.currentTime + duration)
     } catch {}
   }
 
-  // Load initial logs
-  useEffect(() => {
-    setRadioLogs([
-      { id: '1', time: '۰۳:۴۰', sender: 'مرکز فرمان OCC', message: 'کلیه راهبران سرعت در بلاک امام خمینی به دلیل بازرسی فنی تقلیل یابد.', channel: 'OCC MAIN' },
-      { id: '2', time: '۰۳:۴۱', sender: 'راهبر رام ۱۰۴', message: 'OCC رام ۱۰۴ دستور را دریافت کرد. در حال تقلیل سرعت به ۳۰ کیلومتر.', channel: 'OCC MAIN' },
-      { id: '3', time: '۰۳:۴۲', sender: 'ایستگاه هفت تیر', message: 'دیسپاچینگ، سوزن خط ۲ با موفقیت آزاد شد. مسیر تخلیه است.', channel: 'STATION TALK' }
-    ])
-  }, [])
 
   // Simulate incoming messages based on channels or codes
   useEffect(() => {
@@ -280,38 +302,7 @@ export function RadioSimulatorScreen({ navigation }: any) {
     }, 9000)
 
     return () => clearInterval(interval)
-  }, [state, channel, dialedCode, muted])
-
-  const handlePttPress = () => {
-    if (state !== 'IDLE') return
-    Vibration.vibrate([0, 100])
-    setState('TRANSMITTING')
-    playStartBeep()
-  }
-
-  const handlePttRelease = () => {
-    if (state !== 'TRANSMITTING') return
-    Vibration.vibrate(50)
-    playSquelch()
-    setState('IDLE')
-
-    const now = new Date()
-    const timeStr = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
-    const activeBand = dialedCode.length > 0 ? `کد فرکانس ${dialedCode}` : channel
-
-    setRadioLogs((prev) => [
-      {
-        id: Date.now().toString(),
-        time: timeStr,
-        sender: 'شما (راهبر)',
-        message: dialedCode.length > 0 
-          ? `پیام رادیویی با کد اختصاصی فرستنده ${dialedCode} با موفقیت مخابره شد.`
-          : `پیام رادیویی با موفقیت در کانال عمومی ${channel} ارسال شد.`,
-        channel: activeBand
-      },
-      ...prev
-    ])
-  }
+  }, [state, radioStore.activeChannel?.label, dialedCode, muted])
 
   const formatFarsiNumber = (numStr: string) => {
     const farsiDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
@@ -326,26 +317,8 @@ export function RadioSimulatorScreen({ navigation }: any) {
   })
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <ChevronRight size={24} color="#f2f2f7" />
-        </TouchableOpacity>
-        <View style={styles.headerTitleBox}>
-          <Radio size={20} color="#e53935" />
-          <Text style={styles.headerTitle}>شبیه‌ساز بی‌سیم TETRA</Text>
-        </View>
-        <TouchableOpacity
-          onPress={() => setMuted(!muted)}
-          style={styles.volumeButton}
-        >
-          {muted ? <VolumeX size={20} color="#e53935" /> : <Volume2 size={20} color="#34c759" />}
-        </TouchableOpacity>
-      </View>
+    <ScreenWrapper title="شبیه‌ساز بی‌سیم TETRA" navigation={navigation}>
+      <View style={styles.container}>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Device Wrapper */}
@@ -376,9 +349,12 @@ export function RadioSimulatorScreen({ navigation }: any) {
               {/* LCD Top Bar */}
               <View style={styles.lcdHeader}>
                 <View style={styles.lcdStatusIconBox}>
-                  <Wifi size={10} color="#34c759" />
+                  <Wifi size={10} color={theme.colors.success} />
                   <Text style={styles.lcdStatusText}>آنلاین</Text>
                 </View>
+                <TouchableOpacity onPress={() => setMuted(!muted)} style={{ paddingHorizontal: 6 }}>
+                  {muted ? <VolumeX size={12} color="#ff3b30" /> : <Volume2 size={12} color="#34c759" />}
+                </TouchableOpacity>
                 <Text style={styles.lcdFreqText}>
                   {dialedCode ? `${formatFarsiNumber(dialedCode)}.۰۰ MHz` : '۳۸۵.۱۲۵ MHz'}
                 </Text>
@@ -460,7 +436,7 @@ export function RadioSimulatorScreen({ navigation }: any) {
                 style={styles.clearButton}
                 activeOpacity={0.8}
               >
-                <Delete size={16} color="#e53935" />
+                <Delete size={16} color={theme.colors.primary} />
                 <Text style={styles.clearButtonText}>پاک کردن فرکانس</Text>
               </TouchableOpacity>
             </View>
@@ -531,7 +507,7 @@ export function RadioSimulatorScreen({ navigation }: any) {
         {/* Logs Archive */}
         <View style={styles.logsContainer}>
           <View style={styles.logsHeader}>
-            <Clock size={16} color="#e53935" />
+            <Clock size={16} color={theme.colors.primary} />
             <Text style={styles.logsTitle}>وقایع رادیویی باند فعال ({dialedCode ? `باند ${formatFarsiNumber(dialedCode)}` : channel})</Text>
           </View>
 
@@ -554,7 +530,7 @@ export function RadioSimulatorScreen({ navigation }: any) {
 
             {filteredLogs.length === 0 && (
               <View style={styles.emptyLogsBox}>
-                <Radio size={32} color="#262930" />
+                <Radio size={32} color={theme.colors.border} />
                 <Text style={styles.emptyLogsText}>هیچ پیام رادیویی در این باند مخابره نشده است.</Text>
                 <Text style={styles.emptyLogsSub}>با نگه‌داشتن PTT در فرکانس انتخابی صحبت کنید یا منتظر پیام دیسپاچر باشید.</Text>
               </View>
@@ -562,21 +538,22 @@ export function RadioSimulatorScreen({ navigation }: any) {
           </View>
 
           <View style={styles.disclaimerBox}>
-            <ShieldAlert size={16} color="#ff9500" style={styles.disclaimerIcon} />
+            <ShieldAlert size={16} color={theme.colors.warning} style={styles.disclaimerIcon} />
             <Text style={styles.disclaimerText}>
               این شبیه‌ساز مستقیماً متصل به شبکه دیسپاچینگ خط ۱ مترو تهران است. کلیه ارتباطات ضبط و پایش می‌شود.
             </Text>
           </View>
         </View>
       </ScrollView>
-    </View>
+      </View>
+    </ScreenWrapper>
   )
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#13151a',
+    backgroundColor: theme.colors.background,
   },
   header: {
     height: 56,
@@ -585,8 +562,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#262930',
-    backgroundColor: '#1c1e24',
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   backButton: {
     padding: 4,
@@ -599,7 +576,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#f2f2f7',
+    color: theme.colors.primary,
+    fontFamily: theme.typography.screenTitle.fontFamily,
   },
   volumeButton: {
     padding: 6,
@@ -917,35 +895,37 @@ const styles = StyleSheet.create({
   logsContainer: {
     width: '100%',
     maxWidth: 340,
-    backgroundColor: '#1c1e24',
-    borderRadius: 16,
+    backgroundColor: theme.colors.surfaceContainerLowest,
+    borderRadius: theme.borderRadius.xl,
     borderWidth: 1,
-    borderColor: '#262930',
+    borderColor: theme.colors.border,
     padding: 14,
     marginTop: 24,
+    ...theme.shadows.level1,
   },
   logsHeader: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
     gap: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#262930',
+    borderBottomColor: theme.colors.border,
     paddingBottom: 10,
     marginBottom: 12,
   },
   logsTitle: {
     fontSize: 11.5,
     fontWeight: 'bold',
-    color: '#f2f2f7',
+    color: theme.colors.onSurface,
+    fontFamily: theme.typography.cardTitle.fontFamily,
   },
   logsList: {
     maxHeight: 280,
   },
   logCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.15)',
+    backgroundColor: theme.colors.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 10,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.lg,
     padding: 10,
     marginBottom: 8,
   },
@@ -958,18 +938,20 @@ const styles = StyleSheet.create({
   logSender: {
     fontSize: 9.5,
     fontWeight: 'bold',
-    color: '#e53935',
+    color: theme.colors.primary,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   logTime: {
     fontSize: 8.5,
     fontFamily: 'monospace',
-    color: '#8e8e93',
+    color: theme.colors.secondary,
   },
   logMessage: {
-    fontSize: 10.5,
-    color: '#f2f2f7',
+    fontSize: 11,
+    color: theme.colors.onSurface,
     textAlign: 'right',
-    lineHeight: 15,
+    lineHeight: 16,
+    fontFamily: theme.typography.bodyMd.fontFamily,
   },
   logCardFooter: {
     flexDirection: 'row-reverse',
@@ -978,24 +960,26 @@ const styles = StyleSheet.create({
     marginTop: 6,
     paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+    borderTopColor: theme.colors.border,
   },
   logMeta: {
     fontSize: 8,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   tetraBadge: {
-    backgroundColor: 'rgba(229, 57, 53, 0.1)',
+    backgroundColor: theme.colors.primaryContainer + '1A',
     borderWidth: 1,
-    borderColor: 'rgba(229, 57, 53, 0.2)',
+    borderColor: theme.colors.primaryContainer + '30',
     borderRadius: 4,
     paddingHorizontal: 5,
     paddingVertical: 1,
   },
   tetraBadgeText: {
     fontSize: 7.5,
-    color: '#e53935',
+    color: theme.colors.primary,
     fontWeight: 'bold',
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   emptyLogsBox: {
     alignItems: 'center',
@@ -1005,23 +989,25 @@ const styles = StyleSheet.create({
   },
   emptyLogsText: {
     fontSize: 10.5,
-    color: '#8e8e93',
+    color: theme.colors.secondary,
     fontWeight: 'bold',
     textAlign: 'center',
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   emptyLogsSub: {
     fontSize: 9,
-    color: '#555860',
+    color: theme.colors.secondary,
     textAlign: 'center',
     paddingHorizontal: 16,
     lineHeight: 13,
+    fontFamily: theme.typography.captionSm.fontFamily,
   },
   disclaimerBox: {
     flexDirection: 'row-reverse',
-    backgroundColor: 'rgba(255, 149, 0, 0.05)',
+    backgroundColor: theme.colors.warning + '1A',
     borderWidth: 1,
-    borderColor: 'rgba(255, 149, 0, 0.1)',
-    borderRadius: 10,
+    borderColor: theme.colors.warning + '30',
+    borderRadius: theme.borderRadius.lg,
     padding: 10,
     marginTop: 12,
     gap: 8,
@@ -1031,10 +1017,12 @@ const styles = StyleSheet.create({
   },
   disclaimerText: {
     flex: 1,
-    fontSize: 8.5,
-    color: '#ff9500',
+    fontSize: 9,
+    color: theme.colors.warning,
     textAlign: 'right',
-    lineHeight: 13,
+    lineHeight: 14,
+    fontFamily: theme.typography.captionSm.fontFamily,
+    fontWeight: '600',
   },
 })
 

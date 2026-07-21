@@ -1,18 +1,13 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, requireRole, authErrorResponse } from '@/server/rbac/guard'
 import { materializePeriod } from '@/server/modules/roster'
-import { z } from 'zod'
-
-const publishSchema = z.object({
-  startDate: z.string().min(1, 'تاریخ شروع الزامی است'),
-  endDate: z.string().min(1, 'تاریخ پایان الزامی است'),
-})
+import { publishSchema } from '@/lib/zod/shifts'
 
 export async function POST(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'admin')
+  const roleErr = await requireRole(user, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {

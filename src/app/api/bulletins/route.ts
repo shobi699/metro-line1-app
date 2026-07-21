@@ -4,14 +4,14 @@ import {
   requireRole,
   authErrorResponse,
 } from '@/server/rbac/guard'
-import { createBulletinSchema } from '@/server/dto/safety'
+import { createBulletinSchema } from '@/lib/zod/safety'
 import { createBulletin, getAllBulletins } from '@/server/modules/safety/bulletins'
 
 export async function GET(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'admin')
+  const roleErr = await requireRole(user, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const bulletins = await getAllBulletins()
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'admin')
+  const roleErr = await requireRole(user, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const body = await request.json()

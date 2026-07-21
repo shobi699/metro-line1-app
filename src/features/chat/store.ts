@@ -1,6 +1,18 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+/** سطح اولویت پیام — بخش ۵.۳ سند tosee.md */
+export type MessagePriority = 'normal' | 'important' | 'urgent' | 'emergency' | 'critical'
+
+/** رسید قانونی خواندن پیام — بخش ۵.۲ */
+export interface ReadReceipt {
+  userId: string
+  userName: string
+  seenAt: string
+  device?: string
+  ipAddress?: string
+}
+
 export interface ChatMessage {
   id: string
   roomId: string
@@ -11,13 +23,33 @@ export interface ChatMessage {
   attachmentType: string | null
   pinned: boolean
   createdAt: string
+  /** اولویت پیام — بخش ۵.۳ */
+  priority?: MessagePriority
+  /** تگ‌های پیام — بخش ۵.۴ */
+  tags?: string[]
+  /** رسیدهای قانونی خواندن — بخش ۵.۲ */
+  readReceipts?: ReadReceipt[]
 }
+
+/** نوع کانال رسمی — بخش ۵.۱ */
+export type ChannelKind =
+  | 'direct'       // چت شخصی
+  | 'shift'        // گروه شیفت
+  | 'station'      // روم ایستگاه
+  | 'announcement' // کانال اطلاعیه رسمی
+  | 'emergency'    // کانال اضطراری
+  | 'occ'          // کانال OCC
+  | 'training'     // کانال آموزش
+  | 'management'   // کانال مدیران
+  | 'general'
+  | 'operators'
+  | 'custom'
 
 export interface ChatRoom {
   id: string
   name: string
   type: 'direct' | 'group'
-  kind: string
+  kind: ChannelKind
   memberCount: number
   unreadCount: number
   lastMessage: {
@@ -39,6 +71,8 @@ interface ChatState {
   loadingRooms: boolean
   loadingMessages: boolean
   connected: boolean
+  /** حالت ارتباط اضطراری — بخش ۵.۵ */
+  emergencyMode: boolean
   loadRooms: (token: string) => Promise<void>
   selectRoom: (token: string, roomId: string) => Promise<void>
   sendMessage: (
@@ -46,17 +80,21 @@ interface ChatState {
     roomId: string,
     body: string,
     attachment?: { url: string; type: string },
+    priority?: MessagePriority,
   ) => Promise<boolean>
   openDirect: (token: string, userId: string) => Promise<string | null>
   markRead: (token: string, roomId: string) => Promise<void>
   toggleReaction: (token: string, roomId: string, messageId: string, emoji: string) => Promise<void>
   updateSettings: (token: string, roomId: string, settings: { readOnly: boolean; blockAttachments: boolean; maxLength: number }) => Promise<void>
+  acknowledgeMessage: (token: string, messageId: string) => Promise<void>
+  setEmergencyMode: (active: boolean) => void
   connect: (token: string) => void
   disconnect: () => void
   reset: () => void
 }
 
-// نگه‌داری اتصال SSE خارج از state تا از سریال‌سازی/رندر مجدد جدا بماند.
+// نگه‌داری اتصال WebSocket خارج از state تا از سریال‌سازی/رندر مجدد جدا بماند.
+let ws: WebSocket | null = null
 let eventSource: EventSource | null = null
 
 function authHeaders(token: string): HeadersInit {
@@ -75,6 +113,7 @@ export const useChatStore = create<ChatState>()(
       loadingRooms: false,
       loadingMessages: false,
       connected: false,
+      emergencyMode: false,
 
       async loadRooms(token) {
         set({ loadingRooms: true })
@@ -132,7 +171,7 @@ export const useChatStore = create<ChatState>()(
         await get().markRead(token, roomId)
       },
 
-      async sendMessage(token, roomId, body, attachment) {
+      async sendMessage(token, roomId, body, attachment, priority) {
         try {
           const res = await fetch(`/api/chat/rooms/${roomId}/messages`, {
             method: 'POST',
@@ -141,6 +180,7 @@ export const useChatStore = create<ChatState>()(
               body,
               attachmentUrl: attachment?.url,
               attachmentType: attachment?.type,
+              priority: priority ?? 'normal',
             }),
           })
           if (!res.ok) return false
@@ -224,37 +264,101 @@ export const useChatStore = create<ChatState>()(
         }
       },
 
+      async acknowledgeMessage(token, messageId) {
+        try {
+          await fetch(`/api/chat/messages/${messageId}/acknowledge`, {
+            method: 'POST',
+            headers: authHeaders(token),
+            body: JSON.stringify({}),
+          })
+        } catch {
+          // silent
+        }
+      },
+
       connect(token) {
-        if (eventSource) return
-        const es = new EventSource(
-          `/api/chat/stream?token=${encodeURIComponent(token)}`,
-        )
-        es.addEventListener('ready', () => set({ connected: true }))
+        if (ws || eventSource) return
+
+        const sseUrl = `/api/chat/stream?token=${encodeURIComponent(token)}`
+        const es = new EventSource(sseUrl)
+
+        es.onopen = () => set({ connected: true })
+
         es.addEventListener('message', (ev) => {
           try {
-            const payload = JSON.parse((ev as MessageEvent).data) as {
-              roomId: string
-              message: ChatMessage
-            }
-            handleIncoming(set, get, payload.message)
-          } catch {
-            // نادیده گرفتن payload نامعتبر
+            const data = JSON.parse(ev.data) as ChatMessage
+            handleIncoming(set, get, data)
+          } catch (e) {
+            // silent
           }
         })
+
         es.onerror = () => {
           set({ connected: false })
-          // EventSource به‌صورت خودکار تلاش مجدد می‌کند؛ فقط وضعیت را به‌روز می‌کنیم.
+          // در صورتی که اتصال EventSource قطع شد یا سرور Cloudflare بود، به WebSocket سوئیچ کن
+          if (es.readyState === EventSource.CLOSED) {
+            es.close()
+            eventSource = null
+            tryWebSocket(token)
+          }
         }
+
         eventSource = es
+
+        function tryWebSocket(t: string) {
+          if (ws) return
+          const wsUrl = `/api/chat/stream?token=${encodeURIComponent(t)}`
+          const socket = new WebSocket(wsUrl.replace(/^http/, 'ws'))
+
+          socket.onopen = () => set({ connected: true })
+
+          socket.onmessage = (ev) => {
+            try {
+              const payload = JSON.parse(ev.data) as {
+                type: string
+                roomId: string
+                data: ChatMessage
+              }
+              if (payload.type === 'message') {
+                handleIncoming(set, get, payload.data)
+              }
+            } catch {
+              // silent
+            }
+          }
+
+          socket.onerror = () => {
+            set({ connected: false })
+          }
+
+          socket.onclose = () => {
+            set({ connected: false })
+            ws = null
+            // تلاش مجدد بعد از ۳ ثانیه
+            setTimeout(() => {
+              if (!ws && !eventSource) get().connect(t)
+            }, 3000)
+          }
+
+          ws = socket
+        }
+      },
+
+      setEmergencyMode(active) {
+        set({ emergencyMode: active })
       },
 
       disconnect() {
+        ws?.close()
+        ws = null
         eventSource?.close()
         eventSource = null
         set({ connected: false })
       },
 
       reset() {
+        ws?.close()
+        ws = null
         eventSource?.close()
         eventSource = null
         set({
@@ -262,6 +366,7 @@ export const useChatStore = create<ChatState>()(
           activeRoomId: null,
           messagesByRoom: {},
           connected: false,
+          emergencyMode: false,
         })
       },
     }),
@@ -332,6 +437,30 @@ function handleIncoming(
           [message.roomId]: settings,
         },
       }))
+    } catch {
+      // silent
+    }
+    return
+  }
+
+  if (message.attachmentType === 'event/receipt_updated') {
+    try {
+      const payload = JSON.parse(message.body || '{}') as {
+        messageId: string
+        receipts: any[]
+      }
+      set((s) => {
+        const existing = s.messagesByRoom[message.roomId] ?? []
+        const updated = existing.map((m) =>
+          m.id === payload.messageId ? { ...m, readReceipts: payload.receipts } : m
+        )
+        return {
+          messagesByRoom: {
+            ...s.messagesByRoom,
+            [message.roomId]: updated,
+          },
+        }
+      })
     } catch {
       // silent
     }

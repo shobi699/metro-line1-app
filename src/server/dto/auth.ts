@@ -1,10 +1,10 @@
 import { z } from 'zod'
 
 export const registerSchema = z.object({
-  nationalId: z
+  personnelCode: z
     .string()
-    .length(10, 'کد ملی باید ۱۰ رقم باشد')
-    .regex(/^\d+$/, 'کد ملی فقط شامل اعداد باشد'),
+    .length(10, 'کد پرسنلی باید ۱۰ رقم باشد')
+    .regex(/^\d+$/, 'کد پرسنلی فقط شامل اعداد باشد'),
   name: z.string().min(2, 'نام حداقل ۲ کاراکتر باشد'),
   phone: z
     .string()
@@ -21,10 +21,10 @@ export const registerSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>
 
 export const loginSchema = z.object({
-  nationalId: z
+  personnelCode: z
     .string()
-    .length(10, 'کد ملی باید ۱۰ رقم باشد')
-    .regex(/^\d+$/, 'کد ملی فقط شامل اعداد باشد'),
+    .length(10, 'کد پرسنلی باید ۱۰ رقم باشد')
+    .regex(/^\d+$/, 'کد پرسنلی فقط شامل اعداد باشد'),
   password: z.string().min(1, 'رمز عبور الزامی است'),
 })
 
@@ -46,10 +46,10 @@ export const approveUserSchema = z.object({
 export type ApproveUserInput = z.infer<typeof approveUserSchema>
 
 export const sendOtpSchema = z.object({
-  nationalId: z
+  personnelCode: z
     .string()
-    .length(10, 'کد ملی باید ۱۰ رقم باشد')
-    .regex(/^\d+$/, 'کد ملی فقط شامل اعداد باشد'),
+    .length(10, 'کد پرسنلی باید ۱۰ رقم باشد')
+    .regex(/^\d+$/, 'کد پرسنلی فقط شامل اعداد باشد'),
   phone: z
     .string()
     .regex(/^09\d{9}$/, 'شماره موبایل نامعتبر است'),
@@ -58,10 +58,10 @@ export const sendOtpSchema = z.object({
 export type SendOtpInput = z.infer<typeof sendOtpSchema>
 
 export const verifyOtpSchema = z.object({
-  nationalId: z
+  personnelCode: z
     .string()
-    .length(10, 'کد ملی باید ۱۰ رقم باشد')
-    .regex(/^\d+$/, 'کد ملی فقط شامل اعداد باشد'),
+    .length(10, 'کد پرسنلی باید ۱۰ رقم باشد')
+    .regex(/^\d+$/, 'کد پرسنلی فقط شامل اعداد باشد'),
   code: z
     .string()
     .length(6, 'کد تایید باید ۶ رقم باشد')

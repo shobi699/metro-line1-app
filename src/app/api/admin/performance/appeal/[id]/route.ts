@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, requireRole, authErrorResponse } from '@/server/rbac/guard'
 import { reviewPerformanceAppeal } from '@/server/modules/performance/service'
-import { z } from 'zod'
-
-const reviewAppealSchema = z.object({
-  status: z.enum(['approved', 'rejected']),
-  note: z.string().optional().or(z.literal('')),
-})
+import { reviewAppealSchema } from '@/lib/zod/admin'
 
 // PATCH /api/admin/performance/appeal/[id] - Review appeal (Admin/HR Only)
 export async function PATCH(
@@ -17,7 +12,7 @@ export async function PATCH(
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
   // Enforce admin/manager role
-  const roleErr = requireRole(sessionUser, 'admin')
+  const roleErr = await requireRole(sessionUser, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { id: appealId } = await params

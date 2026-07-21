@@ -1,16 +1,16 @@
 import { prisma } from '@/server/db'
-import type { UserSearchParams } from '@/server/dto/directory'
+import type { UserSearchParams } from '@/lib/zod/directory'
 
 export interface PaginatedUsers {
   users: Array<{
     id: string
-    nationalId: string
+    personnelCode: string
     name: string
     phone: string | null
     email: string | null
     status: string
     customFields: Record<string, unknown> | null
-    role: { key: string; name: string }
+    role: { key: string; title: string }
     createdAt: Date
   }>
   total: number
@@ -39,13 +39,13 @@ export async function listUsers(params: UserSearchParams): Promise<PaginatedUser
       where: where as never,
       select: {
         id: true,
-        nationalId: true,
+        personnelCode: true,
         name: true,
         phone: true,
         email: true,
         status: true,
         customFields: true,
-        role: { select: { key: true, name: true } },
+        role: { select: { key: true, title: true } },
         createdAt: true,
       },
       orderBy: { createdAt: 'desc' },
@@ -55,22 +55,22 @@ export async function listUsers(params: UserSearchParams): Promise<PaginatedUser
     const normalizedPlate = plate ? plate.toLowerCase().trim() : ''
 
     const filtered = allUsers.filter((u) => {
-      const customFields = (u.customFields as Record<string, any>) || {}
-      const vehicles = (customFields.vehicles as any[]) || []
+      const customFields = (u.customFields as Record<string, unknown>) || {}
+      const vehicles = (customFields.vehicles as Record<string, unknown>[]) || []
 
       // 1. General search q
       if (normalizedQ) {
         let match = false
         if (u.name.toLowerCase().includes(normalizedQ)) match = true
-        if (u.nationalId.includes(normalizedQ)) match = true
+        if (u.personnelCode.includes(normalizedQ)) match = true
         if (u.phone?.includes(normalizedQ)) match = true
         if (u.email?.toLowerCase().includes(normalizedQ)) match = true
         
         // Search inside vehicles array
-        const vehicleMatch = vehicles.some((v: any) => {
+        const vehicleMatch = vehicles.some((v: Record<string, unknown>) => {
           const plateStr = `${v.plateNum1 || ''}${v.plateLetter || ''}${v.plateNum2 || ''}${v.plateCity || ''}`.toLowerCase()
-          const carPlate = (v.carPlate || '').toLowerCase()
-          const carType = (v.carType || '').toLowerCase()
+          const carPlate = ((v.carPlate as string) || '').toLowerCase()
+          const carType = ((v.carType as string) || '').toLowerCase()
           return plateStr.includes(normalizedQ) || carPlate.includes(normalizedQ) || carType.includes(normalizedQ)
         })
         if (vehicleMatch) match = true
@@ -80,12 +80,16 @@ export async function listUsers(params: UserSearchParams): Promise<PaginatedUser
 
       // 2. Specific Plate search
       if (normalizedPlate) {
-        const vehicleMatch = vehicles.some((v: any) => {
+        // Check vehicles array
+        const vehicleMatch = vehicles.some((v: Record<string, unknown>) => {
           const plateStr = `${v.plateNum1 || ''}${v.plateLetter || ''}${v.plateNum2 || ''}${v.plateCity || ''}`.toLowerCase()
-          const carPlate = (v.carPlate || '').toLowerCase()
+          const carPlate = ((v.carPlate as string) || '').toLowerCase()
           return plateStr.includes(normalizedPlate) || carPlate.includes(normalizedPlate)
         })
-        if (!vehicleMatch) return false
+        // Also check legacy flat carPlate field
+        const legacyPlate = ((customFields.carPlate as string) || '').toLowerCase().replace(/\s+/g, '')
+        const legacyMatch = legacyPlate.includes(normalizedPlate.replace(/\s+/g, ''))
+        if (!vehicleMatch && !legacyMatch) return false
       }
 
       return true
@@ -112,13 +116,13 @@ export async function listUsers(params: UserSearchParams): Promise<PaginatedUser
       where: where as never,
       select: {
         id: true,
-        nationalId: true,
+        personnelCode: true,
         name: true,
         phone: true,
         email: true,
         status: true,
         customFields: true,
-        role: { select: { key: true, name: true } },
+        role: { select: { key: true, title: true } },
         createdAt: true,
       },
       orderBy: { createdAt: 'desc' },

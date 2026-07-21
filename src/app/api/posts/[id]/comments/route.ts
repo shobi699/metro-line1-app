@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
-import { createCommentSchema } from '@/server/dto/content'
+import { createCommentSchema } from '@/lib/zod/content'
 import { addComment, listComments } from '@/server/modules/content/service'
 
 export async function GET(

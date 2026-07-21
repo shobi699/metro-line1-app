@@ -3,13 +3,16 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
-export default defineConfig({
+const config = {
   schema: "prisma/schema.prisma",
+  engine: "classic",
   migrations: {
     path: "prisma/migrations",
     seed: "npx tsx prisma/seed.ts",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    url: process.env["DATABASE_URL"] || "file:d:/zanjirenabodii/app/metro-line1-app/prisma/dev.db",
   },
-});
+} as unknown as Parameters<typeof defineConfig>[0];
+
+export default defineConfig(config);

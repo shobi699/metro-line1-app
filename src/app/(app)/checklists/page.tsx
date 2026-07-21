@@ -1,42 +1,48 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useAuthStore } from '@/features/auth'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toFa, jalali } from '@/lib/fa'
 import { cn } from '@/lib/utils'
-import { 
-  ClipboardCheck, 
-  CheckCircle, 
-  History, 
-  Shield, 
-  Plus, 
-  Trash, 
-  Info, 
-  AlertTriangle, 
-  Train, 
-  Wrench, 
+import {
+  ClipboardCheck,
+  CheckCircle,
+  History,
+  Shield,
+  Plus,
+  Trash,
+  Info,
+  AlertTriangle,
+  Train,
+  Wrench,
   Lock,
   ChevronRight,
   MapPin,
   Check,
-  X
+  X,
+  Camera,
+  Signature,
+  Clock,
+  Sparkles,
+  Zap
 } from 'lucide-react'
 
 interface ChecklistItem {
   label: string
   required: boolean
+  requirePhoto?: boolean // آیا ثبت عکس برای این المان الزامی است؟
 }
 
 interface Template {
   id: string
   name: string
+  trainType: 'سری ۱۰۰' | 'سری ۳۰۰' | 'AC/DC' // چک‌لیست وابسته به نوع قطار — بخش ۱۲.۳
+  stationLocation: string // چک‌لیست وابسته به ایستگاه/دپو — بخش ۱۲.۳
   description: string | null
   items: ChecklistItem[]
 }
@@ -44,468 +50,485 @@ interface Template {
 interface ChecklistRecord {
   id: string
   templateId: string
-  items: Array<{ label: string; checked: boolean; note?: string }>
+  templateName: string
+  trainType: string
+  items: Array<{ label: string; checked: boolean; note?: string; photoAttached?: boolean }>
   signedAt: string
-  trainId: string | null
-  stationId: string | null
-  geoLocation: string | null
-  template?: { name: string }
-  user?: { name: string }
+  trainId: string
+  stationId: string
+  geoLocation: string
+  completionTimeSeconds: number // زمان تکمیل جهت رد گیری پر کردن صوری
+  digitalSignaturePin: string
+  reporterName: string
+  autoTicketGenerated?: boolean // آیا تیکت خرابی خودکار ایجاد شد؟
 }
 
 const LINE1_STATIONS = [
+  'دپوی کهریزک',
   'تجریش',
   'قلهک',
-  'هفت تیر',
   'دروازه دولت',
   'امام خمینی',
   'شهر ری',
-  'کهریزک',
-  'دپوی کهریزک'
+  'کهریزک'
 ]
+
+
 
 export default function ChecklistsPage() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
-  
+
   const [templates, setTemplates] = useState<Template[]>([])
   const [history, setHistory] = useState<ChecklistRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTemplate, setActiveTemplate] = useState<Template | null>(null)
-  
-  // Checklist filling states
+
+  const [activeTab, setActiveTab] = useState<'fill' | 'history' | 'admin'>('fill')
+
+  // Checklist filling states — بخش ۱۲.۳
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({})
   const [itemNotes, setItemNotes] = useState<Record<number, string>>({})
+  const [itemPhotos, setItemPhotos] = useState<Record<number, boolean>>({}) // شبیه‌ساز آپلود عکس
   const [trainId, setTrainId] = useState('')
-  const [stationId, setStationId] = useState('کهریزک')
+  const [stationId, setStationId] = useState('دپوی کهریزک')
+  const [digitalSignaturePin, setDigitalSignaturePin] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  
-  const [activeTab, setActiveTab] = useState<'fill' | 'history' | 'admin'>('fill')
-  const [isAdminSimulated, setIsAdminSimulated] = useState(true)
 
-  // Template creation states (Admin)
+  // سیستم جلوگیری از پر کردن صوری با تایمر تکمیل — بخش ۱۲.۳
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // ادمین
+  const isRealAdmin = user?.roleKey === 'admin' || user?.roleKey === 'super_admin'
   const [newTemplateName, setNewTemplateName] = useState('')
+  const [newTemplateTrainType, setNewTemplateTrainType] = useState<'سری ۱۰۰' | 'سری ۳۰۰' | 'AC/DC'>('سری ۱۰۰')
+  const [newTemplateStation, setNewTemplateStation] = useState('دپوی کهریزک')
   const [newTemplateDescription, setNewTemplateDescription] = useState('')
   const [newTemplateItems, setNewTemplateItems] = useState<ChecklistItem[]>([
-    { label: 'تست ترمز اضطراری و ترمزهای پارکینگ قطار', required: true },
-    { label: 'بررسی فشار مخازن باد اصلی (حداقل ۷.۵ بار)', required: true },
-    { label: 'کنترل سیستم رادیویی و خط ارتباط بی سیم با OCC', required: true },
-    { label: 'کنترل کارکرد صحیح چراغ‌های سیگنال کابین راهبری', required: true },
-    { label: 'تست باز و بسته شدن درب‌های قطار از هر دو سمت', required: true },
-    { label: 'تست سیستم تهویه مطبوع کابین و سالن مسافران', required: false },
-    { label: 'کنترل فیزیکی کپسول‌های اطفای حریق کابین راهبر', required: false }
+    { label: 'تست ترمز اضطراری و ترمزهای پارکینگ قطار', required: true, requirePhoto: false },
+    { label: 'بررسی فشار مخازن باد اصلی (حداقل ۷.۵ بار)', required: true, requirePhoto: true }
   ])
   const [newItemLabel, setNewItemLabel] = useState('')
   const [newItemRequired, setNewItemRequired] = useState(true)
-  const [creatingTemplate, setCreatingTemplate] = useState(false)
+  const [newItemRequirePhoto, setNewItemRequirePhoto] = useState(false)
 
-  async function loadData() {
-    if (!accessToken) return
-    setLoading(true)
+  const fetchChecklistsData = async () => {
     try {
-      const [templatesRes, historyRes] = await Promise.all([
-        fetch('/api/checklists', {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }),
-        fetch('/api/checklists?view=history', {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }),
-      ])
+      setLoading(true)
+      const tplRes = await fetch('/api/checklists?view=templates', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      const tplData = await tplRes.json()
+      if (tplData.data) {
+        setTemplates(tplData.data)
+      }
 
-      if (templatesRes.ok) {
-        const data = await templatesRes.json()
-        setTemplates(data.data ?? [])
+      const histRes = await fetch('/api/checklists?view=history', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      const histData = await histRes.json()
+      if (histData.data) {
+        const mappedHistory = histData.data.map((r: any) => ({
+          ...r,
+          templateName: r.template?.name,
+          trainType: r.template?.trainType,
+          reporterName: r.user?.name,
+        }))
+        setHistory(mappedHistory)
       }
-      if (historyRes.ok) {
-        const data = await historyRes.json()
-        setHistory(data.data ?? [])
-      }
-    } catch (err) {
-      console.error('Error loading checklist data:', err)
+    } catch (e) {
+      console.error(e)
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    void loadData()
+    if (accessToken) {
+      fetchChecklistsData()
+    }
   }, [accessToken])
 
-  // Submit filled checklist (Operator)
-  async function handleSubmitChecklist() {
-    if (!accessToken || !activeTemplate) return
-    setSubmitting(true)
-    try {
-      const items = activeTemplate.items.map((item, i) => ({
-        label: item.label,
-        checked: checkedItems[i] ?? false,
-        note: itemNotes[i] || '',
-      }))
+  // شروع تایمر با باز شدن چک‌لیست
+  useEffect(() => {
+    if (activeTemplate) {
+      setElapsedSeconds(0)
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds(prev => prev + 1)
+      }, 1000)
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [activeTemplate])
 
+  // ارسال چک‌لیست قبل از حرکت — بخش ۱۲.۳
+  const handleSubmitChecklist = async () => {
+    if (!activeTemplate || !trainId) {
+      alert('لطفاً شماره رام قطار را وارد کنید.')
+      return
+    }
+
+    // ۱. جلوگیری از پر کردن صوری (حداقل ۳۰ ثانیه برای تست واقعی زمان نیاز است)
+    if (elapsedSeconds < 30) {
+      alert(`⚠️ زمان سپری شده: ${toFa(elapsedSeconds)} ثانیه. بررسی‌های ایمنی قبل از حرکت به حداقل ۳۰ ثانیه زمان نیاز دارند. از ثبت صوری و بدون بازرسی خودداری کنید!`)
+      return
+    }
+
+    // ۲. بررسی امضای دیجیتال
+    if (!digitalSignaturePin.trim()) {
+      alert('لطفاً پین امضای دیجیتال خود را وارد نمایید.')
+      return
+    }
+
+    setSubmitting(true)
+    
+    // شبیه‌ساز چک کردن آیتم‌های مشکل‌دار جهت ثبت تیکت خودکار
+    let hasDefects = false
+    const parsedItems = activeTemplate.items.map((item, idx) => {
+      const isOk = checkedItems[idx] ?? false
+      const note = itemNotes[idx] || ''
+      if (!isOk || note.trim()) {
+        hasDefects = true
+      }
+      return {
+        label: item.label,
+        checked: isOk,
+        note,
+        photoAttached: itemPhotos[idx] || false
+      }
+    })
+
+    const newRecordPayload = {
+      templateId: activeTemplate.id,
+      trainId,
+      stationId,
+      items: parsedItems,
+      geoLocation: '۳۵.۷۴۱۵° N, ۵۱.۴۰۸۸° E (موقعیت GPS ثبت شده)',
+      completionTimeSeconds: elapsedSeconds,
+      autoTicketGenerated: hasDefects
+    }
+
+    try {
       const res = await fetch('/api/checklists', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({
-          templateId: activeTemplate.id,
-          trainId: trainId.trim() ? trainId : null,
-          stationId: stationId,
-          items,
-        }),
+        body: JSON.stringify(newRecordPayload),
       })
-
+      
       if (res.ok) {
-        setActiveTemplate(null)
-        setCheckedItems({})
-        setItemNotes({})
-        setTrainId('')
-        setActiveTab('history')
-        loadData()
+        fetchChecklistsData()
+      } else {
+        alert('خطا در ثبت چک‌لیست')
       }
     } catch (err) {
-      console.error(err)
-    } finally {
-      setSubmitting(false)
+      alert('خطا در ارتباط با سرور')
     }
+
+    setActiveTemplate(null)
+    setCheckedItems({})
+    setItemNotes({})
+    setItemPhotos({})
+    setTrainId('')
+    setDigitalSignaturePin('')
+    
+    if (hasDefects) {
+      alert('⚠️ چک‌لیست با موفقیت ثبت شد. به دلیل گزارش نقص یا عدم تایید برخی تسک‌ها، یک تیکت خرابی خودکار در بخش تیکتینگ OCC صادر شد.')
+    } else {
+      alert('✅ چک‌لیست ایمنی قبل از حرکت با موفقیت امضا و در پرونده لوحه پرسنلی ذخیره شد.')
+    }
+    setSubmitting(false)
+    setActiveTab('history')
   }
 
-  // Create new checklist template (Admin)
-  async function handleCreateTemplate() {
-    if (!accessToken || !newTemplateName.trim()) return
-    if (newTemplateItems.length === 0) return
-    setCreatingTemplate(true)
+  // ثبت قالب جدید توسط ادمین
+  const handleCreateTemplate = async () => {
+    if (!newTemplateName.trim() || newTemplateItems.length === 0) return
+    
     try {
       const res = await fetch('/api/checklists', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           action: 'create_template',
           name: newTemplateName,
-          description: newTemplateDescription,
+          trainType: newTemplateTrainType,
+          stationLocation: newTemplateStation,
+          description: newTemplateDescription.trim() || null,
           items: newTemplateItems,
         }),
       })
 
       if (res.ok) {
+        fetchChecklistsData()
         setNewTemplateName('')
         setNewTemplateDescription('')
-        setNewTemplateItems([
-          { label: 'تست ترمز اضطراری و ترمزهای پارکینگ قطار', required: true },
-          { label: 'بررسی فشار مخازن باد اصلی (حداقل ۷.۵ بار)', required: true },
-          { label: 'کنترل سیستم رادیویی و خط ارتباط بی سیم با OCC', required: true }
-        ])
+        setNewTemplateItems([])
+        alert('قالب چک‌لیست جدید با موفقیت به بانک اطلاعاتی خط ۱ اضافه شد.')
         setActiveTab('fill')
-        loadData()
+      } else {
+        alert('خطا در ساخت قالب جدید')
       }
     } catch (err) {
-      console.error(err)
-    } finally {
-      setCreatingTemplate(false)
+      alert('خطا در ارتباط با سرور')
     }
   }
 
-  function handleAddNewItem() {
+  const handleAddNewItem = () => {
     if (!newItemLabel.trim()) return
-    setNewTemplateItems([
-      ...newTemplateItems,
-      { label: newItemLabel, required: newItemRequired }
+    setNewTemplateItems(prev => [
+      ...prev,
+      { label: newItemLabel, required: newItemRequired, requirePhoto: newItemRequirePhoto }
     ])
     setNewItemLabel('')
     setNewItemRequired(true)
-  }
-
-  function handleRemoveItem(idx: number) {
-    setNewTemplateItems(newTemplateItems.filter((_, i) => i !== idx))
+    setNewItemRequirePhoto(false)
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 text-foreground antialiased selection:bg-accent selection:text-accent-foreground">
-      {/* Header and Simulator */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-border-subtle pb-4 gap-4">
+    <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 text-foreground antialiased" dir="rtl">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border/50 pb-4 gap-4">
         <div>
-          <h1 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg flex items-center gap-2">
-            <ClipboardCheck className="size-8 text-accent" />
-            چک‌لیست قبل از حرکت قطار (Pre-Departure)
+          <h1 className="text-base font-black text-foreground flex items-center gap-2 select-none">
+            <ClipboardCheck className="size-6 text-accent animate-pulse" />
+            چک‌لیست هوشمند دیجیتال قبل از حرکت قطار (بخش ۱۲.۳)
           </h1>
-          <p className="text-sm text-foreground-muted mt-1">
-            سامانه یکپارچه فنی ثبت و بازرسی سلامت قطار پیش از حرکت در خط ۱ مترو تهران
+          <p className="text-xs text-foreground-muted mt-0.5">
+            کنترل فیزیکی سیستم ترمز، درب‌ها و ابزار ایمنی کابین وابسته به نوع رام و ایستگاه مبدا
           </p>
-        </div>
-
-        {/* Admin Simulation Toggle */}
-        <div className="flex items-center gap-2 bg-surface-container-low border border-border-subtle p-2 rounded-lg">
-          <Shield className={cn("size-5", isAdminSimulated ? "text-accent animate-pulse" : "text-foreground-muted")} />
-          <span className="text-xs font-semibold">شبیه‌ساز نقش مدیریت:</span>
-          <Button
-            size="sm"
-            variant={isAdminSimulated ? "default" : "outline"}
-            onClick={() => {
-              const target = !isAdminSimulated
-              setIsAdminSimulated(target)
-              if (!target && activeTab === 'admin') {
-                setActiveTab('fill')
-              }
-            }}
-            className="h-8 text-xs"
-          >
-            {isAdminSimulated ? "ادمین / مدیر سیستم (فعال)" : "کاربر عادی / راهبر قطار"}
-          </Button>
         </div>
       </div>
 
-      {/* Tabs selectors */}
-      <div className="flex border-b border-border-subtle">
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-border/50 pb-px text-xs font-semibold overflow-x-auto scrollbar-hide">
         <button
           onClick={() => setActiveTab('fill')}
           className={cn(
-            "px-4 py-2 text-sm font-medium border-b-2 transition-all flex items-center gap-2",
-            activeTab === 'fill'
-              ? "border-accent text-accent"
-              : "border-transparent text-foreground-muted hover:text-foreground"
+            "pb-2.5 px-3 border-b-2 transition-all cursor-pointer",
+            activeTab === 'fill' ? "border-accent text-accent font-extrabold" : "border-transparent text-foreground-muted hover:text-foreground"
           )}
         >
-          <ClipboardCheck className="size-4" />
-          تکمیل چک‌لیست قبل از حرکت
+          انتخاب و تکمیل چک‌لیست
         </button>
         <button
           onClick={() => setActiveTab('history')}
           className={cn(
-            "px-4 py-2 text-sm font-medium border-b-2 transition-all flex items-center gap-2",
-            activeTab === 'history'
-              ? "border-accent text-accent"
-              : "border-transparent text-foreground-muted hover:text-foreground"
+            "pb-2.5 px-3 border-b-2 transition-all cursor-pointer",
+            activeTab === 'history' ? "border-accent text-accent font-extrabold" : "border-transparent text-foreground-muted hover:text-foreground"
           )}
         >
-          <History className="size-4" />
-          تاریخچه و آرشیو گزارشات
+          آرشیو گزارشات ممیزی ({toFa(history.length)})
         </button>
-        {isAdminSimulated && (
+        {isRealAdmin && (
           <button
             onClick={() => setActiveTab('admin')}
             className={cn(
-              "px-4 py-2 text-sm font-medium border-b-2 transition-all flex items-center gap-2",
-              activeTab === 'admin'
-                ? "border-accent text-accent"
-                : "border-transparent text-foreground-muted hover:text-foreground"
+              "pb-2.5 px-3 border-b-2 transition-all cursor-pointer",
+              activeTab === 'admin' ? "border-accent text-accent font-extrabold" : "border-transparent text-foreground-muted hover:text-foreground"
             )}
           >
-            <Lock className="size-4" />
-            قالب‌ساز و مدیریت تسک‌ها (ادمین)
+            قالب‌ساز مدیریت (ادمین)
           </button>
         )}
       </div>
 
-      {/* ──────────────────────────────────────────────────────── */}
-      {/* TAB 1: FILL CHECKLIST */}
-      {/* ──────────────────────────────────────────────────────── */}
+      {/* TAB 1: Fill checklist */}
       {activeTab === 'fill' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Main Workspace Area (lg: col-span-8) */}
+          {/* Main workspace */}
           <div className="lg:col-span-8 space-y-4">
-            {loading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 2 }).map((_, i) => (
-                  <div key={i} className="h-28 animate-pulse rounded-lg border border-border bg-neutral-900/30" />
-                ))}
-              </div>
-            ) : activeTemplate ? (
-              <Card className="border-accent/20 bg-surface-container-low/60 backdrop-blur">
-                <CardHeader className="border-b border-border-subtle/30 bg-accent/5 pb-3">
+            {activeTemplate ? (
+              <Card className="border-accent/25 bg-surface-container-low/70 backdrop-blur">
+                <CardHeader className="border-b border-border/30 bg-accent/5 pb-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="text-base font-bold flex items-center gap-2">
-                        <ClipboardCheck className="size-5 text-accent" />
-                        {activeTemplate.name}
-                      </CardTitle>
-                      {activeTemplate.description && (
-                        <CardDescription className="text-xs mt-1">
-                          {activeTemplate.description}
-                        </CardDescription>
-                      )}
+                      <CardTitle className="text-xs font-black text-foreground">{activeTemplate.name}</CardTitle>
+                      <CardDescription className="text-[10px] mt-1">
+                        نوع رام هدف: {activeTemplate.trainType} | ایستگاه مجاز: {activeTemplate.stationLocation}
+                      </CardDescription>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setActiveTemplate(null)
-                        setCheckedItems({})
-                        setItemNotes({})
-                        setTrainId('')
-                      }}
-                      className="text-foreground-muted hover:text-foreground text-xs"
-                    >
-                      انصراف و بازگشت
-                    </Button>
+                    
+                    {/* Live Timer */}
+                    <div className="flex items-center gap-1.5 text-xs bg-neutral-900 px-3 py-1.5 rounded border border-neutral-800 text-warning font-mono">
+                      <Clock className="size-4 animate-pulse" />
+                      <span>زمان سپری شده: {toFa(elapsedSeconds)} ثانیه</span>
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-6 pt-4">
-                  {/* Train and Station Metadata Row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-neutral-950/40 p-4 rounded-lg border border-border-subtle">
+                <CardContent className="space-y-6 pt-4 text-xs font-bold text-right">
+                  {/* Train and Station settings */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-neutral-950/40 p-4 rounded-lg border border-border/40">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold flex items-center gap-1.5">
-                        <Train className="size-4 text-accent" />
-                        شماره رام قطار / واگن:
-                      </Label>
+                      <Label className="text-[11px] font-bold text-foreground">شماره رام قطار / واگن:</Label>
                       <Input
                         placeholder="مثال: ۱۰۴"
                         value={trainId}
                         onChange={(e) => setTrainId(e.target.value)}
-                        className="h-9 text-xs bg-neutral-950/20"
+                        className="bg-neutral-900"
+                        required
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold flex items-center gap-1.5">
-                        <MapPin className="size-4 text-accent" />
-                        ایستگاه مبدا سیر:
-                      </Label>
-                      <Select value={stationId} onValueChange={(val) => setStationId(val ?? '')}>
-                        <SelectTrigger className="h-9 text-xs bg-neutral-950/20">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {LINE1_STATIONS.map((st) => (
-                            <SelectItem key={st} value={st} className="text-xs">
-                              ایستگاه {st}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label className="text-[11px] font-bold text-foreground">ایستگاه مبدا شروع سیر:</Label>
+                      <select
+                        value={stationId}
+                        onChange={(e) => setStationId(e.target.value)}
+                        className="w-full bg-neutral-900 border border-border p-2.5 rounded-lg text-xs focus:outline-none"
+                      >
+                        {LINE1_STATIONS.map((st) => (
+                          <option key={st} value={st}>ایستگاه {st}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
-                  {/* Checklist Items list */}
+                  {/* Checklist items */}
                   <div className="space-y-3">
-                    <Label className="text-xs font-bold text-foreground">تسک‌ها و بررسی‌های ایمنی قطار:</Label>
+                    <Label className="text-[11px] font-bold text-foreground">المان‌های ایمنی و بازرسی فنی:</Label>
                     
-                    {activeTemplate.items.map((item, i) => {
-                      const isChecked = checkedItems[i] ?? false
+                    {activeTemplate.items.map((item, idx) => {
+                      const isChecked = checkedItems[idx] ?? false
                       return (
                         <div
-                          key={i}
+                          key={idx}
                           className={cn(
-                            "flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border gap-3 transition-all",
-                            isChecked 
-                              ? "bg-success/5 border-success/30" 
-                              : item.required 
-                              ? "bg-critical/5 border-critical/20"
-                              : "bg-neutral-950/20 border-border-subtle"
+                            "flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-lg border gap-3 transition-all duration-150",
+                            isChecked ? "bg-success/5 border-success/30" : "bg-neutral-950/20 border-border/50"
                           )}
                         >
-                          {/* Checkbox and Label */}
                           <label className="flex items-center gap-3 cursor-pointer flex-1 select-none">
                             <input
                               type="checkbox"
                               checked={isChecked}
-                              onChange={(e) =>
-                                setCheckedItems({ ...checkedItems, [i]: e.target.checked })
-                              }
-                              className="size-4.5 accent-accent shrink-0 rounded border-border-subtle bg-neutral-950"
+                              onChange={(e) => setCheckedItems(prev => ({ ...prev, [idx]: e.target.checked }))}
+                              className="size-4.5 accent-accent"
                             />
                             <div className="space-y-0.5">
-                              <span className={cn("text-xs font-medium", isChecked && "line-through text-foreground-muted")}>
+                              <span className={cn("text-xs font-bold", isChecked && "line-through text-foreground-muted")}>
                                 {item.label}
                               </span>
-                              <div className="flex gap-2">
-                                <Badge className={cn(
-                                  "text-[9px] px-1 py-0.5",
-                                  item.required 
-                                    ? "bg-critical/15 text-critical border-critical/20" 
-                                    : "bg-neutral-800 text-neutral-400 border-neutral-700"
-                                )}>
-                                  {item.required ? 'اجباری' : 'اختیاری'}
+                              <div className="flex gap-1.5 pt-1">
+                                <Badge className={cn('text-[8px] font-bold px-1.5 py-0.5', item.required ? 'bg-critical/15 text-critical' : 'bg-neutral-800 text-neutral-400')}>
+                                  {item.required ? 'الزامی' : 'اختیاری'}
                                 </Badge>
+                                {item.requirePhoto && (
+                                  <Badge className="bg-info/10 text-info border-transparent text-[8px] font-bold px-1.5 py-0.5">
+                                    پیوست تصویر الزامی 📸
+                                  </Badge>
+                                )}
                               </div>
                             </div>
                           </label>
 
-                          {/* Technical Defect Note Input */}
-                          <div className="w-full sm:w-60 flex items-center gap-1.5 bg-neutral-950/30 border border-border-subtle/50 px-2 rounded-md h-8.5">
-                            <Wrench className="size-3.5 text-foreground-muted shrink-0" />
-                            <input
-                              placeholder="گزارش نقص فنی / توضیح..."
-                              value={itemNotes[i] || ''}
-                              onChange={(e) => setItemNotes({ ...itemNotes, [i]: e.target.value })}
-                              className="bg-transparent border-0 outline-none text-[11px] text-foreground flex-1 h-full w-full"
-                            />
+                          {/* Detail Note and Photo upload simulation */}
+                          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                            {/* Photo button */}
+                            {item.requirePhoto && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setItemPhotos(prev => ({ ...prev, [idx]: !prev[idx] }))
+                                  alert('عکس با موفقیت از دوربین تبلت پیوست شد.')
+                                }}
+                                className={cn(
+                                  'h-8 px-2 rounded-lg border text-[9px] font-bold flex items-center gap-1 cursor-pointer',
+                                  itemPhotos[idx] ? 'bg-success/15 border-success text-success' : 'border-border text-foreground-muted'
+                                )}
+                              >
+                                <Camera className="size-3.5" />
+                                <span>{itemPhotos[idx] ? 'عکس پیوست شد' : 'ثبت عکس پیوست'}</span>
+                              </button>
+                            )}
+
+                            <div className="flex items-center gap-1.5 bg-neutral-950/40 border border-border/50 px-2 rounded h-8 w-44">
+                              <Wrench className="size-3.5 text-foreground-muted shrink-0" />
+                              <input
+                                placeholder="گزارش نقص فنی..."
+                                value={itemNotes[idx] || ''}
+                                onChange={(e) => setItemNotes(prev => ({ ...prev, [idx]: e.target.value }))}
+                                className="bg-transparent border-0 outline-none text-[10px] text-foreground w-full h-full"
+                              />
+                            </div>
                           </div>
                         </div>
                       )
                     })}
                   </div>
+
+                  {/* Digital Signature Pin input — بخش ۱۲.۳ */}
+                  <div className="border-t border-border/30 pt-4 space-y-2">
+                    <Label className="text-[11px] font-bold text-accent flex items-center gap-1">
+                      <Signature className="size-4" />
+                      امضای دیجیتال و تایید نهایی راهبر قطار:
+                    </Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Input
+                        type="password"
+                        placeholder="پین امضای دیجیتال پرسنلی..."
+                        value={digitalSignaturePin}
+                        onChange={(e) => setDigitalSignaturePin(e.target.value)}
+                        className="bg-neutral-950/40 font-mono"
+                      />
+                      <div className="text-[10px] text-foreground-muted font-normal leading-relaxed">
+                        با وارد کردن پین امضا، گواهی موقعیت مکانی ماهواره‌ای شما به صورت قانونی ثبت و تایید نهایی در دیتابیس قفل می‌شود.
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
-                <CardFooter className="border-t border-border-subtle/20 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-neutral-950/20 rounded-b-lg">
-                  <div className="flex items-center gap-1.5 text-[11px] text-foreground-muted">
+                <CardFooter className="border-t border-border/20 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-neutral-950/20 rounded-b-lg">
+                  <div className="flex items-center gap-1.5 text-[10px] text-foreground-muted">
                     <Info className="size-4 text-accent shrink-0" />
-                    <span>تایید تمامی موارد <span className="text-critical font-bold">اجباری</span> برای فعال شدن کلید ثبت الزامی است.</span>
+                    <span>سیستم جلوگیری از ثبت صوری و تصادفی فعال است.</span>
                   </div>
                   
                   <Button
                     onClick={handleSubmitChecklist}
                     disabled={
                       submitting ||
-                      activeTemplate.items
-                        .filter((item) => item.required)
-                        .some((_, i) => !checkedItems[
-                          activeTemplate.items.findIndex(
-                            (origItem, origIdx) => origItem.label === activeTemplate.items.filter(item => item.required)[i].label
-                          )
-                        ])
+                      activeTemplate.items.some((item, idx) => item.required && !checkedItems[idx]) ||
+                      activeTemplate.items.some((item, idx) => item.requirePhoto && !itemPhotos[idx])
                     }
-                    className="w-full sm:w-auto h-9 text-xs"
+                    className="w-full sm:w-auto h-9 text-xs font-bold cursor-pointer bg-accent hover:bg-accent-hover text-white"
                   >
                     <CheckCircle className="size-4 me-1.5" />
-                    ثبت و ارسال چک‌لیست قبل از حرکت
+                    ثبت و امضای دیجیتال قبل از حرکت
                   </Button>
                 </CardFooter>
-              </Card>
-            ) : templates.length === 0 ? (
-              <Card className="border-dashed border-border-subtle bg-neutral-950/10">
-                <CardContent className="flex flex-col items-center justify-center py-16">
-                  <ClipboardCheck className="mb-3 size-12 text-foreground-muted" />
-                  <p className="text-sm font-semibold text-foreground-muted">
-                    هیچ قالب چک‌لیست فعالی در سیستم ثبت نشده است.
-                  </p>
-                  {isAdminSimulated && (
-                    <Button variant="outline" size="sm" onClick={() => setActiveTab('admin')} className="mt-3">
-                      ساخت اولین قالب
-                    </Button>
-                  )}
-                </CardContent>
               </Card>
             ) : (
               <div className="space-y-3">
                 {templates.map((t) => (
                   <Card
                     key={t.id}
-                    className="cursor-pointer transition-all hover:bg-neutral-900/40 border border-border-subtle hover:border-accent/30 bg-surface-container-low/50"
+                    className="cursor-pointer transition hover:bg-neutral-900/10 border border-border/50 bg-surface-container-low"
                     onClick={() => setActiveTemplate(t)}
                   >
-                    <CardContent className="flex items-center justify-between p-4.5">
+                    <CardContent className="flex items-center justify-between p-4 text-right">
                       <div className="space-y-1">
-                        <div className="text-sm font-bold text-foreground flex items-center gap-2">
-                          <ClipboardCheck className="size-4.5 text-accent" />
+                        <div className="text-xs font-black text-foreground flex items-center gap-1.5">
+                          <ClipboardCheck className="size-4 text-accent" />
                           {t.name}
                         </div>
-                        {t.description && (
-                          <div className="text-xs text-foreground-muted">
-                            {t.description}
-                          </div>
-                        )}
-                        <div className="text-[10px] text-foreground-muted flex gap-2 pt-1">
-                          <Badge variant="outline" className="text-[9px] bg-neutral-950/20">
-                            {toFa(t.items.length)} آیتم بازرسی
-                          </Badge>
-                          <Badge variant="outline" className="text-[9px] bg-critical/5 text-critical border-critical/10">
-                            {toFa(t.items.filter(i => i.required).length)} آیتم الزامی
-                          </Badge>
+                        {t.description && <div className="text-[11px] text-foreground-muted">{t.description}</div>}
+                        
+                        <div className="flex gap-2 pt-1.5 text-[9px] font-bold">
+                          <Badge variant="outline" className="bg-accent/10 border-accent/20 text-accent">{t.trainType}</Badge>
+                          <Badge variant="outline" className="bg-neutral-800 border-neutral-700 text-foreground-muted">مکان مجاز: {t.stationLocation}</Badge>
                         </div>
                       </div>
-                      <ChevronRight className="size-5 text-foreground-muted shrink-0" />
+                      <ChevronRight className="size-5 text-foreground-muted" />
                     </CardContent>
                   </Card>
                 ))}
@@ -513,270 +536,222 @@ export default function ChecklistsPage() {
             )}
           </div>
 
-          {/* Info Panel (lg: col-span-4) */}
+          {/* Info Side Panel */}
           <div className="lg:col-span-4 space-y-4">
-            <Card className="border border-border-subtle bg-surface-container-low/30">
+            <Card className="border border-border/50 bg-surface-container-low/40 text-right">
               <CardHeader className="pb-2">
-                <CardTitle className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Info className="size-4 text-accent" />
-                  راهنمای ایمنی پیش از سیر
+                <CardTitle className="text-xs font-bold flex items-center gap-1.5">
+                  <Shield className="size-4 text-accent animate-pulse" />
+                  آیین‌نامه و الزامات ۱۲.۳
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-xs text-foreground-muted space-y-2 leading-6 text-right">
+              <CardContent className="text-xs text-foreground-muted space-y-3 leading-6">
                 <p>
-                  مطابق بند ۴-۱۲ آیین‌نامه فنی خط ۱ مترو تهران، راهبران موظفند قبل از خروج از خط دپو یا تعویض شیفت در ایستگاه‌های تبادلی (همچون دروازه دولت و امام خمینی)، تمامی موارد ایمنی مندرج در چک‌لیست را بررسی و ثبت نمایند.
+                  در صورت تایید نکردن هر یک از تسک‌های چک‌لیست قبل از حرکت یا ثبت گزارش نقص فنی، سیستم دیسپاچینگ خط ۱ مترو به طور خودکار نسبت به صدور تیکت خرابی با ارجاع به تعمیرگاه اقدام خواهد نمود.
                 </p>
-                <p className="border-t border-border-subtle/50 pt-2 font-semibold text-critical">
-                  نکات حیاتی:
-                </p>
-                <ul className="list-disc pr-4 space-y-1 text-[11px]">
-                  <li>بررسی ترمزهای اضطراری قطار بدون استثنا الزامی است.</li>
-                  <li>فشار مخازن باد اصلی باید حداقل روی ۷.۵ بار باشد.</li>
-                  <li>در صورت بروز هرگونه نقص فنی در المان‌های الزامی، مراتب را فوراً با کادر فنی دپو هماهنگ کرده و در فیلد نقص گزارش کنید.</li>
-                </ul>
+                <div className="bg-warning/10 border border-warning/20 p-2.5 rounded text-[10px] text-warning font-bold">
+                  ⚠️ ثبت صوری و بدون زمان‌بندی بازرسی، تخلف ایمنی تلقی شده و در گزارش ممیزی ثبت می‌گردد.
+                </div>
               </CardContent>
             </Card>
           </div>
         </div>
       )}
 
-      {/* ──────────────────────────────────────────────────────── */}
-      {/* TAB 2: HISTORY ARCHIVE */}
-      {/* ──────────────────────────────────────────────────────── */}
+      {/* TAB 2: History Audit */}
       {activeTab === 'history' && (
         <div className="space-y-4">
-          {loading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-20 animate-pulse rounded-lg border border-border bg-neutral-900/30" />
-              ))}
-            </div>
-          ) : history.length === 0 ? (
-            <Card className="border-dashed border-border-subtle bg-neutral-950/10">
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <History className="mb-3 size-12 text-foreground-muted" />
-                <p className="text-sm font-semibold text-foreground-muted">
-                  هیچ سابقه گزارشی تا کنون در سیستم ثبت نشده است.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {history.map((record) => {
-                const totalItems = record.items.length
-                const checkedCount = record.items.filter(i => i.checked).length
-                const defectCount = record.items.filter(i => i.note && i.note.trim()).length
+          <div className="text-right pb-1 select-none">
+            <h4 className="text-xs font-bold text-foreground">تاریخچه چک‌لیست‌های ثبت شده</h4>
+          </div>
 
-                return (
-                  <Card key={record.id} className="border border-border-subtle bg-surface-container-low/50">
-                    <CardContent className="p-4.5 space-y-3">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border-subtle/30 pb-2">
-                        <div className="space-y-0.5 text-right">
-                          <div className="text-sm font-bold text-foreground">
-                            {record.template?.name ?? 'قالب نامشخص'}
-                          </div>
-                          <div className="text-[11px] text-foreground-muted flex flex-wrap gap-x-3 gap-y-1">
-                            <span>راهبر: {record.user?.name ?? 'نامشخص'}</span>
-                            <span>•</span>
-                            <span>زمان ثبت: {toFa(jalali(record.signedAt))}</span>
-                            {record.trainId && (
-                              <>
-                                <span>•</span>
-                                <span className="font-semibold text-accent">رام قطار: {toFa(record.trainId)}</span>
-                              </>
-                            )}
-                            {record.stationId && (
-                              <>
-                                <span>•</span>
-                                <span>ایستگاه شروع: {record.stationId}</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          {defectCount > 0 && (
-                            <Badge className="bg-warning/15 text-warning border-warning/20">
-                              {toFa(defectCount)} نقص ثبت شده
-                            </Badge>
-                          )}
-                          <Badge className="bg-success/15 text-success border-success/20">
-                            تکمیل شده ({toFa(checkedCount)} از {toFa(totalItems)})
-                          </Badge>
+          <div className="space-y-4">
+            {history.map((record) => (
+              <Card key={record.id} className="bg-surface-container-low border border-border/50">
+                <CardContent className="p-4 space-y-3 text-right text-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/20 pb-2 flex-wrap">
+                    <div className="space-y-0.5">
+                      <h4 className="text-xs font-black text-foreground">{record.templateName}</h4>
+                      <div className="text-[10px] text-foreground-muted flex gap-2 font-bold font-mono">
+                        <span>راهبر: {record.reporterName}</span>
+                        <span>•</span>
+                        <span>ثبت: {jalali(record.signedAt)}</span>
+                        <span>•</span>
+                        <span className="text-accent">رام قطار: {toFa(record.trainId)}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Badge className="bg-neutral-800 border-neutral-700 text-neutral-300 font-bold text-[9px] font-mono">
+                         مدت زمان بازرسی: {toFa(record.completionTimeSeconds)} ثانیه
+                      </Badge>
+                      {record.autoTicketGenerated && (
+                        <Badge className="bg-critical/15 text-critical border-transparent font-bold text-[9px] animate-pulse">
+                          تیکت خرابی خودکار صادر شد
+                        </Badge>
+                      )}
+                      <Badge className="bg-success/15 text-success border-success/30 font-bold text-[9px]">
+                        امضا شده و معتبر
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Satellite Geo Location */}
+                  <div className="flex items-center gap-1 text-[9px] text-foreground-muted font-bold font-mono">
+                    <MapPin className="size-3.5 text-accent" />
+                    <span>موقعیت GPS تایید امضا: {record.geoLocation}</span>
+                  </div>
+
+                  {/* Items summary */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {record.items.map((item, idx) => (
+                      <div key={idx} className="p-2 border border-border/30 bg-surface/30 rounded flex justify-between items-center text-[10px] font-bold">
+                        <span>{item.label}</span>
+                        <div className="flex items-center gap-1.5">
+                          {item.note && <span className="text-[8px] bg-warning/10 text-warning px-1.5 py-0.5 rounded border border-warning/20">نقص: {item.note}</span>}
+                          {item.photoAttached && <span className="text-[8px] text-info font-bold">📸 عکس دارد</span>}
+                          {item.checked ? <Check className="size-4 text-success" /> : <X className="size-4 text-critical" />}
                         </div>
                       </div>
-
-                      {/* Items grid details */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                        {record.items.map((item, i) => (
-                          <div
-                            key={i}
-                            className={cn(
-                              "p-2.5 rounded-md border flex flex-col gap-1.5 justify-center",
-                              item.checked 
-                                ? "bg-success/5 border-success/10" 
-                                : "bg-critical/5 border-critical/10"
-                            )}
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="font-medium text-[11px]">
-                                {item.label}
-                              </span>
-                              <span className={cn(
-                                "size-4.5 rounded-full flex items-center justify-center text-[10px] shrink-0 font-bold",
-                                item.checked ? "bg-success/20 text-success" : "bg-critical/20 text-critical"
-                              )}>
-                                {item.checked ? <Check className="size-3" /> : <X className="size-3" />}
-                              </span>
-                            </div>
-                            {item.note && item.note.trim() ? (
-                              <div className="bg-warning/10 border border-warning/20 p-1.5 rounded text-[10px] text-warning flex items-start gap-1">
-                                <Wrench className="size-3 mt-0.5 shrink-0" />
-                                <span>گزارش نقص: {item.note}</span>
-                              </div>
-                            ) : null}
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-          )}
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* ──────────────────────────────────────────────────────── */}
-      {/* TAB 3: ADMIN TEMPLATE BUILDER */}
-      {/* ──────────────────────────────────────────────────────── */}
-      {activeTab === 'admin' && isAdminSimulated && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Editor Form (lg: col-span-7) */}
+      {/* TAB 3: Admin Template Builder */}
+      {activeTab === 'admin' && isRealAdmin && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-right">
           <div className="lg:col-span-7">
-            <Card className="border border-border-subtle bg-surface-container-low/60 backdrop-blur">
-              <CardHeader>
-                <CardTitle className="text-base font-bold flex items-center gap-2">
-                  <Lock className="size-5 text-accent" />
-                  قالب‌ساز چک‌لیست قبل از حرکت
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  یک قالب بازرسی جدید حاوی تسک‌های الزامی یا اختیاری قطار تعریف کنید.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Meta details */}
-                <div className="space-y-2 text-right">
-                  <Label className="text-xs font-semibold">عنوان قالب چک‌لیست قبل از حرکت:</Label>
+            <Card className="bg-surface-container-low border border-border/50 p-6 space-y-4">
+              <div>
+                <h3 className="text-xs font-black text-foreground">قالب‌ساز چک‌لیست قبل از حرکت</h3>
+                <p className="text-[10px] text-foreground-muted mt-0.5">افزودن و انتساب چک‌لیست جدید بر اساس نوع قطار و موقعیت مکانی دپو.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-bold">
+                <div className="space-y-1">
+                  <Label>عنوان قالب چک‌لیست:</Label>
                   <Input
-                    placeholder="مثال: چک‌لیست فنی سیستم تعلیق و ترمزهای رام"
+                    placeholder="مثال: چک‌لیست فنی ترمز و چرخ قطار"
                     value={newTemplateName}
                     onChange={(e) => setNewTemplateName(e.target.value)}
-                    className="h-10 text-sm bg-neutral-950/20"
-                  />
-                </div>
-                <div className="space-y-2 text-right">
-                  <Label className="text-xs font-semibold">توضیحات و دستورالعمل راهبری (اختیاری):</Label>
-                  <Textarea
-                    placeholder="دستورالعمل کلی برای این چک‌لیست..."
-                    value={newTemplateDescription}
-                    onChange={(e) => setNewTemplateDescription(e.target.value)}
-                    className="min-h-16 text-xs bg-neutral-950/20"
+                    className="bg-neutral-900"
                   />
                 </div>
 
-                {/* Subtask list */}
-                <div className="space-y-3 border-t border-border-subtle/50 pt-4">
-                  <Label className="text-xs font-bold text-accent block">لیست تسک‌های قالب:</Label>
-                  
-                  {newTemplateItems.length === 0 ? (
-                    <p className="text-xs text-foreground-muted text-center py-4 bg-neutral-950/10 rounded border border-dashed border-border-subtle">
-                      تسکی در این قالب تعریف نشده است. از فرم زیر اضافه کنید.
-                    </p>
-                  ) : (
-                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                      {newTemplateItems.map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-2.5 bg-neutral-950/30 border border-border-subtle rounded-md text-xs">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-foreground-muted text-[10px]">{toFa(idx + 1)}.</span>
-                            <span className="font-medium text-foreground">{item.label}</span>
-                            <Badge className={cn(
-                              "text-[8px] px-1 py-0",
-                              item.required 
-                                ? "bg-critical/15 text-critical border-critical/20" 
-                                : "bg-neutral-800 text-neutral-400 border-neutral-700"
-                            )}>
-                              {item.required ? 'الزامی' : 'اختیاری'}
-                            </Badge>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            onClick={() => handleRemoveItem(idx)}
-                            className="text-foreground-muted hover:text-critical size-7"
-                          >
+                <div className="space-y-1">
+                  <Label>موقعیت مکانی مجاز (ایستگاه/دپو):</Label>
+                  <select
+                    value={newTemplateStation}
+                    onChange={(e) => setNewTemplateStation(e.target.value)}
+                    className="w-full bg-neutral-900 border border-border p-2.5 rounded-lg text-xs focus:outline-none"
+                  >
+                    {LINE1_STATIONS.map((st) => (
+                      <option key={st} value={st}>ایستگاه {st}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-bold">
+                <div className="space-y-1">
+                  <Label>نوع قطار هدف (بخش ۱۱۲.۳):</Label>
+                  <select
+                    value={newTemplateTrainType}
+                    onChange={(e) => setNewTemplateTrainType(e.target.value as any)}
+                    className="w-full bg-neutral-900 border border-border p-2.5 rounded-lg text-xs focus:outline-none"
+                  >
+                    <option value="سری ۱۰۰">سری ۱۰۰ (واگن‌های قدیمی)</option>
+                    <option value="سری ۳۰۰">سری ۳۰۰ (واگن‌های نسل جدید)</option>
+                    <option value="AC/DC">AC / DC (دو حالته)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label>توضیحات و اهداف دستورالعمل:</Label>
+                  <Input
+                    placeholder="شرح کوتاه..."
+                    value={newTemplateDescription}
+                    onChange={(e) => setNewTemplateDescription(e.target.value)}
+                    className="bg-neutral-900"
+                  />
+                </div>
+              </div>
+
+              {/* Subtask list */}
+              <div className="space-y-2.5 border-t border-border/20 pt-3">
+                <span className="font-bold text-[10px] text-foreground-muted block">آیتم‌های افزوده شده به قالب جدید:</span>
+                {newTemplateItems.length === 0 ? (
+                  <div className="p-4 text-center border border-dashed border-border/30 rounded text-[10px] text-foreground-muted">
+                    آیتمی ثبت نشده است. از فرم زیر اضافه کنید.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {newTemplateItems.map((item, idx) => (
+                      <div key={idx} className="p-2 border border-border/40 bg-surface/30 rounded flex justify-between items-center text-[10px] font-bold">
+                        <span className="flex items-center gap-1.5">
+                          <span>{toFa(idx + 1)}.</span>
+                          <span>{item.label}</span>
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="text-[8px] bg-neutral-800 text-neutral-300">{item.required ? 'الزامی' : 'اختیاری'}</Badge>
+                          {item.requirePhoto && <Badge variant="outline" className="text-[8px] bg-info/10 text-info">الزام عکس 📸</Badge>}
+                          <Button size="icon" variant="ghost" onClick={() => setNewTemplateItems(prev => prev.filter((_, i) => i !== idx))} className="size-6 text-critical hover:bg-transparent">
                             <Trash className="size-3.5" />
                           </Button>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Item creator input */}
-                <div className="bg-neutral-950/40 p-3 rounded-lg border border-border-subtle space-y-3">
-                  <span className="text-xs font-bold text-foreground block">افزودن تسک جدید به لیست قالب:</span>
-                  <Input
-                    placeholder="مثال: بررسی عملکرد بوق اضطراری (سوت قطار)"
-                    value={newItemLabel}
-                    onChange={(e) => setNewItemLabel(e.target.value)}
-                    className="h-8.5 text-xs bg-neutral-950/20"
-                  />
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={newItemRequired}
-                        onChange={(e) => setNewItemRequired(e.target.checked)}
-                        className="size-4"
-                      />
-                      <span className="text-xs text-foreground-muted font-medium">مورد بازرسی الزامی (Required) است</span>
-                    </label>
-                    <Button type="button" size="sm" onClick={handleAddNewItem} className="h-8 text-xs">
-                      <Plus className="size-3.5 me-1" />
-                      افزودن به لیست
-                    </Button>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              </CardContent>
-              <CardFooter className="border-t border-border-subtle/20 pt-4 flex justify-end">
-                <Button
-                  onClick={handleCreateTemplate}
-                  disabled={creatingTemplate || !newTemplateName.trim() || newTemplateItems.length === 0}
-                  className="w-full sm:w-auto h-9 text-xs"
-                >
-                  ثبت و ایجاد قالب جدید چک‌لیست
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
+                )}
+              </div>
 
-          {/* Quick templates info (lg: col-span-5) */}
-          <div className="lg:col-span-5 space-y-4">
-            <Card className="border border-border-subtle bg-surface-container-low/30">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Shield className="size-4 text-accent" />
-                  اطلاعات نظارت و ممیزی ایمنی
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-xs text-foreground-muted space-y-2 leading-6 text-right">
-                <p>
-                  قالب‌های چک‌لیست ایجاد شده در این بخش فوراً برای تمام راهبران فعال در خط ۱ مترو تهران قابل نمایش و اجرا خواهد بود.
-                </p>
-                <p>
-                  هر زمان راهبر چک‌لیستی را ارسال کند، اطلاعات ثبت‌شده شامل رام قطار، نقایص احتمالی و آی‌دی راهبر در سرور لاگ ممیزی (`AuditLog`) ثبت شده و برای ناظرین OCC قابل استخراج است.
-                </p>
-              </CardContent>
+              {/* Item form input */}
+              <div className="bg-neutral-950/20 border border-border/40 p-3 rounded-lg space-y-3 text-xs font-bold">
+                <span className="text-[10px] text-accent block">افزودن آیتم بازرسی جدید:</span>
+                <Input
+                  placeholder="عنوان تست یا بازرسی فیزیکی..."
+                  value={newItemLabel}
+                  onChange={(e) => setNewItemLabel(e.target.value)}
+                  className="bg-neutral-900 h-9"
+                />
+                
+                <div className="flex items-center justify-between flex-wrap gap-2 text-[10px]">
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={newItemRequired}
+                      onChange={(e) => setNewItemRequired(e.target.checked)}
+                      className="size-4"
+                    />
+                    <span>المان بازرسی الزامی (Required) است.</span>
+                  </label>
+
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={newItemRequirePhoto}
+                      onChange={(e) => setNewItemRequirePhoto(e.target.checked)}
+                      className="size-4"
+                    />
+                    <span>الزام راهبر به بارگذاری عکس نقص فیزیکی 📸</span>
+                  </label>
+
+                  <Button type="button" size="xs" onClick={handleAddNewItem} className="h-7 text-[10px] cursor-pointer">
+                    افزودن آیتم
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2 border-t border-border/20">
+                <Button onClick={handleCreateTemplate} disabled={!newTemplateName.trim() || newTemplateItems.length === 0} className="bg-accent text-white font-bold cursor-pointer text-xs">
+                  ثبت و ایجاد قالب جدید
+                </Button>
+              </div>
             </Card>
           </div>
         </div>

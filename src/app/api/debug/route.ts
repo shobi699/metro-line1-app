@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'super_admin')
+  const roleErr = await requireRole(user, 'super_admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'super_admin')
+  const roleErr = await requireRole(user, 'super_admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {

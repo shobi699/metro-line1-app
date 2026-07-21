@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { jalali } from '@/lib/fa'
 import { cn } from '@/lib/utils'
-import { Search, Heart, MessageSquare, CheckCircle2, ImageIcon, Video, Award, Newspaper, Lock } from 'lucide-react'
+import { Search, Heart, MessageSquare, CheckCircle2, ImageIcon, Video, Award, Newspaper, Lock, FileText, BookOpen } from 'lucide-react'
 
 interface PostCard {
   id: string
@@ -38,9 +38,12 @@ const TYPE_LABELS: Record<string, string> = {
   training: 'آموزش',
   circular: 'بخش‌نامه',
   gallery: 'گالری',
+  announcement: 'اطلاعیه اداری',
+  directive: 'دستورالعمل',
+  form: 'فرم و فایل',
 }
 
-const TYPE_FILTERS = ['', 'news', 'training', 'circular', 'blog', 'gallery']
+const TYPE_FILTERS = ['', 'news', 'training', 'circular', 'blog', 'gallery', 'announcement', 'directive', 'form']
 
 export default function ContentPage() {
   const accessToken = useAuthStore((s) => s.accessToken)
@@ -89,14 +92,22 @@ export default function ContentPage() {
             آخرین اخبار، مقالات و محتوای آموزشی
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           {(user?.roleKey === 'admin' || user?.roleKey === 'super_admin') && (
-            <Link href="/admin/content">
-              <Button size="sm" className="h-9 text-xs gap-1.5 cursor-pointer bg-accent hover:bg-accent-hover text-white rounded-lg shadow-md shadow-accent/15">
-                <Newspaper className="size-4" />
-                <span>مدیریت محتوا (ساخت نوشته)</span>
-              </Button>
-            </Link>
+            <>
+              <Link href="/admin/content">
+                <Button size="sm" className="h-9 text-xs gap-1.5 cursor-pointer bg-accent hover:bg-accent-hover text-white rounded-lg shadow-md shadow-accent/15">
+                  <Newspaper className="size-4" />
+                  <span>مدیریت محتوا (ساخت نوشته)</span>
+                </Button>
+              </Link>
+              <Link href="/admin/learning?tab=courses">
+                <Button size="sm" className="h-9 text-xs gap-1.5 cursor-pointer bg-red-700 hover:bg-red-600 text-white rounded-lg shadow-md shadow-red-950/20 font-bold">
+                  <BookOpen className="size-4" />
+                  <span>مدیریت دوره‌ها (ساخت دوره)</span>
+                </Button>
+              </Link>
+            </>
           )}
           <Link href="/learning/gallery">
             <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5 cursor-pointer">
@@ -183,6 +194,9 @@ export default function ContentPage() {
                     )}
                     {post.mediaType?.startsWith('image/') && (
                       <ImageIcon className="size-3.5" />
+                    )}
+                    {post.mediaType === 'application/pdf' && (
+                      <FileText className="size-3.5 text-accent" />
                     )}
                   </div>
                   <h3 className="text-sm font-medium line-clamp-2">{post.title}</h3>

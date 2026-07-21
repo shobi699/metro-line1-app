@@ -9341,3 +9341,34 @@ Operation has timed out
 [2026-06-27T19:08:19.658Z] Current role count in database: 3
 [2026-06-27T19:08:19.658Z] Database already populated. Ensuring custom fields and settings...
 [2026-06-27T19:08:19.814Z] Settings already exist, skipping.
+[2026-06-27T19:43:01.934Z] seedDatabase call initiated
+[2026-06-27T19:43:02.002Z] Current role count in database: 3
+[2026-06-27T19:43:02.003Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-27T19:43:02.163Z] Settings already exist, skipping.
+[2026-06-27T19:43:02.600Z] seedDatabase call initiated
+[2026-06-27T19:43:02.649Z] seedDatabase call initiated
+[2026-06-27T19:43:02.671Z] Current role count in database: 3
+[2026-06-27T19:43:02.671Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-27T19:43:02.714Z] seedDatabase call initiated
+[2026-06-27T19:43:02.719Z] Current role count in database: 3
+[2026-06-27T19:43:02.719Z] Database already populated. Ensuring custom fields and settings...
+[2026-06-27T19:43:02.722Z] Failed to ensure personnel custom fields on boot: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:320:162
+
+  317         }
+  318     });
+  319 } else {
+→ 320     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].customFieldDef.update(
+Operation has timed out
+[2026-06-27T19:43:02.723Z] Settings already exist, skipping.
+[2026-06-27T19:43:02.810Z] Error during seedDatabase: 
+Invalid `prisma.role.count()` invocation in
+D:\zanjirenabodii\app\metro-line1-app\.next\dev\server\chunks\[root-of-the-server]__0imliug._.js:384:41
+
+  381 async function seedDatabase(prisma, force = false) {
+  382     logSeed('seedDatabase call initiated');
+  383     try {
+→ 384         const count = await prisma.role.count(
+Operation has timed out
+[2026-06-27T19:43:02.884Z] Settings already exist, skipping.

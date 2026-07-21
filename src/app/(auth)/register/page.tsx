@@ -17,7 +17,7 @@ import {
 export default function RegisterPage() {
   const router = useRouter()
   const [form, setForm] = useState({
-    nationalId: '',
+    personnelCode: '',
     name: '',
     phone: '',
     email: '',
@@ -59,7 +59,7 @@ export default function RegisterPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nationalId: form.nationalId,
+          personnelCode: form.personnelCode,
           name: form.name,
           phone: form.phone || undefined,
           email: form.email || undefined,
@@ -181,8 +181,8 @@ export default function RegisterPage() {
 
                 {/* National ID */}
                 <div className="col-span-1">
-                  <label className="block text-xs font-semibold text-foreground-muted mb-1" htmlFor="nationalId">
-                    کد ملی <span className="text-critical">*</span>
+                  <label className="block text-xs font-semibold text-foreground-muted mb-1" htmlFor="personnelCode">
+                    کد پرسنلی <span className="text-critical">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted">
@@ -190,12 +190,12 @@ export default function RegisterPage() {
                     </span>
                     <input
                       className="w-full bg-surface-container-low border border-outline-variant text-foreground text-xs rounded-xl focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent block pr-10 p-2.5 font-mono"
-                      id="nationalId"
+                      id="personnelCode"
                       type="text"
-                      placeholder="۰۰۰۰۰۰۰۰۰۰"
+                      placeholder="کد پرسنلی خود را وارد کنید"
                       maxLength={10}
-                      value={form.nationalId}
-                      onChange={(e) => update('nationalId', e.target.value)}
+                      value={form.personnelCode}
+                      onChange={(e) => update('personnelCode', e.target.value)}
                       required
                     />
                   </div>

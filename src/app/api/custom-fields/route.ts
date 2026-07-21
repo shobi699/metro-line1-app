@@ -8,7 +8,7 @@ import {
   listCustomFieldDefs,
   createCustomFieldDef,
 } from '@/server/modules/custom-fields/service'
-import { customFieldDefSchema } from '@/server/dto/directory'
+import { customFieldDefSchema } from '@/lib/zod/directory'
 
 export async function GET(request: Request) {
   const user = await getSessionUser(request)
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'admin')
+  const roleErr = await requireRole(user, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const body = await request.json()

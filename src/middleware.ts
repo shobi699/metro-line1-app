@@ -6,6 +6,9 @@ const PUBLIC_API_PATHS = [
   '/api/auth/register',
   '/api/auth/refresh',
   '/api/config',
+  '/api/ui/bootstrap',
+  '/api/landing',
+  '/api/logs',
 ]
 
 function isPublicPath(pathname: string): boolean {
@@ -19,19 +22,33 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Bypass CORS preflight OPTIONS requests
+  if (request.method === 'OPTIONS') {
+    return NextResponse.next()
+  }
+
   if (isPublicPath(pathname)) {
     return NextResponse.next()
   }
 
   const authHeader = request.headers.get('Authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
+  let token = ''
+  let isQueryToken = false
+
+  if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.slice(7)
+  } else if (pathname === '/api/me/roster/export') {
+    token = request.nextUrl.searchParams.get('token') || ''
+    isQueryToken = true
+  }
+
+  if (!token) {
     return NextResponse.json(
       { error: 'توکن احراز هویت یافت نشد' },
       { status: 401 },
     )
   }
 
-  const token = authHeader.slice(7)
   const secret = process.env.JWT_ACCESS_SECRET
   if (!secret) {
     return NextResponse.json(
@@ -42,6 +59,15 @@ export async function middleware(request: NextRequest) {
 
   try {
     await jwtVerify(token, new TextEncoder().encode(secret))
+    if (isQueryToken) {
+      const requestHeaders = new Headers(request.headers)
+      requestHeaders.set('Authorization', `Bearer ${token}`)
+      return NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      })
+    }
     return NextResponse.next()
   } catch {
     return NextResponse.json(

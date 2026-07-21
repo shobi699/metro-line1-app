@@ -20,10 +20,14 @@ interface Bulletin {
   createdAt: string
 }
 
-export function BulletinsScreen() {
+import { useTheme } from '../shared/ThemeProvider'
+import { ScreenWrapper } from '../shared/ScreenWrapper'
+
+export function BulletinsScreen({ navigation }: any) {
   const accessToken = useAuthStore((s) => s.accessToken)
   const [bulletins, setBulletins] = useState<Bulletin[]>([])
   const [loading, setLoading] = useState(true)
+  const { theme } = useTheme()
 
   useEffect(() => {
     loadBulletins()
@@ -68,21 +72,46 @@ export function BulletinsScreen() {
     ])
   }
 
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.colors.background },
+    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
+    header: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8, padding: 16, paddingBottom: 0 },
+    headerText: { color: theme.colors.warning, fontSize: 13, fontWeight: '700', fontFamily: theme.typography.captionSm.fontFamily },
+    listContainer: { padding: 16, paddingBottom: 24 },
+    card: { 
+      backgroundColor: theme.colors.surfaceContainerLowest, 
+      borderWidth: 1, 
+      borderColor: theme.colors.border, 
+      borderRadius: theme.borderRadius.xl, 
+      padding: 16, 
+      marginBottom: 12,
+      ...theme.shadows.level1,
+    },
+    cardHeader: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8, marginBottom: 10 },
+    cardTitle: { fontSize: 15, fontWeight: '800', color: theme.colors.onSurface, textAlign: 'right', flex: 1, fontFamily: theme.typography.cardTitle.fontFamily },
+    cardBody: { fontSize: 13, color: theme.colors.secondary, textAlign: 'right', lineHeight: 20, fontFamily: theme.typography.bodyMd.fontFamily },
+    cardTime: { fontSize: 11, color: theme.colors.secondary, textAlign: 'right', marginTop: 10, fontFamily: theme.typography.captionSm.fontFamily },
+    ackButton: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 14, backgroundColor: theme.colors.primary, borderRadius: theme.borderRadius.md, paddingVertical: 10, ...theme.shadows.level1 },
+    ackButtonText: { color: theme.colors.onPrimary, fontSize: 13, fontWeight: '800', fontFamily: theme.typography.cardTitle.fontFamily },
+    emptyText: { color: theme.colors.secondary, fontSize: 14, marginTop: 8, fontFamily: theme.typography.bodyMd.fontFamily },
+  })
+
   return (
-    <View style={styles.container}>
+    <ScreenWrapper title="بخشنامه‌های ایمنی" navigation={navigation}>
+      <View style={styles.container}>
       {loading ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#e53935" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : bulletins.length === 0 ? (
         <View style={styles.centerContainer}>
-          <CheckCircle size={40} color="#34c759" />
+          <CheckCircle size={40} color={theme.colors.success} />
           <Text style={styles.emptyText}>بخشنامه خوانده‌نشده‌ای وجود ندارد</Text>
         </View>
       ) : (
         <>
           <View style={styles.header}>
-            <AlertTriangle size={16} color="#ff9500" />
+            <AlertTriangle size={16} color={theme.colors.warning} />
             <Text style={styles.headerText}>
               {bulletins.length} بخشنامه خوانده‌نشده
             </Text>
@@ -94,7 +123,7 @@ export function BulletinsScreen() {
             renderItem={({ item }) => (
               <View style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <Shield size={18} color="#e53935" />
+                  <Shield size={18} color={theme.colors.primary} />
                   <Text style={styles.cardTitle}>{item.title}</Text>
                 </View>
                 <Text style={styles.cardBody}>{item.body}</Text>
@@ -105,7 +134,7 @@ export function BulletinsScreen() {
                   style={styles.ackButton}
                   onPress={() => acknowledgeBulletin(item.id)}
                 >
-                  <CheckCircle size={14} color="#ffffff" />
+                  <CheckCircle size={14} color={theme.colors.onPrimary} />
                   <Text style={styles.ackButtonText}>تأیید مطالعه</Text>
                 </TouchableOpacity>
               </View>
@@ -113,24 +142,9 @@ export function BulletinsScreen() {
           />
         </>
       )}
-    </View>
+      </View>
+    </ScreenWrapper>
   )
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#13151a' },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
-  header: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8, padding: 16, paddingBottom: 0 },
-  headerText: { color: '#ff9500', fontSize: 13, fontWeight: '600' },
-  listContainer: { padding: 16, paddingBottom: 24 },
-  card: { backgroundColor: '#1c1e24', borderWidth: 1, borderColor: '#262930', borderRadius: 12, padding: 16, marginBottom: 12 },
-  cardHeader: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8, marginBottom: 10 },
-  cardTitle: { fontSize: 15, fontWeight: '600', color: '#f2f2f7', textAlign: 'right', flex: 1 },
-  cardBody: { fontSize: 13, color: '#a0a3b0', textAlign: 'right', lineHeight: 20 },
-  cardTime: { fontSize: 11, color: '#555860', textAlign: 'right', marginTop: 10 },
-  ackButton: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 14, backgroundColor: '#e53935', borderRadius: 8, paddingVertical: 10 },
-  ackButtonText: { color: '#ffffff', fontSize: 13, fontWeight: '600' },
-  emptyText: { color: '#a0a3b0', fontSize: 14, marginTop: 8 },
-})
 
 export default BulletinsScreen

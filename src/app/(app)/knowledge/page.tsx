@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/features/auth'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { jalali } from '@/lib/fa'
-import { BookOpen, Search, FileText, Pencil, Plus } from 'lucide-react'
+import { toFa, jalali } from '@/lib/fa'
+import { BookOpen, Search, FileText, Pencil, Plus, Download, CheckCircle, Clock, Users } from 'lucide-react'
 import Link from 'next/link'
 
 interface Article {
@@ -17,21 +17,87 @@ interface Article {
   body: string
   category: string | null
   tags: string | null
+  version: number
+  validFrom: string | null
+  validUntil: string | null
+  confidentialityLevel: string
+  relatedPostId: string | null
   createdAt: string
   author?: { name: string }
+}
+
+interface FAQItem {
+  id: string
+  question: string
+  answer: string
+  category: string | null
+  createdAt: string
+}
+
+interface OfficialDocument {
+  id: string
+  title: string
+  filename: string
+  category: 'rules' | 'bypass' | 'phone' | 'technical'
+  size: string
+  downloadCount: number
+  acknowledgedUsers: Array<{ name: string; date: string }>
 }
 
 export default function KnowledgePage() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
+  
   const [articles, setArticles] = useState<Article[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  
+  // FAQ state
+  const [faqs, setFaqs] = useState<FAQItem[]>([])
+  const [loadingFaqs, setLoadingFaqs] = useState(false)
+  
+  // Tab layout
+  const [activeTab, setActiveTab] = useState<'articles' | 'official-docs' | 'faq'>('articles')
+
+  // Official Documents States
+  const [docsSearch, setDocsSearch] = useState('')
+  const [selectedDocCategory, setSelectedDocCategory] = useState<string>('all')
+  const [documents, setDocuments] = useState<OfficialDocument[]>([])
+
+  const defaultDocs: OfficialDocument[] = []
 
   useEffect(() => {
     void loadArticles()
+    void loadBulletins()
   }, [accessToken, selectedCategory])
+
+  async function loadBulletins() {
+    if (!accessToken) return
+    try {
+      const res = await fetch('/api/safety/bulletins/directory', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      })
+      if (res.ok) {
+        const { data } = await res.json()
+        const mappedDocs: OfficialDocument[] = data.map((b: any) => ({
+          id: b.id,
+          title: b.title,
+          filename: `bulletin-${b.id.slice(-6)}.pdf`,
+          category: 'safety',
+          size: '۱.۲ مگابایت',
+          downloadCount: 0,
+          acknowledgedUsers: b.readReceipts?.map((r: any) => ({
+            name: r.user?.name || 'ناشناس',
+            date: jalali(r.readAt).split(' ')[0]
+          })) || []
+        }))
+        setDocuments(mappedDocs)
+      }
+    } catch (e) {
+      console.error('Failed to load bulletins', e)
+    }
+  }
 
   async function loadArticles() {
     if (!accessToken) return
@@ -53,29 +119,108 @@ export default function KnowledgePage() {
     }
   }
 
+  async function loadFAQs() {
+    if (!accessToken) return
+    setLoadingFaqs(true)
+    try {
+      const res = await fetch('/api/knowledge?scope=faq', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setFaqs(data.data ?? [])
+      }
+    } finally {
+      setLoadingFaqs(false)
+    }
+  }
+
+  async function handleAcknowledgeDocument(docId: string) {
+    if (!user || !accessToken) return
+    try {
+      const res = await fetch(`/api/safety/bulletins/${docId}/receipts`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` }
+      })
+      if (res.ok) {
+        setDocuments(prev => prev.map(doc => {
+          if (doc.id === docId) {
+            const alreadySigned = doc.acknowledgedUsers.some(u => u.name === user.name)
+            if (alreadySigned) return doc
+            return {
+              ...doc,
+              acknowledgedUsers: [
+                ...doc.acknowledgedUsers,
+                { name: user.name, date: jalali(new Date().toISOString()).split(' ')[0] }
+              ]
+            }
+          }
+          return doc
+        }))
+      } else {
+        alert('خطا در ثبت تاییدیه')
+      }
+    } catch (e) {
+      alert('خطا در برقراری ارتباط با سرور')
+    }
+  }
+
   const categories = [
-    'آموزش ایمنی',
-    'آشنایی با تجهیزات',
-    'رویه‌های اضطراری',
-    'نقشه‌خوانی مسیر',
-    'مقررات عمومی سیر و حرکت',
-    'دستورالعمل بایکوت قطار',
+    'خبر سازمانی',
+    'اطلاعیه اداری',
+    'بخشنامه ایمنی',
+    'آموزش فنی',
+    'دستورالعمل عملیاتی',
+    'فرم و فایل',
+    'مقاله',
+    'ویدئوی آموزشی',
+    'آزمون',
   ]
 
+  const docCategories = [
+    { value: 'all', label: 'همه اسناد' },
+    { value: 'news', label: 'خبر سازمانی' },
+    { value: 'notice', label: 'اطلاعیه اداری' },
+    { value: 'safety', label: 'بخشنامه ایمنی' },
+    { value: 'training', label: 'آموزش فنی' },
+    { value: 'instruction', label: 'دستورالعمل عملیاتی' },
+    { value: 'form', label: 'فرم و فایل' },
+    { value: 'article', label: 'مقاله' },
+    { value: 'video', label: 'ویدئوی آموزشی' },
+    { value: 'exam', label: 'آزمون' },
+  ]
+
+  const getDocCategoryLabel = (cat: string) => {
+    switch (cat) {
+      case 'rules': return 'آیین‌نامه‌ها'
+      case 'bypass': return 'بایکوت‌ها'
+      case 'phone': return 'تلفن‌های ضروری'
+      case 'technical': return 'دفترچه فنی'
+      default: return cat
+    }
+  }
+
+  const filteredDocs = documents.filter(doc => {
+    const matchesSearch = doc.title.toLowerCase().includes(docsSearch.toLowerCase()) || 
+                          doc.filename.toLowerCase().includes(docsSearch.toLowerCase())
+    const matchesCategory = selectedDocCategory === 'all' || doc.category === selectedDocCategory
+    return matchesSearch && matchesCategory
+  })
+
   return (
-    <div className="flex flex-1 flex-col gap-6 p-4" dir="rtl">
+    <div className="flex flex-1 flex-col gap-6 p-4 max-w-5xl mx-auto" dir="rtl">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4 select-none">
         <div>
           <h1 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-foreground flex items-center gap-2">
             <BookOpen className="size-6 text-accent" />
-            دانش‌نامه خط ۱
+            دانش‌نامه و اسناد رسمی خط ۱
           </h1>
           <p className="text-sm text-foreground-muted mt-1">
-            مخزن جست‌وجوپذیر دستورالعمل‌ها، فرم‌های فنی، نقشه‌ها و رویه‌های عملیاتی خط ۱ مترو تهران
+            مخزن دستورالعمل‌ها، آیین‌نامه‌ها، بایکوت‌ها و فایل‌های مرجع سیر و حرکت مترو تهران
           </p>
         </div>
-        {(user?.roleKey === 'admin' || user?.roleKey === 'super_admin') && (
+        {activeTab === 'articles' && (user?.roleKey === 'admin' || user?.roleKey === 'super_admin') && (
           <Link href="/admin/knowledge" className="shrink-0">
             <Button size="sm" className="h-9 text-xs gap-1.5 cursor-pointer bg-accent hover:bg-accent-hover text-white rounded-lg shadow-md shadow-accent/15 font-semibold">
               <Plus className="size-4" />
@@ -85,101 +230,301 @@ export default function KnowledgePage() {
         )}
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-foreground-muted" />
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && loadArticles()}
-          placeholder="جستجو در مقالات، تگ‌ها و متون دانشنامه..."
-          className="pe-9 ps-9"
-        />
-      </div>
-
-      {/* Categories */}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant={selectedCategory === null ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setSelectedCategory(null)}
-          className="h-8 text-xs cursor-pointer rounded-lg"
+      {/* Tabs */}
+      <div className="flex border-b border-border">
+        <button
+          onClick={() => setActiveTab('articles')}
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
+            activeTab === 'articles'
+              ? 'border-accent text-accent font-bold'
+              : 'border-transparent text-foreground-muted hover:text-foreground'
+          }`}
         >
-          همه مقالات
-        </Button>
-        {categories.map((cat) => (
-          <Button
-            key={cat}
-            variant={selectedCategory === cat ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSelectedCategory(cat)}
-            className="h-8 text-xs cursor-pointer rounded-lg"
-          >
-            {cat}
-          </Button>
-        ))}
+          مقالات دانشنامه
+        </button>
+        <button
+          onClick={() => setActiveTab('official-docs')}
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
+            activeTab === 'official-docs'
+              ? 'border-accent text-accent font-bold'
+              : 'border-transparent text-foreground-muted hover:text-foreground'
+          }`}
+        >
+          اسناد رسمی و فایل‌ها
+        </button>
+        <button
+          onClick={() => { setActiveTab('faq'); loadFAQs() }}
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
+            activeTab === 'faq'
+              ? 'border-accent text-accent font-bold'
+              : 'border-transparent text-foreground-muted hover:text-foreground'
+          }`}
+        >
+          پرسش و پاسخ متداول
+        </button>
       </div>
 
-      {/* Articles Grid / List */}
-      {loading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-24 animate-pulse rounded-lg border border-border bg-background-subtle"
+      {/* ARTICLES TAB */}
+      {activeTab === 'articles' && (
+        <div className="space-y-4">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-foreground-muted" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && loadArticles()}
+              placeholder="جستجو در مقالات، تگ‌ها و متون دانشنامه..."
+              className="pe-9 ps-9"
             />
-          ))}
-        </div>
-      ) : articles.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <BookOpen className="mb-3 size-10 text-foreground-muted" />
-            <p className="text-sm text-foreground-muted">مقاله‌ای در این دسته‌بندی یافت نشد</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {articles.map((article) => (
-            <div key={article.id} className="relative group">
-              <Link href={`/knowledge/${article.slug}`} className="block">
-                <Card className="transition-all hover:bg-surface-hover hover:border-accent/30 bg-surface/40 backdrop-blur-md rounded-xl overflow-hidden shadow-sm h-full flex flex-col justify-between">
-                  <CardContent className="p-4 flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <FileText className="size-4 text-accent shrink-0" />
-                      <span className="text-sm font-semibold text-foreground truncate max-w-[85%]">
-                        {article.title}
-                      </span>
+          </div>
+
+          {/* Categories */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={selectedCategory === null ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedCategory(null)}
+              className="h-8 text-xs cursor-pointer rounded-lg"
+            >
+              همه مقالات
+            </Button>
+            {categories.map((cat) => (
+              <Button
+                key={cat}
+                variant={selectedCategory === cat ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedCategory(cat)}
+                className="h-8 text-xs cursor-pointer rounded-lg"
+              >
+                {cat}
+              </Button>
+            ))}
+          </div>
+
+          {/* Articles Grid */}
+          {loading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-24 animate-pulse rounded-lg border border-border bg-background-subtle"
+                />
+              ))}
+            </div>
+          ) : articles.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <BookOpen className="mb-3 size-10 text-foreground-muted" />
+                <p className="text-sm text-foreground-muted">مقاله‌ای در این دسته‌بندی یافت نشد</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {articles.map((article) => (
+                <div key={article.id} className="relative group">
+                  <Link href={`/knowledge/${article.slug}`} className="block">
+                    <Card className="transition-all hover:bg-surface-hover hover:border-accent/30 bg-surface/40 backdrop-blur-md rounded-xl overflow-hidden shadow-sm h-full flex flex-col justify-between">
+                      <CardContent className="p-4 flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                          <FileText className="size-4 text-accent shrink-0" />
+                          <span className="text-sm font-semibold text-foreground truncate max-w-[85%]">
+                            {article.title}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {article.category && (
+                            <Badge className="bg-accent/10 text-accent text-[10px] font-semibold border-transparent select-none">
+                              {article.category}
+                            </Badge>
+                          )}
+                          <Badge className="bg-neutral-800 text-neutral-400 text-[9px] font-mono border-transparent">
+                            v{article.version}
+                          </Badge>
+                          {article.confidentialityLevel !== 'internal' && (
+                            <Badge className={
+                              article.confidentialityLevel === 'confidential' ? 'bg-warning/15 text-warning text-[9px] border-transparent' :
+                              article.confidentialityLevel === 'secret' ? 'bg-critical/15 text-critical text-[9px] border-transparent' :
+                              'bg-success/15 text-success text-[9px] border-transparent'
+                            }>
+                              {article.confidentialityLevel === 'confidential' ? 'محرمانه' :
+                               article.confidentialityLevel === 'secret' ? 'سری' : 'عمومی'}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="mt-2 flex items-center gap-3 font-mono text-[10px] text-foreground-muted border-t border-border/20 pt-2">
+                          <span>تاریخ ثبت: {jalali(article.createdAt)}</span>
+                          {article.author && <span>نویسنده: {article.author.name}</span>}
+                          {article.validUntil && (
+                            <span className="text-warning">اعتبار تا: {jalali(article.validUntil)}</span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+
+                  {/* Overlay Edit Button for Admins */}
+                  {(user?.roleKey === 'admin' || user?.roleKey === 'super_admin') && (
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                      <Link href={`/admin/knowledge?edit=${article.slug}`}>
+                        <Button
+                          size="icon-sm"
+                          variant="ghost"
+                          className="size-8 text-foreground-muted hover:text-accent hover:bg-accent/5 rounded-lg border border-border/60 bg-background/85 backdrop-blur shadow-sm cursor-pointer"
+                          title="ویرایش مقاله دانشنامه"
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                      </Link>
                     </div>
-                    {article.category && (
-                      <Badge className="w-fit bg-accent/10 text-accent text-[10px] font-semibold border-transparent select-none">
-                        {article.category}
-                      </Badge>
-                    )}
-                    <div className="mt-2 flex items-center gap-3 font-mono text-[10px] text-foreground-muted border-t border-border/20 pt-2">
-                      <span>تاریخ ثبت: {jalali(article.createdAt)}</span>
-                      {article.author && <span>نویسنده: {article.author.name}</span>}
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* OFFICIAL DOCUMENTS TAB */}
+      {activeTab === 'official-docs' && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between gap-4 bg-surface-container-low border border-border p-3 rounded-lg">
+            <div className="relative flex-1">
+              <Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-foreground-muted" />
+              <Input
+                value={docsSearch}
+                onChange={(e) => setDocsSearch(e.target.value)}
+                placeholder="جستجو در اسناد، آیین‌نامه‌ها و قوانین..."
+                className="pe-9 ps-9 h-8 text-xs"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-foreground-muted">دسته‌بندی اسناد:</span>
+              <select
+                value={selectedDocCategory}
+                onChange={(e) => setSelectedDocCategory(e.target.value)}
+                className="h-8 rounded-lg border border-border bg-surface px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                <option value="all">همه اسناد</option>
+                <option value="rules">آیین‌نامه‌ها</option>
+                <option value="bypass">دستورالعمل بایکوت</option>
+                <option value="phone">تلفن‌های اضطراری</option>
+                <option value="technical">فنی و مهندسی</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {filteredDocs.map((doc) => {
+              const alreadySigned = user ? doc.acknowledgedUsers.some(u => u.name === user.name) : false
+              return (
+                <Card key={doc.id} className="border-accent/10">
+                  <CardContent className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="space-y-2 text-right">
+                      <div className="flex items-center gap-2">
+                        <FileText className="size-4 text-accent shrink-0" />
+                        <span className="text-xs font-black text-foreground">{doc.title}</span>
+                        <Badge variant="outline" className="text-[9px] bg-accent/5 text-accent">
+                          {getDocCategoryLabel(doc.category)}
+                        </Badge>
+                      </div>
+                      
+                      <div className="text-[10px] text-foreground-muted font-data-mono flex flex-wrap gap-4">
+                        <span>نام فایل: {doc.filename}</span>
+                        <span>حجم فایل: {toFa(doc.size)}</span>
+                        <span>تعداد دانلود: {toFa(doc.downloadCount)} بار</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+                      {/* Acknowledge Button */}
+                      {alreadySigned ? (
+                        <Badge className="bg-success/15 text-success border border-success/30 text-[9px] px-2.5 py-1 rounded font-bold flex items-center gap-1">
+                          <CheckCircle className="size-3.5" />
+                          <span>تایید و مطالعه شده</span>
+                        </Badge>
+                      ) : (
+                        <Button
+                          size="sm"
+                          onClick={() => handleAcknowledgeDocument(doc.id)}
+                          className="h-8 text-[10px] font-bold bg-accent hover:bg-accent-hover text-white cursor-pointer"
+                        >
+                          تأیید مطالعه و آگاهی
+                        </Button>
+                      )}
+
+                      {/* Mock Download Button */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => alert(`دانلود فایل ${doc.filename} شبیه‌سازی شد.`)}
+                        className="h-8 text-[10px] font-bold border-border text-foreground-muted hover:text-foreground cursor-pointer"
+                      >
+                        <Download className="size-3.5 me-0.5" />
+                        دانلود سند
+                      </Button>
                     </div>
                   </CardContent>
+
+                  {/* Read Receipts Stats section */}
+                  <div className="px-4 py-2.5 bg-surface-container-low/50 border-t border-border/40 text-[10px] text-foreground-muted flex flex-col sm:flex-row justify-between gap-2">
+                    <span className="font-bold flex items-center gap-1">
+                      <Users className="size-3.5 text-accent" />
+                      تعداد پرسنل مطالعه‌کننده: {toFa(doc.acknowledgedUsers.length)} نفر
+                    </span>
+                    {doc.acknowledgedUsers.length > 0 && (
+                      <span className="truncate max-w-md">
+                        امضا کنندگان اخیر: {doc.acknowledgedUsers.map(u => `${u.name} (${u.date})`).join(' ، ')}
+                      </span>
+                    )}
+                  </div>
                 </Card>
-              </Link>
-              
-              {/* Overlay Edit Button for Admins */}
-              {(user?.roleKey === 'admin' || user?.roleKey === 'super_admin') && (
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-all duration-200">
-                  <Link href={`/admin/knowledge?edit=${article.slug}`}>
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      className="size-8 text-foreground-muted hover:text-accent hover:bg-accent/5 rounded-lg border border-border/60 bg-background/85 backdrop-blur shadow-sm cursor-pointer"
-                      title="ویرایش مقاله دانشنامه"
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-                  </Link>
-                </div>
-              )}
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* FAQ TAB */}
+      {activeTab === 'faq' && (
+        <div className="space-y-4">
+          {loadingFaqs ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-20 animate-pulse rounded-lg border border-border bg-background-subtle" />
+              ))}
             </div>
-          ))}
+          ) : faqs.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <BookOpen className="mb-3 size-10 text-foreground-muted" />
+                <p className="text-sm text-foreground-muted">هنوز پرسش و پاسخی ثبت نشده است</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {faqs.map((faq) => (
+                <Card key={faq.id} className="border-border-subtle">
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <span className="shrink-0 size-6 rounded-full bg-accent/10 text-accent text-xs font-bold flex items-center justify-center">پ</span>
+                      <p className="text-sm font-semibold text-foreground">{faq.question}</p>
+                    </div>
+                    <div className="flex items-start gap-2 pe-8">
+                      <span className="shrink-0 size-6 rounded-full bg-success/10 text-success text-xs font-bold flex items-center justify-center">ج</span>
+                      <p className="text-xs text-foreground-muted leading-relaxed">{faq.answer}</p>
+                    </div>
+                    {faq.category && (
+                      <div className="pe-8">
+                        <Badge className="text-[9px] bg-background-subtle text-foreground-muted">{faq.category}</Badge>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

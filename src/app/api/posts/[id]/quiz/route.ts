@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
-import { addPoints } from '@/server/modules/gamification/service'
 
 interface QuizQuestion {
   q: string
@@ -14,8 +13,7 @@ function extractQuiz(body: string): QuizQuestion[] | null {
   if (!match) return null
   try {
     return JSON.parse(match[1].trim())
-  } catch (e) {
-    console.error('Failed to parse quiz JSON from post body:', e)
+  } catch {
     return null
   }
 }

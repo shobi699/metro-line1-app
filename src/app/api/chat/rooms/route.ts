@@ -4,7 +4,7 @@ import {
   requireRole,
   authErrorResponse,
 } from '@/server/rbac/guard'
-import { createGroupRoomSchema } from '@/server/dto/chat'
+import { createGroupRoomSchema } from '@/lib/zod/chat'
 import { listRoomsForUser, createGroupRoom } from '@/server/modules/chat/service'
 
 export async function GET(request: Request) {
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   if ('error' in user) return authErrorResponse(user)
 
   // ساخت روم گروهی فقط برای مدیر و بالاتر
-  const roleErr = requireRole(user, 'admin')
+  const roleErr = await requireRole(user, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const body = await request.json()

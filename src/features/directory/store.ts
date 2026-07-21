@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware'
 interface DirectoryUser {
   id: string
   name: string
-  nationalId: string
+  personnelCode: string
   phone: string | null
   email: string | null
   status: string

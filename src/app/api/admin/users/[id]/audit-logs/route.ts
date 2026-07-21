@@ -10,7 +10,7 @@ export async function GET(
   const sessionUser = await getSessionUser(request)
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
-  const roleErr = requireRole(sessionUser, 'admin')
+  const roleErr = await requireRole(sessionUser, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { id: userId } = await params
@@ -34,10 +34,10 @@ export async function GET(
           select: {
             id: true,
             name: true,
-            nationalId: true,
+            personnelCode: true,
             role: {
               select: {
-                name: true,
+                title: true,
               },
             },
           },
@@ -51,7 +51,6 @@ export async function GET(
 
     return NextResponse.json({ data: logs })
   } catch (error: unknown) {
-    console.error('Error fetching user audit logs:', error)
     const message = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
       { error: `خطا در دریافت لاگ‌های ممیزی کاربر: ${message}` },

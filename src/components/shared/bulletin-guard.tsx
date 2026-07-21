@@ -82,7 +82,6 @@ export function BulletinGuard({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {children}
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md">
         <style>{`
           @keyframes fadeInUp {

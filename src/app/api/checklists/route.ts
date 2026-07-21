@@ -28,11 +28,15 @@ export async function POST(request: Request) {
   if ('error' in user) return authErrorResponse(user)
 
   const body = await request.json()
-  const { action, name, description, templateId, trainId, stationId, items, geoLocation } = body
+  const { 
+    action, name, description, templateId, trainId, stationId, 
+    items, geoLocation, trainType, stationLocation, 
+    completionTimeSeconds, autoTicketGenerated 
+  } = body
 
   // Check if it's an admin template creation action
   if (action === 'create_template' || (!templateId && name && items)) {
-    const adminError = requireRole(user, 'admin')
+    const adminError = await requireRole(user, 'admin')
     if (adminError) return authErrorResponse(adminError)
 
     if (!name || !items || !Array.isArray(items)) {
@@ -44,10 +48,13 @@ export async function POST(request: Request) {
 
     const template = await createTemplate({
       name,
+      trainType,
+      stationLocation,
       description,
       items: items.map((item: Record<string, unknown>) => ({
         label: String(item.label),
         required: !!item.required,
+        requirePhoto: !!item.requirePhoto,
       })),
     })
 
@@ -71,8 +78,11 @@ export async function POST(request: Request) {
       label: String(item.label),
       checked: !!item.checked,
       note: String(item.note || ''),
+      photoAttached: !!item.photoAttached,
     })),
     geoLocation,
+    completionTimeSeconds,
+    autoTicketGenerated,
   })
 
   return NextResponse.json({ data: record }, { status: 201 })

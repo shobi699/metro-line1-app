@@ -31,7 +31,7 @@ export async function POST(
       roomId,
       messageId,
       user.id,
-      dbUser?.name ?? user.nationalId,
+      dbUser?.name ?? user.personnelCode,
       emoji,
     )
     return NextResponse.json({ data: reactions })

@@ -8,8 +8,38 @@ export interface KnowledgeArticleData {
   category: string | null
   tags: string | null
   attachments: Array<{ url: string; name: string; type: string }> | null
+  version: number
+  validFrom: Date | null
+  validUntil: Date | null
+  ownerId: string | null
+  confidentialityLevel: string
+  relatedPostId: string | null
+  relatedQuizPostId: string | null
   createdAt: Date
   author?: { name: string }
+}
+
+export interface KnowledgeFAQData {
+  id: string
+  question: string
+  answer: string
+  category: string | null
+  articleId: string | null
+  createdAt: Date
+}
+
+function mapArticle(a: {
+  id: string; title: string; slug: string; body: string
+  category: string | null; tags: string | null; attachments: unknown
+  version: number; validFrom: Date | null; validUntil: Date | null
+  ownerId: string | null; confidentialityLevel: string
+  relatedPostId: string | null; relatedQuizPostId: string | null
+  createdAt: Date; author?: { name: string }
+}): KnowledgeArticleData {
+  return {
+    ...a,
+    attachments: (a.attachments as Array<{ url: string; name: string; type: string }>) ?? null,
+  }
 }
 
 export async function listArticles(options?: {
@@ -17,12 +47,14 @@ export async function listArticles(options?: {
   q?: string
   page?: number
   pageSize?: number
+  confidentialityLevel?: string
 }): Promise<{ items: KnowledgeArticleData[]; total: number }> {
   const page = options?.page ?? 1
   const pageSize = options?.pageSize ?? 20
   const where: Record<string, unknown> = {}
 
   if (options?.category) where.category = options.category
+  if (options?.confidentialityLevel) where.confidentialityLevel = options.confidentialityLevel
   if (options?.q) {
     where.OR = [
       { title: { contains: options.q } },
@@ -35,7 +67,7 @@ export async function listArticles(options?: {
     prisma.knowledgeArticle.findMany({
       where,
       include: { author: { select: { name: true } } },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ version: 'desc' }, { createdAt: 'desc' }],
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
@@ -43,10 +75,7 @@ export async function listArticles(options?: {
   ])
 
   return {
-    items: items.map((a) => ({
-      ...a,
-      attachments: (a.attachments as Array<{ url: string; name: string; type: string }>) ?? null,
-    })),
+    items: items.map(mapArticle),
     total,
   }
 }
@@ -60,11 +89,7 @@ export async function getArticleBySlug(
   })
 
   if (!article) return null
-
-  return {
-    ...article,
-    attachments: (article.attachments as Array<{ url: string; name: string; type: string }>) ?? null,
-  }
+  return mapArticle(article)
 }
 
 export async function createArticle(data: {
@@ -74,6 +99,12 @@ export async function createArticle(data: {
   category?: string
   tags?: string
   attachments?: Array<{ url: string; name: string; type: string }>
+  validFrom?: string
+  validUntil?: string
+  ownerId?: string
+  confidentialityLevel?: string
+  relatedPostId?: string
+  relatedQuizPostId?: string
   authorId: string
 }): Promise<KnowledgeArticleData> {
   const article = await prisma.knowledgeArticle.create({
@@ -84,15 +115,18 @@ export async function createArticle(data: {
       category: data.category,
       tags: data.tags,
       attachments: data.attachments as never,
+      validFrom: data.validFrom ? new Date(data.validFrom) : null,
+      validUntil: data.validUntil ? new Date(data.validUntil) : null,
+      ownerId: data.ownerId,
+      confidentialityLevel: data.confidentialityLevel ?? 'internal',
+      relatedPostId: data.relatedPostId,
+      relatedQuizPostId: data.relatedQuizPostId,
       authorId: data.authorId,
     },
     include: { author: { select: { name: true } } },
   })
 
-  return {
-    ...article,
-    attachments: (article.attachments as Array<{ url: string; name: string; type: string }>) ?? null,
-  }
+  return mapArticle(article)
 }
 
 export async function updateArticle(
@@ -102,11 +136,25 @@ export async function updateArticle(
     body?: string
     category?: string
     tags?: string
+    validFrom?: string | null
+    validUntil?: string | null
+    ownerId?: string | null
+    confidentialityLevel?: string
+    relatedPostId?: string | null
+    relatedQuizPostId?: string | null
   },
 ): Promise<void> {
+  const existing = await prisma.knowledgeArticle.findUnique({ where: { id } })
+  if (!existing) throw new Error('مقاله یافت نشد')
+
   await prisma.knowledgeArticle.update({
     where: { id },
-    data,
+    data: {
+      ...data,
+      version: existing.version + 1,
+      validFrom: data.validFrom !== undefined ? (data.validFrom ? new Date(data.validFrom) : null) : undefined,
+      validUntil: data.validUntil !== undefined ? (data.validUntil ? new Date(data.validUntil) : null) : undefined,
+    },
   })
 }
 
@@ -130,8 +178,27 @@ export async function searchArticles(
     take: 10,
   })
 
-  return articles.map((a) => ({
-    ...a,
-    attachments: (a.attachments as Array<{ url: string; name: string; type: string }>) ?? null,
-  }))
+  return articles.map(mapArticle)
+}
+
+// ── FAQ Methods ──────────────────────────────────────
+
+export async function listFAQs(category?: string): Promise<KnowledgeFAQData[]> {
+  return prisma.knowledgeFAQ.findMany({
+    where: category ? { category } : undefined,
+    orderBy: { createdAt: 'desc' },
+  })
+}
+
+export async function createFAQ(data: {
+  question: string
+  answer: string
+  category?: string
+  articleId?: string
+}): Promise<KnowledgeFAQData> {
+  return prisma.knowledgeFAQ.create({ data })
+}
+
+export async function deleteFAQ(id: string): Promise<void> {
+  await prisma.knowledgeFAQ.delete({ where: { id } })
 }

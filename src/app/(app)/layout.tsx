@@ -1,28 +1,120 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
 import { Sidebar, MobileHeader } from '@/components/shared/sidebar'
 import { MobileBottomNav } from '@/components/shared/mobile-bottom-nav'
 import { BulletinGuard } from '@/components/shared/bulletin-guard'
-import { AlertTriangle, X, ShieldAlert } from 'lucide-react'
+import { AnnouncementGuard } from '@/components/shared/announcement-guard'
+import { AlertTriangle, X, ShieldAlert, AlertCircle } from 'lucide-react'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const user = useAuthStore((s) => s.user)
   const router = useRouter()
+  const accessToken = useAuthStore((s) => s.accessToken)
+  const refreshToken = useAuthStore((s) => s.refreshToken)
+  const setAuth = useAuthStore((s) => s.setAuth)
+  const logout = useAuthStore((s) => s.logout)
+  const [hydrated, setHydrated] = useState(false)
 
   const [config, setConfig] = useState<{
     maintenanceMode?: boolean
     systemNotice?: string
   } | null>(null)
   const [showNotice, setShowNotice] = useState(true)
+  const [banners, setBanners] = useState<any[]>([])
+  const pathname = usePathname()
+
+  // Scroll to top on navigation
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!hydrated || !isAuthenticated || !accessToken) return
+    let cancelled = false
+    async function fetchBanners() {
+      try {
+        const res = await fetch('/api/announcements?surface=banner', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+        if (res.ok && !cancelled) {
+          const data = await res.json()
+          setBanners(data.data || [])
+        }
+      } catch {}
+    }
+    fetchBanners()
+    const bannerInterval = setInterval(fetchBanners, 60 * 1000)
+    return () => {
+      cancelled = true
+      clearInterval(bannerInterval)
+    }
+  }, [isAuthenticated, accessToken, hydrated])
+
+  const dismissBanner = (bannerId: string) => {
+    setBanners((prev) => prev.filter((b) => b.id !== bannerId))
+  }
+
+  // منتظر ماندن برای لود شدن وضعیت احراز هویت از LocalStorage
+  useEffect(() => {
+    if (useAuthStore.persist.hasHydrated()) {
+      setHydrated(true)
+    } else {
+      const unsub = useAuthStore.persist.onFinishHydration(() => {
+        setHydrated(true)
+      })
+      return () => unsub()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!hydrated) return
+
+    if (!isAuthenticated || !accessToken || !refreshToken) {
       router.push('/login')
       return
+    }
+
+    async function checkAndRefreshToken() {
+      const token = useAuthStore.getState().accessToken
+      const refreshTok = useAuthStore.getState().refreshToken
+      if (!token || !refreshTok) return
+
+      try {
+        const payloadBase64 = token.split('.')[1]
+        // Decode base64 unicode properly
+        const decoded = JSON.parse(atob(payloadBase64))
+        const exp = decoded.exp
+        
+        // If expired or expiring in less than 60 seconds, refresh it
+        if (exp && (Date.now() / 1000) >= exp - 60) {
+          const res = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken: refreshTok }),
+          })
+
+          if (res.ok) {
+            const data = await res.json()
+            if (data.accessToken && data.refreshToken) {
+              setAuth(
+                useAuthStore.getState().user!,
+                data.accessToken,
+                data.refreshToken
+              )
+            }
+          } else {
+            // Refresh failed (refresh token expired/revoked) -> logout
+            logout()
+            router.push('/login')
+          }
+        }
+      } catch (err) {
+        console.error('Error checking/refreshing token:', err)
+      }
     }
 
     async function fetchConfig() {
@@ -34,8 +126,27 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         }
       } catch {}
     }
+
+    void checkAndRefreshToken()
     void fetchConfig()
-  }, [isAuthenticated, router])
+
+    const interval = setInterval(() => {
+      void checkAndRefreshToken()
+    }, 30000) // check every 30 seconds
+
+    return () => clearInterval(interval)
+  }, [isAuthenticated, accessToken, refreshToken, router, hydrated])
+
+  if (!hydrated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background" dir="rtl">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent"></div>
+          <span className="text-xs text-foreground-muted">در حال بازخوانی نشست کاربری...</span>
+        </div>
+      </div>
+    )
+  }
 
   if (!isAuthenticated) return null
 
@@ -89,6 +200,39 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
+      {/* Active Announcement Banners */}
+      {banners.map((b) => {
+        const color = b.bannerStyle?.color || 'red'
+        const isDismissible = b.bannerStyle?.dismissible !== false
+
+        return (
+          <div
+            key={b.id}
+            className={`relative w-full border-b text-xs px-4 py-2 flex items-center justify-between gap-4 animate-in slide-in-from-top duration-300 ${
+              color === 'red' ? 'bg-destructive/10 border-destructive/20 text-destructive' :
+              color === 'amber' ? 'bg-warning/10 border-warning/20 text-warning' :
+              color === 'blue' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' :
+              'bg-success/10 border-success/20 text-success'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <AlertCircle className="size-4 shrink-0" />
+              <span className="font-semibold">{b.title}:</span>
+              <span className="font-medium text-foreground">{b.excerpt || b.body?.slice(0, 100) || ''}</span>
+            </div>
+            {isDismissible && (
+              <button
+                onClick={() => dismissBanner(b.id)}
+                className="text-foreground-muted hover:text-current p-1 rounded hover:bg-current/5 transition-colors cursor-pointer shrink-0"
+                title="بستن بنر"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+        )
+      })}
+
       <div className="flex min-h-screen flex-1">
         <a
           href="#main-content"
@@ -97,10 +241,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           پرش به محتوا
         </a>
         <Sidebar />
-        <div className="flex min-h-screen flex-1 flex-col">
+        <div className="flex min-h-screen flex-1 flex-col min-w-0">
           <MobileHeader />
-          <main id="main-content" className="flex flex-1 flex-col pb-14 md:pb-0">
-            <BulletinGuard>{children}</BulletinGuard>
+          <main id="main-content" className="flex flex-1 flex-col pb-14 md:pb-0 min-w-0 w-full">
+            <BulletinGuard>
+              <AnnouncementGuard>{children}</AnnouncementGuard>
+            </BulletinGuard>
           </main>
         </div>
         <MobileBottomNav />

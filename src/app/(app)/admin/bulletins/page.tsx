@@ -45,7 +45,7 @@ export default function AdminBulletinsPage() {
     receipts: Array<{
       id: string
       readAt: string
-      user: { name: string; nationalId: string }
+      user: { name: string; personnelCode: string }
     }>
   } | null>(null)
 
@@ -275,7 +275,7 @@ export default function AdminBulletinsPage() {
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-foreground">{r.user.name}</span>
                           <span className="font-mono text-[10px] text-foreground-muted bg-background-subtle border border-border-subtle rounded px-1" dir="ltr">
-                            {r.user.nationalId}
+                            {r.user.personnelCode}
                           </span>
                         </div>
                         <span className="text-foreground-muted font-mono text-[11px]">

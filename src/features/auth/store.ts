@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 
 export interface SessionUser {
   id: string
-  nationalId: string
+  personnelCode: string
   name: string
   roleKey: string
   customFields?: {

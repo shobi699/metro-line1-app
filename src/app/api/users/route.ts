@@ -1,17 +1,18 @@
 import { NextResponse } from 'next/server'
-import { userSearchSchema } from '@/server/dto/directory'
+import { userSearchSchema } from '@/lib/zod/directory'
 import { listUsers } from '@/server/modules/directory/service'
 import {
   getSessionUser,
   requireRole,
   authErrorResponse,
+  withErrorLogging,
 } from '@/server/rbac/guard'
 
-export async function GET(request: Request) {
+export const GET = withErrorLogging(async function GET(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'operator')
+  const roleErr = await requireRole(user, 'operator')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { searchParams } = new URL(request.url)
@@ -34,4 +35,5 @@ export async function GET(request: Request) {
 
   const result = await listUsers(parsed.data)
   return NextResponse.json({ data: result })
-}
+})
+

@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState, Suspense } from 'react'
+import { useEffect, useRef, useState, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { useAuthStore } from '@/features/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,7 +18,6 @@ import {
   Loader2,
   Newspaper,
   ArrowRight,
-  Eye,
   Settings,
   Globe,
   Sparkles,
@@ -26,7 +26,6 @@ import {
   List,
   Image,
   FileText,
-  CheckCircle,
   AlertCircle,
   Award,
   Link2,
@@ -36,11 +35,31 @@ import {
   Settings2,
   ChevronUp,
   ChevronDown,
-  XCircle,
   Video,
   FileCode,
-  Undo2,
   EyeOff,
+  Send,
+  Download,
+  Table as TableIcon,
+  Code as CodeIcon,
+  Minus as DividerIcon,
+  AlertTriangle as AlertIcon,
+  Paperclip,
+  CheckSquare,
+  FoldVertical,
+  Headphones,
+  Highlighter,
+  Sigma,
+  FileDown,
+  MapPin,
+  MousePointerClick,
+  Images,
+  GitCommit,
+  ListOrdered,
+  Megaphone,
+  Terminal,
+  Library,
+  X,
 } from 'lucide-react'
 import { toFa } from '@/lib/fa'
 
@@ -50,8 +69,12 @@ interface AdminPost {
   title: string
   slug: string
   category: string | null
+  tags: string | null
   published: boolean
   mandatory: boolean
+  status: string
+  publishAt: string | null
+  nextReviewAt: string | null
   createdAt: string
   author: { name: string }
   _count: { reads: number }
@@ -63,6 +86,7 @@ interface FormState {
   title: string
   slug: string
   category: string
+  tags: string[]
   excerpt: string
   body: string
   coverUrl: string
@@ -70,7 +94,29 @@ interface FormState {
   mediaType: string
   published: boolean
   mandatory: boolean
+  status: string
   targetRoles: string[]
+  // New Announcement Platform fields
+  kind: 'news' | 'notice' | 'must_read' | 'urgent_banner' | 'emergency'
+  audience: {
+    roles: string[]
+    groups: string[]
+    stations: string[]
+    shiftCodes: string[]
+    userIds: string[]
+  }
+  surfaces: string[]
+  priority: number
+  pinnedUntil: string
+  expiresAt: string
+  ackRequired: boolean
+  ackDeadline: string
+  bannerStyle: {
+    color: 'red' | 'amber' | 'blue' | 'green'
+    icon: string
+    dismissible: boolean
+  }
+  notifyRuleKey: string
 }
 
 export interface QuizQuestionDef {
@@ -81,10 +127,15 @@ export interface QuizQuestionDef {
 
 export interface EditorBlock {
   id: string
-  type: 'paragraph' | 'heading' | 'quote' | 'list' | 'video' | 'image'
+  type: 'paragraph' | 'heading' | 'quote' | 'list' | 'video' | 'image' | 'table' | 'alert' | 'code' | 'divider' | 'file' | 'checklist' | 'accordion' | 'audio' | 'highlight' | 'math' | 'pdf' | 'map' | 'button' | 'gallery' | 'timeline' | 'steps' | 'notice' | 'terminal' | 'term'
   content: string
   level?: 2 | 3
   caption?: string
+  alertType?: 'info' | 'warning' | 'critical'
+  language?: string
+  summary?: string
+  href?: string
+  termName?: string
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -93,6 +144,9 @@ const TYPE_LABELS: Record<string, string> = {
   training: 'دوره آموزشی',
   circular: 'بخش‌نامه ایمنی',
   gallery: 'گالری چندرسانه‌ای',
+  announcement: 'اطلاعیه اداری',
+  directive: 'دستورالعمل عملیاتی',
+  form: 'فرم و فایل',
 }
 
 const EMPTY_FORM: FormState = {
@@ -101,6 +155,7 @@ const EMPTY_FORM: FormState = {
   title: '',
   slug: '',
   category: '',
+  tags: [],
   excerpt: '',
   body: '',
   coverUrl: '',
@@ -108,7 +163,28 @@ const EMPTY_FORM: FormState = {
   mediaType: '',
   published: true,
   mandatory: false,
+  status: 'published',
   targetRoles: ['all'],
+  kind: 'news',
+  audience: {
+    roles: ['all'],
+    groups: [],
+    stations: [],
+    shiftCodes: [],
+    userIds: [],
+  },
+  surfaces: ['feed'],
+  priority: 0,
+  pinnedUntil: '',
+  expiresAt: '',
+  ackRequired: false,
+  ackDeadline: '',
+  bannerStyle: {
+    color: 'red',
+    icon: '',
+    dismissible: true,
+  },
+  notifyRuleKey: '',
 }
 
 const POPULAR_CATEGORIES = ['مقررات عمومی سیر و حرکت', 'عیب‌یابی فنی واگن', 'آموزش ایمنی ایستگاه', 'اطلاعیه‌های اداری', 'دستورالعمل OCC']
@@ -124,6 +200,8 @@ const TARGET_ROLES_OPTIONS = [
 function AdminContentPageContent() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const [posts, setPosts] = useState<AdminPost[]>([])
+  const [contentCategories, setContentCategories] = useState<{ id: string; title: string; slug: string; color: string | null }[]>([])
+
   
   // Query Parameter Direct Edit Listener
   const searchParams = useSearchParams()
@@ -135,6 +213,67 @@ function AdminContentPageContent() {
   const [uploading, setUploading] = useState(false)
   const coverRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const renderFileUpload = (block: EditorBlock, accept: string, placeholder: string, labelTitle: string = "آدرس فایل (لینک مستقیم):", updateBlockContent: (id: string, content: string) => void) => {
+    return (
+      <div className="flex flex-col gap-1.5">
+        <Label className="text-[10px] text-foreground-muted">{labelTitle}</Label>
+        <div className="flex gap-2">
+          <Input
+            value={block.content}
+            onChange={(e) => updateBlockContent(block.id, e.target.value)}
+            placeholder={placeholder}
+            className="h-8 text-xs font-mono text-left dir-ltr flex-1"
+          />
+          <input
+            type="file"
+            accept={accept}
+            className="hidden"
+            id={`upload-${block.id}`}
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              if (!file || !accessToken) return
+              if (file.size > 100 * 1024 * 1024) {
+                alert('حجم فایل بیش از ۱۰۰ مگابایت است')
+                return
+              }
+              const fd = new FormData()
+              fd.append('file', file)
+              try {
+                const res = await fetch('/api/uploads', {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${accessToken}` },
+                  body: fd,
+                })
+                let data: any = null
+                const contentType = res.headers.get('content-type')
+                if (contentType && contentType.includes('application/json')) {
+                  data = await res.json()
+                }
+                if (res.ok && data?.data?.url) {
+                  updateBlockContent(block.id, data.data.url)
+                } else {
+                  alert(data?.error || `خطا در بارگذاری فایل (${res.status})`)
+                }
+              } catch {
+                alert('خطا در ارتباط با سرور')
+              }
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs shrink-0 cursor-pointer"
+            onClick={() => document.getElementById(`upload-${block.id}`)?.click()}
+          >
+            <Upload className="size-3.5 text-accent me-1" />
+            <span>آپلود فایل</span>
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   // Block Editor States
   const [editorTab, setEditorTab] = useState<'visual' | 'code'>('visual')
@@ -162,15 +301,76 @@ function AdminContentPageContent() {
   const [lastAutosaved, setLastAutosaved] = useState<string | null>(null)
   const [hasRecoverableDraft, setHasRecoverableDraft] = useState(false)
 
-  // Markdown to Blocks Parser
+  // Tracking Stats State
+  const [trackingStats, setTrackingStats] = useState<any | null>(null)
+  const [loadingTracking, setLoadingTracking] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/content/categories')
+      .then(res => res.json())
+      .then(json => {
+        if (json.data) setContentCategories(json.data)
+      })
+      .catch(err => console.error(err))
+  }, [])
+
+  const loadTracking = useCallback(async (postId: string) => {
+    if (!accessToken) return
+    setLoadingTracking(true)
+    try {
+      const res = await fetch(`/api/admin/announcements/${postId}/tracking`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setTrackingStats(data.data)
+      }
+    } catch (err) {
+      console.error('Failed to load tracking stats:', err)
+    } finally {
+      setLoadingTracking(false)
+    }
+  }, [accessToken])
+
+  useEffect(() => {
+    if (form.id && isWorkspaceOpen) {
+      loadTracking(form.id)
+    } else {
+      setTrackingStats(null)
+    }
+  }, [form.id, isWorkspaceOpen, loadTracking])
+
+  const handleSendReminder = async (postId: string) => {
+    if (!accessToken) return
+    try {
+      const res = await fetch(`/api/admin/announcements/${postId}/remind`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        alert('یادآوری مجدد با موفقیت ارسال شد.')
+        loadTracking(postId)
+      }
+    } catch {}
+  }
+
   const markdownToBlocks = (markdown: string): EditorBlock[] => {
     if (!markdown.trim()) {
       return [{ id: Math.random().toString(36).slice(2, 9), type: 'paragraph', content: '' }]
     }
 
     // Strip quiz tags
-    const textWithoutQuiz = markdown.replace(/\[quiz\]([\s\S]*?)\[\/quiz\]/, '').trim()
-    const paragraphs = textWithoutQuiz.split(/\n\s*\n/)
+    let textToParse = markdown.replace(/\[quiz\]([\s\S]*?)\[\/quiz\]/, '').trim()
+
+    // Extract Accordions before splitting by paragraph
+    const accordions: { id: string, summary: string, content: string }[] = []
+    textToParse = textToParse.replace(/<details>\s*<summary>([\s\S]*?)<\/summary>\s*([\s\S]*?)<\/details>/g, (match, summary, content) => {
+      const id = `accordion_${Math.random().toString(36).slice(2, 9)}`
+      accordions.push({ id, summary: summary.trim(), content: content.trim() })
+      return `\n[accordion_placeholder_${id}]\n`
+    })
+
+    const paragraphs = textToParse.split(/\n\s*\n/)
     const parsedBlocks: EditorBlock[] = []
 
     paragraphs.forEach((p) => {
@@ -179,19 +379,81 @@ function AdminContentPageContent() {
 
       const blockId = Math.random().toString(36).slice(2, 9)
 
+      if (trimmed.startsWith('[accordion_placeholder_')) {
+        const idMatch = trimmed.match(/\[accordion_placeholder_(.*?)\]/)
+        if (idMatch) {
+          const acc = accordions.find((a) => a.id === idMatch[1])
+          if (acc) {
+            parsedBlocks.push({ id: blockId, type: 'accordion', summary: acc.summary, content: acc.content })
+            return
+          }
+        }
+      }
+
       if (trimmed.startsWith('## ')) {
         parsedBlocks.push({ id: blockId, type: 'heading', level: 2, content: trimmed.replace(/^##\s+/, '') })
       } else if (trimmed.startsWith('### ')) {
         parsedBlocks.push({ id: blockId, type: 'heading', level: 3, content: trimmed.replace(/^###\s+/, '') })
+      } else if (trimmed.startsWith('> [!')) {
+        const typeMatch = trimmed.match(/^>\s+\[!(.*?)\]/)
+        let alertType: 'info' | 'warning' | 'critical' = 'info'
+        if (typeMatch) {
+          const t = typeMatch[1].toUpperCase()
+          if (t === 'WARNING') alertType = 'warning'
+          if (t === 'CAUTION' || t === 'IMPORTANT') alertType = 'critical'
+        }
+        const text = trimmed.split('\n').slice(1).map(line => line.replace(/^>\s?/, '')).join('\n')
+        parsedBlocks.push({ id: blockId, type: 'alert', alertType, content: text })
       } else if (trimmed.startsWith('> ')) {
         const quoteText = trimmed.split('\n').map((line) => line.replace(/^>\s?/, '')).join('\n')
         parsedBlocks.push({ id: blockId, type: 'quote', content: quoteText })
+      } else if (trimmed.startsWith('- [ ] ') || trimmed.startsWith('- [x] ') || trimmed.startsWith('- [X] ')) {
+        parsedBlocks.push({ id: blockId, type: 'checklist', content: trimmed })
       } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
         const listItems = trimmed.split('\n').map((line) => line.replace(/^[-\*]\s+/, '')).join('\n')
         parsedBlocks.push({ id: blockId, type: 'list', content: listItems })
       } else if (trimmed.startsWith('[video]') && trimmed.endsWith('[/video]')) {
         const videoUrl = trimmed.replace(/^\[video\]/, '').replace(/\[\/video\]$/, '')
         parsedBlocks.push({ id: blockId, type: 'video', content: videoUrl })
+      } else if (trimmed.startsWith('[audio]') && trimmed.endsWith('[/audio]')) {
+        const audioUrl = trimmed.replace(/^\[audio\]/, '').replace(/\[\/audio\]$/, '')
+        parsedBlocks.push({ id: blockId, type: 'audio', content: audioUrl })
+      } else if (trimmed.startsWith('==') && trimmed.endsWith('==')) {
+        const highlightText = trimmed.replace(/^==/, '').replace(/==$/, '')
+        parsedBlocks.push({ id: blockId, type: 'highlight', content: highlightText })
+      } else if (trimmed.startsWith('$$') && trimmed.endsWith('$$')) {
+        const mathText = trimmed.replace(/^\$\$/, '').replace(/\$\$$/, '').trim()
+        parsedBlocks.push({ id: blockId, type: 'math', content: mathText })
+      } else if (trimmed.startsWith('[pdf]') && trimmed.endsWith('[/pdf]')) {
+        const pdfUrl = trimmed.replace(/^\[pdf\]/, '').replace(/\[\/pdf\]$/, '')
+        parsedBlocks.push({ id: blockId, type: 'pdf', content: pdfUrl })
+      } else if (trimmed.startsWith('[map') && trimmed.endsWith('[/map]')) {
+        const contentMatch = trimmed.match(/\]([\s\S]*?)\[\/map\]/)
+        const captionMatch = trimmed.match(/caption="(.*?)"/)
+        parsedBlocks.push({ id: blockId, type: 'map', content: contentMatch ? contentMatch[1].trim() : '', caption: captionMatch ? captionMatch[1] : '' })
+      } else if (trimmed.startsWith('[button') && trimmed.endsWith('[/button]')) {
+        const contentMatch = trimmed.match(/\]([\s\S]*?)\[\/button\]/)
+        const hrefMatch = trimmed.match(/href="(.*?)"/)
+        parsedBlocks.push({ id: blockId, type: 'button', content: contentMatch ? contentMatch[1].trim() : '', href: hrefMatch ? hrefMatch[1] : '' })
+      } else if (trimmed.startsWith('[gallery]') && trimmed.endsWith('[/gallery]')) {
+        const galleryContent = trimmed.replace(/^\[gallery\]/, '').replace(/\[\/gallery\]$/, '').trim()
+        parsedBlocks.push({ id: blockId, type: 'gallery', content: galleryContent })
+      } else if (trimmed.startsWith('[timeline]') && trimmed.endsWith('[/timeline]')) {
+        const timelineContent = trimmed.replace(/^\[timeline\]/, '').replace(/\[\/timeline\]$/, '').trim()
+        parsedBlocks.push({ id: blockId, type: 'timeline', content: timelineContent })
+      } else if (trimmed.startsWith('[steps]') && trimmed.endsWith('[/steps]')) {
+        const stepsContent = trimmed.replace(/^\[steps\]/, '').replace(/\[\/steps\]$/, '').trim()
+        parsedBlocks.push({ id: blockId, type: 'steps', content: stepsContent })
+      } else if (trimmed.startsWith('[notice]') && trimmed.endsWith('[/notice]')) {
+        const noticeContent = trimmed.replace(/^\[notice\]/, '').replace(/\[\/notice\]$/, '').trim()
+        parsedBlocks.push({ id: blockId, type: 'notice', content: noticeContent })
+      } else if (trimmed.startsWith('[terminal]') && trimmed.endsWith('[/terminal]')) {
+        const termContent = trimmed.replace(/^\[terminal\]/, '').replace(/\[\/terminal\]$/, '').trim()
+        parsedBlocks.push({ id: blockId, type: 'terminal', content: termContent })
+      } else if (trimmed.startsWith('[term') && trimmed.endsWith('[/term]')) {
+        const contentMatch = trimmed.match(/\]([\s\S]*?)\[\/term\]/)
+        const nameMatch = trimmed.match(/name="(.*?)"/)
+        parsedBlocks.push({ id: blockId, type: 'term', content: contentMatch ? contentMatch[1].trim() : '', termName: nameMatch ? nameMatch[1] : '' })
       } else if (trimmed.startsWith('![') && trimmed.includes('](')) {
         const match = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/)
         if (match) {
@@ -199,6 +461,22 @@ function AdminContentPageContent() {
         } else {
           parsedBlocks.push({ id: blockId, type: 'paragraph', content: trimmed })
         }
+      } else if (trimmed.startsWith('[') && trimmed.includes('](')) {
+        const match = trimmed.match(/^\[(.*?)\]\((.*?)\)$/)
+        if (match) {
+          parsedBlocks.push({ id: blockId, type: 'file', content: match[2], caption: match[1] })
+        } else {
+          parsedBlocks.push({ id: blockId, type: 'paragraph', content: trimmed })
+        }
+      } else if (trimmed.startsWith('```')) {
+        const lines = trimmed.split('\n')
+        const language = lines[0].replace(/```/, '').trim()
+        const codeContent = lines.slice(1, lines.length - 1).join('\n')
+        parsedBlocks.push({ id: blockId, type: 'code', language: language || 'bash', content: codeContent })
+      } else if (trimmed.startsWith('---')) {
+        parsedBlocks.push({ id: blockId, type: 'divider', content: '' })
+      } else if (trimmed.startsWith('|') && trimmed.includes('-|-')) {
+        parsedBlocks.push({ id: blockId, type: 'table', content: trimmed })
       } else {
         parsedBlocks.push({ id: blockId, type: 'paragraph', content: trimmed })
       }
@@ -217,12 +495,50 @@ function AdminContentPageContent() {
             return b.level === 3 ? `### ${content}` : `## ${content}`
           case 'quote':
             return content.split('\n').map((line) => `> ${line}`).join('\n')
+          case 'alert':
+            return `> [!${b.alertType === 'warning' ? 'WARNING' : b.alertType === 'critical' ? 'IMPORTANT' : 'NOTE'}]\n` + content.split('\n').map((line) => `> ${line}`).join('\n')
+          case 'code':
+            return `\`\`\`${b.language || 'text'}\n${b.content}\n\`\`\``
+          case 'divider':
+            return `---`
+          case 'table':
+            return content
           case 'list':
             return content.split('\n').map((line) => `- ${line}`).join('\n')
+          case 'checklist':
+            return content
           case 'video':
             return `[video]${content}[/video]`
+          case 'audio':
+            return `[audio]${content}[/audio]`
+          case 'highlight':
+            return `==${content}==`
+          case 'math':
+            return `$$\n${content}\n$$`
+          case 'pdf':
+            return `[pdf]${content}[/pdf]`
+          case 'map':
+            return `[map caption="${b.caption || ''}"]\n${content}\n[/map]`
+          case 'button':
+            return `[button href="${b.href || '#'}"]\n${content}\n[/button]`
+          case 'gallery':
+            return `[gallery]\n${content}\n[/gallery]`
+          case 'timeline':
+            return `[timeline]\n${content}\n[/timeline]`
+          case 'steps':
+            return `[steps]\n${content}\n[/steps]`
+          case 'notice':
+            return `[notice]\n${content}\n[/notice]`
+          case 'terminal':
+            return `[terminal]\n${content}\n[/terminal]`
+          case 'term':
+            return `[term name="${b.termName || ''}"]\n${content}\n[/term]`
           case 'image':
             return `![${b.caption || ''}](${content})`
+          case 'file':
+            return `[${b.caption || 'دانلود فایل ضمیمه'}](${content})`
+          case 'accordion':
+            return `<details>\n<summary>${b.summary || 'نمایش جزئیات'}</summary>\n${content}\n</details>`
           case 'paragraph':
           default:
             return content
@@ -310,8 +626,8 @@ function AdminContentPageContent() {
         setHasRecoverableDraft(false)
         setIsWorkspaceOpen(true)
       }
-    } catch (e) {
-      console.error('Failed to recover draft:', e)
+    } catch {
+      // draft recovery failed silently
     }
   }
 
@@ -342,8 +658,10 @@ function AdminContentPageContent() {
       title: post.title,
       slug: post.slug,
       category: post.category ?? '',
+      tags: post.tags ? post.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
       published: post.published,
       mandatory: post.mandatory,
+      status: post.status ?? 'draft',
     })
     setLastAutosaved(null)
     setEditorTab('visual')
@@ -372,8 +690,8 @@ function AdminContentPageContent() {
             const parsedQuestions = JSON.parse(match[1].trim())
             setBuiltQuestions(parsedQuestions)
             cleanBody = cleanBody.replace(/\[quiz\]([\s\S]*?)\[\/quiz\]/, '').trim()
-          } catch (e) {
-            console.error('Failed to parse quiz JSON on edit:', e)
+          } catch {
+            // quiz JSON parse failed
           }
         }
 
@@ -385,6 +703,16 @@ function AdminContentPageContent() {
           coverUrl: fullPost.coverUrl || '',
           mediaUrl: fullPost.mediaUrl || '',
           mediaType: fullPost.mediaType || '',
+          kind: fullPost.kind || 'news',
+          audience: fullPost.audience || EMPTY_FORM.audience,
+          surfaces: fullPost.surfaces || EMPTY_FORM.surfaces,
+          priority: fullPost.priority || 0,
+          pinnedUntil: fullPost.pinnedUntil ? new Date(fullPost.pinnedUntil).toISOString().split('T')[0] : '',
+          expiresAt: fullPost.expiresAt ? new Date(fullPost.expiresAt).toISOString().split('T')[0] : '',
+          ackRequired: fullPost.ackRequired || false,
+          ackDeadline: fullPost.ackDeadline ? new Date(fullPost.ackDeadline).toISOString().split('T')[0] : '',
+          bannerStyle: fullPost.bannerStyle || EMPTY_FORM.bannerStyle,
+          notifyRuleKey: fullPost.notifyRuleKey || '',
         }))
 
         // Parse markdown text back to visual blocks
@@ -400,6 +728,10 @@ function AdminContentPageContent() {
   async function handleCover(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file || !accessToken) return
+    if (file.size > 100 * 1024 * 1024) {
+      alert('حجم فایل بیش از ۱۰۰ مگابایت است')
+      return
+    }
     setUploading(true)
     try {
       const fd = new FormData()
@@ -409,17 +741,25 @@ function AdminContentPageContent() {
         headers: { Authorization: `Bearer ${accessToken}` },
         body: fd,
       })
-      if (res.ok) {
-        const data = await res.json()
+      
+      let data: any = null
+      const contentType = res.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json()
+      }
+      
+      if (res.ok && data?.data?.url) {
         setForm((f) => ({
           ...f,
           coverUrl: data.data.url,
           mediaUrl: data.data.url,
           mediaType: data.data.type,
         }))
+      } else {
+        alert(data?.error || `خطا در آپلود فایل (${res.status})`)
       }
     } catch {
-      // silent
+      alert('خطا در ارتباط با سرور')
     } finally {
       setUploading(false)
       if (coverRef.current) coverRef.current.value = ''
@@ -449,13 +789,25 @@ function AdminContentPageContent() {
         type: form.type,
         title: form.title,
         category: form.category,
+        tags: form.tags,
         excerpt: form.excerpt,
         body: finalBody,
         coverUrl: form.coverUrl,
         mediaUrl: form.mediaUrl,
         mediaType: form.mediaType,
-        published: form.published,
+        published: form.status === 'published' || form.published,
         mandatory: form.mandatory,
+        status: form.status,
+        kind: form.kind,
+        audience: form.audience,
+        surfaces: form.surfaces,
+        priority: form.priority,
+        pinnedUntil: form.pinnedUntil || null,
+        expiresAt: form.expiresAt || null,
+        ackRequired: form.ackRequired,
+        ackDeadline: form.ackDeadline || null,
+        bannerStyle: form.bannerStyle,
+        notifyRuleKey: form.notifyRuleKey || null,
       }
       const url = form.id ? `/api/posts/${form.id}` : '/api/posts'
       const method = form.id ? 'PATCH' : 'POST'
@@ -508,10 +860,6 @@ function AdminContentPageContent() {
   }
 
   // Category selection handler
-  const handleSelectCategory = (catName: string) => {
-    setForm((f) => ({ ...f, category: catName }))
-  }
-
   // Handle Tab Switch (Visual Blocks <-> Markdown)
   const handleTabChange = (newTab: 'visual' | 'code') => {
     if (newTab === 'code') {
@@ -531,7 +879,7 @@ function AdminContentPageContent() {
     setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, content: newContent } : b)))
   };
 
-  const updateBlockMeta = (id: string, key: 'level' | 'caption', val: any) => {
+  const updateBlockMeta = (id: string, key: 'level' | 'caption' | 'alertType' | 'language' | 'summary' | 'href' | 'termName', val: any) => {
     setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, [key]: val } : b)))
   };
 
@@ -733,10 +1081,14 @@ function AdminContentPageContent() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setForm((f) => ({ ...f, published: !f.published }))}
+              onClick={() => setForm((f) => ({
+                ...f,
+                status: f.status === 'published' ? 'draft' : 'published',
+                published: f.status !== 'published',
+              }))}
               className="h-8 text-xs gap-1.5 cursor-pointer text-foreground-muted hover:bg-surface-hover hover:text-foreground border border-transparent hover:border-border rounded-lg"
             >
-              {form.published ? (
+              {form.status === 'published' ? (
                 <>
                   <Globe className="size-3.5 text-success" />
                   <span>انتشار عمومی زنده</span>
@@ -760,7 +1112,7 @@ function AdminContentPageContent() {
               ) : (
                 <Check className="size-4" />
               )}
-              <span>{form.id ? 'بروزرسانی تغییرات' : 'انتشار نهایی'}</span>
+              <span>{form.id ? 'بروزرسانی تغییرات' : (form.status === 'published' ? 'انتشار نهایی' : 'ذخیره پیش‌نویس')}</span>
             </Button>
           </div>
         </header>
@@ -797,6 +1149,91 @@ function AdminContentPageContent() {
               </div>
             </div>
 
+            {/* PDF Upload for Form Type */}
+            {form.type === 'form' ? (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-dashed border-accent/30 bg-accent/5 p-8 text-center space-y-3">
+                  <FileText className="size-10 mx-auto text-accent/60" />
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-bold text-foreground">بارگذاری فایل PDF فرم یا مستند</h3>
+                    <p className="text-xs text-foreground-muted">فایل PDF فرم مورد نظر را آپلود کنید تا پرسنل بتوانند آن را مشاهده و دانلود کنند.</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    className="hidden"
+                    id="pdf-upload"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file || !accessToken) return
+                      if (file.size > 100 * 1024 * 1024) {
+                        alert('حجم فایل بیش از ۱۰۰ مگابایت است')
+                        return
+                      }
+                      const fd = new FormData()
+                      fd.append('file', file)
+                      try {
+                        const res = await fetch('/api/uploads', {
+                          method: 'POST',
+                          headers: { Authorization: `Bearer ${accessToken}` },
+                          body: fd,
+                        })
+                        
+                        let data: any = null
+                        const contentType = res.headers.get('content-type')
+                        if (contentType && contentType.includes('application/json')) {
+                          data = await res.json()
+                        }
+                        
+                        if (res.ok && data?.data?.url) {
+                          setForm((f) => ({
+                            ...f,
+                            mediaUrl: data.data.url,
+                            mediaType: 'application/pdf',
+                            body: `دانلود فایل: ${file.name}`,
+                          }))
+                        } else {
+                          alert(data?.error || `خطا در بارگذاری فایل (${res.status})`)
+                        }
+                      } catch {
+                        alert('خطا در ارتباط با سرور')
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById('pdf-upload')?.click()}
+                    className="h-9 text-xs gap-1.5 cursor-pointer border-accent/30 hover:bg-accent/10 text-accent"
+                  >
+                    <Upload className="size-4" />
+                    <span>انتخاب فایل PDF</span>
+                  </Button>
+                </div>
+
+                {form.mediaUrl && form.mediaType === 'application/pdf' && (
+                  <Card className="border border-border bg-surface">
+                    <CardContent className="p-4 flex items-center gap-3">
+                      <FileText className="size-8 text-accent" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-foreground truncate">{form.mediaUrl.split('/').pop()}</p>
+                        <p className="text-[10px] text-foreground-muted">فایل PDF بارگذاری شده</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setForm((f) => ({ ...f, mediaUrl: '', mediaType: '', body: '' }))}
+                        className="size-8 text-critical hover:bg-critical/10 rounded-lg cursor-pointer"
+                      >
+                        <Trash className="size-4" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ) : (
+            <>
             {/* TAB CONTENT 1: VISUAL BLOCK EDITOR (Gutenberg) */}
             {editorTab === 'visual' && (
               <div className="space-y-4">
@@ -846,6 +1283,25 @@ function AdminContentPageContent() {
                             {block.type === 'list' && 'فهرست'}
                             {block.type === 'video' && 'ویدیو'}
                             {block.type === 'image' && 'تصویر'}
+                            {block.type === 'table' && 'جدول'}
+                            {block.type === 'alert' && 'هشدار'}
+                            {block.type === 'code' && 'کد'}
+                            {block.type === 'divider' && 'جداکننده'}
+                            {block.type === 'file' && 'فایل'}
+                            {block.type === 'checklist' && 'چک لیست'}
+                            {block.type === 'accordion' && 'آکاردئون'}
+                            {block.type === 'audio' && 'فایل صوتی'}
+                            {block.type === 'highlight' && 'متن برجسته'}
+                            {block.type === 'math' && 'فرمول'}
+                            {block.type === 'pdf' && 'فایل PDF'}
+                            {block.type === 'map' && 'نقشه'}
+                            {block.type === 'button' && 'دکمه لینک'}
+                            {block.type === 'gallery' && 'گالری'}
+                            {block.type === 'timeline' && 'تایم‌لاین'}
+                            {block.type === 'steps' && 'مراحل'}
+                            {block.type === 'notice' && 'بنر اطلاعیه'}
+                            {block.type === 'terminal' && 'ترمینال'}
+                            {block.type === 'term' && 'واژه‌نامه'}
                           </span>
                           <div className="w-[1px] h-3 bg-border mx-1" />
                           <button
@@ -939,55 +1395,7 @@ function AdminContentPageContent() {
 
                           {block.type === 'video' && (
                             <div className="space-y-3">
-                              <div className="flex flex-col gap-1.5">
-                                <Label className="text-[10px] text-foreground-muted">آدرس مستقیم ویدیو آموزشی (فرمت MP4):</Label>
-                                <div className="flex gap-2">
-                                  <Input
-                                    value={block.content}
-                                    onChange={(e) => updateBlockContent(block.id, e.target.value)}
-                                    placeholder="https://example.com/videos/train-brake-tutorial.mp4"
-                                    className="h-8 text-xs font-mono text-left dir-ltr flex-1"
-                                  />
-                                  <input
-                                    type="file"
-                                    accept="video/*"
-                                    className="hidden"
-                                    id={`video-upload-${block.id}`}
-                                    onChange={async (e) => {
-                                      const file = e.target.files?.[0]
-                                      if (!file || !accessToken) return
-                                      const fd = new FormData()
-                                      fd.append('file', file)
-                                      try {
-                                        const res = await fetch('/api/uploads', {
-                                          method: 'POST',
-                                          headers: { Authorization: `Bearer ${accessToken}` },
-                                          body: fd,
-                                        })
-                                        if (res.ok) {
-                                          const data = await res.json()
-                                          updateBlockContent(block.id, data.data.url)
-                                        } else {
-                                          const data = await res.json()
-                                          alert(data.error || 'خطا در بارگذاری ویدیو')
-                                        }
-                                      } catch {
-                                        alert('خطا در ارتباط با سرور')
-                                      }
-                                    }}
-                                  />
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 text-xs shrink-0 cursor-pointer"
-                                    onClick={() => document.getElementById(`video-upload-${block.id}`)?.click()}
-                                  >
-                                    <Upload className="size-3.5 text-accent me-1" />
-                                    <span>آپلود فایل ویدیو</span>
-                                  </Button>
-                                </div>
-                              </div>
+                              {renderFileUpload(block, "video/*", "https://example.com/videos/train-brake-tutorial.mp4", "آدرس مستقیم ویدیو آموزشی (فرمت MP4):", updateBlockContent)}
                               {block.content.trim() && (
                                 <div className="rounded-lg overflow-hidden border border-border bg-black aspect-video max-w-md mx-auto">
                                   <video src={block.content} controls className="w-full h-full object-contain" />
@@ -1004,15 +1412,7 @@ function AdminContentPageContent() {
 
                           {block.type === 'image' && (
                             <div className="space-y-3">
-                              <div className="flex flex-col gap-1.5">
-                                <Label className="text-[10px] text-foreground-muted">آدرس مستقیم تصویر شاخص:</Label>
-                                <Input
-                                  value={block.content}
-                                  onChange={(e) => updateBlockContent(block.id, e.target.value)}
-                                  placeholder="https://example.com/images/schematic.png"
-                                  className="h-8 text-xs font-mono text-left dir-ltr"
-                                />
-                              </div>
+                              {renderFileUpload(block, "image/*", "https://example.com/images/schematic.png", "آدرس مستقیم تصویر شاخص:", updateBlockContent)}
                               {block.content.trim() && (
                                 <div className="rounded-lg overflow-hidden border border-border bg-neutral-950 max-h-56 max-w-sm mx-auto flex items-center justify-center">
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1025,6 +1425,354 @@ function AdminContentPageContent() {
                                 placeholder="کپشن و زیرنویس تصویر..."
                                 className="h-8 text-xs text-right"
                               />
+                            </div>
+                          )}
+
+                          {block.type === 'alert' && (
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-foreground-muted">نوع هشدار:</span>
+                                <select
+                                  value={block.alertType || 'info'}
+                                  onChange={(e) => updateBlockMeta(block.id, 'alertType', e.target.value as any)}
+                                  className="h-7 text-xs bg-surface border border-border rounded px-2 outline-none"
+                                >
+                                  <option value="info">اطلاعات (آبی)</option>
+                                  <option value="warning">اخطار (زرد)</option>
+                                  <option value="critical">مهم/خطر (قرمز)</option>
+                                </select>
+                              </div>
+                              <div className={`border-r-4 p-3 rounded-l-md ${
+                                block.alertType === 'warning' ? 'border-amber-500 bg-amber-500/10 text-amber-200' :
+                                block.alertType === 'critical' ? 'border-red-500 bg-red-500/10 text-red-200' :
+                                'border-blue-500 bg-blue-500/10 text-blue-200'
+                              }`}>
+                                <textarea
+                                  value={block.content}
+                                  onChange={(e) => updateBlockContent(block.id, e.target.value)}
+                                  placeholder="متن پیام مهم یا هشدار..."
+                                  rows={Math.max(2, block.content.split('\n').length)}
+                                  className="w-full bg-transparent border-none p-0 text-sm placeholder:text-current/50 focus:ring-0 focus:outline-none leading-7 text-right resize-none font-medium"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {block.type === 'code' && (
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-foreground-muted">زبان کد:</span>
+                                <Input
+                                  value={block.language || ''}
+                                  onChange={(e) => updateBlockMeta(block.id, 'language', e.target.value)}
+                                  placeholder="مثلاً bash یا json"
+                                  className="h-7 text-xs w-32 font-mono"
+                                />
+                              </div>
+                              <div className="bg-neutral-950 rounded-md border border-neutral-800 p-3">
+                                <textarea
+                                  value={block.content}
+                                  onChange={(e) => updateBlockContent(block.id, e.target.value)}
+                                  placeholder="قطعه کد را اینجا قرار دهید..."
+                                  rows={Math.max(3, block.content.split('\n').length)}
+                                  className="w-full bg-transparent border-none p-0 text-xs text-neutral-300 placeholder:text-neutral-600 focus:ring-0 focus:outline-none leading-relaxed text-left dir-ltr resize-none font-mono"
+                                  dir="ltr"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {block.type === 'divider' && (
+                            <div className="py-4 flex items-center justify-center">
+                              <div className="w-full h-px bg-border max-w-sm"></div>
+                              <span className="absolute bg-surface px-2 text-[10px] text-foreground-muted">خط جداکننده</span>
+                            </div>
+                          )}
+
+                          {block.type === 'table' && (
+                            <div className="space-y-1">
+                              <div className="text-[10px] text-foreground-muted select-none">جدول مارک‌داون (با | ستون‌ها را جدا کنید)</div>
+                              <textarea
+                                value={block.content}
+                                onChange={(e) => updateBlockContent(block.id, e.target.value)}
+                                placeholder="| عنوان ۱ | عنوان ۲ |\n|---|---|\n| مقدار ۱ | مقدار ۲ |"
+                                rows={Math.max(4, block.content.split('\n').length)}
+                                className="w-full bg-surface border border-border rounded-md p-3 text-sm text-foreground placeholder:text-foreground-muted focus:ring-1 focus:ring-accent outline-none leading-7 text-right resize-none font-mono"
+                              />
+                            </div>
+                          )}
+
+                          {block.type === 'file' && (
+                            <div className="space-y-3">
+                              {renderFileUpload(block, "*/*", "https://example.com/file.pdf", "لینک فایل ضمیمه (PDF، تصاویر و ...):", updateBlockContent)}
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[10px] text-foreground-muted">عنوان فایل برای نمایش به کاربر:</Label>
+                                <Input
+                                  value={block.caption || ''}
+                                  onChange={(e) => updateBlockMeta(block.id, 'caption', e.target.value)}
+                                  placeholder="دانلود فایل پیوست دستورالعمل (مثلا)"
+                                  className="h-8 text-xs text-right"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {block.type === 'checklist' && (
+                            <div className="space-y-1">
+                              <div className="text-[10px] text-foreground-muted select-none">چک لیست عملیاتی (با - [ ] یا - [x] شروع کنید)</div>
+                              <textarea
+                                value={block.content}
+                                onChange={(e) => updateBlockContent(block.id, e.target.value)}
+                                placeholder="- [ ] بررسی چراغ سیگنال\n- [x] روشن کردن سیستم تهویه\n- [ ] کنترل ارتباط رادیویی"
+                                rows={Math.max(3, block.content.split('\n').length)}
+                                className="w-full bg-transparent border-none p-0 text-sm text-foreground placeholder:text-foreground-muted focus:ring-0 focus:outline-none leading-7 text-right resize-none"
+                              />
+                            </div>
+                          )}
+
+                          {block.type === 'accordion' && (
+                            <div className="space-y-3 p-3 bg-surface-container-low/20 rounded-lg border border-border">
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[10px] text-foreground-muted">عنوان آکاردئون (بخش بازشونده):</Label>
+                                <Input
+                                  value={block.summary || ''}
+                                  onChange={(e) => updateBlockMeta(block.id, 'summary', e.target.value)}
+                                  placeholder="برای مشاهده جزئیات فنی کلیک کنید"
+                                  className="h-8 text-xs font-bold bg-surface"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[10px] text-foreground-muted">محتوای داخل آکاردئون:</Label>
+                                <textarea
+                                  value={block.content}
+                                  onChange={(e) => updateBlockContent(block.id, e.target.value)}
+                                  placeholder="متن کامل را اینجا بنویسید..."
+                                  rows={Math.max(3, block.content.split('\n').length)}
+                                  className="w-full bg-surface border border-border p-2 rounded-md text-sm text-foreground placeholder:text-foreground-muted focus:ring-1 focus:ring-accent outline-none leading-7 text-right resize-none"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {block.type === 'audio' && (
+                            <div className="space-y-3">
+                              {renderFileUpload(block, "audio/*", "https://example.com/audio.mp3", "لینک فایل صوتی (بی‌سیم / پادکست):", updateBlockContent)}
+                            </div>
+                          )}
+
+                          {block.type === 'highlight' && (
+                            <div className="space-y-1">
+                              <div className="text-[10px] text-foreground-muted select-none">متن برجسته (Highlight)</div>
+                              <textarea
+                                value={block.content}
+                                onChange={(e) => updateBlockContent(block.id, e.target.value)}
+                                placeholder="متن مهمی که می‌خواهید به شکل برجسته نمایش داده شود..."
+                                rows={Math.max(2, block.content.split('\n').length)}
+                                className="w-full bg-accent/10 border border-accent/20 rounded-md p-3 text-sm text-accent placeholder:text-accent/50 focus:ring-1 focus:ring-accent outline-none leading-7 text-right resize-none"
+                              />
+                            </div>
+                          )}
+
+                          {block.type === 'math' && (
+                            <div className="space-y-1">
+                              <div className="text-[10px] text-foreground-muted select-none">فرمول ریاضی / فیزیک (Latex)</div>
+                              <textarea
+                                value={block.content}
+                                onChange={(e) => updateBlockContent(block.id, e.target.value)}
+                                placeholder="E = mc^2"
+                                rows={Math.max(2, block.content.split('\n').length)}
+                                className="w-full bg-surface border border-border rounded-md p-3 text-sm text-foreground placeholder:text-foreground-muted focus:ring-1 focus:ring-accent outline-none leading-7 text-left dir-ltr resize-none font-mono"
+                                dir="ltr"
+                              />
+                            </div>
+                          )}
+
+                          {block.type === 'pdf' && (
+                            <div className="space-y-3">
+                              {renderFileUpload(block, "application/pdf", "https://example.com/document.pdf", "لینک فایل PDF برای نمایش زنده:", updateBlockContent)}
+                            </div>
+                          )}
+
+                          {block.type === 'map' && (
+                            <div className="space-y-3 p-3 bg-surface-container-low/20 rounded-lg border border-border">
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[10px] text-foreground-muted">نام ایستگاه / مکان:</Label>
+                                <Input
+                                  value={block.caption || ''}
+                                  onChange={(e) => updateBlockMeta(block.id, 'caption', e.target.value)}
+                                  placeholder="ایستگاه تجریش"
+                                  className="h-8 text-xs bg-surface"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[10px] text-foreground-muted">مختصات (Lat,Lng):</Label>
+                                <Input
+                                  type="text"
+                                  value={block.content}
+                                  onChange={(e) => updateBlockContent(block.id, e.target.value)}
+                                  placeholder="35.8048, 51.4283"
+                                  className="h-8 text-xs text-left dir-ltr font-mono"
+                                  dir="ltr"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {block.type === 'button' && (
+                            <div className="space-y-3 p-3 bg-surface-container-low/20 rounded-lg border border-border">
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[10px] text-foreground-muted">متن دکمه:</Label>
+                                <Input
+                                  value={block.content}
+                                  onChange={(e) => updateBlockContent(block.id, e.target.value)}
+                                  placeholder="ورود به سامانه"
+                                  className="h-8 text-xs bg-surface"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[10px] text-foreground-muted">لینک مقصد (URL):</Label>
+                                <Input
+                                  type="text"
+                                  value={block.href || ''}
+                                  onChange={(e) => updateBlockMeta(block.id, 'href', e.target.value)}
+                                  placeholder="https://example.com/login"
+                                  className="h-8 text-xs text-left dir-ltr font-mono"
+                                  dir="ltr"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {block.type === 'gallery' && (
+                            <div className="space-y-2">
+                              <div className="text-[10px] text-foreground-muted select-none">گالری تصاویر (لینک هر تصویر در یک خط جدا)</div>
+                              <textarea
+                                value={block.content}
+                                onChange={(e) => updateBlockContent(block.id, e.target.value)}
+                                placeholder="https://example.com/img1.jpg\nhttps://example.com/img2.jpg"
+                                rows={Math.max(4, block.content.split('\n').length)}
+                                className="w-full bg-surface border border-border rounded-md p-3 text-xs text-foreground placeholder:text-foreground-muted focus:ring-1 focus:ring-accent outline-none leading-7 text-left dir-ltr resize-none font-mono"
+                                dir="ltr"
+                              />
+                              <div className="flex justify-end">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  multiple
+                                  className="hidden"
+                                  id={`gallery-upload-${block.id}`}
+                                  onChange={async (e) => {
+                                    const files = Array.from(e.target.files || [])
+                                    if (!files.length || !accessToken) return
+                                    let newContent = block.content.trim() ? block.content.trim() + '\n' : ''
+                                    for (const file of files) {
+                                      const fd = new FormData()
+                                      fd.append('file', file)
+                                      try {
+                                        const res = await fetch('/api/uploads', {
+                                          method: 'POST',
+                                          headers: { Authorization: `Bearer ${accessToken}` },
+                                          body: fd,
+                                        })
+                                        if (res.ok) {
+                                          const data = await res.json()
+                                          newContent += data.data.url + '\n'
+                                        }
+                                      } catch {
+                                        // ignore
+                                      }
+                                    }
+                                    updateBlockContent(block.id, newContent.trim())
+                                  }}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 text-xs cursor-pointer"
+                                  onClick={() => document.getElementById(`gallery-upload-${block.id}`)?.click()}
+                                >
+                                  <Upload className="size-3.5 text-accent me-1" />
+                                  <span>آپلود تصاویر و افزودن به گالری</span>
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          {block.type === 'timeline' && (
+                            <div className="space-y-1">
+                              <div className="text-[10px] text-foreground-muted select-none">تایم‌لاین عملیاتی (قالب: زمان | رویداد) در هر خط</div>
+                              <textarea
+                                value={block.content}
+                                onChange={(e) => updateBlockContent(block.id, e.target.value)}
+                                placeholder="12:00 | شروع حادثه\n12:15 | حضور تیم امداد"
+                                rows={Math.max(4, block.content.split('\n').length)}
+                                className="w-full bg-surface border border-border rounded-md p-3 text-sm text-foreground placeholder:text-foreground-muted focus:ring-1 focus:ring-accent outline-none leading-7 text-right resize-none font-mono"
+                              />
+                            </div>
+                          )}
+
+                          {block.type === 'steps' && (
+                            <div className="space-y-1">
+                              <div className="text-[10px] text-foreground-muted select-none">مراحل اجرایی (هر خط یک مرحله)</div>
+                              <textarea
+                                value={block.content}
+                                onChange={(e) => updateBlockContent(block.id, e.target.value)}
+                                placeholder="ابتدا سیستم را خاموش کنید.\nسپس دکمه ریست را بزنید."
+                                rows={Math.max(4, block.content.split('\n').length)}
+                                className="w-full bg-surface border border-border rounded-md p-3 text-sm text-foreground placeholder:text-foreground-muted focus:ring-1 focus:ring-accent outline-none leading-7 text-right resize-none"
+                              />
+                            </div>
+                          )}
+
+                          {block.type === 'notice' && (
+                            <div className="space-y-1">
+                              <div className="text-[10px] text-foreground-muted select-none">بنر اطلاعیه مهم</div>
+                              <textarea
+                                value={block.content}
+                                onChange={(e) => updateBlockContent(block.id, e.target.value)}
+                                placeholder="اطلاعیه مهم: لطفاً تا اطلاع ثانوی..."
+                                rows={Math.max(3, block.content.split('\n').length)}
+                                className="w-full bg-warning/10 border border-warning/30 rounded-md p-3 text-sm text-warning-strong placeholder:text-warning/50 focus:ring-1 focus:ring-warning outline-none leading-7 text-right resize-none"
+                              />
+                            </div>
+                          )}
+
+                          {block.type === 'terminal' && (
+                            <div className="space-y-1">
+                              <div className="text-[10px] text-foreground-muted select-none">شبیه‌ساز محیط ترمینال/دستورات</div>
+                              <textarea
+                                value={block.content}
+                                onChange={(e) => updateBlockContent(block.id, e.target.value)}
+                                placeholder="$ ping 192.168.1.1\nReply from 192.168.1.1"
+                                rows={Math.max(4, block.content.split('\n').length)}
+                                className="w-full bg-black border border-neutral-800 rounded-md p-3 text-sm text-emerald-500 placeholder:text-emerald-900 focus:ring-1 focus:ring-emerald-500 outline-none leading-7 text-left dir-ltr resize-none font-mono"
+                                dir="ltr"
+                              />
+                            </div>
+                          )}
+
+                          {block.type === 'term' && (
+                            <div className="space-y-3 p-3 bg-surface-container-low/20 rounded-lg border border-border">
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[10px] text-foreground-muted">نام اصطلاح (Term):</Label>
+                                <Input
+                                  value={block.termName || ''}
+                                  onChange={(e) => updateBlockMeta(block.id, 'termName', e.target.value)}
+                                  placeholder="ATC (Automatic Train Control)"
+                                  className="h-8 text-xs font-bold bg-surface"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[10px] text-foreground-muted">تعریف کامل واژه:</Label>
+                                <textarea
+                                  value={block.content}
+                                  onChange={(e) => updateBlockContent(block.id, e.target.value)}
+                                  placeholder="سیستم کنترل اتوماتیک قطار که وظیفه ایمنی و..."
+                                  rows={Math.max(3, block.content.split('\n').length)}
+                                  className="w-full bg-surface border border-border p-2 rounded-md text-sm text-foreground placeholder:text-foreground-muted focus:ring-1 focus:ring-accent outline-none leading-7 text-right resize-none"
+                                />
+                              </div>
                             </div>
                           )}
                         </div>
@@ -1090,6 +1838,177 @@ function AdminContentPageContent() {
                     >
                       <Image className="size-3.5 text-sky-500" />
                       <span>تصویر دیاگرام فنی</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('table')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <TableIcon className="size-3.5 text-indigo-400" />
+                      <span>جدول اطلاعات</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('alert')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <AlertIcon className="size-3.5 text-orange-500" />
+                      <span>پیام هشدار</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('code')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <CodeIcon className="size-3.5 text-slate-400" />
+                      <span>قطعه کد</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('divider')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <DividerIcon className="size-3.5 text-neutral-500" />
+                      <span>خط جداکننده</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('file')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <Paperclip className="size-3.5 text-blue-500" />
+                      <span>فایل ضمیمه</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('checklist')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <CheckSquare className="size-3.5 text-emerald-500" />
+                      <span>چک لیست</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('accordion')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <FoldVertical className="size-3.5 text-purple-500" />
+                      <span>آکاردئون</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('audio')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <Headphones className="size-3.5 text-pink-500" />
+                      <span>پخش صوتی</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('highlight')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <Highlighter className="size-3.5 text-yellow-500" />
+                      <span>متن برجسته</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('math')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <Sigma className="size-3.5 text-blue-400" />
+                      <span>فرمول ریاضی</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('pdf')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <FileDown className="size-3.5 text-red-400" />
+                      <span>نمایش PDF</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('map')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <MapPin className="size-3.5 text-emerald-400" />
+                      <span>نقشه/مختصات</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('button')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <MousePointerClick className="size-3.5 text-indigo-400" />
+                      <span>دکمه لینک</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('gallery')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <Images className="size-3.5 text-sky-400" />
+                      <span>گالری تصاویر</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('timeline')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <GitCommit className="size-3.5 text-purple-400" />
+                      <span>تایم‌لاین</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('steps')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <ListOrdered className="size-3.5 text-amber-500" />
+                      <span>مراحل اجرایی</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('notice')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <Megaphone className="size-3.5 text-orange-500" />
+                      <span>بنر اطلاعیه</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('terminal')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <Terminal className="size-3.5 text-zinc-400" />
+                      <span>ترمینال قطار</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addBlock('term')}
+                      className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-surface-hover rounded-lg"
+                    >
+                      <Library className="size-3.5 text-rose-400" />
+                      <span>واژه‌نامه</span>
                     </Button>
                   </div>
                 </div>
@@ -1171,6 +2090,8 @@ function AdminContentPageContent() {
                   className="w-full rounded-b-lg border border-border bg-surface-container-low/30 px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-border leading-7 text-right resize-y min-h-[350px] font-mono"
                 />
               </div>
+            )}
+            </>
             )}
 
             {/* Excerpt Section (WordPress Style Summary) */}
@@ -1403,12 +2324,27 @@ function AdminContentPageContent() {
               </CardHeader>
               <CardContent className="p-4 space-y-4 text-xs">
                 
-                {/* Publish status toggler */}
-                <div className="flex items-center justify-between">
-                  <span className="text-foreground-muted">وضعیت سند:</span>
-                  <Badge className={form.published ? 'bg-success/15 text-success border-transparent' : 'bg-neutral-800 text-neutral-400'}>
-                    {form.published ? 'منتشر عمومی' : 'پیش‌نویس'}
-                  </Badge>
+                {/* Workflow Status Selector */}
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-foreground-muted font-semibold">وضعیت انتشار:</Label>
+                  <select
+                    value={form.status ?? 'draft'}
+                    onChange={(e) => {
+                      const newStatus = e.target.value
+                      setForm((f) => ({
+                        ...f,
+                        status: newStatus,
+                        published: newStatus === 'published',
+                      }))
+                    }}
+                    className="h-9 rounded-lg border border-border bg-surface px-2.5 text-xs outline-none focus:border-accent cursor-pointer font-semibold"
+                  >
+                    <option value="draft">پیش‌نویس</option>
+                    <option value="review">در بازبینی</option>
+                    <option value="approved">تأیید شده</option>
+                    <option value="published">انتشار</option>
+                    <option value="archived">آرشیو</option>
+                  </select>
                 </div>
 
                 {/* Estimate time */}
@@ -1424,7 +2360,15 @@ function AdminContentPageContent() {
                   <Label className="text-foreground-muted font-semibold">نوع و قالب نوشته:</Label>
                   <select
                     value={form.type}
-                    onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
+                    onChange={(e) => {
+                      const newType = e.target.value
+                      setForm((f) => ({
+                        ...f,
+                        type: newType,
+                        // اطلاعیه اداری همیشه خواندن اجباری است
+                        mandatory: newType === 'announcement' ? true : f.mandatory,
+                      }))
+                    }}
                     className="h-9 rounded-lg border border-border bg-surface px-2.5 text-xs outline-none focus:border-accent cursor-pointer font-semibold"
                   >
                     {Object.entries(TYPE_LABELS).map(([k, v]) => (
@@ -1510,37 +2454,370 @@ function AdminContentPageContent() {
               </CardContent>
             </Card>
 
+            {/* Announcements Custom Settings Card */}
+            {form.type === 'announcement' && (
+              <Card className="border border-border bg-surface shadow-sm rounded-xl overflow-hidden">
+                <CardHeader className="py-3 border-b border-border/50 bg-neutral-900/45 select-none">
+                  <CardTitle className="text-xs font-bold text-foreground">تنظیمات اعلانات سازمانی</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 space-y-4 text-xs">
+                  {/* kind */}
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-foreground-muted font-semibold">قالب نمایش اطلاعیه:</Label>
+                    <select
+                      value={form.kind}
+                      onChange={(e) => {
+                        const val = e.target.value as any
+                        setForm((f) => ({
+                          ...f,
+                          kind: val,
+                          ackRequired: (val === 'must_read' || val === 'emergency') ? true : f.ackRequired,
+                        }))
+                      }}
+                      className="h-8 rounded-lg border border-border bg-background px-2 text-xs outline-none cursor-pointer"
+                    >
+                      <option value="news">اخبار و رویدادهای عمومی</option>
+                      <option value="notice">ابلاغیه اداری عادی</option>
+                      <option value="must_read">دستورالعمل الزامی (قفل کل صفحه)</option>
+                      <option value="urgent_banner">بنر فوری بالا فید</option>
+                      <option value="emergency">اعلان بحران تمام‌صفحه مانیتورها</option>
+                    </select>
+                  </div>
+
+                  {/* surfaces */}
+                  <div className="space-y-2">
+                    <Label className="text-foreground-muted font-semibold">بخش‌های نمایش (Surfaces):</Label>
+                    <div className="space-y-1.5">
+                      {[
+                        { key: 'feed', label: 'فید اصلی نوشته‌ها' },
+                        { key: 'dashboard', label: 'داشبورد پرسنلی' },
+                        { key: 'banner', label: 'نوار اعلان متحرک بالا' },
+                        { key: 'modal', label: 'مودال الزامی غیرقابل رد شدن' },
+                        { key: 'signage', label: 'تلویزیون‌های دپو/ایستگاه' },
+                      ].map((surface) => (
+                        <label key={surface.key} className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={form.surfaces.includes(surface.key)}
+                            onChange={(e) => {
+                              const checked = e.target.checked
+                              setForm((f) => ({
+                                ...f,
+                                surfaces: checked
+                                  ? [...f.surfaces, surface.key]
+                                  : f.surfaces.filter((s) => s !== surface.key),
+                              }))
+                            }}
+                            className="size-3.5 rounded border-border accent-accent"
+                          />
+                          <span>{surface.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Priority & Dates */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-1.5">
+                      <Label className="text-foreground-muted font-semibold">اولویت نمایش:</Label>
+                      <Input
+                        type="number"
+                        value={form.priority}
+                        onChange={(e) => setForm((f) => ({ ...f, priority: parseInt(e.target.value) || 0 }))}
+                        className="h-8 text-xs text-center"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <Label className="text-foreground-muted font-semibold">انقضا (Expires):</Label>
+                      <Input
+                        type="date"
+                        value={form.expiresAt}
+                        onChange={(e) => setForm((f) => ({ ...f, expiresAt: e.target.value }))}
+                        className="h-8 text-xs text-center"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Acknowledgment settings */}
+                  <div className="space-y-3 border-t border-border pt-3">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={form.ackRequired}
+                        onChange={(e) => setForm((f) => ({ ...f, ackRequired: e.target.checked }))}
+                        className="size-3.5 rounded border-border accent-accent"
+                      />
+                      <span className="font-semibold">نیاز به ثبت تاییدخوانی و امضا</span>
+                    </label>
+
+                    {form.ackRequired && (
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-foreground-muted font-semibold">مهلت تاییدخوانی:</Label>
+                        <Input
+                          type="date"
+                          value={form.ackDeadline}
+                          onChange={(e) => setForm((f) => ({ ...f, ackDeadline: e.target.value }))}
+                          className="h-8 text-xs text-center"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Banner Styles */}
+                  {(form.kind === 'urgent_banner' || form.surfaces.includes('banner')) && (
+                    <div className="space-y-3 border-t border-border pt-3 bg-[#18181b]/30 p-2.5 rounded-lg">
+                      <Label className="text-[10px] font-bold text-accent">سبک نمایش بنر فوری:</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[10px]">رنگ بنر:</Label>
+                          <select
+                            value={form.bannerStyle.color}
+                            onChange={(e) => setForm((f) => ({ ...f, bannerStyle: { ...f.bannerStyle, color: e.target.value as any } }))}
+                            className="h-7 rounded border border-border bg-background px-1 text-[11px] outline-none"
+                          >
+                            <option value="red">قرمز (بحرانی)</option>
+                            <option value="amber">نارنجی (هشدار)</option>
+                            <option value="blue">آبی (اطلاعیه)</option>
+                            <option value="green">سبز (عادی)</option>
+                          </select>
+                        </div>
+                        <label className="flex items-center gap-2 cursor-pointer select-none mt-4 text-[10px]">
+                          <input
+                            type="checkbox"
+                            checked={form.bannerStyle.dismissible}
+                            onChange={(e) => setForm((f) => ({ ...f, bannerStyle: { ...f.bannerStyle, dismissible: e.target.checked } }))}
+                            className="size-3.5 rounded border-border accent-accent"
+                          />
+                          <span>قابل بستن</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notify key & Audience Builder */}
+                  <div className="space-y-3 border-t border-border pt-3">
+                    <Label className="text-foreground-muted font-bold text-[10px] uppercase">مخاطبین هدف (Audience Builder)</Label>
+                    <div className="space-y-2">
+                      <Label className="text-[10px]">نقش‌های هدف:</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {TARGET_ROLES_OPTIONS.map((role) => (
+                          <label key={role.value} className="flex items-center gap-1.5 text-[10px] cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={form.audience.roles.includes(role.value)}
+                              onChange={(e) => {
+                                const checked = e.target.checked
+                                setForm((f) => {
+                                  let nextRoles = f.audience.roles
+                                  if (role.value === 'all') {
+                                    nextRoles = checked ? ['all'] : []
+                                  } else {
+                                    const filtered = f.audience.roles.filter((r) => r !== 'all')
+                                    nextRoles = checked ? [...filtered, role.value] : filtered.filter((r) => r !== role.value)
+                                    if (nextRoles.length === 0) nextRoles = ['all']
+                                  }
+                                  return {
+                                    ...f,
+                                    audience: { ...f.audience, roles: nextRoles },
+                                  }
+                                })
+                              }}
+                              className="size-3 rounded border-border accent-accent"
+                            />
+                            <span>{role.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px]">کدهای شیفت (جدا با کاما):</Label>
+                      <Input
+                        value={form.audience.shiftCodes.join(', ')}
+                        onChange={(e) => {
+                          const val = e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
+                          setForm((f) => ({ ...f, audience: { ...f.audience, shiftCodes: val } }))
+                        }}
+                        placeholder="A, B, C"
+                        className="h-7 text-[11px] text-right bg-zinc-950/20"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px]">نام ایستگاه‌ها (جدا با کاما):</Label>
+                      <Input
+                        value={form.audience.stations.join(', ')}
+                        onChange={(e) => {
+                          const val = e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
+                          setForm((f) => ({ ...f, audience: { ...f.audience, stations: val } }))
+                        }}
+                        placeholder="تجریش، کهریزک"
+                        className="h-7 text-[11px] text-right bg-zinc-950/20"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Compliance Report and Tracking Dashboard */}
+            {form.id && form.type === 'announcement' && trackingStats && (
+              <Card className="border border-border bg-surface shadow-sm rounded-xl overflow-hidden">
+                <CardHeader className="py-3 border-b border-border/50 bg-[#8b0000]/10 select-none">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xs font-bold text-foreground">گزارش انطباق و تاییدخوانی</CardTitle>
+                    <Badge variant="outline" className="text-[10px] py-0 font-mono text-accent">
+                      {toFa(trackingStats.complianceRate)}٪
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 space-y-4 text-xs">
+                  {/* Progress Ring / Bar */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[10px] text-foreground-muted">
+                      <span>درصد تاییدخوانی کل جامعه هدف</span>
+                      <span>{toFa(trackingStats.acknowledgedCount)} از {toFa(trackingStats.totalTargetCount)} نفر</span>
+                    </div>
+                    <div className="h-2 w-full bg-border rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-accent transition-all duration-500 rounded-full"
+                        style={{ width: `${trackingStats.complianceRate}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[10px] text-foreground-muted bg-[#18181b]/20 p-2 rounded border border-border/40">
+                    <div>
+                      تایید شده: <span className="font-bold text-success">{toFa(trackingStats.acknowledgedCount)}</span>
+                    </div>
+                    <div>
+                      باقی‌مانده: <span className="font-bold text-destructive">{toFa(trackingStats.remainingCount)}</span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <a
+                      href={`/api/admin/announcements/${form.id}/acks/export`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-1 bg-[#18181b] hover:bg-zinc-800 border border-zinc-700 text-white rounded px-2.5 py-1.5 text-[10px] font-semibold text-center cursor-pointer"
+                    >
+                      <Download className="size-3" />
+                      <span>دانلود اکسل</span>
+                    </a>
+                    <Button
+                      onClick={() => handleSendReminder(form.id!)}
+                      disabled={trackingStats.remainingCount === 0}
+                      className="bg-destructive hover:bg-destructive-hover text-white text-[10px] font-semibold py-1.5 h-auto rounded cursor-pointer gap-1"
+                    >
+                      <Send className="size-3" />
+                      <span>ارسال یادآوری</span>
+                    </Button>
+                  </div>
+
+                  {/* Quick lists */}
+                  <div className="space-y-2 border-t border-border pt-3">
+                    <Label className="text-[10px] text-foreground-muted">لیست پرسنل باقی‌مانده ({toFa(trackingStats.remainingCount)} نفر):</Label>
+                    <div className="max-h-28 overflow-y-auto space-y-1 bg-zinc-950/20 p-2 rounded text-[10px]">
+                      {trackingStats.remainingList.map((user: any) => (
+                        <div key={user.userId} className="flex justify-between border-b border-zinc-800/40 pb-0.5 last:border-0">
+                          <span className="font-medium text-foreground">{user.name}</span>
+                          <span className="text-[9px] text-foreground-muted font-mono">{user.role}</span>
+                        </div>
+                      ))}
+                      {trackingStats.remainingList.length === 0 && (
+                        <p className="text-center text-success text-[9px] py-2">تمامی پرسنل تایید کرده‌اند ✓</p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Sidebar Module 2: Category Manager */}
             <Card className="border border-border bg-surface shadow-sm rounded-xl overflow-hidden">
               <CardHeader className="py-3 border-b border-border/50 bg-neutral-900/45 select-none">
                 <CardTitle className="text-xs font-bold text-foreground">دسته‌بندی و برچسب‌ها</CardTitle>
               </CardHeader>
               <CardContent className="p-4 space-y-4 text-xs">
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-foreground-muted font-semibold">دسته‌بندی اصلی نوشته:</Label>
-                  <Input
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-foreground-muted font-semibold">دسته‌بندی اصلی (یک مورد):</Label>
+                    <Link href="/admin/content/categories" className="text-[10px] text-accent hover:underline flex items-center gap-1">
+                      <Settings2 className="size-3" />
+                      مدیریت دسته‌بندی‌ها
+                    </Link>
+                  </div>
+                  <select
                     value={form.category}
                     onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                    placeholder="مثال: ایمنی، دستورالعمل فنی واگن..."
-                    className="h-8 text-xs text-right"
-                  />
+                    className="h-9 rounded-lg border border-border bg-surface px-2.5 text-xs outline-none focus:border-accent cursor-pointer font-semibold"
+                  >
+                    <option value="">انتخاب دسته‌بندی اصلی...</option>
+                    {contentCategories.map((cat) => (
+                      <option key={cat.id} value={cat.title}>
+                        {cat.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="h-[1px] bg-border my-2" />
+
+                <div className="flex flex-col gap-2">
+                  <Label className="text-foreground-muted font-semibold">برچسب‌ها (تگ‌ها):</Label>
+                  <div className="flex flex-wrap gap-1.5 min-h-[36px] p-1.5 border border-border rounded-lg bg-surface">
+                    {(form.tags || []).map((tag, idx) => (
+                      <div key={idx} className="flex items-center gap-1 bg-accent/15 text-accent border border-accent/20 px-2 py-1 rounded text-[10px]">
+                        <span>{tag}</span>
+                        <X
+                          className="size-3 cursor-pointer opacity-70 hover:opacity-100"
+                          onClick={() => setForm(f => ({ ...f, tags: (f.tags || []).filter((_, i) => i !== idx) }))}
+                        />
+                      </div>
+                    ))}
+                    <Input
+                      placeholder="افزودن برچسب (Enter)..."
+                      className="h-6 text-[10px] bg-transparent border-none shadow-none flex-1 min-w-[100px] px-1 focus-visible:ring-0"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          const val = e.currentTarget.value.trim()
+                          const currentTags = form.tags || []
+                          if (val && !currentTags.includes(val)) {
+                            setForm(f => ({ ...f, tags: [...currentTags, val] }))
+                            e.currentTarget.value = ''
+                          }
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="text-[10px] text-foreground-muted font-semibold block">دسته‌بندی‌های محبوب خط ۱:</span>
+                  <span className="text-[10px] text-foreground-muted font-semibold block">برچسب‌های محبوب خط ۱:</span>
                   <div className="flex flex-wrap gap-1">
-                    {POPULAR_CATEGORIES.map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => handleSelectCategory(cat)}
-                        className={`px-2 py-1 rounded text-[10px] border transition-all cursor-pointer ${
-                          form.category === cat ? 'bg-accent/15 border-accent text-accent' : 'bg-background hover:bg-surface-hover border-border text-foreground-muted'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
+                    {POPULAR_CATEGORIES.map((cat) => {
+                      const currentTags = form.tags || []
+                      const isIncluded = currentTags.includes(cat)
+                      return (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => {
+                            if (!isIncluded) {
+                              setForm(f => ({ ...f, tags: [...(f.tags || []), cat] }))
+                            }
+                          }}
+                          className={`px-2 py-1 rounded text-[10px] border transition-all cursor-pointer ${
+                            isIncluded ? 'bg-accent/15 border-accent text-accent' : 'bg-background hover:bg-surface-hover border-border text-foreground-muted'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               </CardContent>
@@ -1718,8 +2995,18 @@ function AdminContentPageContent() {
                     <td className="p-4 text-foreground-muted">{post.author?.name || 'مدیر سیستم'}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-1.5">
-                        <Badge className={post.published ? 'bg-success/15 text-success border-transparent text-[10px] font-semibold' : 'bg-neutral-800 text-neutral-400 text-[10px] font-semibold'}>
-                          {post.published ? 'منتشر شده' : 'پیش‌نویس'}
+                        <Badge className={
+                          post.status === 'published' ? 'bg-success/15 text-success border-transparent text-[10px] font-semibold' :
+                          post.status === 'review' ? 'bg-warning/15 text-warning border-transparent text-[10px] font-semibold' :
+                          post.status === 'approved' ? 'bg-info/15 text-info border-transparent text-[10px] font-semibold' :
+                          post.status === 'archived' ? 'bg-neutral-700 text-neutral-400 border-transparent text-[10px] font-semibold' :
+                          'bg-neutral-800 text-neutral-400 text-[10px] font-semibold'
+                        }>
+                          {post.status === 'published' ? 'منتشر شده' :
+                           post.status === 'review' ? 'در بازبینی' :
+                           post.status === 'approved' ? 'تأیید شده' :
+                           post.status === 'archived' ? 'آرشیو' :
+                           'پیش‌نویس'}
                         </Badge>
                         {post.mandatory && (
                           <Badge className="bg-critical/15 text-critical border-transparent text-[10px] font-bold animate-pulse">

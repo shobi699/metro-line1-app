@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const sessionUser = await getSessionUser(request)
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
-  const roleErr = requireRole(sessionUser, 'admin')
+  const roleErr = await requireRole(sessionUser, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
       where: { status: 'pending' },
       select: {
         id: true,
-        nationalId: true,
+        personnelCode: true,
         name: true,
         phone: true,
         email: true,
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
           select: {
             id: true,
             key: true,
-            name: true,
+            title: true,
           },
         },
       },
@@ -43,14 +43,14 @@ export async function GET(request: Request) {
           select: {
             id: true,
             name: true,
-            nationalId: true,
+            personnelCode: true,
           },
         },
         target: {
           select: {
             id: true,
             name: true,
-            nationalId: true,
+            personnelCode: true,
           },
         },
         sourceShift: {
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
           select: {
             id: true,
             name: true,
-            nationalId: true,
+            personnelCode: true,
           },
         },
         log: {
@@ -102,7 +102,7 @@ export async function GET(request: Request) {
             name: true,
             role: {
               select: {
-                name: true,
+                title: true,
                 key: true,
               },
             },
@@ -116,7 +116,7 @@ export async function GET(request: Request) {
       select: {
         id: true,
         key: true,
-        name: true,
+        title: true,
       },
       orderBy: { rank: 'asc' },
     })

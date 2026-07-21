@@ -2,6 +2,25 @@ import dayjs from 'dayjs'
 import { prisma } from '@/server/db'
 import type { ShiftCode } from '@/generated/prisma/client'
 import type { CycleShiftDetail, ShiftTemplateData, ShiftAssignmentData, ShiftCodeValue } from '@/features/shifts/types'
+import { groupKeyFor } from '@/lib/shift-grouping'
+
+/**
+ * زنجیره‌ی یافتن انتساب برای یک کاربر بر اساس customFields:
+ * کاربر-محور → کلید ترکیبی {نوع}:{گروه} → گروه ساده → پیش‌فرض A.
+ */
+function findAssignment<T extends { targetType: string; targetId: string }>(
+  userId: string,
+  customFields: Record<string, unknown> | null,
+  assignments: T[],
+): T | undefined {
+  const { group, compositeKey } = groupKeyFor(customFields)
+  return (
+    assignments.find((a) => a.targetType === 'user' && a.targetId === userId) ??
+    assignments.find((a) => a.targetType === 'group' && a.targetId === compositeKey) ??
+    assignments.find((a) => a.targetType === 'group' && a.targetId === group) ??
+    assignments.find((a) => a.targetType === 'group' && a.targetId === 'A')
+  )
+}
 
 /**
  * محاسبه شیفت یک تاریخ بر اساس قالب چرخه و anchor date
@@ -23,7 +42,7 @@ export function calculateShiftForDate(
   }
 
   const cycleLength = template.length || 6
-  const diffDays = current.diff(anchor, 'day')
+  const diffDays = Math.round(current.diff(anchor, 'hour') / 24)
   const cycleIndex = ((diffDays % cycleLength) + cycleLength) % cycleLength
   return template.shifts.find((s) => s.day === cycleIndex + 1) ?? null
 }
@@ -35,7 +54,7 @@ export function calculateShiftForDate(
 export async function resolveShiftForUser(
   userId: string,
   date: dayjs.Dayjs,
-  userGroup?: string,
+  customFields?: Record<string, unknown> | null,
 ): Promise<{ shift: CycleShiftDetail | null; source: 'cycle' | 'roster' | 'manual'; templateName: string }> {
   const dateStr = date.format('YYYY-MM-DD')
   const dateObj = new Date(dateStr)
@@ -67,13 +86,7 @@ export async function resolveShiftForUser(
     include: { template: true },
   })
 
-  let assignment = assignments.find((a) => a.targetType === 'user' && a.targetId === userId)
-  if (!assignment && userGroup) {
-    assignment = assignments.find((a) => a.targetType === 'group' && a.targetId === userGroup)
-  }
-  if (!assignment) {
-    assignment = assignments.find((a) => a.targetType === 'group' && a.targetId === 'A')
-  }
+  const assignment = findAssignment(userId, customFields ?? null, assignments)
 
   if (!assignment || !assignment.template) {
     return { shift: null, source: 'cycle', templateName: 'بدون قالب' }
@@ -135,13 +148,8 @@ export async function materializePeriod(
 
   await prisma.$transaction(async (tx) => {
     for (const user of users) {
-      const userGroup = (user.customFields as { group?: string } | null)?.group ?? 'A'
-
-      // تخصیص کاربر، بعد گروه
-      let assignment = assignments.find((a) => a.targetType === 'user' && a.targetId === user.id)
-      if (!assignment) {
-        assignment = assignments.find((a) => a.targetType === 'group' && a.targetId === userGroup)
-      }
+      // تخصیص بر اساس کلید ترکیبی گروه×نوع از customFields، با عقب‌نشینی به گروه ساده و A
+      const assignment = findAssignment(user.id, user.customFields as Record<string, unknown> | null, assignments)
       if (!assignment) continue
 
       const templateData: ShiftTemplateData = {

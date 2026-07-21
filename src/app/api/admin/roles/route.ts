@@ -1,24 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
 import { getSessionUser, requireRole, authErrorResponse } from '@/server/rbac/guard'
-import { z } from 'zod'
-
-const createRoleSchema = z.object({
-  key: z
-    .string()
-    .min(2, 'شناسه نقش حداقل ۲ کاراکتر باشد')
-    .regex(/^[a-z_]+$/, 'شناسه نقش فقط باید شامل حروف انگلیسی کوچک و خط تیره پایین (underscore) باشد'),
-  name: z.string().min(2, 'نام نقش حداقل ۲ کاراکتر باشد'),
-  permissions: z.array(z.string()),
-  rank: z.number().int().min(0).max(100).default(0),
-})
+import { createRoleSchema } from '@/lib/zod/admin'
 
 // GET /api/admin/roles - دریافت لیست نقش‌ها و تعداد کاربران هر نقش
 export async function GET(request: Request) {
   const sessionUser = await getSessionUser(request)
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
-  const roleErr = requireRole(sessionUser, 'admin')
+  const roleErr = await requireRole(sessionUser, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {
@@ -49,7 +39,7 @@ export async function POST(request: Request) {
   if ('error' in sessionUser) return authErrorResponse(sessionUser)
 
   // Only super_admin can create new roles
-  const roleErr = requireRole(sessionUser, 'super_admin')
+  const roleErr = await requireRole(sessionUser, 'super_admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {
@@ -63,7 +53,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { key, name, permissions, rank } = parsed.data
+    const { key, title, permissions, rank } = parsed.data
 
     const existingRole = await prisma.role.findUnique({
       where: { key },
@@ -80,7 +70,7 @@ export async function POST(request: Request) {
       prisma.role.create({
         data: {
           key,
-          name,
+          title,
           permissions: JSON.stringify(permissions),
           rank,
           isSystem: false,
@@ -95,7 +85,7 @@ export async function POST(request: Request) {
           before: undefined,
           after: {
             key,
-            name,
+            title,
             permissions,
             rank,
             isSystem: false,

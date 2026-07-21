@@ -1,12 +1,13 @@
 import { verifyAccessToken } from '@/server/auth/jwt'
 import { prisma } from '@/server/db'
-import { subscribeMessages, type ChatMessageEvent } from '@/server/realtime/bus'
 
-export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const HEARTBEAT_MS = 25_000
-
+/**
+ * WebSocket upgrade endpoint for chat.
+ * Clients connect here; the server upgrades to WebSocket and registers
+ * them with the ChatRoom Durable Object.
+ */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const token = searchParams.get('token')
@@ -23,49 +24,75 @@ export async function GET(request: Request) {
     return new Response('توکن نامعتبر یا منقضی شده', { status: 401 })
   }
 
-  // روم‌هایی که کاربر عضو آن‌هاست؛ فقط پیام این روم‌ها استریم می‌شود.
+  // Get rooms the user is a member of
   const memberships = await prisma.chatMember.findMany({
     where: { userId },
     select: { roomId: true },
   })
   const roomIds = memberships.map((m) => m.roomId)
 
-  const encoder = new TextEncoder()
-  let unsubscribe: (() => void) | null = null
-  let heartbeat: ReturnType<typeof setInterval> | null = null
+  // On Cloudflare with Durable Objects, upgrade to WebSocket
+  const ns = (globalThis as unknown as { CHAT_DO?: { idFromName(name: string): unknown; get(id: unknown): { fetch(request: Request): Promise<Response> } } }).CHAT_DO
+  if (ns) {
+    const roomId = roomIds[0] || 'lobby'
+    const id = ns.idFromName(roomId)
+    const stub = ns.get(id)
 
+    const doUrl = new URL(request.url)
+    doUrl.pathname = '/websocket'
+    doUrl.searchParams.set('userId', userId)
+    doUrl.searchParams.set('roomIds', roomIds.join(','))
+
+    return stub.fetch(new Request(doUrl.toString(), request))
+  }
+
+  // Fallback: Server-Sent Events for local dev without Durable Objects
+  const encoder = new TextEncoder()
   const stream = new ReadableStream({
     start(controller) {
       const send = (chunk: string) => {
         try {
           controller.enqueue(encoder.encode(chunk))
         } catch {
-          // کنترلر بسته شده؛ نادیده گرفته می‌شود.
+          // closed
         }
       }
 
-      // رویداد آماده‌بودن اتصال
       send(`event: ready\ndata: ${JSON.stringify({ rooms: roomIds.length })}\n\n`)
 
-      unsubscribe = subscribeMessages(roomIds, (event: ChatMessageEvent) => {
-        send(`event: message\ndata: ${JSON.stringify(event)}\n\n`)
-      })
+      // شنود پیام‌های لایو روی باس نودجی‌اس و ارسال آنی به کلاینت
+      const onMessage = (event: any) => {
+        if (roomIds.includes(event.roomId)) {
+          send(`event: message\ndata: ${JSON.stringify(event.message)}\n\n`)
+        }
+      }
 
-      heartbeat = setInterval(() => send(`: ping\n\n`), HEARTBEAT_MS)
+      const onNotification = (event: any) => {
+        if (event.userId === userId) {
+          send(`event: notification\ndata: ${JSON.stringify(event.notification)}\n\n`)
+        }
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { chatBus } = require('@/server/realtime/bus')
+      chatBus.on('message', onMessage)
+      chatBus.on('notification', onNotification)
+
+      const heartbeat = setInterval(() => send(': ping\n\n'), 25_000)
 
       request.signal.addEventListener('abort', () => {
-        if (heartbeat) clearInterval(heartbeat)
-        unsubscribe?.()
+        clearInterval(heartbeat)
+        chatBus.off('message', onMessage)
+        chatBus.off('notification', onNotification)
         try {
           controller.close()
         } catch {
-          // قبلاً بسته شده
+          // already closed
         }
       })
     },
     cancel() {
-      if (heartbeat) clearInterval(heartbeat)
-      unsubscribe?.()
+      // cleanup
     },
   })
 

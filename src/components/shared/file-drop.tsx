@@ -8,10 +8,11 @@ import { cn } from '@/lib/utils'
 interface FileDropProps {
   accept: string
   onFile: (file: File) => void
+  onClear?: () => void
   disabled?: boolean
 }
 
-export function FileDrop({ accept, onFile, disabled }: FileDropProps) {
+export function FileDrop({ accept, onFile, onClear, disabled }: FileDropProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const [file, setFile] = useState<File | null>(null)
@@ -46,7 +47,8 @@ export function FileDrop({ accept, onFile, disabled }: FileDropProps) {
   const clearFile = useCallback(() => {
     setFile(null)
     if (inputRef.current) inputRef.current.value = ''
-  }, [])
+    onClear?.()
+  }, [onClear])
 
   return (
     <div

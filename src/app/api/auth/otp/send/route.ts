@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db'
-import { sendOtpSchema } from '@/server/dto/auth'
-import { otps } from '@/server/auth/otp-store'
+import { sendOtpSchema } from '@/lib/zod/auth'
+import { otpStore } from '@/server/auth/otp-store'
+import { checkRateLimit } from '@/server/auth/rate-limit'
 
 export async function POST(request: Request) {
   try {
@@ -15,18 +16,18 @@ export async function POST(request: Request) {
       )
     }
 
-    const { nationalId, phone } = parsed.data
+    const { personnelCode, phone } = parsed.data
 
     const user = await prisma.user.findFirst({
       where: {
-        nationalId,
+        personnelCode,
         phone,
       },
     })
 
     if (!user) {
       return NextResponse.json(
-        { error: 'کد ملی یا شماره همراه وارد شده با اطلاعات ثبت‌شده همخوانی ندارد' },
+        { error: 'کد پرسنلی یا شماره همراه وارد شده با اطلاعات ثبت‌شده همخوانی ندارد' },
         { status: 404 },
       )
     }
@@ -38,20 +39,28 @@ export async function POST(request: Request) {
       )
     }
 
-    // Generate a 6-digit OTP code
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
+    if (!checkRateLimit(`otp-send:${personnelCode}`, 3, 10 * 60 * 1000)) {
+      return NextResponse.json(
+        { error: 'درخواست‌های بیش از حد. لطفاً بعداً دوباره تلاش کنید' },
+        { status: 429 },
+      )
+    }
+
+    // Generate a 6-digit OTP code using CSPRNG
+    const otpCode = String(crypto.getRandomValues(new Uint32Array(1))[0] % 900000 + 100000)
     const expiresAt = Date.now() + 5 * 60 * 1000 // 5 minutes TTL
 
-    // Store in global memory map
-    otps.set(nationalId, {
+    // Store via adapter (KV on Cloudflare, in-memory locally)
+    await otpStore.setOtp(personnelCode, {
       code: otpCode,
       expiresAt,
       phone,
+      attempts: 0,
     })
 
     return NextResponse.json({
       message: 'کد تایید یکبار مصرف پیامکی با موفقیت ارسال شد.',
-      debugOtp: otpCode, // For testing purposes
+      ...(process.env.NODE_ENV !== 'production' ? { debugOtp: otpCode } : {}),
     })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'خطای سرور'

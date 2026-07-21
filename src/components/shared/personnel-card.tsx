@@ -13,16 +13,17 @@ interface PersonnelCardProps {
   user: {
     id: string
     name: string
-    nationalId: string
+    personnelCode: string
     phone: string | null
     email: string | null
     status: string
     customFields: Record<string, unknown> | null
     role: { key: string; name: string }
+    createdAt?: string
   }
   currentUserId?: string
   onMessage?: (userId: string) => void
-  onProfile?: (user: any) => void
+  onProfile?: (user: PersonnelCardProps['user']) => void
   /**
    * List of field keys that non-admin users are allowed to see.
    * `undefined` means "not loaded yet" — will hide everything for safety.
@@ -179,7 +180,7 @@ export function PersonnelCard({ user, currentUserId, onMessage, onProfile, visib
     return allowedFields.includes(cf.key)
   })
 
-  const canShowNationalId = isAdmin || isOwnProfile || allowedFields.includes('nationalId')
+  const canShowNationalId = isAdmin || isOwnProfile || allowedFields.includes('personnelCode')
   const canShowPhone = isAdmin || isOwnProfile || allowedFields.includes('phone')
   const canShowEmail = isAdmin || isOwnProfile || allowedFields.includes('email')
 
@@ -216,8 +217,8 @@ export function PersonnelCard({ user, currentUserId, onMessage, onProfile, visib
   })
 
   // Extract vehicles for graphical plate display
-  const customFields = (user.customFields as Record<string, any>) || {}
-  const vehicles = (customFields.vehicles as any[]) || []
+  const customFields = (user.customFields as Record<string, unknown>) || {}
+  const vehicles = (customFields.vehicles as Record<string, unknown>[]) || []
   const canShowVehicles = true
 
   return (
@@ -259,7 +260,7 @@ export function PersonnelCard({ user, currentUserId, onMessage, onProfile, visib
             </div>
             {canShowNationalId && (
               <span className="font-data-mono shrink-0 text-xs bg-surface-container-high text-foreground px-2 py-1 rounded border border-border-subtle">
-                {user.nationalId}
+                {user.personnelCode}
               </span>
             )}
           </div>

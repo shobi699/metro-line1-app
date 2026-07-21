@@ -68,6 +68,39 @@ enum AuditLogAction {
   export
 }
 
+enum TrainStatus {
+  active
+  standby
+  maintenance
+  out_of_service
+}
+
+enum FaultStatus {
+  submitted
+  under_review
+  needs_info
+  rejected
+  approved
+  in_repair
+  repaired
+  verified_closed
+  deferred
+  reopened
+}
+
+enum FaultLogAction {
+  created
+  status_changed
+  edited
+  assigned
+  comment
+  priority_changed
+  attachment_added
+  sla_breached
+  reopened
+  deferred
+}
+
 enum ChatRoomType {
   direct
   group
@@ -80,6 +113,26 @@ enum ChatRoomKind {
   shift
   station
   custom
+  training
+  announcement
+  emergency
+  management
+}
+
+enum PersonalEventType {
+  event
+  birthday
+  task
+  note
+  work_log
+  financial
+  on_call
+  overtime
+  leave_sick
+  leave_daily
+  leave_hourly
+  reminder
+  other
 }
 
 enum PostType {
@@ -88,74 +141,138 @@ enum PostType {
   training
   circular
   gallery
+  announcement
+  directive
+  form
 }
 
 // ── Models ─────────────────────────────────────────────
 
 model User {
-  id            String      @id @default(cuid())
-  nationalId    String      @unique
-  name          String
-  phone         String?
-  email         String?
-  passwordHash  String
-  status        UserStatus  @default(pending)
-  roleId        String
-  customFields  Json?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id           String     @id @default(cuid())
+  personnelCode   String     @unique @map("nationalId")
+  name         String
+  phone        String?
+  email        String?
+  passwordHash String
+  status       UserStatus @default(pending)
+  roleId       String
+  customFields Json?
+  plateSearch  String     @default("")
+  homeUnitId   String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
-  role              Role              @relation(fields: [roleId], references: [id])
-  importJobs        ImportJob[]       @relation("ImportActor")
-  rosterFiles       RosterFile[]      @relation("RosterUploader")
-  shifts            Shift[]           @relation("ShiftAssignee")
-  swapRequestsInit  SwapRequest[]     @relation("SwapRequester")
-  swapRequestsTarget SwapRequest[]    @relation("SwapTarget")
-  ticketsCreated    Ticket[]          @relation("TicketCreator")
-  ticketLogs        TicketLog[]       @relation("TicketLogActor")
-  auditLogs         AuditLog[]        @relation("AuditActor")
-  readReceipts      ReadReceipt[]     @relation("ReceiptUser")
-  chatMemberships   ChatMember[]      @relation("ChatMemberUser")
-  messages          Message[]         @relation("MessageSender")
-  posts             Post[]            @relation("PostAuthor")
-  postReads         PostRead[]        @relation("PostReadUser")
-  postReactions     PostReaction[]    @relation("PostReactionUser")
-  comments          Comment[]         @relation("CommentUser")
-  notifications     Notification[]
-  feedback          Feedback[]
-  attendance        AttendanceRecord[]
-  pollsCreated      Poll[]            @relation("PollCreator")
-  pollVotes         PollVote[]
-  meetingsInitiated MeetingRequest[]  @relation("MeetingRequester")
-  meetingsTarget    MeetingRequest[]  @relation("MeetingTarget")
-  checklistRecords  ChecklistRecord[]
-  knowledgeArticles KnowledgeArticle[]
-  crisisEvents      CrisisEvent[]     @relation("CrisisActivator")
-  gamificationScores GamificationScore[]
-  performanceLogsReceived   PerformanceLog[] @relation("PerformanceReceiver")
-  performanceLogsRecorded   PerformanceLog[] @relation("PerformanceRecorder")
-  performanceAppeals        PerformanceAppeal[] @relation("PerformanceAppealingUser")
-  performanceAppealsReviewed PerformanceAppeal[] @relation("PerformanceAppealReviewer")
-  scoreSnapshots            ScoreSnapshot[]
-  nominations               Nomination[]
-  shiftNotes                ShiftNote[]
-  shiftTasks                ShiftTask[]
+  role       Role        @relation(fields: [roleId], references: [id])
+  homeUnit   OrgUnit?    @relation("UserHomeUnit", fields: [homeUnitId], references: [id])
+  importJobs ImportJob[] @relation("ImportActor")
+
+  shifts                     Shift[]                 @relation("ShiftAssignee")
+  swapRequestsInit           SwapRequest[]           @relation("SwapRequester")
+  catalogs                   TechnicalCatalog[]      @relation("CatalogAuthor")
+  swapRequestsTarget         SwapRequest[]           @relation("SwapTarget")
+  tripSwapRequestsInit       TripSwapRequest[]       @relation("TripSwapRequester")
+  tripSwapRequestsTarget     TripSwapRequest[]       @relation("TripSwapTarget")
+  ticketsCreated             Ticket[]                @relation("TicketCreator")
+  ticketLogs                 TicketLog[]             @relation("TicketLogActor")
+  auditLogs                  AuditLog[]              @relation("AuditActor")
+  systemLogs                 SystemLog[]             @relation("SystemLogActor")
+  readReceipts               ReadReceipt[]           @relation("ReceiptUser")
+  chatMemberships            ChatMember[]            @relation("ChatMemberUser")
+  messages                   Message[]               @relation("MessageSender")
+  posts                      Post[]                  @relation("PostAuthor")
+  postReads                  PostRead[]              @relation("PostReadUser")
+  postReactions              PostReaction[]          @relation("PostReactionUser")
+  comments                   Comment[]               @relation("CommentUser")
+  postAcks                   PostAck[]               @relation("PostAckUser")
+  notifications              Notification[]
+  feedback                   Feedback[]
+  attendance                 AttendanceRecord[]
+  notificationDevices        NotificationDevice[]    @relation("UserDevice")
+  notificationOutboxes       NotificationOutbox[]    @relation("UserOutbox")
+  notificationPreferences    NotificationPreference? @relation("UserPreference")
+  pollsCreated               Poll[]                  @relation("PollCreator")
+  pollVotes                  PollVote[]
+  meetingsInitiated          MeetingRequest[]        @relation("MeetingRequester")
+  meetingsTarget             MeetingRequest[]        @relation("MeetingTarget")
+  checklistRecords           ChecklistRecord[]
+  knowledgeArticles          KnowledgeArticle[]
+  crisisEvents               CrisisEvent[]           @relation("CrisisActivator")
+  gamificationScores         GamificationScore[]
+  performanceLogsReceived    PerformanceLog[]        @relation("PerformanceReceiver")
+  performanceLogsRecorded    PerformanceLog[]        @relation("PerformanceRecorder")
+  performanceAppeals         PerformanceAppeal[]     @relation("PerformanceAppealingUser")
+  performanceAppealsReviewed PerformanceAppeal[]     @relation("PerformanceAppealReviewer")
+  scoreSnapshots             ScoreSnapshot[]
+  nominations                Nomination[]
+  shiftNotes                 ShiftNote[]
+  shiftTasks                 ShiftTask[]
+  rosterVersionsUploaded     RosterVersion[]         @relation("RosterVersionUploader")
+  rosterVersionsPublished    RosterVersion[]         @relation("RosterVersionPublisher")
+  tripAssignmentsMatched     TripAssignment[]        @relation("TripAssignmentUser")
+  tripAssignmentsConfirmed   TripAssignment[]        @relation("TripAssignmentConfirmer")
+  leaveRequests              LeaveRequest[]          @relation("LeaveRequester")
+  reviewedLeaves             LeaveRequest[]          @relation("LeaveReviewer")
+  aiConversations            AiConversation[]
+  faultsReporter             FaultReport[]           @relation("FaultReporter")
+  faultsReviewer             FaultReport[]           @relation("FaultReviewer")
+  faultsAssignee             FaultReport[]           @relation("FaultAssignee")
+  faultsVerifier             FaultReport[]           @relation("FaultVerifier")
+  faultLogsActor             FaultLog[]              @relation("FaultLogActor")
+  personalEvents             PersonalEvent[]         @relation("PersonalEvents")
+  calendarPreference         CalendarPreference?     @relation("CalendarPref")
+  formSubmissions            FormSubmission[]        @relation("FormSubmitter")
+  formLogsActor              FormLog[]               @relation("FormLogActor")
+  formDecisions              FormApproval[]          @relation("FormDecider")
+  feedbackMsgSender          FeedbackMessage[]       @relation("FeedbackMsgSender")
+  feedbackLogs               FeedbackLog[]           @relation("FeedbackLogActor")
+  ideaVotes                  IdeaVote[]
+  feedbackAssignee           Feedback[]              @relation("FeedbackAssignee")
+  profileChangeRequests      ProfileChangeRequest[]  @relation("ProfileChangeRequester")
+  userDocuments              UserDocument[]
+  credentials                Credential[]
+  userSessions               UserSession[]
+  radioLogs                  RadioLog[]              @relation("RadioLogSender")
+  enrollments                Enrollment[]
+  examAttempts               ExamAttempt[]
+  certificates               Certificate[]
+  surveysCreated             Survey[]                @relation("SurveyCreator")
+  surveyInvitees             SurveyInvitee[]
+  surveyResponses            SurveyResponse[]
+  myRosterDays               MyRosterDay[]
+  fatigueLogs                FatigueLog[]
+  sosAlerts                  SOSAlert[]              @relation("SOSReporter")
+  incidentReports            IncidentReport[]        @relation("IncidentReporter")
+  
+  roleAssignments            RoleAssignment[]
+  permissionOverrides        PermissionOverride[]
+  lifecycleEvents            UserLifecycleEvent[]
+  transfersRequested         TransferRequest[]       @relation("TransferRequester")
+  transfersTarget            TransferRequest[]       @relation("TransferTarget")
+  transfersApproved          TransferRequest[]       @relation("TransferApprover")
 
   @@index([roleId])
   @@index([status])
+  @@index([name])
+  @@index([phone])
+  @@index([plateSearch])
 }
 
 model Role {
   id          String   @id @default(cuid())
   key         String   @unique
-  name        String
+  title       String   @map("name")
+  description String?
   permissions Json
-  rank        Int      @default(0)
   isSystem    Boolean  @default(false)
+  color       String?
+  isActive    Boolean  @default(true)
+  rank        Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  users User[]
+  users            User[]
+  roleAssignments  RoleAssignment[]
 
   @@map("roles")
 }
@@ -177,16 +294,16 @@ model CustomFieldDef {
 }
 
 model ImportJob {
-  id          String          @id @default(cuid())
-  fileName    String
-  fileType    String
-  status      ImportJobStatus @default(pending)
-  rowCount    Int             @default(0)
-  errorCount  Int             @default(0)
-  errors      Json?
-  actorId     String
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id         String          @id @default(cuid())
+  fileName   String
+  fileType   String
+  status     ImportJobStatus @default(pending)
+  rowCount   Int             @default(0)
+  errorCount Int             @default(0)
+  errors     Json?
+  actorId    String
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
 
   actor User @relation("ImportActor", fields: [actorId], references: [id])
 
@@ -194,33 +311,19 @@ model ImportJob {
   @@index([status])
 }
 
-model RosterFile {
-  id          String   @id @default(cuid())
-  fileName    String
-  period      String
-  parsedData  Json
-  uploaderId  String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  uploader User @relation("RosterUploader", fields: [uploaderId], references: [id])
-
-  @@index([uploaderId])
-}
-
 model Shift {
-  id          String     @id @default(cuid())
-  date        DateTime
-  code        ShiftCode
-  source      String     @default("manual") // "cycle" | "roster" | "manual"
-  note        String?
-  userId      String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id        String    @id @default(cuid())
+  date      DateTime
+  code      ShiftCode
+  source    String    @default("manual") // "cycle" | "roster" | "manual"
+  note      String?
+  userId    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-  user          User          @relation("ShiftAssignee", fields: [userId], references: [id])
-  swapAsSource  SwapRequest[] @relation("SwapSourceShift")
-  swapAsTarget  SwapRequest[] @relation("SwapTargetShift")
+  user         User          @relation("ShiftAssignee", fields: [userId], references: [id])
+  swapAsSource SwapRequest[] @relation("SwapSourceShift")
+  swapAsTarget SwapRequest[] @relation("SwapTargetShift")
 
   @@unique([userId, date])
   @@index([date])
@@ -231,14 +334,14 @@ model Shift {
 // ── Shift Cycle Templates (server-side source of truth) ──
 
 model ShiftTemplate {
-  id          String   @id @default(cuid())
-  name        String
-  type        String   // "rotational" | "staff"
-  length      Int      // cycle length in days
-  shifts      Json     // CycleShiftDetail[] { day, code, label, hours, startTime, endTime }
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  type      String // "rotational" | "staff"
+  length    Int // cycle length in days
+  shifts    Json // CycleShiftDetail[] { day, code, label, hours, startTime, endTime }
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   assignments ShiftAssignment[]
 
@@ -246,13 +349,13 @@ model ShiftTemplate {
 }
 
 model ShiftAssignment {
-  id          String   @id @default(cuid())
-  templateId  String
-  targetType  String   // "user" | "group"
-  targetId    String   // user ID or group key ("A","B","C","Staff")
-  anchorDate  DateTime
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  templateId String
+  targetType String // "user" | "group"
+  targetId   String // user ID or group key ("A","B","C","Staff")
+  anchorDate DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   template ShiftTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
@@ -277,18 +380,18 @@ model ShiftNote {
 }
 
 model ShiftTask {
-  id         String   @id @default(cuid())
-  userId     String
-  date       DateTime
-  title      String
-  time       String
-  priority   String   @default("medium") // "low" | "medium" | "high"
-  status     String   @default("todo")   // "todo" | "in_progress" | "done"
-  type       String   @default("personal") // "personal" | "system"
-  overtime   Float?
-  extraData  Json?    // kahrizakCount and other custom numeric fields
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime
+  title     String
+  time      String
+  priority  String   @default("medium") // "low" | "medium" | "high"
+  status    String   @default("todo") // "todo" | "in_progress" | "done"
+  type      String   @default("personal") // "personal" | "system"
+  overtime  Float?
+  extraData Json? // kahrizakCount and other custom numeric fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -297,21 +400,21 @@ model ShiftTask {
 }
 
 model SwapRequest {
-  id              String            @id @default(cuid())
-  requesterId     String
-  targetId        String
-  sourceShiftId   String
-  targetShiftId   String
-  status          SwapRequestStatus @default(pending)
-  note            String?
-  reviewedBy      String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id            String            @id @default(cuid())
+  requesterId   String
+  targetId      String
+  sourceShiftId String
+  targetShiftId String
+  status        SwapRequestStatus @default(pending)
+  note          String?
+  reviewedBy    String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
-  requester   User   @relation("SwapRequester", fields: [requesterId], references: [id])
-  target      User   @relation("SwapTarget", fields: [targetId], references: [id])
-  sourceShift Shift  @relation("SwapSourceShift", fields: [sourceShiftId], references: [id])
-  targetShift Shift  @relation("SwapTargetShift", fields: [targetShiftId], references: [id])
+  requester   User  @relation("SwapRequester", fields: [requesterId], references: [id])
+  target      User  @relation("SwapTarget", fields: [targetId], references: [id])
+  sourceShift Shift @relation("SwapSourceShift", fields: [sourceShiftId], references: [id])
+  targetShift Shift @relation("SwapTargetShift", fields: [targetShiftId], references: [id])
 
   @@index([requesterId])
   @@index([targetId])
@@ -320,25 +423,50 @@ model SwapRequest {
   @@index([status])
 }
 
+model TripSwapRequest {
+  id                 String            @id @default(cuid())
+  requesterId        String
+  targetId           String
+  sourceAssignmentId String // TripAssignment being swapped by requester
+  targetAssignmentId String // TripAssignment being swapped by target
+  status             SwapRequestStatus @default(pending)
+  note               String?
+  reviewedBy         String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  requester        User           @relation("TripSwapRequester", fields: [requesterId], references: [id])
+  target           User           @relation("TripSwapTarget", fields: [targetId], references: [id])
+  sourceAssignment TripAssignment @relation("TripSwapSourceAssignment", fields: [sourceAssignmentId], references: [id])
+  targetAssignment TripAssignment @relation("TripSwapTargetAssignment", fields: [targetAssignmentId], references: [id])
+
+  @@index([requesterId])
+  @@index([targetId])
+  @@index([sourceAssignmentId])
+  @@index([targetAssignmentId])
+  @@index([status])
+}
+
 model SafetyBulletin {
-  id          String   @id @default(cuid())
-  title       String
-  body        String
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   readReceipts ReadReceipt[]
 }
 
 model ReadReceipt {
-  id              String   @id @default(cuid())
-  userId          String
+  id               String   @id @default(cuid())
+  userId           String
   safetyBulletinId String
-  readAt          DateTime @default(now())
+  readAt           DateTime @default(now())
+  device           String?
 
-  user            User            @relation("ReceiptUser", fields: [userId], references: [id])
-  safetyBulletin  SafetyBulletin  @relation(fields: [safetyBulletinId], references: [id])
+  user           User           @relation("ReceiptUser", fields: [userId], references: [id])
+  safetyBulletin SafetyBulletin @relation(fields: [safetyBulletinId], references: [id])
 
   @@unique([userId, safetyBulletinId])
   @@index([safetyBulletinId])
@@ -366,12 +494,12 @@ model Ticket {
 }
 
 model TicketLog {
-  id        String           @id @default(cuid())
+  id        String          @id @default(cuid())
   ticketId  String
   actorId   String
   action    TicketLogAction
   note      String?
-  createdAt DateTime         @default(now())
+  createdAt DateTime        @default(now())
 
   ticket Ticket @relation(fields: [ticketId], references: [id])
   actor  User   @relation("TicketLogActor", fields: [actorId], references: [id])
@@ -388,6 +516,11 @@ model AuditLog {
   action    AuditLogAction
   before    Json?
   after     Json?
+  reason    String? // دلیل تغییر
+  ipAddress String? // آدرس آی‌پی درخواست‌دهنده
+  userAgent String? // مشخصات مرورگر / کلاینت
+  device    String? // نوع دستگاه: mobile | desktop | tablet
+  metadata  Json? // اطلاعات اضافی دلخواه
   createdAt DateTime       @default(now())
 
   actor User @relation("AuditActor", fields: [actorId], references: [id])
@@ -395,6 +528,26 @@ model AuditLog {
   @@index([actorId])
   @@index([entity, entityId])
   @@index([action])
+  @@index([createdAt])
+}
+
+model SystemLog {
+  id        String   @id @default(cuid())
+  level     String   // info | warn | error | debug
+  source    String   // server | client | mobile
+  category  String   // e.g. "auth", "uploads", "database", "api"
+  message   String
+  stack     String?  // stack trace or detailed error message
+  metadata  Json?    // any additional info (request body, headers, etc)
+  ipAddress String?
+  userAgent String?
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  actor User? @relation("SystemLogActor", fields: [actorId], references: [id])
+
+  @@index([level])
+  @@index([source])
   @@index([createdAt])
 }
 
@@ -414,13 +567,35 @@ model ChatRoom {
   @@index([type])
 }
 
-model ChatMember {
-  id        String    @id @default(cuid())
-  roomId    String
+model AiConversation {
+  id        String      @id @default(uuid())
   userId    String
-  isAdmin   Boolean   @default(false)
+  user      User        @relation(fields: [userId], references: [id])
+  messages  AiMessage[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model AiMessage {
+  id              String         @id @default(uuid())
+  conversationId  String
+  conversation    AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role            String // 'user' | 'model'
+  text            String
+  source          String? // 'rulebook' | 'gemini' | 'system'
+  confidence      Int?
+  handbookSection String?
+  feedback        Int? // 1 for thumbs up, -1 for thumbs down
+  createdAt       DateTime       @default(now())
+}
+
+model ChatMember {
+  id         String    @id @default(cuid())
+  roomId     String
+  userId     String
+  isAdmin    Boolean   @default(false)
   lastReadAt DateTime?
-  joinedAt  DateTime  @default(now())
+  joinedAt   DateTime  @default(now())
 
   room ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
   user User     @relation("ChatMemberUser", fields: [userId], references: [id])
@@ -437,6 +612,9 @@ model Message {
   attachmentUrl  String?
   attachmentType String?
   pinned         Boolean   @default(false)
+  priority       String    @default("normal") // normal | important | urgent | emergency | critical
+  tags           String? // comma-separated tags or JSON
+  readReceipts   Json? // JSON array of ReadReceipt { userId, userName, seenAt, device, ipAddress, signature, docUrl }
   createdAt      DateTime  @default(now())
   editedAt       DateTime?
 
@@ -449,30 +627,56 @@ model Message {
 // ── Content (وبلاگ/اخبار/آموزش) ─────────────────────────
 
 model Post {
-  id          String   @id @default(cuid())
-  type        PostType @default(news)
-  title       String
-  slug        String   @unique
-  excerpt     String?
-  body        String
-  category    String?
-  coverUrl    String?
-  mediaUrl    String?
-  mediaType   String?
-  published   Boolean  @default(false)
-  mandatory   Boolean  @default(false)
-  authorId    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String    @id @default(cuid())
+  type           PostType  @default(news)
+  title          String
+  slug           String    @unique
+  excerpt        String?
+  body           String
+  category       String?
+  tags           String?
+  coverUrl       String?
+  mediaUrl       String?
+  mediaType      String?
+  published      Boolean   @default(false)
+  mandatory      Boolean   @default(false)
+  hasQuiz        Boolean   @default(false)
+  prerequisiteId String?
+  status         String    @default("draft") // draft | review | approved | published | archived
+  publishAt      DateTime? // زمان انتشار زمان‌بندی‌شده
+  reviewedById   String?
+  reviewedAt     DateTime?
+  archivedAt     DateTime?
+  nextReviewAt   DateTime? // یادآوری بازنگری دوره‌ای
+  authorId       String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Announcements Platform fields
+  kind          String    @default("news")
+  audience      Json?
+  surfaces      Json?
+  priority      Int       @default(0)
+  pinnedUntil   DateTime?
+  expiresAt     DateTime?
+  ackRequired   Boolean   @default(false)
+  ackDeadline   DateTime?
+  bannerStyle   Json?
+  attachments   Json?
+  notifyRuleKey String?
 
   author    User           @relation("PostAuthor", fields: [authorId], references: [id])
   reads     PostRead[]
   reactions PostReaction[]
   comments  Comment[]
+  acks      PostAck[]      @relation("PostAckPost")
+  audiences PostAudience[]
 
+  @@index([type, status])
   @@index([type, published])
   @@index([authorId])
   @@index([createdAt])
+  @@index([status])
 }
 
 model PostRead {
@@ -519,14 +723,14 @@ model Setting {
   key          String   @unique
   label        String
   description  String?
-  type         String   // "number" | "text" | "boolean" | "color" | "select"
-  value        String   // JSON serialized value
-  defaultValue String   // JSON serialized defaultValue
-  category     String   // e.g. "general", "shifts", "tickets", "chat"
+  type         String // "number" | "text" | "boolean" | "color" | "select"
+  value        String // JSON serialized value
+  defaultValue String // JSON serialized defaultValue
+  category     String // e.g. "general", "shifts", "tickets", "chat"
   isEnabled    Boolean  @default(true)
   min          Float?
   max          Float?
-  options      String?  // JSON options for select type
+  options      String? // JSON options for select type
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -587,7 +791,28 @@ model Feedback {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
-  user User? @relation(fields: [userId], references: [id])
+  feedbackNo     Int       @unique @default(0)
+  categoryId     String?
+  assigneeId     String?
+  assigneeRole   String?
+  priority       String    @default("normal")
+  formData       Json?
+  attachments    Json?
+  anonToken      String?   @unique
+  slaFirstDue    DateTime?
+  slaResolveDue  DateTime?
+  slaBreached    Boolean   @default(false)
+  satisfaction   Int?
+  closedAt       DateTime?
+  isPublicIdea   Boolean   @default(false)
+  ideaVotesCount Int       @default(0)
+
+  user     User?             @relation(fields: [userId], references: [id])
+  category FeedbackCategory? @relation(fields: [categoryId], references: [id])
+  messages FeedbackMessage[]
+  logs     FeedbackLog[]
+  votes    IdeaVote[]
+  assignee User?             @relation("FeedbackAssignee", fields: [assigneeId], references: [id])
 
   @@index([userId])
   @@index([status])
@@ -597,22 +822,125 @@ model Feedback {
 // ── Attendance ─────────────────────────────────────────
 
 model AttendanceRecord {
-  id          String    @id @default(cuid())
-  userId      String
-  stationId   String?
-  checkInGeo  String?
-  checkInTime DateTime  @default(now())
-  checkOutGeo String?
+  id           String    @id @default(cuid())
+  userId       String
+  stationId    String?
+  checkInGeo   String?
+  checkInTime  DateTime  @default(now())
+  checkOutGeo  String?
   checkOutTime DateTime?
-  method      String    @default("gps")
-  note        String?
-  createdAt   DateTime  @default(now())
+  method       String    @default("gps")
+  note         String?
+  createdAt    DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id])
 
   @@index([userId, checkInTime])
   @@index([stationId])
 }
+
+// ── Identity & Access Management (IAM) ─────────────────
+
+model OrgUnit {
+  id        String   @id @default(cuid())
+  kind      String   // "line" | "station" | "shift_group" | "unit"
+  key       String   @unique // e.g. "st-tajrish", "st-tajrish-shift-a"
+  title     String
+  parentId  String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]   @relation("UserHomeUnit")
+  parent    OrgUnit? @relation("OrgUnitParent", fields: [parentId], references: [id])
+  children  OrgUnit[] @relation("OrgUnitParent")
+
+  @@index([parentId])
+  @@index([kind])
+}
+
+model RoleAssignment {
+  id        String    @id @default(cuid())
+  userId    String
+  roleId    String
+  scopeType String    @default("all") // "all" | "region" | "station" | "unit"
+  scopeKey  String?
+  validFrom DateTime  @default(now())
+  validTo   DateTime?
+  reason    String?
+  grantedBy String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([roleId, scopeType, scopeKey])
+}
+
+model PermissionOverride {
+  id        String    @id @default(cuid())
+  userId    String
+  permKey   String
+  effect    String    // "grant" | "deny"
+  scopeType String    @default("all")
+  scopeKey  String?
+  validTo   DateTime?
+  reason    String
+  grantedBy String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AccessPolicy {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  config    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserLifecycleEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String   // "registered" | "approved" | "activated" | "suspended" | "role_changed" | "offboarded"
+  detail    Json?
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model TransferRequest {
+  id            String   @id @default(cuid())
+  userId        String
+  fromUnitId    String?
+  toUnitId      String
+  effectiveDate DateTime
+  status        String   @default("pending") // "pending" | "approved" | "rejected"
+  requestedById String
+  approvedById  String?
+  reason        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  targetUser    User     @relation("TransferTarget", fields: [userId], references: [id], onDelete: Cascade)
+  requestedBy   User     @relation("TransferRequester", fields: [requestedById], references: [id])
+  approvedBy    User?    @relation("TransferApprover", fields: [approvedById], references: [id])
+
+  @@index([userId])
+  @@index([toUnitId])
+  @@index([status])
+}
+
 
 // ── Polls ──────────────────────────────────────────────
 
@@ -626,15 +954,22 @@ model Poll {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  creator   User         @relation("PollCreator", fields: [createdById], references: [id])
-  options   PollOption[]
-  votes     PollVote[]
+  audience    Json?
+  isAnonymous Boolean @default(false)
+  multiSelect Boolean @default(false)
+  showResults String  @default("after_vote")
+  allowChange Boolean @default(false)
+  surfaces    Json?
+
+  creator User         @relation("PollCreator", fields: [createdById], references: [id])
+  options PollOption[]
+  votes   PollVote[]
 
   @@index([isActive])
 }
 
 model PollOption {
-  id     String     @id @default(cuid())
+  id     String @id @default(cuid())
   pollId String
   label  String
 
@@ -645,10 +980,10 @@ model PollOption {
 }
 
 model PollVote {
-  id       String   @id @default(cuid())
-  pollId   String
-  optionId String
-  userId   String
+  id        String   @id @default(cuid())
+  pollId    String
+  optionId  String
+  userId    String
   createdAt DateTime @default(now())
 
   poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
@@ -666,6 +1001,7 @@ enum MeetingStatus {
   approved
   rejected
   rescheduled
+  completed
 }
 
 model MeetingRequest {
@@ -683,8 +1019,21 @@ model MeetingRequest {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  requester     User @relation("MeetingRequester", fields: [requesterId], references: [id])
-  targetManager User @relation("MeetingTarget", fields: [targetManagerId], references: [id])
+  typeId        String?
+  hostRoleKey   String?
+  roomId        String?
+  endAt         DateTime?
+  formData      Json?
+  attendees     Json?
+  cancelReason  String?
+  rescheduleOf  String?
+  remindersSent Json?
+  outcomeNote   String?
+
+  requester     User         @relation("MeetingRequester", fields: [requesterId], references: [id])
+  targetManager User         @relation("MeetingTarget", fields: [targetManagerId], references: [id])
+  room          MeetingRoom? @relation(fields: [roomId], references: [id])
+  meetingType   MeetingType? @relation(fields: [typeId], references: [id])
 
   @@index([requesterId])
   @@index([targetManagerId])
@@ -694,27 +1043,31 @@ model MeetingRequest {
 // ── Checklists ─────────────────────────────────────────
 
 model ChecklistTemplate {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  items       Json     // [{ label: string, required: boolean }]
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(cuid())
+  name            String
+  trainType       String   @default("سری ۱۰۰")
+  stationLocation String   @default("دپوی کهریزک")
+  description     String?
+  items           Json // [{ label: string, required: boolean, requirePhoto?: boolean }]
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   records ChecklistRecord[]
 }
 
 model ChecklistRecord {
-  id           String   @id @default(cuid())
-  templateId   String
-  userId       String
-  trainId      String?
-  stationId    String?
-  items        Json     // [{ label: string, checked: boolean, note?: string }]
-  signedAt     DateTime @default(now())
-  geoLocation  String?
-  createdAt    DateTime @default(now())
+  id                    String   @id @default(cuid())
+  templateId            String
+  userId                String
+  trainId               String?
+  stationId             String?
+  items                 Json // [{ label: string, checked: boolean, note?: string, photoAttached?: boolean }]
+  signedAt              DateTime @default(now())
+  geoLocation           String?
+  completionTimeSeconds Int      @default(0)
+  autoTicketGenerated   Boolean  @default(false)
+  createdAt             DateTime @default(now())
 
   template ChecklistTemplate @relation(fields: [templateId], references: [id])
   user     User              @relation(fields: [userId], references: [id])
@@ -726,21 +1079,41 @@ model ChecklistRecord {
 // ── Knowledge Base ─────────────────────────────────────
 
 model KnowledgeArticle {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  body        String
-  category    String?
-  tags        String?  // comma-separated
-  attachments Json?    // [{ url, name, type }]
-  authorId    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                   String    @id @default(cuid())
+  title                String
+  slug                 String    @unique
+  body                 String
+  category             String?
+  tags                 String? // comma-separated
+  attachments          Json? // [{ url, name, type }]
+  version              Int       @default(1)
+  validFrom            DateTime?
+  validUntil           DateTime?
+  ownerId              String?
+  confidentialityLevel String    @default("internal") // public | internal | confidential | secret
+  relatedPostId        String? // لینک به دوره آموزشی مرتبط
+  relatedQuizPostId    String? // لینک به آزمون مرتبط
+  authorId             String
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   author User @relation(fields: [authorId], references: [id])
 
   @@index([category])
   @@index([createdAt])
+  @@index([confidentialityLevel])
+}
+
+model KnowledgeFAQ {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  category  String?
+  articleId String? // لینک اختیاری به مقاله دانشنامه
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
 }
 
 // ── Crisis Management ──────────────────────────────────
@@ -778,7 +1151,7 @@ model GamificationScore {
   userId    String
   points    Int      @default(0)
   reason    String
-  period    String   // e.g. "2026-03"
+  period    String // e.g. "2026-03"
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
@@ -791,12 +1164,12 @@ model GamificationScore {
 // ── Performance Evaluation & KPIs ──────────────────────
 
 model Competency {
-  id          String   @id
-  name        String
-  weight      Float    @default(1.0)
-  direction   String   // "positive" | "negative" | "both"
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id
+  name      String
+  weight    Float    @default(1.0)
+  direction String // "positive" | "negative" | "both"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   actionTypes PerformanceActionType[]
 }
@@ -806,7 +1179,7 @@ model PerformanceActionType {
   competencyId String
   title        String
   defaultScore Float
-  maxSeverity  String   // "L1" | "L2" | "L3"
+  maxSeverity  String // "L1" | "L2" | "L3"
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -815,18 +1188,18 @@ model PerformanceActionType {
 }
 
 model PerformanceLog {
-  id            String   @id @default(cuid())
-  employeeId    String
-  recordedById  String
-  actionTypeId  String
-  severity      String   // "L1" | "L2" | "L3"
-  scoreValue    Float
-  note          String?
-  evidenceUrl   String?
-  periodId      String   // e.g., "1405-04" (jalali year-month)
-  status        String   @default("active") // "active" | "appealed" | "overturned"
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  employeeId   String
+  recordedById String
+  actionTypeId String
+  severity     String // "L1" | "L2" | "L3"
+  scoreValue   Float
+  note         String?
+  evidenceUrl  String?
+  periodId     String // e.g., "1405-04" (jalali year-month)
+  status       String   @default("active") // "active" | "appealed" | "overturned"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   employee   User                  @relation("PerformanceReceiver", fields: [employeeId], references: [id])
   recordedBy User                  @relation("PerformanceRecorder", fields: [recordedById], references: [id])
@@ -846,7 +1219,7 @@ model PerformanceAppeal {
   reason       String
   status       String    @default("pending") // "pending" | "approved" | "rejected"
   reviewedById String?
-  note         String?   // Review note
+  note         String? // Review note
   createdAt    DateTime  @default(now())
   resolvedAt   DateTime?
 
@@ -888,3 +1261,1608 @@ model Nomination {
   @@index([periodId])
   @@index([employeeId])
 }
+
+model RosterDay {
+  id               String   @id @default(cuid())
+  lineCode         String   @default("LINE_1")
+  jalaliDate       String   @unique
+  gregorianDate    DateTime
+  weekday          String?
+  title            String?
+  schedulingTitle  String?
+  processingNumber Int?
+  issuedByName     String?
+  status           String   @default("DRAFT") // DRAFT | PROCESSING | REVIEW | PUBLISHED | ARCHIVED
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  versions   RosterVersion[]
+  snapshot   RosterSnapshot?
+  amendments RosterAmendment[]
+}
+
+model RosterVersion {
+  id               String    @id @default(cuid())
+  rosterDayId      String
+  versionNo        Int       @default(1)
+  fileUrl          String?
+  originalFileName String?
+  checksum         String?
+  status           String    @default("UPLOADED") // UPLOADED | PARSED | VALIDATED | PUBLISHED | REJECTED
+  uploadedById     String?
+  uploadedAt       DateTime  @default(now())
+  publishedById    String?
+  publishedAt      DateTime?
+  changeReason     String?
+  changeSummary    String?
+
+  rosterDay   RosterDay @relation(fields: [rosterDayId], references: [id], onDelete: Cascade)
+  uploadedBy  User?     @relation("RosterVersionUploader", fields: [uploadedById], references: [id])
+  publishedBy User?     @relation("RosterVersionPublisher", fields: [publishedById], references: [id])
+  trips       Trip[]
+
+  @@index([rosterDayId])
+}
+
+model Trip {
+  id                 String  @id @default(cuid())
+  rosterVersionId    String
+  rowNo              Int
+  trainNumber        String?
+  direction          String // TAJRISH_TO_SHAHRREY | SHAHRREY_TO_TAJRISH
+  originStation      String?
+  destinationStation String?
+  departureTime      String? // HH:mm:ss
+  arrivalTime        String? // HH:mm:ss
+  operationalNote    String?
+  status             String  @default("NORMAL") // NORMAL | EMPTY | CANCELLED | DEPOT | SPECIAL
+
+  rosterVersion RosterVersion     @relation(fields: [rosterVersionId], references: [id], onDelete: Cascade)
+  assignments   TripAssignment[]
+  amendments    RosterAmendment[]
+
+  @@index([rosterVersionId])
+}
+
+model TripAssignment {
+  id             String    @id @default(cuid())
+  tripId         String
+  role           String // H1 | H2 | T | R
+  rawName        String?
+  matchedUserId  String?
+  personnelNo    String?
+  matchScore     Float?
+  matchStatus    String    @default("UNMATCHED") // AUTO_MATCHED | NEEDS_REVIEW | MANUAL_MATCHED | UNMATCHED
+  confirmedById  String?
+  confirmedAt    DateTime?
+  acknowledgedAt DateTime? // Confirm Sight
+  readyAt        DateTime?
+  handoverAt     DateTime?
+  disputed       Boolean   @default(false)
+  disputeNote    String?
+
+  trip                      Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  matchedUser               User?             @relation("TripAssignmentUser", fields: [matchedUserId], references: [id])
+  confirmedBy               User?             @relation("TripAssignmentConfirmer", fields: [confirmedById], references: [id])
+  tripSwapSourceAssignments TripSwapRequest[] @relation("TripSwapSourceAssignment")
+  tripSwapTargetAssignments TripSwapRequest[] @relation("TripSwapTargetAssignment")
+  amendments                RosterAmendment[]
+
+  @@index([tripId])
+  @@index([matchedUserId])
+}
+
+model RosterTemplate {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  description  String?
+  sourceType   String   @default("EXCEL") // EXCEL | PDF
+  // Excel column mappings (existing)
+  rightMapping Json? // ColumnMapping JSON for Excel right block
+  leftMapping  Json? // ColumnMapping JSON for Excel left block
+  // PDF template fields (§۴.۳)
+  pageWidth    Int? // PDF page width in pixels
+  pageHeight   Int? // PDF page height in pixels
+  rightBlock   Json? // { x, y, width, height } — right table block coordinates
+  leftBlock    Json? // { x, y, width, height } — left table block coordinates
+  headerZones  Json? // [{ label, box: {x, y, width, height} }] — metadata extraction zones
+  pdfColumns   Json? // ColumnMapping[] for PDF column positions
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ── UI Builder / Server-Driven UI ─────────────────────
+
+model UiMenuItem {
+  id                 String   @id @default(cuid())
+  parentId           String?
+  label              String
+  icon               String
+  route              String // target route name or page slug
+  orderIndex         Int      @default(0)
+  isVisible          Boolean  @default(true)
+  requiredPermission String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  parent   UiMenuItem?  @relation("MenuHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children UiMenuItem[] @relation("MenuHierarchy")
+
+  @@index([parentId])
+  @@index([orderIndex])
+  @@map("ui_menu_items")
+}
+
+model UiPage {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  title            String
+  layoutType       String   @default("list") // list | detail | dashboard | form
+  status           String   @default("draft") // draft | published
+  currentVersionId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  versions UiPageVersion[]
+
+  @@map("ui_pages")
+}
+
+model UiPageVersion {
+  id            String   @id @default(cuid())
+  pageId        String
+  schemaJson    Json // JSON representing component tree
+  versionNumber Int
+  createdById   String?
+  createdAt     DateTime @default(now())
+
+  page UiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId])
+  @@map("ui_page_versions")
+}
+
+model UiDashboardWidget {
+  id                 String   @id @default(cuid())
+  pageId             String?
+  widgetType         String // stat_card | chart | list | banner
+  title              String?
+  size               String   @default("md") // sm | md | lg
+  orderIndex         Int      @default(0)
+  isVisible          Boolean  @default(true)
+  configJson         Json // JSON representing configuration
+  requiredPermission String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([orderIndex])
+  @@map("ui_dashboard_widgets")
+}
+
+model UiTheme {
+  id              String   @id @default(cuid())
+  primaryColor    String   @default("#ae0011") // Default Metro Red
+  accentColor     String   @default("#575e70")
+  radius          Int      @default(12)
+  fontSize        String   @default("md")
+  darkModeDefault Boolean  @default(false)
+  logoUrl         String?
+  apiBaseUrl      String   @default("https://metro.qzz.io")
+  updatedAt       DateTime @updatedAt
+
+  @@map("ui_themes")
+}
+
+// ── Leave & Mission Management ─────────────────────────
+
+enum LeaveRequestStatus {
+  pending
+  approved
+  rejected
+  cancelled
+}
+
+model LeaveRequest {
+  id               String             @id @default(cuid())
+  userId           String
+  type             String // e.g., 'annual_leave', 'sick_leave', 'mission', 'overtime', 'on_call'
+  fromDate         DateTime
+  toDate           DateTime
+  reason           String?
+  amount           Float? // e.g., 4.5 hours or 2 days
+  unit             String? // 'hours', 'days', 'count'
+  calculatedAmount Float? // After admin multiplier logic
+  status           LeaveRequestStatus @default(pending)
+  reviewedById     String?
+  reviewedAt       DateTime?
+  reviewNote       String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  user       User  @relation("LeaveRequester", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy User? @relation("LeaveReviewer", fields: [reviewedById], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([fromDate])
+}
+
+// ── AI Gateway & Semantic Cache ─────────────────────────
+
+model AiProvider {
+  id                  String    @id @default(cuid())
+  name                String // e.g., "Gemini Flash", "Ollama Local"
+  providerType        String // gemini, openrouter, ollama, grok, custom
+  baseUrl             String
+  apiKey              String? // Store encrypted or raw depending on implementation
+  modelName           String?
+  requestFormat       String    @default("openai_compatible")
+  priority            Int       @default(100)
+  isActive            Boolean   @default(true)
+  maxRetries          Int       @default(2)
+  timeoutMs           Int       @default(8000)
+  costPer1kTokens     Float     @default(0)
+  healthStatus        String    @default("healthy") // healthy, degraded, down
+  lastFailureAt       DateTime?
+  consecutiveFailures Int       @default(0)
+  extraHeaders        String? // JSON string
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([priority])
+}
+
+model AiKnowledgeCache {
+  id                String    @id @default(cuid())
+  questionText      String
+  questionEmbedding String // JSON array of floats as string for SQLite compatibility
+  answerText        String
+  source            String // 'ai_generated', 'admin_manual', 'database'
+  providerUsed      String?
+  hitCount          Int       @default(0)
+  confidenceScore   Float?
+  isVerified        Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  lastUsedAt        DateTime  @default(now())
+  personaKey        String?
+  ttlAt             DateTime?
+  sourceRefs        Json?
+}
+
+// ── Fleet ──────────────────────────────────────────────
+
+model Train {
+  id             String      @id @default(cuid())
+  trainNumber    String      @unique // e.g. "110"
+  fleetSeries    String? // DC01, AC02, etc.
+  manufacturer   String? // CNR, CRRC, etc.
+  wagonCount     Int         @default(7)
+  commissionedAt DateTime?
+  status         TrainStatus @default(active)
+  qrToken        String      @unique @default(cuid())
+  notes          String?
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  wagons Wagon[]
+  faults FaultReport[]
+
+  @@index([status])
+}
+
+model Wagon {
+  id        String  @id @default(cuid())
+  trainId   String
+  wagonCode String // e.g. "110-3"
+  position  Int // 1..7
+  wagonType String? // Mc / Tp / M / T
+  isActive  Boolean @default(true)
+
+  train  Train         @relation(fields: [trainId], references: [id])
+  faults FaultReport[]
+
+  @@unique([trainId, position])
+  @@index([trainId])
+}
+
+model Part {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  partNumber  String?  @unique
+  trainType   String   @default("both") // "AC", "DC", "both"
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([trainType])
+}
+
+// ── Fault Catalog ──────────────────────────────────────────────
+
+model FaultCategory {
+  id        String  @id @default(cuid())
+  code      String  @unique // BRK, DRS, TRC, HVAC, SIG, BOG, PAN, etc.
+  title     String
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  faultCodes FaultCode[]
+}
+
+model FaultCode {
+  id              String         @id @default(cuid())
+  categoryId      String
+  code            String         @unique // e.g. DRS-004
+  title           String
+  description     String?
+  defaultPriority TicketPriority @default(medium)
+  safetyCritical  Boolean        @default(false)
+  requiresWagon   Boolean        @default(true)
+  operatorGuide   String?
+  keywords        String?
+  aliases         String?
+  embedding       Bytes?
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  category FaultCategory @relation(fields: [categoryId], references: [id])
+  faults   FaultReport[]
+
+  @@index([categoryId])
+}
+
+// ── Fault Report & Workflow ──────────────────────────────────────────────
+
+model FaultReport {
+  id          String         @id @default(cuid())
+  faultNo     Int            @unique // Managed programmatically to avoid SQLite non-primary autoincrement error
+  trainId     String
+  wagonId     String?
+  faultCodeId String
+  status      FaultStatus    @default(submitted)
+  priority    TicketPriority @default(medium)
+
+  // Registration
+  reporterId    String
+  description   String
+  locationNote  String?
+  occurredAt    DateTime
+  serviceImpact String? // none | delay | evacuated | removed_from_service
+  photoUrls     Json?
+  annotations   Json?
+
+  // Review
+  reviewerId String?
+  reviewNote String?
+  reviewedAt DateTime?
+
+  // Repair
+  assigneeId    String?
+  repairStartAt DateTime?
+  repairEndAt   DateTime?
+  rootCause     String?
+  actionsTaken  String?
+  partsUsed     Json? // [{name, qty, partNo?}]
+
+  // Verification/Deferral
+  verifierId  String?
+  verifiedAt  DateTime?
+  closedAt    DateTime?
+  deferReason String?
+  deferUntil  DateTime?
+
+  // Recurrence & SLA
+  recurrenceOfId String?
+  slaDueAt       DateTime?
+  slaBreached    Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  train        Train         @relation(fields: [trainId], references: [id])
+  wagon        Wagon?        @relation(fields: [wagonId], references: [id])
+  faultCode    FaultCode     @relation(fields: [faultCodeId], references: [id])
+  reporter     User          @relation("FaultReporter", fields: [reporterId], references: [id])
+  reviewer     User?         @relation("FaultReviewer", fields: [reviewerId], references: [id])
+  assignee     User?         @relation("FaultAssignee", fields: [assigneeId], references: [id])
+  verifier     User?         @relation("FaultVerifier", fields: [verifierId], references: [id])
+  recurrenceOf FaultReport?  @relation("FaultRecurrence", fields: [recurrenceOfId], references: [id])
+  recurrences  FaultReport[] @relation("FaultRecurrence")
+  logs         FaultLog[]
+
+  @@index([trainId, status])
+  @@index([faultCodeId])
+  @@index([status])
+  @@index([occurredAt])
+  @@index([slaDueAt])
+}
+
+model FaultLog {
+  id         String         @id @default(cuid())
+  faultId    String
+  actorId    String
+  action     FaultLogAction
+  fromStatus FaultStatus?
+  toStatus   FaultStatus?
+  note       String?
+  changes    Json? // {field: {before, after}}
+  createdAt  DateTime       @default(now())
+
+  fault FaultReport @relation(fields: [faultId], references: [id], onDelete: Cascade)
+  actor User        @relation("FaultLogActor", fields: [actorId], references: [id])
+
+  @@index([faultId])
+}
+
+// ── Life Calendar (تقویم زندگی شیفت‌محور) ─────────────
+
+model PersonalEvent {
+  id          String            @id @default(cuid())
+  userId      String
+  type        PersonalEventType @default(event)
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime?
+  allDay      Boolean           @default(true)
+  color       String?
+  location    String?
+  isDone      Boolean           @default(false)
+  recurrence  Json? // {freq: yearly|monthly|weekly|daily, interval, until, jalali:true}
+  reminders   Json? // [{minutesBefore: 60}]
+  metadata    Json? // e.g. {amount: 5000, category: "Kahrizak", hours: 4}
+  isPrivate   Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  user User @relation("PersonalEvents", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startAt])
+}
+
+model Holiday {
+  id         String  @id @default(cuid())
+  jalaliDate String // "1405-01-01"
+  title      String
+  kind       String  @default("official") // official | religious | occasion
+  isOffDay   Boolean @default(true)
+  recurring  Boolean @default(true) // تکرار سالانه جلالی
+  hijriBased Boolean @default(false) // قمری — ادمین سالانه ایمپورت می‌کند
+  color      String?
+  isActive   Boolean @default(true)
+
+  @@index([jalaliDate])
+}
+
+model OrgEvent {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime?
+  allDay      Boolean   @default(true)
+  audience    Json // {roles:[], groups:[], userIds:[]}
+  color       String?
+  mandatory   Boolean   @default(false)
+  createdBy   String
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  seenRecords OrgEventSeen[]
+
+  @@index([startAt])
+}
+
+model OrgEventSeen {
+  id      String   @id @default(cuid())
+  eventId String
+  userId  String
+  seenAt  DateTime @default(now())
+
+  event OrgEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+}
+
+model CalendarPreference {
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  layers       Json // {shift:{on:true}, holidays:{on:true}, personal:{on:true}, org:{on:true}, tasks:{on:true}}
+  defaultView  String  @default("month")
+  weekStart    String  @default("saturday")
+  widgetConfig Json?
+  icsToken     String? @unique
+
+  user User @relation("CalendarPref", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Workflow {
+  id          String    @id @default(cuid())
+  key         String // "fault-default"
+  version     Int
+  isActive    Boolean   @default(false)
+  definition  Json // { states:[], transitions:[], rules:[] }
+  publishedAt DateTime?
+  publishedBy String?
+  createdAt   DateTime  @default(now())
+
+  @@unique([key, version])
+}
+
+// ── Form Builder Core ──────────────────────────────────
+
+enum FormSubmissionStatus {
+  draft // پیشنویس (هنوز ارسال نشده)
+  submitted // ارسال شده — در گردشکار
+  in_review // در حال بررسی یک مرحله
+  needs_changes // برگشت به متقاضی برای اصلاح
+  approved // تایید نهایی
+  rejected // رد شده
+  cancelled // لغو توسط متقاضی
+}
+
+model FormTemplate {
+  id              String   @id @default(cuid())
+  key             String   @unique // "overtime-request"
+  title           String // «درخواست اضافهکار»
+  description     String?
+  category        String? // «منابع انسانی»، «عملیات»...
+  icon            String? // نام آیکون
+  isActive        Boolean  @default(true)
+  isPublished     Boolean  @default(false)
+  activeVersionId String? // نسخه فعال
+  allowMobile     Boolean  @default(true) // نمایش در اپ موبایل
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  versions    FormVersion[]
+  submissions FormSubmission[]
+
+  @@index([category])
+}
+
+model FormVersion {
+  id          String    @id @default(cuid())
+  templateId  String
+  version     Int
+  schema      Json // { fields:[...], layout:[...] } — تعریف کامل فیلدها و چیدمان
+  workflow    Json // { stages:[...], transitions:[...], rules:[...] } — گردشکار
+  access      Json // { whoCanSubmit:[roleKeys/userIds], whoCanView:[...] }
+  isActive    Boolean   @default(false)
+  publishedAt DateTime?
+  publishedBy String?
+  createdAt   DateTime  @default(now())
+
+  template    FormTemplate     @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  submissions FormSubmission[]
+
+  @@unique([templateId, version])
+}
+
+model FormSubmission {
+  id           String               @id @default(cuid())
+  submissionNo Int                  @unique // خوانا: R-2045
+  templateId   String
+  versionId    String // نسخهی قالب هنگام ثبت (قفل)
+  submitterId  String
+  status       FormSubmissionStatus @default(submitted)
+  currentStage String? // کلید مرحله جاری در گردشکار
+  data         Json // { fieldName: value } پاسخهای متقاضی
+  targetDate   DateTime? // تاریخ موضوع درخواست (مثلاً روز اضافهکار)
+  amount       Float? // مقدار عددی کلیدی (ساعت/مبلغ) برای گزارش
+  slaDueAt     DateTime?
+  submittedAt  DateTime             @default(now())
+  closedAt     DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  template  FormTemplate   @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  version   FormVersion    @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  submitter User           @relation("FormSubmitter", fields: [submitterId], references: [id], onDelete: Cascade)
+  steps     FormApproval[]
+  logs      FormLog[]
+
+  @@index([templateId, status])
+  @@index([submitterId])
+  @@index([currentStage])
+  @@index([targetDate])
+}
+
+model FormApproval {
+  id           String    @id @default(cuid())
+  submissionId String
+  stageKey     String // «supervisor-review»
+  stageTitle   String
+  assigneeId   String? // مسئول این مرحله (نقش یا کاربر مشخص)
+  decision     String? // approve | reject | refer | request_changes | null(pending)
+  note         String?
+  decidedById  String?
+  decidedAt    DateTime?
+  referredTo   String? // اگر ارجاع داده، به کدام نقش/کاربر
+  createdAt    DateTime  @default(now())
+
+  submission FormSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  decidedBy  User?          @relation("FormDecider", fields: [decidedById], references: [id])
+
+  @@index([submissionId])
+  @@index([assigneeId, decision])
+  @@index([decidedById])
+}
+
+model FormLog {
+  id           String   @id @default(cuid())
+  submissionId String
+  actorId      String
+  action       String // submitted|approved|rejected|referred|edited|commented|cancelled
+  fromStage    String?
+  toStage      String?
+  note         String?
+  changes      Json? // برای ویرایشها
+  createdAt    DateTime @default(now())
+
+  submission FormSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  actor      User           @relation("FormLogActor", fields: [actorId], references: [id])
+
+  @@index([submissionId])
+  @@index([actorId])
+}
+
+// ── Notification Gateway Models ────────────────────────
+model NotificationDevice {
+  id         String   @id @default(cuid())
+  userId     String
+  platform   String // android | ios_pwa | web
+  driver     String // pushe | najva | selfhosted
+  token      String // SDK token or self-hosted connection id
+  deviceName String?
+  lastSeenAt DateTime @default(now())
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  user User @relation("UserDevice", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([driver, token])
+  @@index([userId, isActive])
+}
+
+model NotificationTemplate {
+  id        String   @id @default(cuid())
+  eventKey  String   @unique // "roster.published" | "sos.triggered" ...
+  title     String // title template: "لوحه {date} منتشر شد"
+  body      String // body template
+  smsText   String? // sms template
+  link      String? // deep link template
+  isActive  Boolean  @default(true)
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+}
+
+model NotificationRule {
+  id                 String  @id @default(cuid())
+  eventKey           String  @unique
+  severity           String  @default("normal") // info | normal | important | critical
+  channels           Json // stored as Json list: ["inapp", "push", "sms"]
+  audience           Json? // default recipient roles/groups: ["driver", "shift_lead"]
+  smsIfUnseenMinutes Int? // SMS fallback timer (minutes)
+  respectQuietHours  Boolean @default(true)
+  isActive           Boolean @default(true)
+}
+
+model NotificationOutbox {
+  id          String    @id @default(cuid())
+  eventKey    String
+  userId      String
+  channel     String // inapp | push | sms
+  driver      String? // driver key used
+  payload     Json // payload data
+  status      String    @default("queued") // queued | sent | delivered | seen | failed | expired
+  attempts    Int       @default(0)
+  lastError   String?
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  seenAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation("UserOutbox", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([userId, eventKey])
+}
+
+model NotificationPreference {
+  id         String @id @default(cuid())
+  userId     String @unique
+  channels   Json // preferences Json mapping of eventKey: channel[]
+  quietHours Json? // { from: "23:00", to: "07:00" }
+
+  user User @relation("UserPreference", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PostAck {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  ackAt     DateTime @default(now())
+  device    String?
+  ip        String?
+  location  Json?
+  signature String?
+
+  post Post @relation("PostAckPost", fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation("PostAckUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+}
+
+model SignageScreen {
+  id         String    @id @default(cuid())
+  name       String
+  location   String?
+  pairCode   String    @unique
+  playlistId String?
+  isOnline   Boolean   @default(false)
+  lastSeenAt DateTime?
+}
+
+model SignagePlaylist {
+  id       String  @id @default(cuid())
+  name     String
+  items    Json // [{type:"post"|"roster_today"|"clock"|"weather"|"custom_html", refId?, seconds}]
+  isActive Boolean @default(true)
+}
+
+// ── Feedback Messaging Models ────────────────────────
+model FeedbackCategory {
+  id             String   @id @default(cuid())
+  key            String   @unique
+  title          String
+  icon           String?
+  description    String?
+  assigneeRole   String
+  routingRules   Json?
+  slaHours       Json
+  allowAnonymous Boolean  @default(true)
+  forceAnonymous Boolean  @default(false)
+  confidential   Boolean  @default(false)
+  formFields     Json?
+  whoCanSubmit   Json?
+  ideaBoard      Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  feedbacks Feedback[]
+}
+
+model FeedbackMessage {
+  id          String   @id @default(cuid())
+  feedbackId  String
+  senderKind  String
+  senderId    String?
+  body        String
+  attachments Json?
+  isInternal  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  feedback Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  sender   User?    @relation("FeedbackMsgSender", fields: [senderId], references: [id])
+
+  @@index([feedbackId])
+}
+
+model FeedbackLog {
+  id         String   @id @default(cuid())
+  feedbackId String
+  actorId    String?
+  action     String
+  detail     Json?
+  createdAt  DateTime @default(now())
+
+  feedback Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  actor    User?    @relation("FeedbackLogActor", fields: [actorId], references: [id])
+
+  @@index([feedbackId])
+}
+
+model IdeaVote {
+  feedbackId String
+  userId     String
+  createdAt  DateTime @default(now())
+
+  feedback Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([feedbackId, userId])
+}
+
+// ── Meeting Booking Models ──────────────────────────
+model MeetingType {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  title        String
+  description  String?
+  durationMin  Int      @default(30)
+  bufferMin    Int      @default(0)
+  hostMode     String   @default("user")
+  hostRoleKey  String?
+  whoCanBook   Json
+  approval     String   @default("auto")
+  minNoticeHrs Int      @default(4)
+  maxPerWeek   Int?
+  needsRoom    Boolean  @default(false)
+  fields       Json?
+  color        String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  meetings MeetingRequest[]
+}
+
+model AvailabilityRule {
+  id        String   @id @default(cuid())
+  ownerType String
+  ownerKey  String
+  weekday   Int
+  fromTime  String
+  toTime    String
+  typeKeys  Json?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerType, ownerKey])
+}
+
+model AvailabilityException {
+  id        String   @id @default(cuid())
+  ownerType String
+  ownerKey  String
+  date      DateTime
+  fromTime  String?
+  toTime    String?
+  reason    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerType, ownerKey, date])
+}
+
+model MeetingRoom {
+  id        String   @id @default(cuid())
+  name      String
+  location  String?
+  capacity  Int?
+  amenities Json?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  meetings MeetingRequest[]
+}
+
+// ── Polls & Surveys Models ──────────────────────────
+model Survey {
+  id           String    @id @default(cuid())
+  key          String    @unique
+  title        String
+  description  String?
+  status       String    @default("draft")
+  schema       Json
+  audience     Json?
+  isAnonymous  Boolean   @default(true)
+  isMandatory  Boolean   @default(false)
+  opensAt      DateTime?
+  closesAt     DateTime?
+  remindDays   Json?
+  quotaPercent Int?
+  createdBy    String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  creator   User             @relation("SurveyCreator", fields: [createdBy], references: [id])
+  responses SurveyResponse[]
+  invitees  SurveyInvitee[]
+}
+
+model SurveyInvitee {
+  id          String    @id @default(cuid())
+  surveyId    String
+  userId      String
+  respondedAt DateTime?
+  remindedAt  DateTime?
+
+  survey Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([surveyId, userId])
+  @@index([surveyId, respondedAt])
+}
+
+model SurveyResponse {
+  id          String   @id @default(cuid())
+  surveyId    String
+  userId      String?
+  segment     Json?
+  answers     Json
+  durationSec Int?
+  createdAt   DateTime @default(now())
+
+  survey Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id])
+
+  @@index([surveyId])
+}
+
+// ── User Profile & Qualifications ────────────────────
+model ProfileSection {
+  id         String   @id @default(cuid())
+  key        String   @unique
+  title      String
+  icon       String?
+  sortOrder  Int      @default(0)
+  visibility Json
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model ProfileChangeRequest {
+  id         String    @id @default(cuid())
+  userId     String
+  changes    Json
+  status     String    @default("pending")
+  note       String?
+  reviewedBy String?
+  reviewedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation("ProfileChangeRequester", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([userId])
+}
+
+model UserDocument {
+  id         String    @id @default(cuid())
+  userId     String
+  typeKey    String
+  fileUrl    String
+  status     String    @default("pending")
+  issuedAt   DateTime?
+  expiresAt  DateTime?
+  reviewNote String?
+  reviewedBy String?
+  createdAt  DateTime  @default(now())
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type DocumentType @relation(fields: [typeKey], references: [key])
+
+  @@index([userId, typeKey])
+  @@index([expiresAt])
+}
+
+model DocumentType {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  title       String
+  requiredFor Json?
+  hasExpiry   Boolean  @default(false)
+  remindDays  Json?
+  needsReview Boolean  @default(true)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  documents UserDocument[]
+}
+
+model Credential {
+  id        String    @id @default(cuid())
+  userId    String
+  typeKey   String
+  number    String?
+  issuedAt  DateTime?
+  expiresAt DateTime?
+  status    String    @default("valid")
+  meta      Json?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model UserSession {
+  id         String    @id @default(cuid())
+  userId     String
+  device     String?
+  platform   String?
+  ip         String?
+  lastActive DateTime  @default(now())
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+}
+
+// ── Comms, Roster Policies & Learning ───────────────
+model ChatRolePolicy {
+  id        String   @id @default(cuid())
+  roleKey   String
+  roomKind  String
+  canSend   Boolean  @default(true)
+  canAttach Boolean  @default(true)
+  canPin    Boolean  @default(false)
+  canUrgent Boolean  @default(false)
+  canCreate Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([roleKey, roomKind])
+}
+
+model QuickReply {
+  id        String   @id @default(cuid())
+  roleKey   String
+  label     String
+  body      String
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RosterRolePolicy {
+  id        String   @id @default(cuid())
+  roleKey   String
+  action    String
+  allowed   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([roleKey, action])
+}
+
+model RadioChannel {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  label     String
+  code      String?
+  color     String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  logs RadioLog[]
+}
+
+model RadioLog {
+  id         String   @id @default(cuid())
+  channelId  String
+  senderId   String?
+  senderName String
+  message    String
+  kind       String   @default("VOICE_NOTE")
+  createdAt  DateTime @default(now())
+
+  channel RadioChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  sender  User?        @relation("RadioLogSender", fields: [senderId], references: [id])
+
+  @@index([channelId, createdAt])
+}
+
+model RadioPhrase {
+  id        String   @id @default(cuid())
+  roleKey   String?
+  label     String
+  text      String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RadioRolePolicy {
+  id          String   @id @default(cuid())
+  roleKey     String
+  channelKey  String
+  canListen   Boolean  @default(true)
+  canTransmit Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([roleKey, channelKey])
+}
+
+model DirectoryFieldPolicy {
+  id        String   @id @default(cuid())
+  roleKey   String
+  fieldKey  String
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([roleKey, fieldKey])
+}
+
+model PostAudience {
+  id        String   @id @default(cuid())
+  postId    String
+  roleKey   String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, roleKey])
+}
+
+model ContentCategory {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  label     String
+  color     String?
+  type      String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LearningPath {
+  id         String   @id @default(cuid())
+  key        String   @unique
+  title      String
+  roleKeys   String
+  courseIds  String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Course {
+  id               String   @id @default(cuid())
+  key              String   @unique
+  title            String
+  description      String?
+  coverUrl         String?
+  category         String?
+  status           String   @default("draft")
+  audience         String?
+  mandatoryFor     String?
+  recurrenceMonths Int?
+  passScore        Int      @default(70)
+  certTemplate     String?
+  estMinutes       Int?
+  sortOrder        Int      @default(0)
+  createdBy        String   @default("system")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  chapters     Chapter[]
+  enrollments  Enrollment[]
+  certificates Certificate[]
+  exams        Exam[]
+}
+
+model Chapter {
+  id        String   @id @default(cuid())
+  courseId  String
+  title     String
+  sortOrder Int      @default(0)
+
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons   Lesson[]
+}
+
+model Lesson {
+  id         String   @id @default(cuid())
+  chapterId  String
+  title      String
+  kind       String
+  contentRef String
+  minSeconds Int?
+  sortOrder  Int      @default(0)
+
+  chapter    Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+}
+
+model QuestionBank {
+  id          String   @id @default(cuid())
+  category    String
+  kind        String
+  text        String
+  mediaUrl    String?
+  options     String
+  difficulty  String   @default("normal")
+  explanation String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Exam {
+  id            String   @id @default(cuid())
+  courseId      String?
+  title         String
+  drawRules     String
+  questionCount Int
+  durationMin   Int
+  passScore     Int
+  maxAttempts   Int      @default(3)
+  cooldownHrs   Int      @default(24)
+  shuffle       Boolean  @default(true)
+  showAnswers   String   @default("after_pass")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  course        Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  attempts      ExamAttempt[]
+}
+
+model Enrollment {
+  id          String    @id @default(cuid())
+  courseId    String
+  userId      String
+  status      String    @default("active")
+  progressPct Int       @default(0)
+  enrolledAt  DateTime  @default(now())
+  completedAt DateTime?
+  deadlineAt  DateTime?
+
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attempts    ExamAttempt[]
+
+  @@unique([courseId, userId])
+}
+
+model ExamAttempt {
+  id           String   @id @default(cuid())
+  examId       String
+  userId       String
+  enrollmentId String?
+  status       String   @default("in_progress")
+  startedAt    DateTime @default(now())
+  endedAt      DateTime?
+  score        Int?
+  snapshot     String
+  answers      String?
+
+  exam         Exam        @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enrollment   Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
+}
+
+model Certificate {
+  id        String   @id @default(cuid())
+  courseId  String
+  userId    String
+  serial    String   @unique
+  issuedAt  DateTime @default(now())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, userId])
+}
+
+// ── AI Assistant Platform ───────────────────────────────
+
+model AiPersona {
+  id              String  @id @default(cuid())
+  key             String  @unique // "operator" | "supervisor" | ...
+  title           String
+  icon            String?
+  systemPrompt    String
+  roleKeys        String // JSON string
+  knowledgeCats   String // JSON string
+  tools           String // JSON string
+  economyModel    String?
+  strongModel     String?
+  monthlyTokenCap Int?
+  isActive        Boolean @default(true)
+}
+
+model AiKnowledgeSource {
+  id          String    @id @default(cuid())
+  title       String
+  category    String
+  accessRoles String? // JSON string
+  fileUrl     String?
+  version     Int       @default(1)
+  chunkCount  Int       @default(0)
+  indexedAt   DateTime?
+  isActive    Boolean   @default(true)
+
+  chunks AiChunk[]
+}
+
+model AiChunk {
+  id        String  @id @default(cuid())
+  sourceId  String
+  text      String
+  embedding String // JSON array of floats as string for SQLite compatibility
+  meta      String? // JSON string
+
+  source AiKnowledgeSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+}
+
+model AiInteraction {
+  id         String   @id @default(cuid())
+  userId     String
+  personaKey String
+  layer      String // L0|L1|L2|L3|L4
+  provider   String?
+  model      String?
+  tokensIn   Int      @default(0)
+  tokensOut  Int      @default(0)
+  costEst    Float    @default(0)
+  latencyMs  Int
+  rating     Int? // 1 / -1
+  toolUsed   String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([personaKey, layer])
+}
+
+// ── Roster Precomputed Snapshots (Roster Platform v2 — فاز ۱: سرعت) ──
+
+model RosterSnapshot {
+  id          String   @id @default(cuid())
+  rosterDayId String   @unique
+  versionNo   Int
+  payload     String // JSON — لوحه کامل نرمال‌شده (SQLite compatible)
+  etag        String
+  builtAt     DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rosterDay RosterDay @relation(fields: [rosterDayId], references: [id], onDelete: Cascade)
+}
+
+model MyRosterDay {
+  id         String   @id @default(cuid())
+  userId     String
+  jalaliDate String
+  versionNo  Int
+  payload    String // JSON — سفرهای شخصی + متادیتا
+  etag       String
+  builtAt    DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jalaliDate])
+  @@index([jalaliDate])
+  @@index([userId])
+}
+
+// ── Roster Amendments (Roster Platform v2 — فاز ۲: اصلاحیه) ──
+
+model RosterAmendment {
+  id           String    @id @default(cuid())
+  rosterDayId  String
+  seq          Int // اصلاحیه شماره N روز
+  kind         String // trip_time | trip_status | crew_replace | crew_add | crew_remove | trip_add | trip_remove | note
+  targetTripId String?
+  before       String? // JSON — وضعیت قبل
+  after        String // JSON — وضعیت بعد
+  reason       String // اجباری
+  status       String    @default("draft") // draft | pending_approval | approved | applied | rejected
+  createdById  String
+  approvedById String?
+  appliedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  rosterDay        RosterDay       @relation(fields: [rosterDayId], references: [id], onDelete: Cascade)
+  trip             Trip?           @relation(fields: [tripId], references: [id])
+  tripId           String?
+  tripAssignment   TripAssignment? @relation(fields: [tripAssignmentId], references: [id])
+  tripAssignmentId String?
+
+  @@index([rosterDayId, seq])
+  @@index([status])
+}
+
+// ── Roster Validation Rules (Roster Platform v2 — فاز ۳: کیفیت) ──
+
+model RosterValidationRule {
+  id          String   @id @default(cuid())
+  key         String   @unique // e.g. "incomplete_crew", "overlap", "fatigue_turnaround"
+  label       String // متن فارسی
+  description String?
+  severity    String   @default("error") // error | warning
+  isEnabled   Boolean  @default(true)
+  params      String? // JSON — پارامترهای قابل تنظیم
+  category    String   @default("general")
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+}
+
+model NameAlias {
+  id         String   @id @default(cuid())
+  rawName    String // نام خام از فایل
+  userId     String // کاربر تطبیق‌شده
+  confidence Float    @default(100)
+  createdAt  DateTime @default(now())
+
+  @@unique([rawName, userId])
+  @@index([rawName])
+}
+
+// ── Roster Visibility & Amendment Rules (Roster Platform v2 — فاز ۴) ──
+
+model RosterVisibilityMatrix {
+  id            String   @id @default(cuid())
+  roleKey       String   @unique // operator | supervisor | occ | planner | admin
+  visibleCols   String // JSON array: ["trainNumber", "direction", "departureTime", "h1", "h2", ...]
+  regionFilter  String? // JSON: ناحیه‌های قابل مشاهده
+  showCrewNames Boolean  @default(true)
+  showNotes     Boolean  @default(true)
+  defaultView   String   @default("timeline") // timeline | table | gantt
+  updatedAt     DateTime @updatedAt
+}
+
+model RosterAmendmentRule {
+  id                   String   @id @default(cuid())
+  amendmentKind        String   @unique // trip_time | crew_replace | ...
+  requireApproval      Boolean  @default(true)
+  approverRoleKey      String? // نقش تایید‌کننده
+  maxHoursAfterPublish Int? // مهلت اصلاح
+  standardReasons      String? // JSON array — دلایل استاندارد
+  updatedAt            DateTime @updatedAt
+}
+
+// ── Fatigue Analysis ────────────────────────────────────────
+
+model FatigueLog {
+  id                 String   @id @default(cuid())
+  userId             String
+  sleepHours         Float
+  sleepQuality       String // "good" | "fair" | "poor"
+  fatigueLevel       Int // 1-5
+  hasHeadacheOrColds Boolean
+  score              Int
+  createdAt          DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ── Crisis & Safety Modules ─────────────────────────────────
+
+model SOSAlert {
+  id                  String   @id @default(cuid())
+  reporterId          String
+  reporterShift       String?
+  reporterRole        String?
+  locationCoordinates String?
+  batteryPercentage   Int?
+  networkStatus       String?
+  audioMemoUrl        String?
+  status              String   @default("submitted") // submitted | seen | dispatch | resolved | closed
+  timeline            Json? // Array<{ time: string; text: string }>
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  reporter User @relation("SOSReporter", fields: [reporterId], references: [id])
+
+  @@index([reporterId])
+  @@index([status])
+}
+
+model IncidentReport {
+  id               String   @id @default(cuid())
+  title            String
+  type             String // accident | near_miss | safety_violation | equipment_failure | delay
+  dateTime         DateTime @default(now())
+  location         String?
+  trainNo          String?
+  rootCause        String?
+  correctiveAction String?
+  description      String?
+  status           String   @default("under_review") // under_review | action_taken | closed
+  reporterId       String
+  timeline         Json? // Array<{ time: string; text: string }>
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  reporter User @relation("IncidentReporter", fields: [reporterId], references: [id])
+
+  @@index([reporterId])
+  @@index([type])
+  @@index([status])
+}
+
+// ── Technical Catalogs (Live Guide & Flowcharts) ─────────────────
+
+model TechnicalCatalog {
+  id          String   @id @default(cuid())
+  title       String
+  category    String   // e.g. "AC", "DC", "عمومی"
+  content     String   // The Mermaid code
+  authorId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author      User?    @relation("CatalogAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([authorId])
+}
+
+// ── Landing Page (Orbit Gallery) ──────────────────────
+
+model OrbitImage {
+  id        String   @id @default(cuid())
+  title     String
+  caption   String?
+  alt       String
+  mediaUrl  String
+  thumbUrl  String?
+  linkUrl   String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([isActive, sortOrder])
+}
+
+model HeroQuote {
+  id        String  @id @default(cuid())
+  text      String
+  author    String?
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+}
+
+model LandingCta {
+  id        String  @id @default(cuid())
+  label     String
+  href      String
+  icon      String?
+  variant   String  @default("primary")
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+  authOnly  Boolean @default(false)
+}
+
+model LandingVersion {
+  id          String    @id @default(cuid())
+  status      String    @default("DRAFT")
+  snapshot    String
+  publishedAt DateTime?
+  publishedBy String?
+  createdAt   DateTime  @default(now())
+}
+
+
+
+
+
+

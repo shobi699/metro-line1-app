@@ -52,11 +52,14 @@ const TYPE_LABELS: Record<string, string> = {
   training: 'آموزش',
   circular: 'بخش‌نامه',
   gallery: 'گالری',
+  announcement: 'اطلاعیه اداری',
+  directive: 'دستورالعمل',
+  form: 'فرم و فایل',
 }
 
 function renderBody(body: string, handleVideoEnded: () => void) {
   // Remove quiz and prerequisite tags
-  let cleanText = body
+  const cleanText = body
     .replace(/\[quiz\]([\s\S]*?)\[\/quiz\]/, '')
     .replace(/\[prerequisite\]([\s\S]*?)\[\/prerequisite\]/, '')
     .trim()
@@ -208,8 +211,8 @@ export default function PostDetailPage() {
             try {
               const questions = JSON.parse(match[1].trim())
               setQuizQuestions(questions)
-            } catch (e) {
-              console.error('Failed to parse quiz JSON:', e)
+            } catch {
+              // quiz JSON parse failed
             }
           }
 

@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 export interface UserProfile {
   id: string
   name: string
-  nationalId: string
+  personnelCode: string
   phone?: string | null
   email?: string | null
   status: 'pending' | 'active' | 'suspended'
@@ -44,9 +44,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   async logout() {
     try {
       await AsyncStorage.multiRemove([
-        ['@auth_user'],
-        ['@auth_accessToken'],
-        ['@auth_refreshToken'],
+        '@auth_user',
+        '@auth_accessToken',
+        '@auth_refreshToken',
       ])
     } catch {
       // silent

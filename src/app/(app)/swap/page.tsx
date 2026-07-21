@@ -12,7 +12,7 @@ import { ArrowLeftRight, Send, AlertTriangle, CheckCircle, FileText } from 'luci
 interface UserOption {
   id: string
   name: string
-  nationalId: string
+  personnelCode: string
 }
 
 interface ShiftOption {
@@ -264,7 +264,7 @@ export default function CreateSwapRequestPage() {
                 <option value="">انتخاب همکار</option>
                 {colleagues.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name} (کد ملی: {toFa(c.nationalId)})
+                    {c.name} (کد پرسنلی: {toFa(c.personnelCode)})
                   </option>
                 ))}
               </select>

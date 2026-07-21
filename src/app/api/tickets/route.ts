@@ -3,15 +3,16 @@ import {
   getSessionUser,
   requireRole,
   authErrorResponse,
+  withErrorLogging,
 } from '@/server/rbac/guard'
-import { createTicketSchema } from '@/server/dto/safety'
+import { createTicketSchema } from '@/lib/zod/safety'
 import { createTicket, listTickets, getTicketStats } from '@/server/modules/tickets/service'
 
-export async function GET(request: Request) {
+export const GET = withErrorLogging(async function GET(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'operator')
+  const roleErr = await requireRole(user, 'operator')
   if (roleErr) return authErrorResponse(roleErr)
 
   const { searchParams } = new URL(request.url)
@@ -21,13 +22,13 @@ export async function GET(request: Request) {
   const stats = await getTicketStats()
 
   return NextResponse.json({ data: { tickets, stats } })
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withErrorLogging(async function POST(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'operator')
+  const roleErr = await requireRole(user, 'operator')
   if (roleErr) return authErrorResponse(roleErr)
 
   const body = await request.json()
@@ -42,4 +43,5 @@ export async function POST(request: Request) {
 
   const ticket = await createTicket(parsed.data, user.id)
   return NextResponse.json({ data: ticket }, { status: 201 })
-}
+})
+

@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import dayjs from 'dayjs'
-import 'dayjs-jalali'
+import { jdate } from '@/lib/dayjs'
 import { useAuthStore } from '@/features/auth'
 import { Button } from '@/components/ui/button'
 import { toFa } from '@/lib/fa'
@@ -14,7 +13,7 @@ interface Shift {
   date: string
   code: string
   note: string | null
-  user?: { id: string; name: string; nationalId: string }
+  user?: { id: string; name: string; personnelCode: string }
 }
 
 const SHIFT_COLORS: Record<string, string> = {
@@ -38,7 +37,7 @@ interface ShiftCalendarProps {
 
 export function ShiftCalendar({ userId, isAdmin }: ShiftCalendarProps) {
   const accessToken = useAuthStore((s) => s.accessToken)
-  const now = dayjs().locale('jalali')
+  const now = jdate()
   const [currentMonth, setCurrentMonth] = useState(() => now.month() + 1)
   const [currentYear, setCurrentYear] = useState(() => now.year())
   const [shifts, setShifts] = useState<Shift[]>([])
@@ -71,15 +70,14 @@ export function ShiftCalendar({ userId, isAdmin }: ShiftCalendarProps) {
     load()
   }, [currentMonth, currentYear, userId, accessToken])
 
-  const firstDay = dayjs()
-    .locale('jalali')
+  const firstDay = jdate()
     .year(currentYear)
     .month(currentMonth - 1)
     .date(1)
   const daysInMonth = firstDay.daysInMonth()
   const startWeekday = firstDay.day()
 
-  const today = dayjs().locale('jalali')
+  const today = jdate()
   const todayStr = today.format('YYYY-MM-DD')
 
   const days: Array<{ day: number; dateStr: string; shifts: Shift[]; isToday: boolean; isFriday: boolean }> = []
@@ -87,7 +85,7 @@ export function ShiftCalendar({ userId, isAdmin }: ShiftCalendarProps) {
     const date = firstDay.date(d)
     const dateStr = date.format('YYYY-MM-DD')
     const dayShifts = shifts.filter((s) => {
-      const sDate = dayjs(s.date).format('YYYY-MM-DD')
+      const sDate = jdate(s.date).format('YYYY-MM-DD')
       return sDate === dateStr
     })
     days.push({
@@ -132,7 +130,7 @@ export function ShiftCalendar({ userId, isAdmin }: ShiftCalendarProps) {
       {/* Month Header */}
       <div className="flex items-center justify-between">
         <h2 className="font-headline-md text-foreground">
-          {firstDay.format('jMMMM jYYYY')}
+          {toFa(firstDay.format('MMMM YYYY'))}
         </h2>
         <div className="flex gap-1">
           <Button variant="outline" size="icon-sm" onClick={prevMonth}>

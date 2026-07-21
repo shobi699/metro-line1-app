@@ -8,19 +8,25 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
+  SafeAreaView,
+  Alert,
+  Modal,
   Platform,
+  Pressable
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { MaterialIcons } from '@expo/vector-icons'
 import { useAuthStore } from '../stores/auth'
 import { useConfigStore } from '../stores/config'
 import { useNetworkStore } from '../stores/network'
 import { API_URL } from '../shared/config'
-import { Phone, MessageSquare, Search, Car, User } from 'lucide-react-native'
+import { useTheme } from '../shared/ThemeProvider'
+import { ScreenWrapper } from '../shared/ScreenWrapper'
 
 interface DirectoryUser {
   id: string
   name: string
-  nationalId: string
+  personnelCode: string
   phone?: string | null
   email?: string | null
   role: {
@@ -30,6 +36,7 @@ interface DirectoryUser {
 }
 
 export function DirectoryScreen({ navigation }: any) {
+  const { theme } = useTheme()
   const accessToken = useAuthStore((s) => s.accessToken)
   const config = useConfigStore((s) => s.config)
   const isGlobalOffline = useNetworkStore((s) => s.isOffline)
@@ -40,6 +47,11 @@ export function DirectoryScreen({ navigation }: any) {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [isOffline, setIsOffline] = useState(false)
+
+  // Custom Action Sheet Modal state (handles React Native Web compatibility)
+  const [actionSheetVisible, setActionSheetVisible] = useState(false)
+  const [actionSheetType, setActionSheetType] = useState<'call' | 'message' | null>(null)
+  const [selectedUser, setSelectedUser] = useState<DirectoryUser | null>(null)
 
   // Load cache immediately on mount
   useEffect(() => {
@@ -123,14 +135,222 @@ export function DirectoryScreen({ navigation }: any) {
     fetchUsers()
   }, [search, accessToken])
 
-  function handleCall(phone: string) {
-    Linking.openURL(`tel:${phone}`)
+  function handleCall(user: DirectoryUser) {
+    setSelectedUser(user)
+    setActionSheetType('call')
+    setActionSheetVisible(true)
   }
 
-  function handleMessage(userId: string) {
-    // ناوبری به تب چت و بازکردن چت مستقیم
-    navigation.navigate('چت', { dm: userId })
+  function handleMessage(user: DirectoryUser) {
+    setSelectedUser(user)
+    setActionSheetType('message')
+    setActionSheetVisible(true)
   }
+
+  const styles = StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      padding: theme.spacing.containerMargin,
+    },
+    searchContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.colors.surfaceContainerLowest,
+      borderWidth: 1,
+      borderColor: theme.colors.surfaceVariant,
+      borderRadius: theme.borderRadius.md,
+      paddingHorizontal: 12,
+      height: 48,
+      marginBottom: 16,
+      ...theme.shadows.level1,
+    },
+    searchIcon: {
+      marginRight: 8,
+    },
+    searchInput: {
+      flex: 1,
+      color: theme.colors.onSurface,
+      fontFamily: theme.typography.bodyMd.fontFamily,
+      fontSize: theme.typography.bodyMd.fontSize,
+      height: '100%',
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 40,
+    },
+    listContainer: {
+      paddingBottom: 24,
+    },
+    card: {
+      backgroundColor: theme.colors.surfaceContainerLowest,
+      borderColor: theme.colors.surfaceVariant,
+      borderWidth: 1,
+      borderRadius: theme.borderRadius.xl,
+      padding: 16,
+      marginBottom: 12,
+      ...theme.shadows.level1,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.surfaceVariant,
+      paddingBottom: 12,
+      marginBottom: 12,
+    },
+    roleContainer: {
+      backgroundColor: theme.colors.primaryContainer,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 4,
+    },
+    roleText: {
+      color: theme.colors.primary,
+      fontFamily: theme.typography.captionSm.fontFamily,
+      fontSize: 11,
+      fontWeight: 'bold',
+    },
+    nameText: {
+      fontSize: theme.typography.cardTitle.fontSize,
+      fontFamily: theme.typography.cardTitle.fontFamily,
+      color: theme.colors.onSurface,
+      fontWeight: '700',
+    },
+    detailsContainer: {
+      marginBottom: 12,
+    },
+    detailRow: {
+      flexDirection: 'row-reverse',
+      justifyContent: 'space-between',
+      marginBottom: 6,
+    },
+    detailLabel: {
+      color: theme.colors.secondary,
+      fontFamily: theme.typography.bodyMd.fontFamily,
+      fontSize: theme.typography.bodyMd.fontSize,
+    },
+    detailValue: {
+      color: theme.colors.onSurface,
+      fontFamily: theme.typography.bodyMd.fontFamily,
+      fontSize: theme.typography.bodyMd.fontSize,
+      fontWeight: '600',
+    },
+    actionsContainer: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    actionButton: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      height: 40,
+      borderRadius: theme.borderRadius.md,
+      ...theme.shadows.level1,
+    },
+    callButton: {
+      backgroundColor: theme.colors.success,
+    },
+    chatButton: {
+      backgroundColor: theme.colors.primary,
+    },
+    actionText: {
+      color: '#ffffff',
+      fontFamily: theme.typography.cardTitle.fontFamily,
+      fontSize: 12,
+      fontWeight: 'bold',
+    },
+    emptyText: {
+      color: theme.colors.secondary,
+      fontFamily: theme.typography.bodyMd.fontFamily,
+      fontSize: theme.typography.bodyMd.fontSize,
+    },
+    offlineIndicator: {
+      backgroundColor: theme.colors.errorContainer,
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      marginBottom: 16,
+      alignItems: 'center',
+    },
+    offlineText: {
+      color: theme.colors.error,
+      fontFamily: theme.typography.captionSm.fontFamily,
+      fontSize: 12,
+      fontWeight: 'bold',
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.65)',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+    },
+    modalContent: {
+      width: Platform.OS === 'web' ? 450 : '100%',
+      maxWidth: '100%',
+      backgroundColor: theme.colors.surfaceContainerLowest,
+      borderTopLeftRadius: theme.borderRadius.xl,
+      borderTopRightRadius: theme.borderRadius.xl,
+      padding: 24,
+      paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+      alignItems: 'stretch',
+    },
+    modalTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: theme.colors.onSurface,
+      textAlign: 'center',
+      marginBottom: 6,
+      fontFamily: theme.typography.cardTitle.fontFamily,
+    },
+    modalSubtitle: {
+      fontSize: 13,
+      color: theme.colors.secondary,
+      textAlign: 'center',
+      marginBottom: 20,
+      fontFamily: theme.typography.bodyMd.fontFamily,
+    },
+    modalButton: {
+      flexDirection: 'row-reverse',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.surfaceVariant,
+      borderWidth: 1,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      borderRadius: theme.borderRadius.lg,
+      marginBottom: 10,
+      gap: 12,
+    },
+    modalButtonText: {
+      fontSize: 13,
+      color: theme.colors.onSurface,
+      fontFamily: theme.typography.bodyMd.fontFamily,
+      fontWeight: '600',
+    },
+    modalCancelButton: {
+      backgroundColor: 'transparent',
+      borderColor: 'transparent',
+      justifyContent: 'center',
+      marginTop: 8,
+    },
+    modalCancelButtonText: {
+      fontSize: 14,
+      color: theme.colors.error || '#ef4444',
+      fontWeight: 'bold',
+      fontFamily: theme.typography.cardTitle.fontFamily,
+    },
+  })
 
   function renderItem({ item }: { item: DirectoryUser }) {
     // استخراج فیلدهای پویا
@@ -172,19 +392,19 @@ export function DirectoryScreen({ navigation }: any) {
           <View style={styles.actionsContainer}>
             <TouchableOpacity
               style={[styles.actionButton, styles.callButton]}
-              onPress={() => handleCall(item.phone!)}
+              onPress={() => handleCall(item)}
               activeOpacity={0.7}
             >
-              <Phone size={16} color="#ffffff" />
+              <MaterialIcons name="phone" size={16} color="#ffffff" />
               <Text style={styles.actionText}>تماس مستقیم</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.actionButton, styles.chatButton]}
-              onPress={() => handleMessage(item.id)}
+              onPress={() => handleMessage(item)}
               activeOpacity={0.7}
             >
-              <MessageSquare size={16} color="#ffffff" />
+              <MaterialIcons name="chat" size={16} color="#ffffff" />
               <Text style={styles.actionText}>ارسال پیام</Text>
             </TouchableOpacity>
           </View>
@@ -194,180 +414,148 @@ export function DirectoryScreen({ navigation }: any) {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <Search size={18} color="#a0a3b0" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          value={search}
-          onChangeText={setSearch}
-          placeholder="جست‌وجوی پرسنل (نام، شماره، ایستگاه...)"
-          placeholderTextColor="#555860"
-          textAlign="right"
-        />
+    <ScreenWrapper title="دفتر تلفن پرسنل" navigation={navigation}>
+      <View style={styles.container}>
+        <View style={styles.searchContainer}>
+          <MaterialIcons name="search" size={20} color={theme.colors.secondary} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            value={search}
+            onChangeText={setSearch}
+            placeholder="جست‌وجوی پرسنل (نام، شماره، ایستگاه...)"
+            placeholderTextColor={theme.colors.secondary}
+            textAlign="right"
+          />
+        </View>
+
+        {isOffline && (
+          <View style={styles.offlineIndicator}>
+            <Text style={styles.offlineText}>جست‌وجوی آفلاین بر روی داده‌های کش‌شده</Text>
+          </View>
+        )}
+
+        {loading && !refreshing ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+          </View>
+        ) : (
+          <FlatList
+            data={users}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContainer}
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true)
+              fetchUsers(true)
+            }}
+            ListEmptyComponent={
+              <View style={styles.centerContainer}>
+                <Text style={styles.emptyText}>
+                  {isOffline 
+                    ? 'ارتباط قطع است و داده کش‌شده‌ای یافت نشد.' 
+                    : 'هیچ کاربری یافت نشد.'}
+                </Text>
+              </View>
+            }
+          />
+        )}
       </View>
 
-      {isOffline && (
-        <View style={styles.offlineIndicator}>
-          <Text style={styles.offlineText}>جست‌وجوی آفلاین بر روی داده‌های کش‌شده</Text>
-        </View>
-      )}
+      <Modal
+        visible={actionSheetVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setActionSheetVisible(false)}
+      >
+        <Pressable 
+          style={styles.modalOverlay} 
+          onPress={() => setActionSheetVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              {actionSheetType === 'call' ? 'انتخاب روش تماس' : 'انتخاب روش ارسال پیام'}
+            </Text>
+            <Text style={styles.modalSubtitle}>
+              ارتباط با {selectedUser?.name}
+            </Text>
 
-      {loading && !refreshing ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#e53935" />
-        </View>
-      ) : (
-        <FlatList
-          data={users}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContainer}
-          refreshing={refreshing}
-          onRefresh={() => {
-            setRefreshing(true)
-            fetchUsers(true)
-          }}
-          ListEmptyComponent={
-            <View style={styles.centerContainer}>
-              <Text style={styles.emptyText}>
-                {isOffline 
-                  ? 'ارتباط قطع است و داده کش‌شده‌ای یافت نشد.' 
-                  : 'هیچ کاربری یافت نشد.'}
-              </Text>
-            </View>
-          }
-        />
-      )}
-    </View>
+            {actionSheetType === 'call' && selectedUser?.phone && (
+              <>
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => {
+                    setActionSheetVisible(false)
+                    Linking.openURL(`tel:${selectedUser.phone}`)
+                  }}
+                >
+                  <MaterialIcons name="phone" size={20} color={theme.colors.success} />
+                  <Text style={styles.modalButtonText}>تماس تلفنی معمولی (سیم‌کارت)</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => {
+                    setActionSheetVisible(false)
+                    navigation.navigate('کنفرانس صوتی')
+                  }}
+                >
+                  <MaterialIcons name="group" size={20} color={theme.colors.primary} />
+                  <Text style={styles.modalButtonText}>کنفرانس صوتی خط ۱ (VoIP)</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => {
+                    setActionSheetVisible(false)
+                    navigation.navigate('بی‌سیم راهبری')
+                  }}
+                >
+                  <MaterialIcons name="radio" size={20} color={theme.colors.warning || '#f59e0b'} />
+                  <Text style={styles.modalButtonText}>شبیه‌ساز بی‌سیم راهبری</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {actionSheetType === 'message' && selectedUser && (
+              <>
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => {
+                    setActionSheetVisible(false)
+                    navigation.navigate('چت', { dm: selectedUser.id })
+                  }}
+                >
+                  <MaterialIcons name="chat" size={20} color={theme.colors.primary} />
+                  <Text style={styles.modalButtonText}>چت داخلی اپلیکیشن (بلادرنگ)</Text>
+                </TouchableOpacity>
+
+                {selectedUser.phone && (
+                  <TouchableOpacity
+                    style={styles.modalButton}
+                    onPress={() => {
+                      setActionSheetVisible(false)
+                      Linking.openURL(`sms:${selectedUser.phone}`)
+                    }}
+                  >
+                    <MaterialIcons name="sms" size={20} color={theme.colors.success} />
+                    <Text style={styles.modalButtonText}>ارسال پیامک معمولی (SMS)</Text>
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
+
+            <TouchableOpacity
+              style={[styles.modalButton, styles.modalCancelButton]}
+              onPress={() => setActionSheetVisible(false)}
+            >
+              <Text style={styles.modalCancelButtonText}>انصراف</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
+    </ScreenWrapper>
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#13151a',
-    padding: 16,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1c1e24',
-    borderWidth: 1,
-    borderColor: '#262930',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 44,
-    marginBottom: 16,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    color: '#f2f2f7',
-    fontSize: 14,
-    height: '100%',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  listContainer: {
-    paddingBottom: 24,
-  },
-  card: {
-    backgroundColor: '#1c1e24',
-    borderColor: '#262930',
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#262930',
-    paddingBottom: 12,
-    marginBottom: 12,
-  },
-  roleContainer: {
-    backgroundColor: 'rgba(52, 199, 89, 0.1)', // سبز
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  roleText: {
-    color: '#34c759',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  nameText: {
-    fontSize: 16,
-    color: '#f2f2f7',
-    fontWeight: '600',
-  },
-  detailsContainer: {
-    marginBottom: 12,
-  },
-  detailRow: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  detailLabel: {
-    color: '#a0a3b0',
-    fontSize: 13,
-  },
-  detailValue: {
-    color: '#f2f2f7',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    height: 36,
-    borderRadius: 6,
-  },
-  callButton: {
-    backgroundColor: '#34c759', // سبز تماس
-  },
-  chatButton: {
-    backgroundColor: '#e53935', // قرمز برند چت
-  },
-  actionText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  emptyText: {
-    color: '#a0a3b0',
-    fontSize: 14,
-  },
-  offlineIndicator: {
-    backgroundColor: 'rgba(229, 57, 53, 0.1)',
-    borderRadius: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginBottom: 12,
-    alignItems: 'center',
-  },
-  offlineText: {
-    color: '#e53935',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-})
 export default DirectoryScreen

@@ -4,19 +4,14 @@ import {
   requireRole,
   authErrorResponse,
 } from '@/server/rbac/guard'
-import { z } from 'zod'
+import { analyzeSchema } from '@/lib/zod/tickets'
 import { predictTicketPriority } from '@/server/modules/tickets/service'
-
-const analyzeSchema = z.object({
-  title: z.string().min(1, 'عنوان الزامی است'),
-  description: z.string().optional(),
-})
 
 export async function POST(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'operator')
+  const roleErr = await requireRole(user, 'operator')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {
@@ -34,7 +29,7 @@ export async function POST(request: Request) {
     const analysis = await predictTicketPriority(title, description)
 
     return NextResponse.json({ data: analysis })
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'خطا در تحلیل متن گزارش خرابی' },
       { status: 500 }

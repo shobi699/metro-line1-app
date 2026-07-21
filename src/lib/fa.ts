@@ -1,3 +1,5 @@
+import { fromJalali } from './dayjs'
+
 const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
 
 export function toFa(n: number | string): string {
@@ -95,6 +97,64 @@ function gd_j(jy: number): number {
 }
 
 export function jalaliToDate(jy: number, jm: number, jd: number): Date {
-  const [gy, gm, gd] = jalaliToGregorianArray(jy, jm, jd)
-  return new Date(gy, gm - 1, gd)
+  return fromJalali(jy, jm, jd).toDate()
+}
+
+export function normalizeFarsiString(str: string): string {
+  if (!str) return ''
+  return toEn(str)
+    .replace(/[\u064B-\u065F\u0640]/g, '') // Remove Arabic diacritics & Kashida
+    .replace(/ي/g, 'ی')
+    .replace(/ك/g, 'ک')
+    .replace(/ة/g, 'ه')
+    .replace(/ۀ/g, 'ه')
+    .replace(/\u200c/g, ' ') // Replace ZWNJ with space
+    .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width spaces/joins
+    .replace(/[,\-\_\.\u060C]/g, ' ') // Replace commas, dashes, periods with space
+    .replace(/\s+/g, ' ') // Multiple spaces to single space
+    .trim()
+    .toLowerCase()
+}
+
+export function levenshteinDistance(s1: string, s2: string): number {
+  const m = s1.length
+  const n = s2.length
+  const d: number[][] = []
+
+  for (let i = 0; i <= m; i++) d[i] = [i]
+  for (let j = 0; j <= n; j++) d[0][j] = j
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = s1[i - 1] === s2[j - 1] ? 0 : 1
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1, // deletion
+        d[i][j - 1] + 1, // insertion
+        d[i - 1][j - 1] + cost // substitution
+      )
+    }
+  }
+  return d[m][n]
+}
+
+export function fuzzyMatchScore(a: string, b: string): number {
+  const normA = normalizeFarsiString(a)
+  const normB = normalizeFarsiString(b)
+
+  if (!normA || !normB) return 0
+  if (normA === normB) return 100
+
+  // 1. Direct Levenshtein similarity
+  const maxLen = Math.max(normA.length, normB.length)
+  const dist = levenshteinDistance(normA, normB)
+  const directScore = ((maxLen - dist) / maxLen) * 100
+
+  // 2. Token Sort Ratio (helps with word order changes)
+  const tokensA = normA.split(' ').filter(Boolean).sort().join(' ')
+  const tokensB = normB.split(' ').filter(Boolean).sort().join(' ')
+  const tokensMaxLen = Math.max(tokensA.length, tokensB.length)
+  const tokensDist = levenshteinDistance(tokensA, tokensB)
+  const tokenSortScore = tokensMaxLen > 0 ? ((tokensMaxLen - tokensDist) / tokensMaxLen) * 100 : 0
+
+  return Math.max(directScore, tokenSortScore)
 }

@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const user = await getSessionUser(request)
   if ('error' in user) return authErrorResponse(user)
 
-  const roleErr = requireRole(user, 'admin')
+  const roleErr = await requireRole(user, 'admin')
   if (roleErr) return authErrorResponse(roleErr)
 
   try {
@@ -80,7 +80,7 @@ export async function GET(request: Request) {
         },
       },
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'خطا در دریافت تنظیمات' },
       { status: 500 }

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Paperclip, SendHorizontal, X, Loader2, Mic } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { usePrivateConfig } from '@/features/auth/use-private-config'
+import { uploadFileWithProgress } from '@/lib/upload'
 
 interface Attachment {
   url: string
@@ -32,6 +33,7 @@ export function MessageComposer({
   const [text, setText] = useState('')
   const [attachment, setAttachment] = useState<Attachment | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [sending, setSending] = useState(false)
   const [configMaxLength, setConfigMaxLength] = useState(1000)
   const [configEnableFileSharing, setConfigEnableFileSharing] = useState(true)
@@ -132,22 +134,23 @@ export function MessageComposer({
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
+    setUploadProgress(0)
     try {
-      const form = new FormData()
-      form.append('file', file)
-      const res = await fetch('/api/uploads', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: form,
+      const url = await uploadFileWithProgress({
+        file,
+        token,
+        onProgress: (p) => setUploadProgress(p),
       })
-      if (res.ok) {
-        const data = await res.json()
-        setAttachment({ url: data.data.url, type: data.data.type, name: file.name })
-      }
-    } catch {
-      // silent
+      const isImage = /\.(jpeg|jpg|gif|png|webp|svg)/i.test(url)
+      const isVideo = /\.(mp4|webm|ogg|mov)/i.test(url)
+      const isAudio = /\.(mp3|wav|ogg|aac|webm)/i.test(url)
+      const type = isImage ? 'image/png' : isVideo ? 'video/mp4' : isAudio ? 'audio/mpeg' : 'application/pdf'
+      setAttachment({ url, type, name: file.name })
+    } catch (err: any) {
+      alert(err.message || 'خطا در ارتباط با سرور')
     } finally {
       setUploading(false)
+      setUploadProgress(0)
       if (fileRef.current) fileRef.current.value = ''
     }
   }
@@ -245,6 +248,21 @@ export function MessageComposer({
           >
             <X className="size-3.5" />
           </Button>
+        </div>
+      )}
+
+      {uploading && (
+        <div className="mb-2 flex flex-col gap-1.5 rounded-lg border border-outline-variant bg-surface px-3 py-2.5 text-xs">
+          <div className="flex items-center gap-2">
+            <Loader2 className="size-3.5 text-accent animate-spin" />
+            <span className="flex-1 truncate font-medium">در حال آپلود فایل پیوست... ({uploadProgress}٪)</span>
+          </div>
+          <div className="w-full h-1 bg-border rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-accent transition-all duration-150 ease-out" 
+              style={{ width: `${uploadProgress}%` }} 
+            />
+          </div>
         </div>
       )}
 

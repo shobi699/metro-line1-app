@@ -7,6 +7,12 @@ export interface MobileConfig {
   brandColor: string
   chatMaxMessageLength: number
   allowNoWagon: boolean
+  appVersion?: string
+  developerText?: string
+  socialLinks?: Array<{ platform: string; url: string; icon: string }>
+  shifts?: {
+    showHolidays: boolean
+  }
   mobile: {
     enableSos: boolean
     geofencingEnabled: boolean
@@ -15,7 +21,13 @@ export interface MobileConfig {
     sosRecipientPhone: string
     activeTheme: 'dark' | 'light' | 'system'
     locationTrackingInterval: number
+    dashboardBanner?: {
+      enabled: boolean
+      url: string
+      link: string
+    }
   }
+  leaveTypes?: Array<{ label: string; value: string; maxDaysPerMonth: number; requiresApproval: boolean }>
   comms?: {
     voiceChatEnabled: boolean
     maxRecordingTime: number
@@ -29,15 +41,25 @@ export interface MobileConfig {
   }
 }
 
-interface ConfigState {
-  config: MobileConfig | null
-  isLoading: boolean
-  fetchConfig: () => Promise<void>
-  loadPersistedConfig: () => Promise<void>
+export interface ModuleFlag {
+  id: string
+  enabled: boolean
+  matchingPrefixes: string[]
 }
 
-export const useConfigStore = create<ConfigState>((set) => ({
+interface ConfigState {
+  config: MobileConfig | null
+  moduleFlags: ModuleFlag[]
+  isLoading: boolean
+  fetchConfig: () => Promise<void>
+  fetchModuleFlags: () => Promise<void>
+  loadPersistedConfig: () => Promise<void>
+  isModuleEnabled: (id: string) => boolean
+}
+
+export const useConfigStore = create<ConfigState>((set, get) => ({
   config: null,
+  moduleFlags: [],
   isLoading: false,
 
   async fetchConfig() {
@@ -58,14 +80,41 @@ export const useConfigStore = create<ConfigState>((set) => ({
     }
   },
 
+  async fetchModuleFlags() {
+    try {
+      const res = await fetch(`${API_URL}/modules/public`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.data?.flags) {
+          const flags = data.data.flags as ModuleFlag[]
+          await AsyncStorage.setItem('@module_flags', JSON.stringify(flags))
+          set({ moduleFlags: flags })
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching module flags on mobile:', err)
+    }
+  },
+
   async loadPersistedConfig() {
     try {
       const stored = await AsyncStorage.getItem('@app_config')
       if (stored) {
         set({ config: JSON.parse(stored) as MobileConfig })
       }
+      const storedFlags = await AsyncStorage.getItem('@module_flags')
+      if (storedFlags) {
+        set({ moduleFlags: JSON.parse(storedFlags) as ModuleFlag[] })
+      }
     } catch (err) {
       console.error('Error loading persisted config:', err)
     }
+  },
+
+  isModuleEnabled(id: string) {
+    const flags = get().moduleFlags
+    if (!flags || flags.length === 0) return true
+    const flag = flags.find((f) => f.id === id)
+    return flag ? flag.enabled : true
   },
 }))

@@ -1,6 +1,6 @@
-import { EventEmitter } from 'node:events'
+import type { DurableObjectNamespace } from '../cloudflare-types'
+import { EventEmitter } from 'events'
 
-/** payload رویداد پیام جدید که از طریق SSE به کلاینت‌ها می‌رسد. */
 export interface ChatMessageEvent {
   roomId: string
   message: {
@@ -13,40 +13,35 @@ export interface ChatMessageEvent {
     attachmentType: string | null
     pinned: boolean
     createdAt: string
+    priority?: string
+    tags?: string[]
+    readReceipts?: any
   }
 }
 
-const CHANNEL = 'chat:message'
+// کانتینر باس برای سرور محلی نودجی‌اس جهت همگام‌سازی چت لایو
+if (!(globalThis as any).chatBus) {
+  (globalThis as any).chatBus = new EventEmitter()
+}
+export const chatBus = (globalThis as any).chatBus as EventEmitter
 
-// EventEmitter تک‌نمونه روی globalThis تا در برابر hot-reload در حالت توسعه مقاوم بماند.
-const globalForBus = globalThis as unknown as { __chatBus?: EventEmitter }
+export async function publishMessage(event: ChatMessageEvent): Promise<void> {
+  const ns = (globalThis as unknown as { CHAT_DO?: DurableObjectNamespace }).CHAT_DO
+  if (ns) {
+    const id = ns.idFromName(event.roomId)
+    const stub = ns.get(id)
 
-function getEmitter(): EventEmitter {
-  if (!globalForBus.__chatBus) {
-    const emitter = new EventEmitter()
-    emitter.setMaxListeners(0) // هر اتصال SSE یک listener است
-    globalForBus.__chatBus = emitter
+    await stub.fetch('https://chat-do/broadcast', {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'message',
+        roomId: event.roomId,
+        data: event.message,
+      }),
+    })
+  } else {
+    // انتشار پیام روی کانتینر باس محلی نودجی‌اس
+    chatBus.emit('message', event)
   }
-  return globalForBus.__chatBus
 }
 
-export function publishMessage(event: ChatMessageEvent): void {
-  getEmitter().emit(CHANNEL, event)
-}
-
-/**
- * اشتراک در پیام‌های روم‌های مشخص. handler فقط برای رویدادهای روم‌های عضو
- * فراخوانی می‌شود. تابع لغو اشتراک بازگردانده می‌شود.
- */
-export function subscribeMessages(
-  roomIds: string[],
-  handler: (event: ChatMessageEvent) => void,
-): () => void {
-  const rooms = new Set(roomIds)
-  const listener = (event: ChatMessageEvent) => {
-    if (rooms.has(event.roomId)) handler(event)
-  }
-  const emitter = getEmitter()
-  emitter.on(CHANNEL, listener)
-  return () => emitter.off(CHANNEL, listener)
-}

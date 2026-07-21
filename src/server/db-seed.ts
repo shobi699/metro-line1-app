@@ -1,35 +1,57 @@
-import { PrismaClient, type ShiftCode } from '@/generated/prisma/client'
+import { PrismaClient, Prisma, type ShiftCode } from '@/generated/prisma/client'
 import bcrypt from 'bcryptjs'
-import fs from 'node:fs'
-import path from 'node:path'
-// dayjs is used for Jalali date calculations during database seeding
-import dayjs from 'dayjs'
-import 'dayjs-jalali'
+import { jalaliPeriodId } from '@/lib/dayjs'
 import { ensurePersonnelCustomFields } from './modules/custom-fields/service'
 
 const DEMO_PASSWORD = 'admin123'
 
-function logSeed(message: string) {
-  try {
-    const logPath = path.resolve(process.cwd(), 'prisma', 'seed.log')
-    const logMsg = `[${new Date().toISOString()}] ${message}\n`
-    fs.appendFileSync(logPath, logMsg, 'utf8')
-  } catch (err) {
-    console.error('Failed to write seed log:', err)
-  }
+function logSeed(_message?: string) {
+  // silent in production
 }
 
 export async function seedDatabase(prisma: PrismaClient, force = false) {
   logSeed('seedDatabase call initiated')
   try {
+    if (force) {
+      logSeed('Force flag provided. Cleaning up database tables...')
+      try {
+        await prisma.readReceipt.deleteMany()
+        await prisma.safetyBulletin.deleteMany()
+        await prisma.knowledgeArticle.deleteMany()
+        await prisma.checklistRecord.deleteMany()
+        await prisma.checklistTemplate.deleteMany()
+        await prisma.performanceAppeal.deleteMany()
+        await prisma.performanceLog.deleteMany()
+        await prisma.performanceActionType.deleteMany()
+        await prisma.competency.deleteMany()
+        await prisma.scoreSnapshot.deleteMany()
+        await prisma.nomination.deleteMany()
+        await prisma.tripAssignment.deleteMany()
+        await prisma.trip.deleteMany()
+        await prisma.rosterVersion.deleteMany()
+        await prisma.rosterDay.deleteMany()
+        await prisma.user.deleteMany()
+        await prisma.role.deleteMany()
+        await prisma.setting.deleteMany()
+        await prisma.uiMenuItem.deleteMany().catch(() => {})
+        await prisma.uiDashboardWidget.deleteMany().catch(() => {})
+        await prisma.uiPageVersion.deleteMany().catch(() => {})
+        await prisma.uiPage.deleteMany().catch(() => {})
+        await prisma.uiTheme.deleteMany().catch(() => {})
+        logSeed('Database clean up completed successfully.')
+      } catch (cleanupErr) {
+        logSeed(`Error during cleanup: ${cleanupErr}`)
+      }
+    }
     const count = await prisma.role.count()
     logSeed(`Current role count in database: ${count}`)
     if (count > 0 && !force) {
       logSeed('Database already populated. Ensuring custom fields and settings...')
       try {
         await ensurePersonnelCustomFields()
-      } catch (err: any) {
-        logSeed(`Failed to ensure personnel custom fields on boot: ${err.message}`)
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        logSeed(`Failed to ensure personnel custom fields on boot: ${msg}`)
       }
       try {
         const settingsCount = await prisma.setting.count()
@@ -56,6 +78,29 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err)
         logSeed(`Failed to seed performance tables on boot: ${msg}`)
+      }
+
+      // Landing page data
+      try {
+        const { seedLandingData } = await import('./modules/landing/service')
+        await seedLandingData()
+        logSeed('Landing data seeded successfully.')
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        logSeed(`Failed to seed landing data on boot: ${msg}`)
+      }
+
+      // Also check if AI assistant tables need seeding
+      try {
+        const aiPersonaCount = await prisma.aiPersona.count()
+        if (aiPersonaCount === 0) {
+          logSeed('AI personas table empty. Seeding AI assistant...')
+          await seedAiAssistant(prisma)
+          logSeed('AI assistant seeded successfully.')
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        logSeed(`Failed to seed AI assistant on boot: ${msg}`)
       }
 
       return
@@ -203,7 +248,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
       const role = await prisma.role.upsert({
         where: { key: key as string },
         update: { permissions: JSON.stringify(perms) },
-        create: { key: key as string, name, permissions: JSON.stringify(perms) },
+        create: { key: key as string, title: name, permissions: JSON.stringify(perms) },
       })
       roles[key] = role.id
     }
@@ -211,7 +256,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
 
     // ── Users ──────────────────────────────────────────────
     const superAdmin = await prisma.user.upsert({
-      where: { nationalId: '0000000000' },
+      where: { personnelCode: '0000000000' },
       update: {
         customFields: {
           personnelNo: '901001',
@@ -227,7 +272,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
         }
       },
       create: {
-        nationalId: '0000000000',
+        personnelCode: '0000000000',
         name: 'مدیر سیستم',
         phone: '09120000000',
         email: 'admin@metro.ir',
@@ -250,7 +295,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
     })
 
     const admin = await prisma.user.upsert({
-      where: { nationalId: '9999999999' },
+      where: { personnelCode: '9999999999' },
       update: {
         customFields: {
           personnelNo: '901002',
@@ -266,7 +311,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
         }
       },
       create: {
-        nationalId: '9999999999',
+        personnelCode: '9999999999',
         name: 'مدیر خط',
         phone: '09120000009',
         email: 'lineadmin@metro.ir',
@@ -291,7 +336,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
     const operatorDefinitions = [
       {
         name: 'علی رضایی',
-        nationalId: '1111111111',
+        personnelCode: '1111111111',
         phone: '09121000001',
         roleKey: 'driver',
         customFields: {
@@ -309,7 +354,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
       },
       {
         name: 'محمد حسینی',
-        nationalId: '2222222222',
+        personnelCode: '2222222222',
         phone: '09121000002',
         roleKey: 'shift_lead',
         customFields: {
@@ -327,7 +372,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
       },
       {
         name: 'زهرا کریمی',
-        nationalId: '3333333333',
+        personnelCode: '3333333333',
         phone: '09121000003',
         roleKey: 'expert',
         customFields: {
@@ -345,7 +390,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
       },
       {
         name: 'فاطمه محمدی',
-        nationalId: '4444444444',
+        personnelCode: '4444444444',
         phone: '09121000004',
         roleKey: 'dispatch_tech',
         customFields: {
@@ -363,7 +408,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
       },
       {
         name: 'امیر نوری',
-        nationalId: '5555555555',
+        personnelCode: '5555555555',
         roleKey: 'supervisor',
         phone: '09121000005',
         customFields: {
@@ -381,7 +426,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
       },
       {
         name: 'سارا احمدی',
-        nationalId: '6666666666',
+        personnelCode: '6666666666',
         roleKey: 'clerical',
         phone: '09121000006',
         customFields: {
@@ -403,19 +448,19 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
     for (const op of operatorDefinitions) {
       const matchedRoleId = roles[op.roleKey] || roles.operator
       const user = await prisma.user.upsert({
-        where: { nationalId: op.nationalId },
+        where: { personnelCode: op.personnelCode },
         update: {
           roleId: matchedRoleId,
-          customFields: op.customFields as any
+          customFields: op.customFields as unknown as Prisma.InputJsonValue
         },
         create: {
-          nationalId: op.nationalId,
+          personnelCode: op.personnelCode,
           name: op.name,
           phone: op.phone,
           passwordHash,
           status: 'active',
           roleId: matchedRoleId,
-          customFields: op.customFields as any
+          customFields: op.customFields as unknown as Prisma.InputJsonValue
         },
       })
       operators.push(user)
@@ -482,6 +527,60 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
       })
     }
     logSeed('Read receipts seeded.')
+
+    // ── Knowledge articles (RAG) ──────────────────────────
+    await prisma.knowledgeArticle.deleteMany()
+    await prisma.knowledgeArticle.createMany({
+      data: [
+        {
+          title: 'دستورالعمل سرعت‌های مجاز سیر در خط ۱ (بند ۴-۳)',
+          slug: 'line1-speed-limits',
+          body: `مقررات سرعت‌های مجاز در سیر و حرکت خط ۱ مترو تهران:
+۱. حداکثر سرعت سیر تحت سیستم سیگنالینگ ATP و در شرایط عادی ۸۰ کیلومتر بر ساعت است.
+۲. سرعت عبور از سوزن‌های انحرافی در ایستگاه‌های دارای خط فرعی، حداکثر ۳۰ کیلومتر بر ساعت می‌باشد.
+۳. در زمان خرابی سیگنالینگ و حرکت به صورت دستی با فرمان OCC، سرعت قطار نباید از ۲۵ کیلومتر بر ساعت تجاوز کند.
+۴. حداکثر سرعت حرکت در دپوهای فتح‌آباد و کهریزک ۱۵ کیلومتر بر ساعت تعیین شده است.`,
+          category: 'operation',
+          tags: 'سرعت,سوزن,atp,دپو,سیر',
+          authorId: superAdmin.id,
+        },
+        {
+          title: 'پروتکل تخلیه اضطراری مسافران در تونل (بند ۱۲-۵)',
+          slug: 'emergency-passenger-evacuation',
+          body: `دستورالعمل تخلیه اضطراری مسافران در داخل تونل خط ۱:
+۱. در صورت توقف قطار به دلیل حریق یا نقص فنی غیرقابل حرکت، راهبر موظف است فوراً موقعیت بلاک را به OCC گزارش داده و درخواست قطع برق ریل سوم (۷۵۰ ولت DC) را نماید.
+۲. تخلیه مسافران تنها پس از اعلام قطع کامل جریان برق توسط مرکز فرمان و تایید نهایی آن مجاز است.
+۳. راهبر باید درب‌های خروجی فرار اضطراری جلو یا انتهای قطار را باز کند.
+۴. هدایت مسافران باید همواره در جهت خلاف جریان باد و به سمت نزدیک‌ترین ایستگاه یا خروجی اضطراری تونل انجام گیرد.`,
+          category: 'safety',
+          tags: 'تخلیه,تونل,حریق,اضطراری,ریل سوم',
+          authorId: superAdmin.id,
+        },
+        {
+          title: 'پروتکل ارتباطات رادیویی و بی‌سیم راهبری (بند ۷-۱۲)',
+          slug: 'driver-radio-protocol',
+          body: `مقررات ارتباط رادیویی بی‌سیم بین راهبران و دیسپچرز مرکز فرمان (OCC):
+۱. کانال ارتباطی پیش‌فرض رادیو بی‌سیم به صورت نیمه-دوبلکس (Half-Duplex) کار می‌کند. راهبران باید پس از فشردن دکمه PTT ابتدا کد قطار خود را اعلام کنند.
+۲. مخابره پیام‌ها باید با نهایت اختصار، وضوح و رعایت کدهای استاندارد باشد.
+۳. در زمان شنیده شدن کد اعلام وضعیت اضطراری (کد قرمز یا SOS)، تمامی پرسنل و راهبران باید بلافاصله مکالمات رادیویی غیرحیاتی را متوقف کرده و خط را برای OCC باز نگه دارند.`,
+          category: 'operation',
+          tags: 'بیسیم,رادیو,occ,ارتباطات,sos',
+          authorId: superAdmin.id,
+        },
+        {
+          title: 'کنترل ترمز و توقف در شیب‌های تند خط ۱ (بند ۵-۲)',
+          slug: 'steep-slope-braking',
+          body: `دستورالعمل کنترل قطار و سیستم ترمز در شیب‌های تند خط ۱ (از تجریش تا قلهک):
+۱. شیب مسیر در بخش‌های شمالی خط ۱ تا ۴۵ در هزار می‌رسد. راهبر باید همواره عقربه‌های فشار مخازن ترمز اصلی را بررسی کند که نباید کمتر از ۷.۵ بار باشد.
+۲. در صورت افت فشار باد اصلی به کمتر از ۵.۵ بار، قطار به صورت خودکار ترمز اضطراری (Emergency Brake) اعمال می‌کند.
+۳. برای شروع حرکت مجدد در شیب، راهبر باید سیستم کشش (Traction) را همزمان با رهاسازی تدریجی ترمز پنوماتیک به کار گیرد تا از پس زدن قطار جلوگیری شود.`,
+          category: 'technical',
+          tags: 'ترمز,شیب,تجریش,باد,پنوماتیک',
+          authorId: superAdmin.id,
+        }
+      ]
+    })
+    logSeed('Knowledge articles seeded.')
 
     // ── Tickets ────────────────────────────────────────────
     const tickets = await Promise.all([
@@ -606,7 +705,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
     logSeed('Performance action types seeded.')
 
     // ── Performance Logs (initial) ───────────────────────
-    const currentPeriodId = dayjs().locale('jalali').format('YYYY-MM')
+    const currentPeriodId = jalaliPeriodId()
     const logCount = await prisma.performanceLog.count()
     if (logCount === 0 && operators.length >= 3) {
       await prisma.performanceLog.createMany({
@@ -669,6 +768,10 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
     // ── Settings ───────────────────────────────────────────
     await seedDefaultSettings(prisma)
     logSeed('Default settings seeded.')
+    await seedUiBuilder(prisma)
+    logSeed('UI Builder settings seeded.')
+    await seedAiAssistant(prisma)
+    logSeed('AI assistant settings seeded.')
 
     logSeed('Self-seeded database successfully.')
   } catch (error: unknown) {
@@ -679,6 +782,7 @@ export async function seedDatabase(prisma: PrismaClient, force = false) {
 }
 
 async function seedDefaultSettings(prisma: PrismaClient) {
+  await prisma.setting.deleteMany()
   await prisma.setting.createMany({
     data: [
       {
@@ -711,6 +815,16 @@ async function seedDefaultSettings(prisma: PrismaClient) {
         category: 'shifts',
         min: 8,
         max: 24,
+        isEnabled: true,
+      },
+      {
+        key: 'shifts.show_holidays',
+        label: 'نمایش تعطیلات رسمی',
+        description: 'آیا تعطیلات رسمی در تقویم شیفت‌ها پرسنل (در موبایل و پنل) نمایش داده شود؟',
+        type: 'boolean',
+        value: JSON.stringify(true),
+        defaultValue: JSON.stringify(true),
+        category: 'shifts',
         isEnabled: true,
       },
       {
@@ -847,6 +961,17 @@ async function seedDefaultSettings(prisma: PrismaClient) {
         category: 'mobile',
         options: JSON.stringify(['dark', 'light', 'system']),
         isEnabled: true,
+      },
+      {
+        key: 'ai.searchPriority',
+        label: 'اولویت سناریوی جستجو',
+        description: 'تعیین اولویت پاسخ‌دهی به پرسنل: جستجو در دیتابیس محلی (آیین‌نامه) یا پردازش با هوش مصنوعی',
+        type: 'select',
+        value: JSON.stringify('database'),
+        defaultValue: JSON.stringify('database'),
+        category: 'general',
+        options: JSON.stringify(['database', 'ai']),
+        isEnabled: true,
       }
     ]
   })
@@ -908,6 +1033,101 @@ export async function seedPerformanceTables(prisma: PrismaClient) {
       where: { id: a.id },
       update: { title: a.title, defaultScore: a.defaultScore, maxSeverity: a.maxSeverity },
       create: a,
+    })
+  }
+}
+
+export async function seedUiBuilder(prisma: PrismaClient) {
+  // Check if UI theme already seeded
+  const themeCount = await prisma.uiTheme.count()
+  if (themeCount > 0) return
+
+  // Seed Theme
+  await prisma.uiTheme.create({
+    data: {
+      primaryColor: '#ae0011',
+      accentColor: '#575e70',
+      radius: 12,
+      fontSize: 'md',
+      darkModeDefault: false,
+      logoUrl: '',
+    }
+  })
+
+  // Seed Default Menu Items
+  await prisma.uiMenuItem.createMany({
+    data: [
+      { label: 'پروفایل', icon: 'User', route: 'ProfileScreen', orderIndex: 4, isVisible: true },
+      { label: 'گفتگو', icon: 'MessageSquare', route: 'ChatScreen', orderIndex: 3, isVisible: true },
+      { label: 'اعلان‌ها', icon: 'Bell', route: 'NotificationsScreen', orderIndex: 2, isVisible: true },
+      { label: 'تقویم زندگی', icon: 'Calendar', route: 'LifeCalendarScreen', orderIndex: 1, isVisible: true },
+      { label: 'داشبورد', icon: 'LayoutDashboard', route: 'HomeScreen', orderIndex: 0, isVisible: true },
+    ]
+  })
+
+  // Seed Default Widgets
+  await prisma.uiDashboardWidget.createMany({
+    data: [
+      { widgetType: 'stat_card', title: 'شیفت امروز', size: 'md', orderIndex: 0, isVisible: true, configJson: { source: 'shift' } },
+      { widgetType: 'chart', title: 'عملکرد هفتگی کیلومتر رانندگی', size: 'md', orderIndex: 1, isVisible: true, configJson: { type: 'bar', source: 'kpi' } },
+      { widgetType: 'list', title: 'آخرین بخشنامه‌های ایمنی', size: 'lg', orderIndex: 2, isVisible: true, configJson: { limit: 3, source: 'bulletins' } },
+    ]
+  })
+}
+
+export async function seedAiAssistant(prisma: PrismaClient) {
+  // 1. Seed AI Provider
+  const providerCount = await prisma.aiProvider.count()
+  if (providerCount === 0) {
+    await prisma.aiProvider.create({
+      data: {
+        name: 'Google Gemini',
+        providerType: 'gemini',
+        baseUrl: 'https://generativelanguage.googleapis.com',
+        apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || 'fake-key',
+        modelName: 'gemini-2.0-flash',
+        requestFormat: 'gemini',
+        priority: 1,
+        isActive: true,
+        maxRetries: 3,
+        timeoutMs: 10000,
+        costPer1kTokens: 0,
+      }
+    })
+  }
+
+  // 2. Seed AI Personas
+  const personaCount = await prisma.aiPersona.count()
+  if (personaCount === 0) {
+    await prisma.aiPersona.createMany({
+      data: [
+        {
+          key: 'operator',
+          title: 'دستیار هوشمند عملیاتی',
+          icon: '🚇',
+          systemPrompt: 'شما یک دستیار هوشمند عملیاتی ارشد برای راهبران و پرسنل فنی خط ۱ مترو تهران هستید. وظیفه شما پاسخ به سوالات فنی عیب‌یابی قطارها (مانند کدهای خطای درب واگن E102، صدای غیرعادی موتور E205، اعلام حریق E303، سیستم ترمز و سیگنالینگ ATP S301) و ارائه دستورالعمل‌های ایمنی و مقررات سیر و حرکت است. پاسخ‌ها را به زبان فارسی و با تکیه بر اطلاعات رسمی ارائه دهید.',
+          roleKeys: JSON.stringify(['*']),
+          knowledgeCats: JSON.stringify(['general', 'technical', 'safety']),
+          tools: JSON.stringify(['create_fault']),
+          economyModel: 'gemini-2.0-flash',
+          strongModel: 'gemini-2.0-flash',
+          monthlyTokenCap: 100000,
+          isActive: true,
+        },
+        {
+          key: 'supervisor',
+          title: 'دستیار سرشیفت و مدیران',
+          icon: '👨‍✈️',
+          systemPrompt: 'شما دستیار هوشمند سرشیفت، دیسپچرز مرکز فرمان (OCC) و مدیران سیر و حرکت خط ۱ مترو تهران هستید. وظیفه شما کمک به تحلیل تاخیرها، مدیریت بحران و حوادث، هماهنگی شیفت‌ها و وظایف، نظارت بر محدودیت‌های سرعت و برنامه‌ریزی حرکت قطارها است.',
+          roleKeys: JSON.stringify(['admin', 'super_admin', 'manager', 'shift_lead', 'supervisor']),
+          knowledgeCats: JSON.stringify(['general', 'technical', 'safety', 'confidential']),
+          tools: JSON.stringify(['create_fault']),
+          economyModel: 'gemini-2.0-flash',
+          strongModel: 'gemini-2.0-flash',
+          monthlyTokenCap: 200000,
+          isActive: true,
+        }
+      ]
     })
   }
 }

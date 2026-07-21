@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Save, RotateCcw, Check, AlertCircle } from 'lucide-react'
 import { toFa } from '@/lib/fa'
+import { ImageUploader } from '@/components/shared/image-uploader'
+import { SharedFilesUploader } from '@/components/shared/shared-files-uploader'
 
 interface Setting {
   id: string
@@ -42,13 +44,17 @@ interface AuditLog {
 
 const CATEGORY_MAP: Record<string, { label: string; icon: string }> = {
   general: { label: 'تنظیمات عمومی', icon: '⚙️' },
+  ui: { label: 'طراحی و رابط کاربری', icon: '🎨' },
   shifts: { label: 'مدیریت شیفت‌ها', icon: '📅' },
   tickets: { label: 'خرابی و تیکتینگ', icon: '🎫' },
   chat: { label: 'پیام‌رسان و گفت‌وگو', icon: '💬' },
   mobile: { label: 'تنظیمات اپلیکیشن موبایل', icon: '📱' },
   comms: { label: 'ارتباطات صوتی و بی‌سیم', icon: '🎙️' },
   performance: { label: 'ارزیابی عملکرد و گیمیفیکیشن', icon: '🏆' },
-  audit: { label: 'تاریخچه تغییرات', icon: '📝' },
+  ideas: { label: 'تنظیمات و امتیازدهی ایده‌ها', icon: '💡' },
+  download: { label: 'تنظیمات صفحه دانلود', icon: '📥' },
+  requests: { label: 'درخواست‌های پرسنلی', icon: '📝' },
+  audit: { label: 'تاریخچه تغییرات', icon: '🕒' },
 }
 
 export default function AdminSettingsPage() {
@@ -129,8 +135,8 @@ export default function AdminSettingsPage() {
         const data = await res.json()
         setAuditLogs(data.data as AuditLog[])
       }
-    } catch (error) {
-      console.error('Error fetching audit logs:', error)
+    } catch {
+      // audit logs fetch failed silently
     } finally {
       setLoadingAudit(false)
     }
@@ -496,13 +502,44 @@ export default function AdminSettingsPage() {
                       <div className="flex items-center gap-3 shrink-0 self-end md:self-center">
                         {/* Custom Inputs based on type */}
                         {setting.type === 'text' && (
-                          setting.key.includes('Notice') || setting.key.includes('message') ? (
+                          setting.key === 'requests.types' ? (
+                            <textarea
+                              value={String(currentValue ?? '')}
+                              onChange={(e) => handleValueChange(setting.key, e.target.value)}
+                              rows={10}
+                              dir="ltr"
+                              className="w-full md:w-[400px] rounded-lg border border-border bg-background/50 p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-ring focus:border-accent resize-y"
+                            />
+                          ) : setting.key === 'download.sharedFiles' ? (
+                            <div className="w-48 md:w-[480px]">
+                              <SharedFilesUploader
+                                value={String(currentValue ?? '[]')}
+                                onChange={(val) => handleValueChange(setting.key, val)}
+                              />
+                            </div>
+                          ) : setting.key.includes('Notice') || setting.key.includes('message') ? (
                             <textarea
                               value={String(currentValue ?? '')}
                               onChange={(e) => handleValueChange(setting.key, e.target.value)}
                               rows={2}
                               className="w-48 md:w-64 rounded-lg border border-border bg-background/50 p-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-accent resize-y min-h-[60px]"
                             />
+                          ) : (
+                            ((setting.key.toLowerCase().includes('url') || setting.key.toLowerCase().includes('logo') || setting.key.toLowerCase().includes('banner')) && 
+                             !setting.key.toLowerCase().includes('link') &&
+                             setting.key !== 'download.android.value' &&
+                             setting.key !== 'download.ios.value') ||
+                            (setting.key === 'download.android.value' && localValues['download.android.type'] === 'file') ||
+                            (setting.key === 'download.ios.value' && localValues['download.ios.type'] === 'file')
+                          ) ? (
+                            <div className="w-48 md:w-64">
+                              <ImageUploader 
+                                value={String(currentValue ?? '')}
+                                onChange={(url) => handleValueChange(setting.key, url)}
+                                accept={setting.key === 'download.android.value' ? '.apk' : setting.key === 'download.ios.value' ? '.ipa,.plist' : 'image/*'}
+                                placeholder={setting.key.includes('download') ? 'آپلود فایل نصب' : 'آپلود تصویر'}
+                              />
+                            </div>
                           ) : (
                             <Input
                               type="text"
@@ -572,11 +609,27 @@ export default function AdminSettingsPage() {
                             onChange={(e) => handleValueChange(setting.key, e.target.value)}
                             className="w-48 md:w-64 h-9 rounded-lg border border-border bg-background/50 px-2.5 text-sm outline-none focus-visible:border-accent"
                           >
-                            {(JSON.parse(setting.options) as string[]).map((opt) => (
-                              <option key={opt} value={opt}>
-                                {toFa(opt)}
-                              </option>
-                            ))}
+                            {(() => {
+                              let parsed: any;
+                              try {
+                                parsed = JSON.parse(setting.options)
+                              } catch {
+                                parsed = setting.options
+                              }
+                              
+                              let opts: string[] = []
+                              if (Array.isArray(parsed)) {
+                                opts = parsed
+                              } else if (typeof parsed === 'string') {
+                                opts = parsed.split(',')
+                              }
+
+                              return opts.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {toFa(opt)}
+                                </option>
+                              ))
+                            })()}
                           </select>
                         )}
 

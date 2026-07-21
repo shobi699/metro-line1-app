@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, authErrorResponse } from '@/server/rbac/guard'
 import { filePerformanceAppeal } from '@/server/modules/performance/service'
-import { z } from 'zod'
-
-const createAppealSchema = z.object({
-  logId: z.string().min(1, 'شناسه رکورد الزامی است'),
-  reason: z.string().min(5, 'ذکر دلیل اعتراض (حداقل ۵ کاراکتر) الزامی است'),
-})
+import { createAppealSchema } from '@/lib/zod/performance'
 
 // POST /api/performance/appeal - File an appeal
 export async function POST(request: Request) {

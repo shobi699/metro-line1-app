@@ -123,8 +123,8 @@ describe('getBulletinReceipts', () => {
   it('returns receipt stats with percentage', async () => {
     const bulletin = { id: 'b1', title: 'ایمنی' }
     const receipts = [
-      { id: 'r1', user: { id: 'u1', name: 'علی', nationalId: '111' } },
-      { id: 'r2', user: { id: 'u2', name: 'محمد', nationalId: '222' } },
+      { id: 'r1', user: { id: 'u1', name: 'علی', personnelCode: '111' } },
+      { id: 'r2', user: { id: 'u2', name: 'محمد', personnelCode: '222' } },
     ]
 
     vi.mocked(prisma.safetyBulletin.findUnique).mockResolvedValue(bulletin as any)

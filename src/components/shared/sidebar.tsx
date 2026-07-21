@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
+import { useConfigStore } from '@/features/config'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
@@ -11,16 +13,19 @@ import {
   LayoutDashboard,
   Users,
   Calendar,
+  CalendarDays,
   ArrowLeftRight,
   AlertTriangle,
   ShieldCheck,
   FileSpreadsheet,
+  FileText,
   MessageCircle,
   Newspaper,
   LogOut,
   Settings,
   Bell,
   MessageSquare,
+  Globe,
   ClipboardCheck,
   BookOpen,
   User,
@@ -34,23 +39,31 @@ import {
   ChevronLeft,
   GraduationCap,
   HardDrive,
+  Cpu,
   UserCheck,
   Video,
   Award,
   Mic,
+  Clock,
+  TrendingUp,
+  Vote,
+  Menu,
+  Terminal,
+  Search,
+  X,
 } from 'lucide-react'
 
 interface NavItem {
   label: string
   href: string
-  icon: React.ElementType
+  icon: React.ComponentType<any>
   roles?: string[]
 }
 
 interface NavSubgroup {
   id: string
   label: string
-  icon: React.ElementType
+  icon: React.ComponentType<any>
   items: NavItem[]
   roles?: string[]
 }
@@ -74,21 +87,34 @@ const NAVIGATION_SECTIONS: NavSection[] = [
           { label: 'داشبورد اصلی', href: '/dashboard', icon: LayoutDashboard },
           { label: 'اعلانات سیستم', href: '/notifications', icon: Bell },
           { label: 'پروفایل کاربری', href: '/profile', icon: User },
+          { label: 'رزرو وقت جلسه', href: '/meetings', icon: Calendar },
+          { label: 'نظرسنجی‌ها', href: '/polls', icon: Vote },
+          { label: 'ثبت ایده و پیشنهاد', href: '/ideas', icon: MessageSquare },
+          { label: 'پایش خستگی و سلامت کاری', href: '/fatigue', icon: Activity },
           { label: 'جدول برترها (رتبه)', href: '/leaderboard', icon: Trophy },
           { label: 'کارنامه و ارزیابی عملکرد', href: '/performance', icon: Award },
           { label: 'ثبت بازخورد و پیام', href: '/feedback', icon: MessageSquare },
+          { label: 'فرم‌ها و درخواست‌ها', href: '/forms', icon: FileText },
+          { label: 'کارتابل تاییدات من', href: '/forms/inbox', icon: ShieldCheck },
         ]
       },
       {
         id: 'shifts-op',
         label: 'عملیات و شیفت‌ها',
         icon: Calendar,
-        items: [
-          { label: 'شیفت و تقویم من', href: '/shifts', icon: Calendar },
+         items: [
+          { label: 'تقویم زندگی (شیفت و رویدادها)', href: '/calendar', icon: CalendarDays },
+          { label: 'برنامه روزانه من', href: '/roster/my-day', icon: Clock },
+          { label: 'لوحه اعزام روزانه خط ۱', href: '/roster', icon: Clock },
+          { label: 'بورد لوحه', href: '/roster/board', icon: CalendarDays },
+          { label: 'جابه‌جایی شیفت (Swap)', href: '/swap', icon: ArrowLeftRight },
           { label: 'درخواست تعویض شیفت', href: '/swap/inbox', icon: ArrowLeftRight },
           { label: 'حضور و غیاب هوشمند', href: '/attendance', icon: UserCheck },
           { label: 'چک‌لیست حرکت قطار', href: '/checklists', icon: ClipboardCheck },
           { label: 'ثبت خرابی و تیکتینگ', href: '/tickets', icon: AlertTriangle },
+          { label: 'گزارش خرابی‌ها', href: '/reports/faults', icon: AlertTriangle },
+          { label: 'تجهیزات انفرادی من', href: '/equipment', icon: HardDrive },
+          { label: 'مرخصی و مأموریت‌ها', href: '/leaves', icon: Calendar },
         ]
       },
       {
@@ -130,10 +156,14 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         label: 'آموزش و آزمون‌ها',
         icon: GraduationCap,
         items: [
+          { label: 'آموزش بدو خدمت (Onboarding)', href: '/onboarding', icon: GraduationCap },
+          { label: 'داشبورد اصلی آموزش (LMS)', href: '/learning', icon: GraduationCap },
           { label: 'دوره‌ها و مقالات آموزشی', href: '/content', icon: Newspaper },
           { label: 'گالری ویدیوهای آموزشی', href: '/learning/gallery', icon: Video },
           { label: 'کارنامه و آزمون‌های من', href: '/learning/exams', icon: Award },
           { label: 'دستورالعمل‌ها و دانش‌نامه', href: '/knowledge', icon: BookOpen },
+          { label: 'کاتالوگ فنی و راهنما', href: '/catalogs', icon: Cpu },
+          { label: 'راهنمای جامع سوپراپ', href: '/docs', icon: FileText },
         ]
       }
     ]
@@ -148,21 +178,35 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         icon: Users,
         roles: ['admin', 'super_admin'],
         items: [
+          { label: 'واحد من (زیرمجموعه‌ها)', href: '/admin/my-unit', icon: Users },
+          { label: 'مدیریت کل کاربران', href: '/admin/users', icon: UserCheck },
+          { label: 'ممیزی و گزارشات دسترسی', href: '/admin/iam-reports', icon: FileSpreadsheet },
           { label: 'پیشخوان رویدادهای زنده', href: '/admin/live-actions', icon: Activity },
-          { label: 'مدیریت پرسنل و نقش‌ها', href: '/admin/users', icon: Users },
-          { label: 'صف تایید مدارک', href: '/admin/documents-queue', icon: UserCheck },
+          { label: 'صف تایید مدارک', href: '/admin/documents-queue', icon: ClipboardCheck },
           { label: 'تنظیمات بایومتریک', href: '/admin/biometrics', icon: ShieldCheck },
         ]
       },
       {
-        id: 'admin-roster',
-        label: 'برنامه‌ریزی و شیفت',
+        id: 'admin',
+        label: 'مدیریت کل',
         icon: Calendar,
         roles: ['admin', 'super_admin'],
         items: [
+          { label: 'مدیریت صفحهٔ اصلی', href: '/admin/landing', icon: Globe },
+          { label: 'مدیریت درخواست‌ها', href: '/admin/requests', icon: FileSpreadsheet },
+          { label: 'مدیریت مرخصی‌ها', href: '/admin/leaves', icon: Calendar },
+          { label: 'تنظیمات مرخصی', href: '/admin/settings/leaves', icon: Settings },
           { label: 'مدیریت شیفت‌ها', href: '/admin/shifts', icon: Calendar },
+          { label: 'مدیریت تقویم', href: '/admin/calendar', icon: CalendarDays },
+          { label: 'گزارش وضعیت روزانه', href: '/admin/day-status', icon: FileText },
           { label: 'بارگذاری اکسل لوحه', href: '/roster/upload', icon: FileSpreadsheet },
-          { label: 'مدیریت چک‌لیست‌ها', href: '/checklists', icon: ClipboardCheck },
+          { label: 'نمای گانت لوحه', href: '/roster?view=gantt', icon: TrendingUp },
+          { label: 'آمار و تحلیل اعزام‌ها', href: '/roster/analytics', icon: BarChart3 },
+          { label: 'قوانین اعتبارسنجی لوحه', href: '/admin/roster/validation-rules', icon: Settings },
+          { label: 'قوانین اصلاح لوحه', href: '/admin/roster/amendment-rules', icon: Settings },
+          { label: 'ماتریس دیداری لوحه', href: '/admin/roster/visibility-matrix', icon: Settings },
+          { label: 'مدیریت تابلوهای اعلانات', href: '/admin/signage', icon: Radio },
+          { label: 'مدیریت چک‌لیست‌ها', href: '/admin/checklists', icon: ClipboardCheck },
         ]
       },
       {
@@ -171,8 +215,26 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         icon: GraduationCap,
         roles: ['admin', 'super_admin'],
         items: [
+          { label: 'مدیریت جامع آموزش', href: '/admin/learning', icon: GraduationCap },
+          { label: 'مدیریت ایمنی (Safety)', href: '/admin/safety', icon: ShieldCheck },
+          { label: 'مدیریت دانشنامه', href: '/admin/knowledge', icon: BookOpen },
+          { label: 'انتشار محتوا و اسناد', href: '/admin/content', icon: Newspaper },
+          { label: 'مدیریت دسته‌بندی محتوا', href: '/admin/content/categories', icon: Settings },
+          { label: 'سیاست‌های امنیتی', href: '/admin/security-policies', icon: Shield },
+          { label: 'ماتریس اختیارات', href: '/admin/delegation-matrix', icon: ShieldCheck },
           { label: 'بخشنامه‌های ایمنی', href: '/admin/bulletins', icon: ShieldCheck },
           { label: 'بانک سوالات و آزمون‌ها', href: '/admin/exams-editor', icon: Settings },
+        ]
+      },
+      {
+        id: 'admin-ai',
+        label: 'هوش مصنوعی و RAG',
+        icon: Bot,
+        roles: ['admin', 'super_admin'],
+        items: [
+          { label: 'داشبورد هوش مصنوعی', href: '/admin/ai', icon: LayoutDashboard },
+          { label: 'مدیریت پروایدرها', href: '/admin/ai-providers', icon: Bot },
+          { label: 'مدیریت کش معنایی', href: '/admin/ai-cache', icon: HardDrive },
         ]
       },
       {
@@ -181,12 +243,21 @@ const NAVIGATION_SECTIONS: NavSection[] = [
         icon: BarChart3,
         roles: ['admin', 'super_admin'],
         items: [
+          { label: 'فرم‌ساز سازمانی', href: '/admin/form-builder', icon: Settings },
+          { label: 'مدیریت نظرسنجی‌ها', href: '/admin/surveys', icon: Vote },
+          { label: 'ویرایشگر UI', href: '/admin/ui-builder', icon: LayoutDashboard },
+          { label: 'گزارشات جلسات', href: '/admin/meetings/reports', icon: BarChart3 },
+          { label: 'مدیریت تیکت‌های خرابی', href: '/admin/tickets', icon: AlertTriangle },
           { label: 'داشبورد تحلیلی', href: '/admin/analytics', icon: BarChart3 },
           { label: 'پیکربندی کاتالوگ عملکرد', href: '/admin/performance-config', icon: Award },
-          { label: 'اعتراضات ارزیابی عملکرد', href: '/admin/performance-appeals', icon: FileSpreadsheet },
+          { label: 'درخواست تجدیدنظر عملکرد', href: '/admin/performance-appeals', icon: FileText },
+          { label: 'ثبت و بررسی عملکرد', href: '/admin/performance', icon: FileSpreadsheet },
           { label: 'سیگنالینگ و شبکه برق', href: '/admin/infrastructure', icon: HardDrive },
           { label: 'ثبت خودروها و پلاک‌خوان', href: '/admin/license-plates', icon: Settings },
           { label: 'صلاحیت و گواهی راهبران', href: '/admin/operator-licenses', icon: ShieldCheck },
+          { label: 'دفتر ثبت وقایع (Audit Log)', href: '/admin/audit-logs', icon: Shield },
+          { label: 'لاگ‌های سیستم و خطاها', href: '/admin/logs', icon: Terminal },
+          { label: 'مدیریت ماژول‌ها و منوها', href: '/admin/modules', icon: Settings, roles: ['super_admin', 'admin'] },
           { label: 'تنظیمات سیستم', href: '/admin/settings', icon: Settings },
         ]
       }
@@ -201,10 +272,24 @@ const roleLabels: Record<string, string> = {
   user: 'راهبر / پرسنل',
 }
 
-export function Sidebar() {
+export function SidebarContent() {
   const pathname = usePathname()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
+  const isRouteEnabled = useConfigStore((s) => s.isRouteEnabled)
+  const fetchModuleFlags = useConfigStore((s) => s.fetchModuleFlags)
+  const [webVersion, setWebVersion] = useState<string>('v0.1.1')
+  const [searchQuery, setSearchQuery] = useState('')
+
+  useEffect(() => {
+    fetchModuleFlags()
+    fetch('/api/config')
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.data?.webVersion) setWebVersion(json.data.webVersion)
+      })
+      .catch(() => {})
+  }, [fetchModuleFlags])
 
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}
@@ -222,10 +307,13 @@ export function Sidebar() {
   })
 
   const toggleGroup = (groupId: string) => {
-    setExpandedGroups((prev) => ({
-      ...prev,
-      [groupId]: !prev[groupId],
-    }))
+    setExpandedGroups((prev) => {
+      if (prev[groupId]) {
+        return { ...prev, [groupId]: false }
+      } else {
+        return { [groupId]: true }
+      }
+    })
   }
 
   // فیلتر نقش‌ها
@@ -234,8 +322,49 @@ export function Sidebar() {
     return roles.includes(user?.roleKey ?? '')
   }
 
+  // فیلتر کردن هوشمند بخش‌ها و منوها بر اساس جستجو
+  const getFilteredSections = () => {
+    if (!searchQuery.trim()) return NAVIGATION_SECTIONS
+
+    const query = searchQuery.toLowerCase().trim()
+
+    return NAVIGATION_SECTIONS.map((section) => {
+      // فیلتر گروه‌های هر بخش
+      const filteredGroups = section.groups.map((group) => {
+        const groupMatches = group.label.toLowerCase().includes(query)
+        if (groupMatches) {
+          return group
+        }
+
+        const matchingItems = group.items.filter((item) =>
+          item.label.toLowerCase().includes(query)
+        )
+
+        if (matchingItems.length > 0) {
+          return {
+            ...group,
+            items: matchingItems
+          }
+        }
+
+        return null
+      }).filter((g): g is NavSubgroup => g !== null)
+
+      if (filteredGroups.length > 0) {
+        return {
+          ...section,
+          groups: filteredGroups
+        }
+      }
+
+      return null
+    }).filter((s): s is NavSection => s !== null)
+  }
+
+  const filteredSections = getFilteredSections()
+
   return (
-    <aside className="hidden w-64 shrink-0 border-s border-border-subtle bg-surface-container-low lg:flex lg:flex-col" dir="rtl">
+    <div className="flex flex-col h-full w-full">
       {/* User Profile Section */}
       <div className="flex flex-col items-center gap-3 border-b border-border-subtle px-5 py-5">
         <div className="flex size-16 items-center justify-center rounded-full border-2 border-accent bg-surface-container-high overflow-hidden">
@@ -256,91 +385,122 @@ export function Sidebar() {
         </div>
       </div>
 
+      {/* Search Input Box */}
+      <div className="px-3 pt-3 pb-1">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="جستجوی منوها..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-9 rounded-lg bg-surface-container-highest/60 border border-border-subtle/50 pr-8 pl-3 text-xs text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-accent/50 focus:border-accent transition duration-150"
+            dir="rtl"
+          />
+          <Search className="absolute right-2.5 top-2.5 size-4 text-foreground-muted pointer-events-none" />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="absolute left-2.5 top-2.5 text-foreground-muted hover:text-foreground cursor-pointer"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Navigation */}
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4" aria-label="منوی اصلی">
-        {NAVIGATION_SECTIONS.map((section, idx) => {
-          // بررسی نقش در سطح بخش
-          if (section.roles && !section.roles.includes(user?.roleKey ?? '')) {
-            return null
-          }
+        {filteredSections.length === 0 ? (
+          <div className="text-center py-8 text-xs text-foreground-muted">
+            منویی یافت نشد.
+          </div>
+        ) : (
+          filteredSections.map((section, idx) => {
+            // بررسی نقش در سطح بخش
+            if (section.roles && !section.roles.includes(user?.roleKey ?? '')) {
+              return null
+            }
 
-          // فیلتر گروه‌های مجاز بر اساس نقش کاربر
-          const visibleGroups = section.groups.filter((group) => checkRole(group.roles))
-          if (visibleGroups.length === 0) return null
+            // فیلتر گروه‌های مجاز بر اساس نقش کاربر
+            const visibleGroups = section.groups.filter((group) => checkRole(group.roles))
+            if (visibleGroups.length === 0) return null
 
-          return (
-            <div key={idx} className="space-y-1.5">
-              {/* عنوان دسته‌بندی */}
-              <div className="text-[10px] font-bold text-foreground-muted/65 px-3 uppercase tracking-wider">
-                {section.title}
-              </div>
+            return (
+              <div key={idx} className="space-y-1.5">
+                {/* عنوان دسته‌بندی */}
+                <div className="text-[10px] font-bold text-foreground-muted/65 px-3 uppercase tracking-wider">
+                  {section.title}
+                </div>
 
-              {/* گروه‌های تاشو */}
-              <div className="space-y-1">
-                {visibleGroups.map((group) => {
-                  const isExpanded = !!expandedGroups[group.id]
-                  const groupHasActiveChild = group.items.some(
-                    (item) => pathname === item.href || pathname.startsWith(item.href + '/'),
-                  )
+                {/* گروه‌های تاشو */}
+                <div className="space-y-1">
+                  {visibleGroups.map((group) => {
+                    const isExpanded = searchQuery.trim() ? true : !!expandedGroups[group.id]
+                    const groupHasActiveChild = group.items.some(
+                      (item) => pathname === item.href || pathname.startsWith(item.href + '/'),
+                    )
 
-                  // فیلتر آیتم‌های مجاز
-                  const visibleItems = group.items.filter((item) => checkRole(item.roles))
-                  if (visibleItems.length === 0) return null
+                    // فیلتر آیتم‌های مجاز
+                    const visibleItems = group.items.filter(
+                      (item) => checkRole(item.roles) && isRouteEnabled(item.href)
+                    )
+                    if (visibleItems.length === 0) return null
 
-                  return (
-                    <div key={group.id} className="rounded-lg overflow-hidden">
-                      {/* دکمه هدر گروه تاشو */}
-                      <button
-                        onClick={() => toggleGroup(group.id)}
-                        className={cn(
-                          'flex items-center justify-between w-full px-3 py-2 text-sm rounded-lg transition-all scale-[0.98] active:scale-95',
-                          groupHasActiveChild
-                            ? 'text-foreground font-semibold bg-surface-container-high/40'
-                            : 'text-foreground-muted hover:bg-surface-container-highest hover:text-foreground',
+                    return (
+                      <div key={group.id} className="rounded-lg overflow-hidden">
+                        {/* دکمه هدر گروه تاشو */}
+                        <button
+                          onClick={() => toggleGroup(group.id)}
+                          className={cn(
+                            'flex items-center justify-between w-full px-3 py-2 text-sm rounded-lg transition-all scale-[0.98] active:scale-95',
+                            groupHasActiveChild
+                              ? 'text-foreground font-semibold bg-surface-container-high/40'
+                              : 'text-foreground-muted hover:bg-surface-container-highest hover:text-foreground',
+                          )}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <group.icon className="size-4 shrink-0" />
+                            <span>{group.label}</span>
+                          </div>
+                          {isExpanded ? (
+                            <ChevronDown className="size-3.5 text-foreground-muted" />
+                          ) : (
+                            <ChevronLeft className="size-3.5 text-foreground-muted" />
+                          )}
+                        </button>
+
+                        {/* لیست زیرمنوهای گروه */}
+                        {isExpanded && (
+                          <div className="mr-3 mt-0.5 border-r border-border-subtle/50 pr-2.5 space-y-0.5 transition-all">
+                            {visibleItems.map((item) => {
+                              const active = pathname === item.href || pathname.startsWith(item.href + '/')
+                              return (
+                                <Link
+                                  key={item.href}
+                                  href={item.href}
+                                  aria-current={active ? 'page' : undefined}
+                                  className={cn(
+                                    'flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs transition-all scale-[0.98] active:scale-95',
+                                    active
+                                      ? 'bg-accent/10 text-accent font-bold'
+                                      : 'text-foreground-muted hover:bg-surface-container-highest hover:text-foreground',
+                                  )}
+                                >
+                                  <item.icon className="size-3.5 shrink-0" />
+                                  <span>{item.label}</span>
+                                </Link>
+                              )
+                            })}
+                          </div>
                         )}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <group.icon className="size-4 shrink-0" />
-                          <span>{group.label}</span>
-                        </div>
-                        {isExpanded ? (
-                          <ChevronDown className="size-3.5 text-foreground-muted" />
-                        ) : (
-                          <ChevronLeft className="size-3.5 text-foreground-muted" />
-                        )}
-                      </button>
-
-                      {/* لیست زیرمنوهای گروه */}
-                      {isExpanded && (
-                        <div className="mr-3 mt-0.5 border-r border-border-subtle/50 pr-2.5 space-y-0.5 transition-all">
-                          {visibleItems.map((item) => {
-                            const active = pathname === item.href || pathname.startsWith(item.href + '/')
-                            return (
-                              <Link
-                                key={item.href}
-                                href={item.href}
-                                aria-current={active ? 'page' : undefined}
-                                className={cn(
-                                  'flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs transition-all scale-[0.98] active:scale-95',
-                                  active
-                                    ? 'bg-accent/10 text-accent font-bold'
-                                    : 'text-foreground-muted hover:bg-surface-container-highest hover:text-foreground',
-                                )}
-                              >
-                                <item.icon className="size-3.5 shrink-0" />
-                                <span>{item.label}</span>
-                              </Link>
-                            )
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })
+        )}
       </nav>
 
       {/* Footer */}
@@ -360,20 +520,69 @@ export function Sidebar() {
             خروج
           </Button>
         </div>
+        {/* Web Version Badge */}
+        <div className="flex items-center justify-center gap-1.5 rounded-md bg-surface-container-high/50 px-2 py-1.5">
+          <span className="text-[10px] text-foreground-muted/60">نسخه پنل وب:</span>
+          <span className="font-mono text-[10px] font-semibold text-accent/80 tracking-wide">{webVersion}</span>
+        </div>
       </div>
+    </div>
+  )
+}
+
+export function Sidebar() {
+  const config = useConfigStore((s) => s.config)
+
+  return (
+    <aside className="hidden w-64 shrink-0 border-s border-border-subtle bg-surface-container-low lg:flex lg:flex-col" dir="rtl">
+      <div className="flex h-16 items-center gap-2.5 border-b border-border-subtle px-6 select-none">
+        <img src={config?.appLogoUrl || "/logo.png"} className="size-8 object-contain rounded-full bg-background p-0.5 border border-border" alt="Logo" />
+        <span className="font-headline-md text-headline-md font-bold text-accent">
+          {config?.appName || "مترو خط ۱"}
+        </span>
+      </div>
+      <SidebarContent />
     </aside>
   )
 }
 
 export function MobileHeader() {
+  const pathname = usePathname()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
+  const config = useConfigStore((s) => s.config)
+  const [open, setOpen] = useState(false)
+
+  // بستن سایدبار پس از تغییر مسیر
+  useEffect(() => {
+    setOpen(false)
+  }, [pathname])
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border-subtle bg-surface-container px-4 lg:hidden">
-      <span className="font-headline-md text-headline-md font-bold text-accent">
-        مترو خط ۱
-      </span>
+    <header className="flex h-16 items-center justify-between border-b border-border-subtle bg-surface-container px-4 lg:hidden" dir="rtl">
+      <div className="flex items-center gap-2">
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="active:scale-95 transition-all text-foreground-muted hover:text-foreground"
+                aria-label="منوی کاربری"
+              >
+                <Menu className="size-5" />
+              </Button>
+            }
+          />
+          <SheetContent side="right" className="w-64 p-0 bg-surface-container-low border-s border-border-subtle flex flex-col h-full">
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+        <img src={config?.appLogoUrl || "/logo.png"} className="size-8 object-contain rounded-full bg-background p-0.5 border border-border" alt="Logo" />
+        <span className="font-headline-md text-headline-md font-bold text-accent">
+          {config?.appName || "مترو خط ۱"}
+        </span>
+      </div>
       <div className="flex items-center gap-2">
         <Link
           href="/notifications"

@@ -1,6 +1,6 @@
 import { prisma } from '@/server/db'
 import { Prisma } from '@/generated/prisma/client'
-import type { CustomFieldDefInput } from '@/server/dto/directory'
+import type { CustomFieldDefInput } from '@/lib/zod/directory'
 
 export async function listCustomFieldDefs(entityType?: string) {
   const where = entityType ? { entityType } : {}

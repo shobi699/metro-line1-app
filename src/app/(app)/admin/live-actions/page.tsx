@@ -11,32 +11,24 @@ import {
   VolumeX,
   Play,
   Pause,
-  Activity,
   UserCheck,
   CheckCircle2,
   XCircle,
   Clock,
   User,
-  Shield,
   ArrowLeftRight,
   Trophy,
   History,
-  Sparkles,
   Zap,
   Check,
-  AlertTriangle,
   RefreshCw,
-  Search,
-  Eye,
-  Radio,
-  FileSpreadsheet,
 } from 'lucide-react'
 
 // ── Types ───────────────────────────────────────────────────────────
 
 interface PendingUser {
   id: string
-  nationalId: string
+  personnelCode: string
   name: string
   phone: string | null
   email: string | null
@@ -60,12 +52,12 @@ interface PendingSwap {
   requester: {
     id: string
     name: string
-    nationalId: string
+    personnelCode: string
   }
   target: {
     id: string
     name: string
-    nationalId: string
+    personnelCode: string
   }
   sourceShift: {
     id: string
@@ -91,7 +83,7 @@ interface PendingAppeal {
   employee: {
     id: string
     name: string
-    nationalId: string
+    personnelCode: string
   }
   log: {
     id: string
@@ -142,7 +134,7 @@ interface DBStatusData {
 function playAlertSound(type: 'info' | 'warning' | 'success') {
   if (typeof window === 'undefined') return
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const ctx = new (window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)()
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
 
@@ -174,8 +166,8 @@ function playAlertSound(type: 'info' | 'warning' | 'success') {
       osc.start(ctx.currentTime)
       osc.stop(ctx.currentTime + 0.25)
     }
-  } catch (e) {
-    console.warn('Audio Context blocked or unsupported:', e)
+  } catch {
+    // audio context not supported
   }
 }
 
@@ -263,15 +255,13 @@ export default function LiveActionsPage() {
         setRoles(data.roles)
 
         // Check for new items to sound notification
-        let hasNew = false
         const currentIds = new Set<string>()
 
         data.pendingUsers.forEach((u) => {
           currentIds.add(u.id)
           if (!knownIdsRef.current.has(u.id)) {
             if (initializedRef.current) {
-              triggerToast('ثبت‌نام جدید پرسنل', `کاربر جدید «${u.name}» با کدملی ${toFa(u.nationalId)} ثبت‌نام کرده و منتظر تایید است.`, 'warning')
-              hasNew = true
+              triggerToast('ثبت‌نام جدید پرسنل', `کاربر جدید «${u.name}» با کدملی ${toFa(u.personnelCode)} ثبت‌نام کرده و منتظر تایید است.`, 'warning')
             }
             knownIdsRef.current.add(u.id)
           }
@@ -282,7 +272,6 @@ export default function LiveActionsPage() {
           if (!knownIdsRef.current.has(s.id)) {
             if (initializedRef.current) {
               triggerToast('درخواست جدید جابجایی شیفت', `درخواست جابجایی از طرف «${s.requester.name}» ثبت شد.`, 'info')
-              hasNew = true
             }
             knownIdsRef.current.add(s.id)
           }
@@ -293,7 +282,6 @@ export default function LiveActionsPage() {
           if (!knownIdsRef.current.has(a.id)) {
             if (initializedRef.current) {
               triggerToast('اعتراض جدید به نمره عملکرد', `پرسنل «${a.employee.name}» به ثبت خطا اعتراض کرده است.`, 'info')
-              hasNew = true
             }
             knownIdsRef.current.add(a.id)
           }
@@ -309,8 +297,8 @@ export default function LiveActionsPage() {
         initializedRef.current = true
         setLastUpdated(new Date())
       }
-    } catch (e) {
-      console.error('Error fetching live control data:', e)
+    } catch {
+      // live control data fetch failed silently
     } finally {
       if (!silent) setLoading(false)
     }
@@ -343,11 +331,11 @@ export default function LiveActionsPage() {
       if (type === 'user') {
         const mockNames = ['مرتضی کاظمی', 'وحید صادقی', 'مهدی ابراهیمی']
         const name = mockNames[Math.floor(Math.random() * mockNames.length)]
-        const nationalId = '008' + Math.floor(1000000 + Math.random() * 9000000)
+        const personnelCode = '008' + Math.floor(1000000 + Math.random() * 9000000)
         const newUser: PendingUser = {
           id,
           name,
-          nationalId,
+          personnelCode,
           phone: '0912' + Math.floor(1000000 + Math.random() * 9000000),
           email: 'simulated@metro.ir',
           createdAt: new Date().toISOString(),
@@ -368,8 +356,8 @@ export default function LiveActionsPage() {
           status: 'pending',
           note: 'نیاز به استراحت به علت شیفت فشرده قبلی',
           createdAt: new Date().toISOString(),
-          requester: { id: 'req-sim', name: name1, nationalId: '123' },
-          target: { id: 'target-sim', name: name2, nationalId: '456' },
+          requester: { id: 'req-sim', name: name1, personnelCode: '123' },
+          target: { id: 'target-sim', name: name2, personnelCode: '456' },
           sourceShift: { id: 's-sim', date: new Date().toISOString(), code: 'morning' },
           targetShift: { id: 't-sim', date: new Date().toISOString(), code: 'night' },
         }
@@ -387,7 +375,7 @@ export default function LiveActionsPage() {
           reviewedById: null,
           note: null,
           createdAt: new Date().toISOString(),
-          employee: { id: 'emp-sim', name, nationalId: '987' },
+          employee: { id: 'emp-sim', name, personnelCode: '987' },
           log: {
             id: 'log-sim',
             scoreValue: -5,
@@ -773,7 +761,7 @@ export default function LiveActionsPage() {
                         <span className="text-[10px] bg-warning/10 border border-warning/30 text-warning px-2 py-0.5 rounded-full font-bold">عضویت معلق</span>
                       </div>
                       <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 mt-3 text-[10px] text-foreground-muted">
-                        <div>کد ملی: <span className="font-mono text-foreground">{toFa(user.nationalId)}</span></div>
+                        <div>کد پرسنلی: <span className="font-mono text-foreground">{toFa(user.personnelCode)}</span></div>
                         <div>تلفن: <span className="font-mono text-foreground">{user.phone ? toFa(user.phone) : '—'}</span></div>
                         <div className="col-span-2">ثبت نام: <span className="text-foreground">{jalali(user.createdAt)}</span></div>
                       </div>

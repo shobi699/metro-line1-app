@@ -26,13 +26,38 @@ export async function cachedFetch<T>(
     if (cached) return cached
 
     if (options.method && options.method !== 'GET') {
-      await cacheStore.enqueue(url, options.method, options.body as string | null, headers)
+      await cacheStore.enqueue('attendance', 'default', url, options.method, options.body as string | null, headers)
     }
     return null
   }
 
   try {
-    const res = await fetch(url, { ...options, headers })
+    let res = await fetch(url, { ...options, headers })
+
+    if (res.status === 401 && authStore.refreshToken) {
+      try {
+        const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken: authStore.refreshToken })
+        })
+        
+        if (refreshRes.ok) {
+          const tokens = await refreshRes.json()
+          if (authStore.user) {
+            await authStore.setAuth(authStore.user, tokens.accessToken, tokens.refreshToken)
+          }
+          headers['Authorization'] = `Bearer ${tokens.accessToken}`
+          res = await fetch(url, { ...options, headers })
+        } else {
+          await authStore.logout()
+          return null
+        }
+      } catch (err) {
+        await authStore.logout()
+        return null
+      }
+    }
 
     if (!res.ok) return null
 

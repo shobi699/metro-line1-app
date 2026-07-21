@@ -46,3 +46,27 @@ next-env.d.ts
 
 # uploaded media (local storage driver)
 /public/uploads
+
+# nested workspace clone that should not be tracked by this repo
+metro-line11-app/
+
+# expo and native builds
+.expo/
+mobile/.expo/
+mobile/android/
+mobile/ios/
+
+# local pdf manuals data directory
+/lohe
+/lohe/docs
+
+# SQLite databases
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Large binary/app files
+*.apk
+*.ipa
+/public/file/

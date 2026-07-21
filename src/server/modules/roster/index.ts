@@ -1,11 +1,22 @@
 export {
-  parseRosterExcel,
-  applyRosterToShifts,
-  commitRosterFile,
-  type RosterRow,
-  type ParsedRoster,
-  type RosterImportResult,
+  parseRosterExcelV2,
+  validateRoster,
+  createRosterDayDraft,
+  publishRosterVersion,
+  type ColumnMapping,
+  type ValidationIssue,
+  DEFAULT_RIGHT_MAPPING,
+  DEFAULT_LEFT_MAPPING,
 } from './service'
+export {
+  diffRosterVersions,
+  computeDiff,
+  type RosterDiff,
+  type TripSummary,
+  type ChangedTrip,
+  type TripFieldChange,
+  type TripFieldKey,
+} from './diff'
 export {
   getUserShifts,
   getAllShifts,
@@ -18,8 +29,6 @@ export {
   materializePeriod,
 } from './materialize'
 export {
-  shiftTemplateSchema,
-  shiftAssignmentSchema,
   listTemplates,
   createTemplate,
   updateTemplate,
@@ -29,8 +38,6 @@ export {
   deleteAssignment,
 } from './templates'
 export {
-  shiftNoteSchema,
-  shiftTaskSchema,
   listNotes,
   upsertNote,
   deleteNote,
@@ -39,3 +46,5 @@ export {
   updateTask,
   deleteTask,
 } from './notes-tasks'
+export { parseRosterPDF } from './pdf-parser'
+export { shiftTemplateSchema, shiftAssignmentSchema, shiftNoteSchema, shiftTaskSchema } from '@/lib/zod/roster'

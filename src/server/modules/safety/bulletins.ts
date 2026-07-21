@@ -1,5 +1,5 @@
 import { prisma } from '@/server/db'
-import type { CreateBulletinInput } from '@/server/dto/safety'
+import type { CreateBulletinInput } from '@/lib/zod/safety'
 
 export async function createBulletin(data: CreateBulletinInput, actorId: string) {
   const bulletin = await prisma.safetyBulletin.create({
@@ -68,6 +68,7 @@ export async function acknowledgeBulletin(
       userId,
       safetyBulletinId: bulletinId,
       readAt: new Date(),
+      device: userAgent || 'نامشخص',
     },
   })
 
@@ -98,7 +99,7 @@ export async function getBulletinReceipts(bulletinId: string) {
     prisma.readReceipt.findMany({
       where: { safetyBulletinId: bulletinId },
       include: {
-        user: { select: { id: true, name: true, nationalId: true } },
+        user: { select: { id: true, name: true, personnelCode: true } },
       },
       orderBy: { readAt: 'asc' },
     }),

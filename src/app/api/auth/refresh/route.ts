@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { refreshSchema } from '@/server/dto/auth'
+import { refreshSchema } from '@/lib/zod/auth'
 import { verifyRefreshToken, issueAccessToken, issueRefreshToken } from '@/server/auth/jwt'
 import { prisma } from '@/server/db'
 import { coercePermissions, rankForRoleKey } from '@/server/rbac/permissions'
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
   const newAccessToken = await issueAccessToken(
     user.id,
-    user.nationalId,
+    user.personnelCode,
     user.role.key,
     user.role.rank ?? rankForRoleKey(user.role.key),
     coercePermissions(user.role.permissions),
@@ -51,3 +51,4 @@ export async function POST(request: Request) {
     refreshToken: newRefreshToken,
   })
 }
+

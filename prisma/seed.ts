@@ -6,14 +6,40 @@ config({ path: path.resolve(process.cwd(), '.env'), override: true })
 import { PrismaClient } from '../src/generated/prisma/client'
 import { PrismaLibSql } from '@prisma/adapter-libsql'
 import bcrypt from 'bcryptjs'
+import { DEFAULT_SETTINGS } from '../src/server/modules/settings/service'
 
 const DEMO_PASSWORD = 'admin123'
 
 async function main() {
-  const dbPath = path.resolve(process.cwd(), 'prisma', 'dev.db')
-  const adapter = new PrismaLibSql({ url: `file:${dbPath}` })
+  const tursoUrl = process.env.TURSO_DATABASE_URL
+  const tursoToken = process.env.TURSO_AUTH_TOKEN
+  const adapter = (tursoUrl && tursoToken)
+    ? new PrismaLibSql({ url: tursoUrl, authToken: tursoToken })
+    : new PrismaLibSql({ url: `file:${path.resolve(process.cwd(), 'prisma', 'dev.db')}` })
   const prisma = new PrismaClient({ adapter })
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 12)
+
+  // Clear non-upsert tables to allow repeat execution without constraint failures
+  await prisma.shiftAssignment.deleteMany().catch(() => {})
+  await prisma.shiftTemplate.deleteMany().catch(() => {})
+  await prisma.setting.deleteMany().catch(() => {})
+  await prisma.message.deleteMany().catch(() => {})
+  await prisma.chatRoom.deleteMany().catch(() => {})
+  await prisma.auditLog.deleteMany().catch(() => {})
+  await prisma.customFieldDef.deleteMany().catch(() => {})
+  await prisma.swapRequest.deleteMany().catch(() => {})
+  await prisma.ticketLog.deleteMany().catch(() => {})
+  await prisma.ticket.deleteMany().catch(() => {})
+  await prisma.readReceipt.deleteMany().catch(() => {})
+  await prisma.safetyBulletin.deleteMany().catch(() => {})
+  await prisma.post.deleteMany().catch(() => {})
+  
+  // Clear UI Builder tables
+  await prisma.uiMenuItem.deleteMany().catch(() => {})
+  await prisma.uiDashboardWidget.deleteMany().catch(() => {})
+  await prisma.uiPageVersion.deleteMany().catch(() => {})
+  await prisma.uiPage.deleteMany().catch(() => {})
+  await prisma.uiTheme.deleteMany().catch(() => {})
 
   // ── Roles (dynamic RBAC: flat permission keys) ─────────
   const roles = {} as Record<string, string>
@@ -36,12 +62,33 @@ async function main() {
     'imports:create',
     'imports:read',
     'settings:read',
+    'settings:update',
+    'meetings:create',
     'meetings:read',
     'meetings:manage',
+    'calendar:personal',
+    'calendar:view',
+    'calendar:view-team',
+    'calendar-admin:holidays',
+    'calendar-admin:events',
+    'calendar-admin:config',
     'feedback:read',
     'feedback:respond',
     'notifications:send',
     'chat:access',
+    'faults:create',
+    'faults:read',
+    'faults:review',
+    'faults:repair',
+    'faults:verify',
+    'faults:defer',
+    'faults:reopen',
+    'fleet:manage',
+    'fleet:read',
+    'fault-catalog:manage',
+    'fault-catalog:read',
+    'fault-reports:view',
+    'fault-reports:export',
   ]
 
   const operatorPerms = [
@@ -57,7 +104,12 @@ async function main() {
     'meetings:create',
     'feedback:create',
     'chat:access',
+    'faults:create',
+    'faults:read',
+    'fleet:read',
+    'fault-catalog:read',
   ]
+
 
   for (const [key, name, perms, rank] of [
     ['super_admin', 'مدیر ارشد', ['*'], 2],
@@ -77,7 +129,7 @@ async function main() {
       update: { permissions: JSON.stringify(perms), rank, isSystem: true },
       create: {
         key,
-        name,
+        title: name,
         permissions: JSON.stringify(perms),
         rank,
         isSystem: true,
@@ -87,20 +139,20 @@ async function main() {
   }
 
   // ── Users ──────────────────────────────────────────────
-  const operatorNames: Array<{ name: string; nationalId: string; phone: string }> = [
-    { name: 'علی رضایی', nationalId: '1111111111', phone: '09121000001' },
-    { name: 'محمد حسینی', nationalId: '2222222222', phone: '09121000002' },
-    { name: 'زهرا کریمی', nationalId: '3333333333', phone: '09121000003' },
-    { name: 'فاطمه محمدی', nationalId: '4444444444', phone: '09121000004' },
-    { name: 'امیر نوری', nationalId: '5555555555', phone: '09121000005' },
-    { name: 'سارا احمدی', nationalId: '6666666666', phone: '09121000006' },
+  const operatorNames: Array<{ name: string; personnelCode: string; phone: string }> = [
+    { name: 'علی رضایی', personnelCode: '1111111111', phone: '09121000001' },
+    { name: 'محمد حسینی', personnelCode: '2222222222', phone: '09121000002' },
+    { name: 'زهرا کریمی', personnelCode: '3333333333', phone: '09121000003' },
+    { name: 'فاطمه محمدی', personnelCode: '4444444444', phone: '09121000004' },
+    { name: 'امیر نوری', personnelCode: '5555555555', phone: '09121000005' },
+    { name: 'سارا احمدی', personnelCode: '6666666666', phone: '09121000006' },
   ]
 
   const superAdmin = await prisma.user.upsert({
-    where: { nationalId: '0000000000' },
+    where: { personnelCode: '0000000000' },
     update: {},
     create: {
-      nationalId: '0000000000',
+      personnelCode: '0000000000',
       name: 'مدیر سیستم',
       phone: '09120000000',
       email: 'admin@metro.ir',
@@ -111,10 +163,10 @@ async function main() {
   })
 
   const admin = await prisma.user.upsert({
-    where: { nationalId: '9999999999' },
+    where: { personnelCode: '9999999999' },
     update: {},
     create: {
-      nationalId: '9999999999',
+      personnelCode: '9999999999',
       name: 'مدیر خط',
       phone: '09120000009',
       email: 'lineadmin@metro.ir',
@@ -125,17 +177,23 @@ async function main() {
   })
 
   const operators = []
-  for (const op of operatorNames) {
+  for (let i = 0; i < operatorNames.length; i++) {
+    const op = operatorNames[i]
+    // چرخش گروه و نوع شیفت: A/B/C چرخشی + هر چهارمین نفر ستادی
+    const isStaff = i % 4 === 3
+    const group = isStaff ? 'ستادی' : (['A', 'B', 'C'][i % 3])
+    const shiftType = isStaff ? 'ستادی' : (i % 2 === 0 ? '9-15' : '12-24')
     const user = await prisma.user.upsert({
-      where: { nationalId: op.nationalId },
+      where: { personnelCode: op.personnelCode },
       update: {},
       create: {
-        nationalId: op.nationalId,
+        personnelCode: op.personnelCode,
         name: op.name,
         phone: op.phone,
         passwordHash,
         status: 'active',
         roleId: roles.operator,
+        customFields: { shift: group, shiftType },
       },
     })
     operators.push(user)
@@ -350,7 +408,7 @@ async function main() {
         entity: 'User',
         entityId: op.id,
         action: 'create',
-        after: { name: op.name, nationalId: op.nationalId },
+        after: { name: op.name, personnelCode: op.personnelCode },
       },
     })
   }
@@ -449,175 +507,19 @@ async function main() {
 
   // ── Settings ───────────────────────────────────────────
   await prisma.setting.createMany({
-    data: [
-      {
-        key: 'general.appName',
-        label: 'نام سامانه',
-        description: 'عنوان فارسی اصلی سامانه در بالای صفحات و اپلیکیشن',
-        type: 'text',
-        value: JSON.stringify('سیر و حرکت خط یک مترو'),
-        defaultValue: JSON.stringify('سیر و حرکت خط یک مترو'),
-        category: 'general',
-        isEnabled: true,
-      },
-      {
-        key: 'general.brandColor',
-        label: 'رنگ شاخص برند',
-        description: 'کد هگز رنگ اصلی برند خط مترو (مثلاً قرمز برای خط ۱)',
-        type: 'color',
-        value: JSON.stringify('#e53935'),
-        defaultValue: JSON.stringify('#e53935'),
-        category: 'general',
-        isEnabled: true,
-      },
-      {
-        key: 'shifts.minRestHours',
-        label: 'حداقل فاصله استراحت قانونی (ساعت)',
-        description: 'حداقل ساعت استراحت اجباری بین پایان یک شیفت و شروع شیفت بعدی',
-        type: 'number',
-        value: JSON.stringify(12),
-        defaultValue: JSON.stringify(12),
-        category: 'shifts',
-        min: 8,
-        max: 24,
-        isEnabled: true,
-      },
-      {
-        key: 'tickets.allowNoWagon',
-        label: 'امکان ثبت تیکت بدون شماره واگن',
-        description: 'آیا کاربران می‌توانند خرابی‌هایی را ثبت کنند که مربوط به واگن خاصی نباشد؟',
-        type: 'boolean',
-        value: JSON.stringify(true),
-        defaultValue: JSON.stringify(true),
-        category: 'tickets',
-        isEnabled: true,
-      },
-      {
-        key: 'tickets.aiPriorityEnabled',
-        label: 'تحلیلگر هوشمند اولویت AI',
-        description: 'پیش‌بینی خودکار شدت و اولویت تیکت بر اساس متن گزارش خرابی',
-        type: 'boolean',
-        value: JSON.stringify(true),
-        defaultValue: JSON.stringify(true),
-        category: 'tickets',
-        isEnabled: true,
-      },
-      {
-        key: 'tickets.criticalKeywords',
-        label: 'کلمات کلیدی اولویت بحرانی',
-        description: 'کلمات کلیدی نشان‌دهنده اولویت بحرانی (جدا شده با کاما)',
-        type: 'text',
-        value: JSON.stringify('آتش,حریق,انفجار,سقوط,برق‌گرفتگی,خروج از ریل,ترمز اضطراری,دود'),
-        defaultValue: JSON.stringify('آتش,حریق,انفجار,سقوط,برق‌گرفتگی,خروج از ریل,ترمز اضطراری,دود'),
-        category: 'tickets',
-        isEnabled: true,
-      },
-      {
-        key: 'tickets.highKeywords',
-        label: 'کلمات کلیدی اولویت عمده',
-        description: 'کلمات کلیدی نشان‌دهنده اولویت عمده (جدا شده با کاما)',
-        type: 'text',
-        value: JSON.stringify('آسانسور,پله برقی,سیگنالینگ,تهویه,نشت آب,دوربین,سنسور'),
-        defaultValue: JSON.stringify('آسانسور,پله برقی,سیگنالینگ,تهویه,نشت آب,دوربین,سنسور'),
-        category: 'tickets',
-        isEnabled: true,
-      },
-      {
-        key: 'tickets.mediumKeywords',
-        label: 'کلمات کلیدی اولویت جزئی',
-        description: 'کلمات کلیدی نشان‌دهنده اولویت جزئی (جدا شده با کاما)',
-        type: 'text',
-        value: JSON.stringify('روشنایی,مانیتور,ساعت,بلندگو,تلفن,درب,صندلی'),
-        defaultValue: JSON.stringify('روشنایی,مانیتور,ساعت,بلندگو,تلفن,درب,صندلی'),
-        category: 'tickets',
-        isEnabled: true,
-      },
-      {
-        key: 'tickets.lowKeywords',
-        label: 'کلمات کلیدی اولویت کم‌اهمیت',
-        description: 'کلمات کلیدی نشان‌دهنده اولویت کم‌اهمیت (جدا شده با کاما)',
-        type: 'text',
-        value: JSON.stringify('نظافت,سطل زباله,پوستر,پله,سنگفرش,پنجره'),
-        defaultValue: JSON.stringify('نظافت,سطل زباله,پوستر,پله,سنگفرش,پنجره'),
-        category: 'tickets',
-        isEnabled: true,
-      },
-      {
-        key: 'chat.maxMessageLength',
-        label: 'حداکثر طول پیام چت',
-        description: 'حداکثر تعداد نویسه‌های مجاز برای هر پیام ارسالی در روم‌ها',
-        type: 'number',
-        value: JSON.stringify(1000),
-        defaultValue: JSON.stringify(1000),
-        category: 'chat',
-        min: 100,
-        max: 5000,
-        isEnabled: true,
-      },
-      {
-        key: 'mobile.enableSos',
-        label: 'دکمه اضطراری SOS',
-        description: 'فعال یا غیرفعال بودن دکمه اضطراری SOS در اپلیکیشن موبایل پرسنل',
-        type: 'boolean',
-        value: JSON.stringify(true),
-        defaultValue: JSON.stringify(true),
-        category: 'mobile',
-        isEnabled: true,
-      },
-      {
-        key: 'mobile.geofencingEnabled',
-        label: 'حضور و غیاب Geofencing',
-        description: 'ثبت حضور و غیاب هوشمند پرسنل بر اساس موقعیت مکانی جی‌پی‌اس ایستگاه‌ها',
-        type: 'boolean',
-        value: JSON.stringify(true),
-        defaultValue: JSON.stringify(true),
-        category: 'mobile',
-        isEnabled: true,
-      },
-      {
-        key: 'mobile.geofencingRadius',
-        label: 'شعاع موقعیت‌یاب حضور و غیاب (متر)',
-        description: 'حداکثر شعاع فاصله مجاز راهبر از ایستگاه برای چک‌این خودکار',
-        type: 'number',
-        value: JSON.stringify(100),
-        defaultValue: JSON.stringify(100),
-        category: 'mobile',
-        min: 20,
-        max: 1000,
-        isEnabled: true,
-      },
-      {
-        key: 'mobile.offlineCacheEnabled',
-        label: 'ذخیره آفلاین اطلاعات',
-        description: 'فعال‌سازی کش آفلاین دفتر تلفن و شیفت‌های کاری در محیط‌های بدون سیگنال تونل',
-        type: 'boolean',
-        value: JSON.stringify(true),
-        defaultValue: JSON.stringify(true),
-        category: 'mobile',
-        isEnabled: true,
-      },
-      {
-        key: 'mobile.sosRecipientPhone',
-        label: 'شماره پیامک اضطراری SOS',
-        description: 'شماره تلفن مستقیم دیسپچر مرکز فرمان جهت ارسال پیام اضطراری در زمان قطع اینترنت',
-        type: 'text',
-        value: JSON.stringify('09120000000'),
-        defaultValue: JSON.stringify('09120000000'),
-        category: 'mobile',
-        isEnabled: true,
-      },
-      {
-        key: 'mobile.activeTheme',
-        label: 'تم پیش‌فرض موبایل',
-        description: 'تم رنگی پیش‌فرض رابط کاربری موبایل',
-        type: 'select',
-        value: JSON.stringify('dark'),
-        defaultValue: JSON.stringify('dark'),
-        category: 'mobile',
-        options: JSON.stringify(['dark', 'light', 'system']),
-        isEnabled: true,
-      }
-    ]
+    data: DEFAULT_SETTINGS.map((d) => ({
+      key: d.key,
+      label: d.label,
+      description: d.description,
+      type: d.type,
+      value: JSON.stringify(d.value),
+      defaultValue: JSON.stringify(d.defaultValue),
+      category: d.category,
+      min: (d as any).min ?? null,
+      max: (d as any).max ?? null,
+      options: (d as any).options ? JSON.stringify((d as any).options) : null,
+      isEnabled: true,
+    })),
   })
 
   // ── Shift Cycle Templates (server-side source of truth) ─────────
@@ -670,8 +572,6 @@ async function main() {
     },
   })
 
-  void tplRotational1
-
   const anchorA = new Date()
   anchorA.setHours(0, 0, 0, 0)
   anchorA.setDate(anchorA.getDate() - 2)
@@ -685,18 +585,56 @@ async function main() {
   const anchorStaff = new Date(anchorA)
   anchorStaff.setDate(anchorStaff.getDate() - 2)
 
+  // انتساب بر اساس کلید ترکیبی «{نوع شیفت}:{گروه}»:
+  // نوع 9-15 → الگوی ۹ ساعته، نوع 12-24 → الگوی ۱۲ ساعته، ستادی → الگوی ستادی.
   await prisma.shiftAssignment.createMany({
     data: [
-      { templateId: tplRotational2.id, targetType: 'group', targetId: 'A', anchorDate: anchorA },
-      { templateId: tplRotational2.id, targetType: 'group', targetId: 'B', anchorDate: anchorB },
-      { templateId: tplRotational2.id, targetType: 'group', targetId: 'C', anchorDate: anchorC },
-      { templateId: tplStaff.id, targetType: 'group', targetId: 'Staff', anchorDate: anchorStaff },
+      // گروه‌های ۹ ساعته
+      { templateId: tplRotational1.id, targetType: 'group', targetId: '9-15:A', anchorDate: anchorA },
+      { templateId: tplRotational1.id, targetType: 'group', targetId: '9-15:B', anchorDate: anchorB },
+      { templateId: tplRotational1.id, targetType: 'group', targetId: '9-15:C', anchorDate: anchorC },
+      // گروه‌های ۱۲ ساعته
+      { templateId: tplRotational2.id, targetType: 'group', targetId: '12-24:A', anchorDate: anchorA },
+      { templateId: tplRotational2.id, targetType: 'group', targetId: '12-24:B', anchorDate: anchorB },
+      { templateId: tplRotational2.id, targetType: 'group', targetId: '12-24:C', anchorDate: anchorC },
+      // ستادی
+      { templateId: tplStaff.id, targetType: 'group', targetId: 'ستادی:ستادی', anchorDate: anchorStaff },
     ],
+  })
+
+  // ── Seed UI Builder defaults ──────────────────────
+  await prisma.uiTheme.create({
+    data: {
+      primaryColor: '#ae0011',
+      accentColor: '#575e70',
+      radius: 12,
+      fontSize: 'md',
+      darkModeDefault: false,
+      logoUrl: '',
+    }
+  })
+
+  await prisma.uiMenuItem.createMany({
+    data: [
+      { label: 'پروفایل', icon: 'User', route: 'ProfileScreen', orderIndex: 4, isVisible: true },
+      { label: 'گفتگو', icon: 'MessageSquare', route: 'ChatScreen', orderIndex: 3, isVisible: true },
+      { label: 'اعلان‌ها', icon: 'Bell', route: 'NotificationsScreen', orderIndex: 2, isVisible: true },
+      { label: 'شیفت‌ها', icon: 'Calendar', route: 'CalendarScreen', orderIndex: 1, isVisible: true },
+      { label: 'داشبورد', icon: 'LayoutDashboard', route: 'HomeScreen', orderIndex: 0, isVisible: true },
+    ]
+  })
+
+  await prisma.uiDashboardWidget.createMany({
+    data: [
+      { widgetType: 'stat_card', title: 'شیفت امروز', size: 'md', orderIndex: 0, isVisible: true, configJson: JSON.stringify({ source: 'shift' }) },
+      { widgetType: 'chart', title: 'عملکرد هفتگی کیلومتر رانندگی', size: 'md', orderIndex: 1, isVisible: true, configJson: JSON.stringify({ type: 'bar', source: 'kpi' }) },
+      { widgetType: 'list', title: 'آخرین بخشنامه‌های ایمنی', size: 'lg', orderIndex: 2, isVisible: true, configJson: JSON.stringify({ limit: 3, source: 'bulletins' }) },
+    ]
   })
 
   console.log('Seed complete:')
   console.log(`  Roles: super_admin, admin, operator`)
-  console.log(`  Users: ${allOperators.length} (${superAdmin.nationalId} / admin123)`)
+  console.log(`  Users: ${allOperators.length} (${superAdmin.personnelCode} / admin123)`)
   console.log(`  Shifts: ${15 * allOperators.length} rows (today +/- 7 days)`)
   console.log(`  Bulletins: ${bulletins.length}`)
   console.log(`  Tickets: ${tickets.length}`)
@@ -705,8 +643,311 @@ async function main() {
   console.log(`  Chat rooms: 3 (عمومی، راهبران، مرکز فرمان)`)
   console.log(`  Posts: 3 (اخبار، بخش‌نامه، آموزش)`)
   console.log(`  Shift templates: 3 (نوبتی ۹ ساعت، ۱۲ ساعت، ستادی)`)
+  console.log(`  UI Builder Default Menu, Theme and Widgets Seeded.`)
+
+  // Seed Fleet & Fault Catalog
+  await seedFaultSubsystemData(prisma)
 
   await prisma.$disconnect()
+}
+
+async function seedFaultSubsystemData(prisma: any) {
+  // 1. Seed Trains & Wagons
+  const trainsData = [
+    { number: '101', series: 'DC01', manufacturer: 'CNR' },
+    { number: '102', series: 'DC01', manufacturer: 'CNR' },
+    { number: '103', series: 'DC01', manufacturer: 'CNR' },
+    { number: '104', series: 'AC02', manufacturer: 'CRRC' },
+    { number: '105', series: 'AC02', manufacturer: 'CRRC' },
+    { number: '106', series: 'AC02', manufacturer: 'CRRC' },
+    { number: '107', series: 'AC02', manufacturer: 'CRRC' },
+    { number: '108', series: 'AC02', manufacturer: 'CRRC' },
+    { number: '109', series: 'AC02', manufacturer: 'CRRC' },
+    { number: '110', series: 'AC02', manufacturer: 'CRRC' },
+  ]
+
+  for (const t of trainsData) {
+    const train = await prisma.train.upsert({
+      where: { trainNumber: t.number },
+      update: { fleetSeries: t.series, manufacturer: t.manufacturer },
+      create: { trainNumber: t.number, fleetSeries: t.series, manufacturer: t.manufacturer, status: 'active' },
+    })
+
+    // Upsert 7 wagons for each train
+    for (let pos = 1; pos <= 7; pos++) {
+      const wagonCode = `${t.number}-${pos}`
+      await prisma.wagon.upsert({
+        where: { trainId_position: { trainId: train.id, position: pos } },
+        update: { wagonCode },
+        create: { trainId: train.id, position: pos, wagonCode, wagonType: pos === 1 || pos === 7 ? 'Mc' : pos === 3 || pos === 5 ? 'M' : 'Tp' },
+      })
+    }
+  }
+
+  // 2. Seed Fault Categories
+  const categories = [
+    { code: 'BRK', title: 'ترمز' },
+    { code: 'DRS', title: 'درب‌ها' },
+    { code: 'TRC', title: 'کشش (Traction)' },
+    { code: 'HVAC', title: 'تهویه مطبوع' },
+    { code: 'SIG', title: 'سیگنالینگ و ارتباطات' },
+    { code: 'BOG', title: 'بوژی و چرخ‌ها' },
+    { code: 'PAN', title: 'پانتوگراف و شبکه برق' },
+  ]
+
+  const categoryMap = new Map<string, string>()
+  for (const c of categories) {
+    const cat = await prisma.faultCategory.upsert({
+      where: { code: c.code },
+      update: { title: c.title },
+      create: { code: c.code, title: c.title },
+    })
+    categoryMap.set(c.code, cat.id)
+  }
+
+  // 3. Seed Fault Codes
+  const faultCodes = [
+    { categoryCode: 'BRK', code: 'BRK-012', title: 'عدم آزادسازی ترمز واگن', defaultPriority: 'high', safetyCritical: true, requiresWagon: true, keywords: 'ترمز, قفل, چسبیدن, سیلندر', aliases: 'ترمز ول نمیکنه | چرخ قفله | ترمز چسبیده', operatorGuide: 'سوپاپ ترمز واگن مربوطه را بکشید و مجدد تست کنید.' },
+    { categoryCode: 'BRK', code: 'BRK-007', title: 'گیرپاژ کفشک ترمز', defaultPriority: 'critical', safetyCritical: true, requiresWagon: true, keywords: 'کفشک, گیرپاژ, سیلندر, داغ', aliases: 'کفشک ترمز چسبیده | لنت داغ شده | دود لنت' },
+    { categoryCode: 'DRS', code: 'DRS-004', title: 'گیر مکانیکی درب', defaultPriority: 'medium', safetyCritical: false, requiresWagon: true, keywords: 'درب, گیر, مانع, باز', aliases: 'درب گیر کرده | در باز نمیشه | مانع بین در' },
+    { categoryCode: 'DRS', code: 'DRS-001', title: 'خرابی لیمیت سوئیچ درب', defaultPriority: 'medium', safetyCritical: false, requiresWagon: true, keywords: 'لیمیت, سوئیچ, درب, بازخورد', aliases: 'چراغ درب روشن میمونه | فیدبک درب | لیمیت درب' },
+    { categoryCode: 'HVAC', code: 'HVAC-001', title: 'عدم کارکرد کمپرسور تهویه', defaultPriority: 'low', safetyCritical: false, requiresWagon: true, keywords: 'تهویه, کولر, گرم, کمپرسور', aliases: 'باد تهویه گرمه | کولر کار نمیکنه | کمپرسور خراب' },
+    { categoryCode: 'SIG', code: 'SIG-001', title: 'قطع ارتباط رادیویی قطار', defaultPriority: 'high', safetyCritical: true, requiresWagon: false, keywords: 'رادیو, بی سیم, بیسیم, سیگنال', aliases: 'بیسیم قطعه | ارتباط با OCC قطعه | آنتن بیسیم نداریم' },
+    { categoryCode: 'TRC', code: 'TRC-001', title: 'خطای اینورتر کشش', defaultPriority: 'high', safetyCritical: true, requiresWagon: true, keywords: 'اینورتر, کشش, تراکشن, موتور', aliases: 'تراکشن فالت | موتور کار نمیکنه | خطای اینورتر' },
+    { categoryCode: 'BOG', code: 'BOG-003', title: 'قفل بوژی', defaultPriority: 'critical', safetyCritical: true, requiresWagon: true, keywords: 'بوژی, چرخ, قفل, بلبرینگ', aliases: 'بوژی قفله | دمای بلبرینگ بالا | چرخ نمیچرخه' },
+    { categoryCode: 'PAN', code: 'PAN-001', title: 'خرابی بوق پانتوگراف', defaultPriority: 'critical', safetyCritical: true, requiresWagon: false, keywords: 'پانتوگراف, بوق, شبکه, برق', aliases: 'پانتو بوق زده | آرک پانتوگراف | برق قطع شده' },
+  ]
+
+  for (const f of faultCodes) {
+    const categoryId = categoryMap.get(f.categoryCode)
+    if (!categoryId) continue
+
+    await prisma.faultCode.upsert({
+      where: { code: f.code },
+      update: {
+        title: f.title,
+        defaultPriority: f.defaultPriority,
+        safetyCritical: f.safetyCritical,
+        requiresWagon: f.requiresWagon,
+        keywords: f.keywords,
+        aliases: f.aliases,
+        operatorGuide: f.operatorGuide,
+      },
+      create: {
+        categoryId,
+        code: f.code,
+        title: f.title,
+        defaultPriority: f.defaultPriority as any,
+        safetyCritical: f.safetyCritical,
+        requiresWagon: f.requiresWagon,
+        keywords: f.keywords,
+        aliases: f.aliases,
+        operatorGuide: f.operatorGuide,
+      },
+    })
+  }
+
+  // ── Seed Feedback Categories ──────────────────────────
+  const feedbackCategories = [
+    { key: 'safety_issue', title: 'گزارش مشکل ایمنی', icon: 'ShieldAlert', assigneeRole: 'supervisor', slaHours: { firstResponse: 12, resolve: 48 }, confidential: true, allowAnonymous: true },
+    { key: 'welfare', title: 'شکایت رفاهی', icon: 'Heart', assigneeRole: 'expert', slaHours: { firstResponse: 24, resolve: 120 }, confidential: false, allowAnonymous: true },
+    { key: 'ceo_message', title: 'پیام به مدیرعامل', icon: 'UserCheck', assigneeRole: 'manager', slaHours: { firstResponse: 72, resolve: 240 }, confidential: true, allowAnonymous: true },
+  ]
+  for (const fc of feedbackCategories) {
+    await prisma.feedbackCategory.upsert({
+      where: { key: fc.key },
+      update: {
+        title: fc.title,
+        icon: fc.icon,
+        assigneeRole: fc.assigneeRole,
+        slaHours: fc.slaHours,
+        confidential: fc.confidential,
+        allowAnonymous: fc.allowAnonymous,
+      },
+      create: {
+        key: fc.key,
+        title: fc.title,
+        icon: fc.icon,
+        assigneeRole: fc.assigneeRole,
+        slaHours: fc.slaHours,
+        confidential: fc.confidential,
+        allowAnonymous: fc.allowAnonymous,
+      },
+    })
+  }
+
+  // ── Seed Meeting Rooms ──────────────────────────
+  const meetingRooms = [
+    { name: 'اتاق جلسات دپو غرب', location: 'ساختمان اداری دپو، طبقه ۱', capacity: 12 },
+    { name: 'اتاق جلسات ایستگاه امام خمینی', location: 'ایستگاه امام خمینی، اتاق سرپرستی', capacity: 6 },
+  ]
+  for (const room of meetingRooms) {
+    const existing = await prisma.meetingRoom.findFirst({ where: { name: room.name } })
+    if (!existing) {
+      await prisma.meetingRoom.create({ data: room })
+    }
+  }
+
+  // ── Seed Meeting Types ──────────────────────────
+  const meetingTypes = [
+    { key: 'public_visit', title: 'ملاقات مردمی با مدیر', durationMin: 15, whoCanBook: ['operator', 'driver'], approval: 'host' },
+    { key: 'technical', title: 'جلسه فنی و هماهنگی', durationMin: 60, whoCanBook: ['supervisor', 'manager'], approval: 'auto' },
+  ]
+  for (const mt of meetingTypes) {
+    await prisma.meetingType.upsert({
+      where: { key: mt.key },
+      update: {
+        title: mt.title,
+        durationMin: mt.durationMin,
+        whoCanBook: mt.whoCanBook,
+        approval: mt.approval,
+      },
+      create: {
+        key: mt.key,
+        title: mt.title,
+        durationMin: mt.durationMin,
+        whoCanBook: mt.whoCanBook,
+        approval: mt.approval,
+      },
+    })
+  }
+
+  // ── Seed Document Types ──────────────────────────
+  const docTypes = [
+    { key: 'national_card', title: 'کارت ملی', hasExpiry: false, needsReview: true },
+    { key: 'health_cert', title: 'کارت سلامت و طب کار', hasExpiry: true, remindDays: [60, 30, 7], needsReview: true },
+    { key: 'operator_license_A', title: 'گواهینامه راهبری پایه ۱', hasExpiry: true, remindDays: [90, 60, 30], needsReview: true },
+  ]
+  for (const dt of docTypes) {
+    await prisma.documentType.upsert({
+      where: { key: dt.key },
+      update: {
+        title: dt.title,
+        hasExpiry: dt.hasExpiry,
+        remindDays: dt.remindDays,
+        needsReview: dt.needsReview,
+      },
+      create: {
+        key: dt.key,
+        title: dt.title,
+        hasExpiry: dt.hasExpiry,
+        remindDays: dt.remindDays,
+        needsReview: dt.needsReview,
+      },
+    })
+  }
+
+  // ── Seed Radio Channels ──────────────────────────
+  const radioChannels = [
+    { key: 'occ-main', label: 'کانال اصلی راهبران (CH 1)', code: '440.125 MHz', color: 'red', sortOrder: 1 },
+    { key: 'station-talk', label: 'کانال خدمات ایستگاهی (CH 2)', code: '442.250 MHz', color: 'blue', sortOrder: 2 },
+    { key: 'depot-tech', label: 'کانال دپو و مانور (CH 3)', code: '445.500 MHz', color: 'green', sortOrder: 3 },
+  ]
+  for (const rc of radioChannels) {
+    await prisma.radioChannel.upsert({
+      where: { key: rc.key },
+      update: {
+        label: rc.label,
+        code: rc.code,
+        color: rc.color,
+        sortOrder: rc.sortOrder,
+      },
+      create: {
+        key: rc.key,
+        label: rc.label,
+        code: rc.code,
+        color: rc.color,
+        sortOrder: rc.sortOrder,
+      },
+    })
+  }
+
+  // ── Seed Radio Phrases ──────────────────────────
+  const radioPhrases = [
+    { label: 'دریافت شد', text: 'پیام شما دریافت شد، تمام.' },
+    { label: 'موقعیت حادثه', text: 'در موقعیت کیلومتر ... متوقف شده‌ام، لطفا پشتیبانی هماهنگ کنید.' },
+    { label: 'توقف اضطراری', text: 'توقف اضطراری اعلام می‌کنم، ریل سوم بی برق شود.' },
+  ]
+  for (const rp of radioPhrases) {
+    const existing = await prisma.radioPhrase.findFirst({ where: { label: rp.label } })
+    if (!existing) {
+      await prisma.radioPhrase.create({ data: rp })
+    }
+  }
+
+  // ── Seed Content Categories ──────────────────────────
+  const contentCategories = [
+    { key: 'news', label: 'اخبار سازمانی', color: 'blue', type: 'news' },
+    { key: 'technical', label: 'آموزش‌های فنی', color: 'green', type: 'training' },
+    { key: 'circular', label: 'بخشنامه‌های عمومی', color: 'purple', type: null },
+  ]
+  for (const cc of contentCategories) {
+    await prisma.contentCategory.upsert({
+      where: { key: cc.key },
+      update: {
+        label: cc.label,
+        color: cc.color,
+        type: cc.type,
+      },
+      create: {
+        key: cc.key,
+        label: cc.label,
+        color: cc.color,
+        type: cc.type,
+      },
+    })
+  }
+
+  // ── Seed Courses and Videos ──────────────────────────
+  const courses = [
+    {
+      key: 'door-troubleshooting-300',
+      title: 'دوره جامع عیب‌یابی درب‌های سری ۳۰۰',
+      description: 'آموزش نحوه عیب‌یابی لیمیت سوئیچ‌ها و شیر بایکوت درب واگن‌ها در زمان اضطراری.',
+      coverUrl: '/images/cover.png',
+      category: 'فنی',
+      status: 'published',
+      passScore: 70,
+      recurrenceMonths: 12,
+      estMinutes: 120,
+      sortOrder: 1,
+    },
+  ]
+  for (const c of courses) {
+    const existing = await prisma.course.findUnique({ where: { key: c.key } })
+    if (!existing) {
+      const course = await prisma.course.create({
+        data: c,
+      })
+      
+      const chap = await prisma.chapter.create({
+        data: {
+          courseId: course.id,
+          title: 'فصل اول: آشنایی با سیستم مکانیزم درب قطار',
+          sortOrder: 1,
+        },
+      })
+
+      await prisma.lesson.createMany({
+        data: [
+          {
+            chapterId: chap.id,
+            title: 'درس اول: معرفی لیمیت سوئیچ‌های مغناطیسی درب واگن ۳',
+            kind: 'video',
+            contentRef: '/videos/sample.mp4',
+            sortOrder: 1,
+          },
+          {
+            chapterId: chap.id,
+            title: 'درس دوم: عیب‌یابی لیمیت سوئیچ‌ها و شیر بایکوت درب واگن‌ها',
+            kind: 'text',
+            contentRef: 'معرفی عملکرد و کد خطای مربوط به عدم بسته شدن فیدبک درب و آموزش نحوه عیب‌یابی لیمیت سوئیچ‌ها در شرایط اضطراری.',
+            sortOrder: 2,
+          },
+        ],
+      })
+    }
+  }
 }
 
 main().catch(async (e) => {

@@ -1,6 +1,6 @@
 import { prisma } from '@/server/db'
 import type { Prisma } from '@/generated/prisma/client'
-import dayjs from 'dayjs'
+import { jalaliPeriodId } from '@/lib/dayjs'
 import { getSettingValue } from '@/server/modules/settings/service'
 
 // Competency IDs mapping
@@ -17,7 +17,7 @@ export const COMPETENCY_IDS = [
 export function getCurrentPeriodId(): string {
   // Safe default: return current Jalali year-month
   try {
-    return dayjs().locale('jalali').format('YYYY-MM')
+    return jalaliPeriodId()
   } catch {
     // Fallback to Gregorian if locale not set
     const d = new Date()
@@ -98,7 +98,7 @@ export async function logPerformanceAction(data: {
           severity,
           scoreValue,
           note,
-        } as any,
+        } as unknown as Prisma.InputJsonValue,
       },
     })
 
@@ -118,7 +118,7 @@ export async function getEmployeeScorecard(employeeId: string, periodId: string)
       id: true,
       name: true,
       customFields: true,
-      role: { select: { name: true } },
+      role: { select: { title: true } },
     },
   })
   if (!employee) throw new Error('کارمند یافت نشد')
@@ -269,7 +269,7 @@ export async function calculatePeriodScoresAndNormalize(periodId: string) {
   // Group employees by department (we map posts or departments)
   // Since our schema uses customFields for department/post, we group by `post` or a custom department field
   const employeesWithDepts = employees.map((emp) => {
-    const dept = (emp.customFields as any)?.post || 'عملیات'
+    const dept = ((emp.customFields as Record<string, unknown>)?.post as string) || 'عملیات'
     return { emp, dept }
   })
 
@@ -291,7 +291,7 @@ export async function calculatePeriodScoresAndNormalize(periodId: string) {
   }[] = []
 
   // For each department, calculate adjusted scores and normalize
-  for (const [deptName, group] of Object.entries(deptGroups)) {
+  for (const [, group] of Object.entries(deptGroups)) {
     // Calculate adjusted scores for each employee
     const scores = await Promise.all(
       group.map(async (item) => {
@@ -423,7 +423,7 @@ export async function getLeaderboard(periodId: string, currentUserId: string) {
     employeeId: snap.employeeId,
     name: snap.employee.name,
     avatar: snap.employee.name.slice(0, 2),
-    dept: (snap.employee.customFields as any)?.post || 'عملیات',
+    dept: ((snap.employee.customFields as Record<string, unknown>)?.post as string) || 'عملیات',
     score: snap.normalizedScore,
   }))
 

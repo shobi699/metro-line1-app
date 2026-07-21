@@ -11,25 +11,39 @@ interface CacheEntry<T = unknown> {
   timestamp: number
 }
 
-interface QueueEntry {
+export interface PendingOp {
+  id: string            // UUID — idempotency key
+  type: 'receipt' | 'ready' | 'handover' | 'dispute' | 'delay' | 'checklist' | 'attendance'
+  tripId: string
   url: string
   method: string
-  body: string | null
+  payload: any
   headers: Record<string, string>
   timestamp: number
+  syncStatus: 'pending' | 'syncing' | 'synced' | 'conflict'
+  conflictReason?: string
 }
 
 interface OfflineCacheState {
   cache: Record<string, CacheEntry>
-  queue: QueueEntry[]
+  queue: PendingOp[]
   isInitialized: boolean
   init: () => Promise<void>
   getCached: <T>(key: string) => T | null
   setCache: (key: string, data: unknown) => Promise<void>
   clearCache: (key: string) => Promise<void>
-  enqueue: (url: string, method: string, body: string | null, headers: Record<string, string>) => Promise<void>
+  enqueue: (
+    type: PendingOp['type'],
+    tripId: string,
+    url: string,
+    method: string,
+    payload: any,
+    headers: Record<string, string>
+  ) => Promise<void>
   processQueue: (token: string | null) => Promise<number>
   getQueueLength: () => number
+  markConflict: (opId: string, reason: string) => void
+  removeOp: (opId: string) => Promise<void>
 }
 
 export const useOfflineCacheStore = create<OfflineCacheState>((set, get) => ({
@@ -53,7 +67,7 @@ export const useOfflineCacheStore = create<OfflineCacheState>((set, get) => ({
         }
       }
 
-      const queue: QueueEntry[] = queueEntries ? JSON.parse(queueEntries) : []
+      const queue: PendingOp[] = queueEntries ? JSON.parse(queueEntries) : []
 
       set({ cache, queue, isInitialized: true })
     } catch {
@@ -94,8 +108,20 @@ export const useOfflineCacheStore = create<OfflineCacheState>((set, get) => ({
     } catch {}
   },
 
-  async enqueue(url: string, method: string, body: string | null, headers: Record<string, string>) {
-    const entry: QueueEntry = { url, method, body, headers, timestamp: Date.now() }
+  async enqueue(type, tripId, url, method, payload, headers) {
+    const idempotencyKey = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    
+    const entry: PendingOp = {
+      id: idempotencyKey,
+      type,
+      tripId,
+      url,
+      method,
+      payload,
+      headers,
+      timestamp: Date.now(),
+      syncStatus: 'pending'
+    }
     const newQueue = [...get().queue, entry]
     set({ queue: newQueue })
 
@@ -108,33 +134,58 @@ export const useOfflineCacheStore = create<OfflineCacheState>((set, get) => ({
     const { queue } = get()
     if (queue.length === 0) return 0
 
-    const remaining: QueueEntry[] = []
+    const remaining: PendingOp[] = []
     let processed = 0
 
     for (const entry of queue) {
+      if (entry.syncStatus === 'conflict') {
+        remaining.push(entry)
+        continue
+      }
+
       try {
-        const headers: Record<string, string> = { ...entry.headers }
+        const headers: Record<string, string> = { 
+          ...entry.headers,
+          'X-Idempotency-Key': entry.id // Send idempotency key in headers
+        }
         if (token) headers['Authorization'] = `Bearer ${token}`
+
+        // Update status to syncing
+        entry.syncStatus = 'syncing'
+        set({ queue: [...queue] })
 
         const res = await fetch(entry.url, {
           method: entry.method,
           headers,
-          body: entry.body,
+          body: entry.payload ? JSON.stringify(entry.payload) : null,
         })
 
         if (res.ok) {
           processed++
+          entry.syncStatus = 'synced'
         } else {
-          remaining.push(entry)
+          // Check for validation/version conflict response from backend
+          if (res.status === 409 || res.status === 422) {
+            const errJson = await res.json().catch(() => ({}))
+            entry.syncStatus = 'conflict'
+            entry.conflictReason = errJson.error || 'تعارض در نسخه لوحه'
+            remaining.push(entry)
+          } else {
+            entry.syncStatus = 'pending'
+            remaining.push(entry)
+          }
         }
       } catch {
+        entry.syncStatus = 'pending'
         remaining.push(entry)
       }
     }
 
-    set({ queue: remaining })
+    // Filter out synced operations
+    const nextQueue = remaining.filter(op => op.syncStatus !== 'synced')
+    set({ queue: nextQueue })
     try {
-      await AsyncStorage.setItem(QUEUE_PREFIX + 'keys', JSON.stringify(remaining))
+      await AsyncStorage.setItem(QUEUE_PREFIX + 'keys', JSON.stringify(nextQueue))
     } catch {}
 
     return processed
@@ -143,4 +194,21 @@ export const useOfflineCacheStore = create<OfflineCacheState>((set, get) => ({
   getQueueLength() {
     return get().queue.length
   },
+
+  markConflict(opId, reason) {
+    const nextQueue = get().queue.map(op => 
+      op.id === opId ? { ...op, syncStatus: 'conflict' as const, conflictReason: reason } : op
+    )
+    set({ queue: nextQueue })
+    AsyncStorage.setItem(QUEUE_PREFIX + 'keys', JSON.stringify(nextQueue)).catch(() => {})
+  },
+
+  async removeOp(opId) {
+    const nextQueue = get().queue.filter(op => op.id !== opId)
+    set({ queue: nextQueue })
+    try {
+      await AsyncStorage.setItem(QUEUE_PREFIX + 'keys', JSON.stringify(nextQueue))
+    } catch {}
+  }
 }))
+

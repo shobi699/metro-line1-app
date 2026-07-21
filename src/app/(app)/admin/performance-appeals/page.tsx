@@ -42,7 +42,7 @@ interface Appeal {
   }
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ComponentType<any> }> = {
   pending: { label: 'در انتظار بررسی', color: 'text-warning border-warning/30 bg-warning/5', icon: Clock },
   approved: { label: 'پذیرفته شد', color: 'text-success border-success/30 bg-success/5', icon: CheckCircle2 },
   rejected: { label: 'رد شد', color: 'text-critical border-critical/30 bg-critical/5', icon: XCircle },
